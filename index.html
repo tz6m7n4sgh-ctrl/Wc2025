@@ -2237,10 +2237,14 @@ function render(){
       // FIX: S.view="dashboard" used consistently everywhere
       BT({cls:"nav-btn "+(S.view==="dashboard"?"on":"off"),onclick:()=>ss({view:"dashboard"})},["📊 "+tr("Dashboard")]),
       // FIX: "Predict" nav button sets view:"predict" and goes to name/groups screen
-      //BT({cls:"nav-btn "+(S.view==="predict"?"on":"off"),onclick:()=>{
-        //if(S.name.trim()){loadMe(S.name.trim());ss({view:"predict",screen:"groups"});}
-        //else ss({view:"predict",screen:"name"});
-      //}},["✏️ "+tr("Predict")]),
+      S.admin ? BT({cls:"nav-btn "+(S.view==="predict"?"on":"off"),onclick:()=>{
+  if(S.name.trim()){
+    loadMe(S.name.trim());
+    ss({view:"predict",screen:"groups"});
+  }else{
+    ss({view:"predict",screen:"name"});
+  }
+}},["✏️ "+tr("Predict")]) : null,
       BT({cls:"nav-btn "+(S.view==="predictions"?"on":"off"),onclick:()=>ss({view:"predictions"})},["👁️ "+tr("Predictions")]),
       BT({cls:"nav-btn "+(S.view==="today"?"on":"off"),onclick:()=>ss({view:"today"})},["📅 "+tr("Today Matches")]),
       BT({cls:"nav-btn "+(S.view==="allmatches"?"on":"off"),onclick:()=>ss({view:"allmatches"})},["📋 "+tr("All Matches")]),

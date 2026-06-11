@@ -298,24 +298,46 @@ function parseAsUae(str){
 }
 
 /**
- * FIX: Combine date + time fields from API into a proper UAE-aware ISO string.
- * Old version called Date.parse(d+' '+tm) which was browser-local.
+ * FIX: Combine API date + time into a correct ISO timestamp.
+ *
+ * Rule:
+ * - If API gives "20:00 UTC", treat as UTC.
+ * - If API gives "20:00 UTC+4", treat as UTC+4.
+ * - If API gives only "20:00", treat as UTC.
+ * - Display later converts it to UAE time.
  */
 function parseKickoffDate(dateVal,timeVal,fallback){
   const d=String(dateVal||'').trim();
   const tm=String(timeVal||'').trim();
 
   if(d&&tm){
-    // "HH:MM UTC+4" or "HH:MM UTC" style
-    const m=tm.match(/^(\d{1,2}):(\d{2})(?:\s*UTC([+-]\d{1,2}(?::\d{2})?))?/i);
+    // Supports: "20:00", "20:00 UTC", "20:00 UTC+4", "20:00 UTC+04:00"
+    const m=tm.match(/^(\d{1,2}):(\d{2})(?:\s*UTC\s*([+-]\d{1,2}(?::\d{2})?)?)?/i);
+
     if(m){
-      const hh=m[1].padStart(2,'0'),mi=m[2];
-      const off=m[3]||'+04:00'; // default to UAE if no explicit offset
-      // normalise offset: "+4" → "+04:00"
-      const normOff=off.replace(/^([+-])(\d)$/,'$10$2:00').replace(/^([+-]\d{2})$/,'$1:00');
+      const hh=m[1].padStart(2,'0');
+      const mi=m[2];
+
+      let off;
+
+      if(/\bUTC\b/i.test(tm)){
+        // "UTC" with no offset means +00:00
+        off=m[3]||'+00:00';
+      }else{
+        // API time has no timezone, so treat it as UTC.
+        off='+00:00';
+      }
+
+      // Normalize offsets:
+      // "+4"  -> "+04:00"
+      // "+04" -> "+04:00"
+      const normOff=off
+        .replace(/^([+-])(\d)$/,'$10$2:00')
+        .replace(/^([+-]\d{2})$/,'$1:00');
+
       return parseAsUae(d+'T'+hh+':'+mi+':00'+normOff);
     }
-    // Generic fallback: concatenate and let parseAsUae handle it
+
     const combined=parseAsUae(d+'T'+tm);
     if(combined)return combined;
   }
@@ -834,11 +856,22 @@ function statusRaw(m){
 
 function isFinishedMatch(m){
   const st=statusRaw(m);
+
   const f=deepGet(m,['finished','is_finished']);
   if(String(f).toLowerCase()==='true'||f===true)return true;
-  if(deepGet(m,['score.ft.0','score.fullTime.home','score.fulltime.home','home_score','intHomeScore'])!==undefined
-    &&deepGet(m,['score.ft.1','score.fullTime.away','score.fulltime.away','away_score','intAwayScore'])!==undefined)return true;
-  return ['finished','ft','aet','pen','full time','match finished','after extra time','after penalties'].some(x=>st===x||st.includes(x));
+
+  // Only trust final-status words as completed.
+  // Do NOT mark completed just because a score exists.
+  return [
+    'finished',
+    'ft',
+    'full time',
+    'match finished',
+    'aet',
+    'after extra time',
+    'pen',
+    'after penalties'
+  ].some(x=>st===x||st.includes(x));
 }
 
 function isLiveMatch(m){
@@ -875,13 +908,22 @@ function parseMatch(m){
 function matchTime(mt){const t=Date.parse(mt.utcDate||'');return Number.isFinite(t)?t:null;}
 
 function matchState(mt){
-  // FIX: check API-reported finished/live first; fall through to time-based live window
-  // The time-based window uses proper UTC milliseconds so it's timezone-independent.
-  if(isFinishedMatch(mt.raw)&&mt.homeScore!==null&&mt.awayScore!==null)return 'finished';
+  // Final status wins first.
+  if(isFinishedMatch(mt.raw))return 'finished';
+
+  // Live/in-progress status comes second.
   if(isLiveMatch(mt.raw))return 'live';
-  const t=matchTime(mt),now=Date.now();
-  // Consider live if within 2h window of kickoff (UTC ms comparison — timezone safe)
-  if(t&&now>=t&&now<t+2*60*60*1000)return 'live';
+
+  const t=matchTime(mt);
+  const now=Date.now();
+
+  // If kickoff started and no final status yet, treat as live for 2h 30m.
+  if(t&&now>=t&&now<t+2.5*60*60*1000)return 'live';
+
+  // If kickoff time passed but API did not say finished, keep it live-ish for 3h.
+  // This avoids showing "upcoming" during delayed/stoppage/extra time.
+  if(t&&now>=t&&now<t+3*60*60*1000)return 'live';
+
   return 'upcoming';
 }
 
@@ -990,11 +1032,51 @@ async function fetchScheduleMatches(){
   for(const url of urls){
     try{
       const json=await fetchJsonFromApi(url,sessionStorage.getItem('wc2026_results_token')||'');
-      asArrayPayload(json).map(parseMatch).filter(Boolean).filter(isWorldCupMatchObj).filter(isWc2026MatchDate).forEach(m=>{
-        const key=[normName(m.home),normName(m.away),m.utcDate||'',m.round||''].join('|');
-        const old=byKey.get(key);
-        if(!old||(old.homeScore===null&&m.homeScore!==null))byKey.set(key,m);
-      });
+      asArrayPayload(json)
+  .map(parseMatch)
+  .filter(Boolean)
+  .filter(isWorldCupMatchObj)
+  .filter(isWc2026MatchDate)
+  .forEach(m=>{
+    // Deduplicate same match across multiple APIs.
+    // Use teams + UAE match day, not exact timestamp/round,
+    // because different APIs may return slightly different time or round text.
+    const t=matchTime(m);
+    const day=t?uaeYmd(t):'nodate';
+
+    const teams=[normName(m.home),normName(m.away)].sort().join('_');
+    const key=teams+'|'+day;
+
+    const old=byKey.get(key);
+
+    if(!old){
+      byKey.set(key,m);
+      return;
+    }
+
+    // Prefer match with score over no score.
+    if(old.homeScore===null&&m.homeScore!==null){
+      byKey.set(key,m);
+      return;
+    }
+
+    // Prefer finished over live/upcoming.
+    if(matchState(m)==='finished'&&matchState(old)!=='finished'){
+      byKey.set(key,m);
+      return;
+    }
+
+    // Prefer live over upcoming.
+    if(matchState(m)==='live'&&matchState(old)==='upcoming'){
+      byKey.set(key,m);
+      return;
+    }
+
+    // Prefer one with a valid kickoff time.
+    if(!matchTime(old)&&matchTime(m)){
+      byKey.set(key,m);
+    }
+  });
     }catch(e){errors.push(String(e));}
   }
   const matches=[...byKey.values()].sort((a,b)=>(matchTime(a)||9e15)-(matchTime(b)||9e15));
@@ -1039,7 +1121,7 @@ async function fetchTodayMatches(silent=false){
   try{
     if(!silent||!S.live.loading)ss({live:{...S.live,loading:true,error:null}});
     const matches=await fetchScheduleMatches();
-    const finished=matches.filter(x=>isFinishedMatch(x.raw)&&x.homeScore!==null&&x.awayScore!==null);
+    const finished=matches.filter(x=>isFinishedMatch()&&x.homeScore!==null&&x.awayScore!==null);
     if(finished.length)applyFetchedMatches(finished,true);
     ss({live:{matches,last:fmtUaeTime(Date.now())+' UAE',loading:false,error:null}});
     if(!silent)toast(tr('Schedule updated'));
@@ -1886,7 +1968,10 @@ function render(){
       // FIX: S.view="dashboard" used consistently everywhere
       BT({cls:"nav-btn "+(S.view==="dashboard"?"on":"off"),onclick:()=>ss({view:"dashboard"})},["📊 "+tr("Dashboard")]),
       // FIX: "Predict" nav button sets view:"predict" and goes to name/groups screen
-      //BT({cls:"nav-btn "+(S.view==="predict"?"on":"off"),onclick:()=>{if(S.name.trim()){loadMe(S.name.trim());ss({view:"predict",screen:"groups"});}else ss({view:"predict",screen:"name"});}},["✏️ "+tr("Predict")]),
+      //BT({cls:"nav-btn "+(S.view==="predict"?"on":"off"),onclick:()=>{
+        //if(S.name.trim()){loadMe(S.name.trim());ss({view:"predict",screen:"groups"});}
+        //else ss({view:"predict",screen:"name"});
+      //}},["✏️ "+tr("Predict")]),
       BT({cls:"nav-btn "+(S.view==="predictions"?"on":"off"),onclick:()=>ss({view:"predictions"})},["👁️ "+tr("Predictions")]),
       BT({cls:"nav-btn "+(S.view==="today"?"on":"off"),onclick:()=>ss({view:"today"})},["📅 "+tr("Today Matches")]),
       BT({cls:"nav-btn "+(S.view==="allmatches"?"on":"off"),onclick:()=>ss({view:"allmatches"})},["📋 "+tr("All Matches")]),

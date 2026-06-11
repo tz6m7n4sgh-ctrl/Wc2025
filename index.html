@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
@@ -83,6 +83,7 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
 @keyframes pu{0%,100%{opacity:1}50%{opacity:.3}}
 .fix-sql{background:#fff3cd;border:1px solid #ffc107;border-radius:var(--radius);padding:1rem 1.25rem;margin-bottom:1rem;font-size:13px}
 .fix-sql code{display:block;background:#0f172a;color:#e2e8f0;padding:12px;border-radius:6px;font-family:monospace;font-size:12px;margin:8px 0;white-space:pre;overflow-x:auto}
+[dir="rtl"] body{text-align:right}[dir="rtl"] .hdr,[dir="rtl"] .hdr-right,[dir="rtl"] .hdr-left,[dir="rtl"] .admin-bar{direction:rtl}[dir="rtl"] .lbr{direction:rtl}[dir="rtl"] .toast{right:auto;left:22px}.lang-select{font-size:12px;padding:5px 8px;border-radius:18px;border:none;background:rgba(255,255,255,.15);color:#fff}.lang-select option{color:#0f172a;background:#fff}
 @media(max-width:600px){.hdr{border-radius:0}}
 </style>
 </head>
@@ -178,7 +179,136 @@ let _pt=null;
 function startPoll(cb){clearInterval(_pt);_pt=setInterval(async()=>{try{const d=await dbRead();cb(d);}catch(e){}},8000);}
 
 /* ── State ── */
-let S={view:"predict",screen:"loading",name:"",ag:"A",ako:"r32",gp:{},kp:{},ch:null,data:EMPTY,loading:true,sync:"ok",admin:false,showLogin:false,ainput:"",dtab:"lb",dg:"A",toast:null,terr:false,dbErr:null};
+let S={view:"predict",screen:"loading",name:"",ag:"A",ako:"r32",gp:{},kp:{},ch:null,data:EMPTY,loading:true,sync:"ok",admin:false,showLogin:false,ainput:"",dtab:"lb",dg:"A",toast:null,terr:false,dbErr:null,lang:localStorage.getItem("wc2026_lang")||"ar"};
+
+
+/* ── Language / i18n ── */
+const AR_MAP={
+  "World Cup 2026":"كأس العالم 2026",
+  "Predictions":"التوقعات",
+  "Predict":"التوقع",
+  "Dashboard":"لوحة النتائج",
+  "Admin":"المشرف",
+  "Admin on":"المشرف مفعل",
+  "Admin login":"تسجيل دخول المشرف",
+  "Password protects results, resets and player management.":"كلمة المرور تحمي النتائج، إعادة الضبط، وإدارة اللاعبين.",
+  "Password":"كلمة المرور",
+  "Cancel":"إلغاء",
+  "Login":"دخول",
+  "Wrong password":"كلمة المرور غير صحيحة",
+  "Who are you?":"من أنت؟",
+  "Predictions are saved under your name.":"يتم حفظ التوقعات باسمك.",
+  "Your name":"اسمك",
+  "Start predicting →":"ابدأ التوقع ←",
+  "Change name":"تغيير الاسم",
+  "Save all":"حفظ الكل",
+  "Save":"حفظ",
+  "Saved ✓":"تم الحفظ ✓",
+  "Save failed":"فشل الحفظ",
+  "Locked":"مغلق",
+  "Lock predictions":"إغلاق التوقعات",
+  "Unlock":"فتح",
+  "Unlock predictions":"فتح التوقعات",
+  "Auto-lock":"الإغلاق التلقائي",
+  "Champion":"البطل",
+  "Champion Pick":"توقع البطل",
+  "Who will win the World Cup?":"من سيفوز بكأس العالم؟",
+  "Correct pick =":"التوقع الصحيح =",
+  "10 points":"10 نقاط",
+  "Confirmed":"المؤكد",
+  "Your pick":"اختيارك",
+  "Winner":"الفائز",
+  "winner":"الفائز",
+  "Knockout Stage":"مرحلة خروج المغلوب",
+  "Group Stage":"دور المجموعات",
+  "Round of 32":"دور الـ32",
+  "Round of 16":"دور الـ16",
+  "Quarter-finals":"ربع النهائي",
+  "Semi-finals":"نصف النهائي",
+  "Final":"النهائي",
+  "Tap the winning team.":"اختر الفريق الفائز.",
+  "per correct pick.":"لكل اختيار صحيح.",
+  "Teams TBD":"الفرق لم تحدد بعد",
+  "All done ✓":"تم الكل ✓",
+  "Back":"رجوع",
+  "Leaderboard":"الترتيب",
+  "Groups":"المجموعات",
+  "Knockout":"خروج المغلوب",
+  "No predictions yet!":"لا توجد توقعات بعد!",
+  "Players":"اللاعبون",
+  "Player":"اللاعب",
+  "players":"لاعبين",
+  "player":"لاعب",
+  "Points":"النقاط",
+  "pts":"نقاط",
+  "pt":"نقطة",
+  "Prize pool":"مجموع الجوائز",
+  "Total prize pool":"مجموع الجوائز",
+  "Entry":"الاشتراك",
+  "Results in":"النتائج المدخلة",
+  "Group matches":"مباريات المجموعات",
+  "Group":"المجموعة",
+  "Match":"مباراة",
+  "Home":"الفريق الأول",
+  "Away":"الفريق الثاني",
+  "Result":"النتيجة",
+  "Pick":"التوقع",
+  "pick":"التوقع",
+  "Saved":"محفوظ",
+  "result":"النتيجة",
+  "Result = 1pt":"نتيجة صحيحة = نقطة واحدة",
+  "Exact = 3pts":"نتيجة دقيقة = 3 نقاط",
+  "Correct result":"نتيجة صحيحة",
+  "Exact / correct pick":"نتيجة دقيقة / اختيار صحيح",
+  "Wrong":"خطأ",
+  "Reset results":"مسح النتائج",
+  "Reset all":"مسح الكل",
+  "Results reset ✓":"تم مسح النتائج ✓",
+  "Reset ✓":"تم المسح ✓",
+  "Players — click × to remove":"اللاعبون — اضغط × للحذف",
+  "deleted":"تم الحذف",
+  "Export PDF":"تصدير PDF",
+  "Save as PDF":"حفظ كـ PDF",
+  "WC2026 PDF Export":"تصدير كأس العالم 2026 PDF",
+  "Choose “Save as PDF” in the print dialog.":"اختر حفظ كـ PDF من نافذة الطباعة.",
+  "Close":"إغلاق",
+  "Connection error":"خطأ في الاتصال",
+  "Could not connect to Supabase.":"تعذر الاتصال بـ Supabase.",
+  "Fix: run this SQL in your Supabase dashboard":"الحل: شغّل هذا SQL في لوحة Supabase",
+  "Go to your Supabase project → SQL Editor → paste and run:":"اذهب إلى مشروع Supabase → محرر SQL → الصق وشغّل:",
+  "Try again after running SQL":"حاول مرة أخرى بعد تشغيل SQL",
+  "Copied ✓":"تم النسخ ✓",
+  "Connecting to Supabase…":"جارٍ الاتصال بـ Supabase…",
+  "Saving…":"جارٍ الحفظ…",
+  "Synced":"متزامن",
+  "Error":"خطأ",
+  "not set":"غير محدد",
+  "TBD":"لم يحدد",
+  "entry":"اشتراك",
+  "Language":"اللغة"
+};
+function isAr(){return S.lang==="ar";}
+function tr(s){return isAr()?(AR_MAP[String(s)]||String(s)):String(s);}
+function localizeString(s){
+  if(!isAr())return s;
+  let out=String(s);
+  Object.keys(AR_MAP).sort((a,b)=>b.length-a.length).forEach(k=>{out=out.split(k).join(AR_MAP[k]);});
+  out=out.replace(/\bGroup\s+([A-L])\b/g,"المجموعة $1");
+  out=out.replace(/\bMatch\s+(\d+)\b/g,"مباراة $1");
+  out=out.replace(/\b(\d+)\s+players\b/g,"$1 لاعبين");
+  out=out.replace(/\b(\d+)\s+player\b/g,"$1 لاعب");
+  return out;
+}
+function localizeDOM(root){
+  if(!isAr())return;
+  const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT);
+  const nodes=[]; while(walker.nextNode())nodes.push(walker.currentNode);
+  nodes.forEach(n=>{n.nodeValue=localizeString(n.nodeValue);});
+  root.querySelectorAll("input,textarea").forEach(e=>{if(e.placeholder)e.placeholder=localizeString(e.placeholder);});
+  root.querySelectorAll("[title]").forEach(e=>e.setAttribute("title",localizeString(e.getAttribute("title"))));
+}
+function setLang(v){S.lang=v==="ar"?"ar":"en";localStorage.setItem("wc2026_lang",S.lang);render();}
+
 function ss(p){Object.assign(S,p);render();}
 let _tt=null;
 function toast(m,e){clearTimeout(_tt);ss({toast:m,terr:!!e});_tt=setTimeout(()=>ss({toast:null}),3000);}
@@ -198,34 +328,45 @@ async function init(){
 }
 
 let _sv=null,_st=null;
-function sched(data){_sv=data;clearTimeout(_st);ss({sync:"s"});_st=setTimeout(async()=>{try{await dbWrite(_sv);ss({sync:"ok"});}catch(e){ss({sync:"e"});toast("Save failed: "+String(e),true);}},900);}
+function sched(data){_sv=data;clearTimeout(_st);ss({sync:"s"});_st=setTimeout(async()=>{try{await dbWrite(_sv);ss({sync:"ok"});}catch(e){ss({sync:"e"});toast(tr("Save failed")+": "+String(e),true);}},900);}
 function mut(nd){ss({data:nd});sched(nd);}
 
-async function save(){if(!S.name.trim()||locked())return;const pd={groupPreds:S.gp,knockoutPreds:S.kp,champion:S.ch};mut({...S.data,players:{...S.data.players,[S.name.trim()]:pd}});toast("Saved \u2713");}
+async function save(){if(!S.name.trim()||locked())return;const pd={groupPreds:S.gp,knockoutPreds:S.kp,champion:S.ch};mut({...S.data,players:{...S.data.players,[S.name.trim()]:pd}});toast(tr("Saved ✓"));}
 function ugr(g,i,side,val){const k=g+"_"+i;mut({...S.data,groupResults:{...S.data.groupResults,[k]:{...S.data.groupResults?.[k],[side]:String(val)}}});}
 function skom(rk,idx,side,team){mut({...S.data,knockoutMatches:{...S.data.knockoutMatches,[rk]:{...S.data.knockoutMatches?.[rk],[idx+"_"+side]:team}}});}
 function skow(rk,idx,w){mut({...S.data,knockoutResults:{...S.data.knockoutResults,[rk]:{...S.data.knockoutResults?.[rk],[idx]:w}}});}
 function schamp(t){mut({...S.data,champion:t||null});}
 function toglock(){mut({...S.data,locked:!S.data.locked});}
 function setdl(v){mut({...S.data,deadline:v});}
-async function resetAll(){if(!confirm("Reset ALL data? Cannot be undone."))return;mut(EMPTY);ss({gp:{},kp:{},ch:null,name:"",screen:"name"});toast("Reset \u2713");}
-async function resetRes(){if(!confirm("Reset all results?"))return;mut({...S.data,groupResults:{},knockoutResults:{},knockoutMatches:{},champion:null});toast("Results reset \u2713");}
-async function delP(name){if(!confirm('Delete "'+name+'"?'))return;const pl={...S.data.players};delete pl[name];mut({...S.data,players:pl});toast(name+" deleted");}
+async function resetAll(){if(!confirm("Reset ALL data? Cannot be undone."))return;mut(EMPTY);ss({gp:{},kp:{},ch:null,name:"",screen:"name"});toast(tr("Reset ✓"));}
+async function resetRes(){if(!confirm("Reset all results?"))return;mut({...S.data,groupResults:{},knockoutResults:{},knockoutMatches:{},champion:null});toast(tr("Results reset ✓"));}
+async function delP(name){if(!confirm('Delete "'+name+'"?'))return;const pl={...S.data.players};delete pl[name];mut({...S.data,players:pl});toast(name+" "+tr("deleted"));}
 
 /* ── Export ── */
 function exportDash(){
   const l=lb(),now=new Date().toLocaleString(),pp=Object.keys(S.data.players||{}).length*ENTRY_FEE;
-  const rm=i=>i===0?"\ud83e\udd47":i===1?"\ud83e\udd48":i===2?"\ud83e\udd49":(i+1)+".";
-  const ph=l.map(p=>'<th style="padding:8px;background:#1e3a5f;color:#fff;white-space:nowrap">'+p.name+'</th>').join("");
-  const lbr=l.map((p,i)=>'<tr style="background:'+(i===0?"#fffbea":i%2===0?"#f9f9f9":"#fff")+'"><td style="padding:10px">'+rm(i)+'</td><td style="padding:10px;font-weight:'+(i<3?700:400)+'">'+p.name+'</td><td style="padding:10px;text-align:center">'+(FL[p.champion]||"")+" "+(p.champion||"—")+'</td><td style="padding:10px;text-align:right;font-size:20px;font-weight:700;color:'+(i===0?"#b45309":"#0f172a")+'">'+p.points+'</td></tr>').join("");
+  const esc=x=>String(x??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"}[c]));
+  const rm=i=>i===0?"🥇":i===1?"🥈":i===2?"🥉":(i+1)+".";
+  const ph=l.map(p=>'<th>'+esc(p.name)+'</th>').join("");
+  const lbr=l.map((p,i)=>'<tr class="'+(i===0?'top ':'')+(i%2===0?'even':'odd')+'"><td>'+rm(i)+'</td><td><strong>'+esc(p.name)+'</strong></td><td class="center">'+(FL[p.champion]||"")+" "+esc(p.champion||"—")+'</td><td class="pts">'+p.points+'</td></tr>').join("");
   const gs=Object.entries(GROUPS).map(([g,teams])=>{
     const rows=GM[g].map((m,i)=>{const k=g+"_"+i,res=S.data.groupResults?.[k],hr=res&&res.home!==undefined&&res.home!=="";
-    const cells=l.map(({name})=>{const pred=S.data.players?.[name]?.groupPreds?.[k];if(!pred||pred.home===undefined||pred.home==="")return'<td style="padding:6px;text-align:center;color:#aaa">—</td>';const pts=gp(pred,res);const bg=pts===3?"#d1fae5":pts===1?"#fef3c7":pts===0&&hr?"#fee2e2":"#f3f4f6";return'<td style="padding:6px;text-align:center;background:'+bg+'">'+pred.home+"–"+pred.away+" "+(pts===3?"\ud83c\udfaf":pts===1?"\u2713":pts===0&&hr?"\u2717":"")+'</td>';}).join("");
-    return'<tr><td style="padding:6px;white-space:nowrap">'+(FL[m.home]||"")+" "+m.home+'</td><td style="padding:6px;white-space:nowrap">'+(FL[m.away]||"")+" "+m.away+'</td><td style="padding:6px;text-align:center;font-weight:700">'+(hr?res.home+"–"+res.away:"—")+"</td>"+cells+"</tr>";}).join("");
-    return'<h3 style="margin:1.5rem 0 .5rem;color:#1e3a5f;font-size:14px;border-bottom:1px solid #e2e8f0;padding-bottom:4px">Group '+g+' — '+teams.join(" · ")+'</h3><div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:12px"><thead><tr><th style="padding:8px;background:#1e3a5f;color:#fff;text-align:left">Home</th><th style="padding:8px;background:#1e3a5f;color:#fff;text-align:left">Away</th><th style="padding:8px;background:#1e3a5f;color:#fff">Result</th>'+ph+'</tr></thead><tbody>'+rows+'</tbody></table></div>';
+      const cells=l.map(({name})=>{const pred=S.data.players?.[name]?.groupPreds?.[k];if(!pred||pred.home===undefined||pred.home==="")return'<td class="muted center">—</td>';const pts=gp(pred,res);const cls=pts===3?'exact':pts===1?'result':pts===0&&hr?'wrong':'pending';return'<td class="'+cls+' center">'+esc(pred.home)+"–"+esc(pred.away)+" "+(pts===3?'🎯':pts===1?'✓':pts===0&&hr?'✗':'')+'</td>';}).join("");
+      return'<tr><td>'+esc(FL[m.home]||"")+" "+esc(m.home)+'</td><td>'+esc(FL[m.away]||"")+" "+esc(m.away)+'</td><td class="score">'+(hr?esc(res.home)+"–"+esc(res.away):"—")+'</td>'+cells+'</tr>';
+    }).join("");
+    return'<section class="sec page-avoid"><h3>Group '+esc(g)+' — '+teams.map(esc).join(" · ")+'</h3><div class="table-wrap"><table><thead><tr><th>Home</th><th>Away</th><th>Result</th>'+ph+'</tr></thead><tbody>'+rows+'</tbody></table></div></section>';
   }).join("");
-  const html='<!DOCTYPE html><html><head><meta charset="UTF-8"/><title>WC2026 Dashboard '+now+'</title><style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:-apple-system,sans-serif;background:#f1f5f9;color:#0f172a}.hdr{background:linear-gradient(135deg,#042C53,#185FA5);color:#fff;padding:1.5rem 2rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem}.prize{background:#FFD700;color:#4A1B0C;padding:5px 16px;border-radius:20px;font-weight:700}.wrap{max-width:1100px;margin:0 auto;padding:1.5rem}.sec{background:#fff;border-radius:10px;padding:1.25rem;margin-bottom:1.25rem;box-shadow:0 1px 3px rgba(0,0,0,.08)}h2{font-size:17px;margin-bottom:1rem}tbody tr:hover{background:#f8fafc!important}.ft{text-align:center;font-size:11px;color:#94a3b8;padding:1.5rem}</style></head><body><div class="hdr"><div><h1 style="font-size:22px;font-weight:700">\ud83c\udfc6 World Cup 2026 — Dashboard</h1><div style="font-size:12px;opacity:.6;margin-top:3px">'+now+' · '+Object.keys(S.data.players||{}).length+' players · 200 AED entry</div></div><div class="prize">\ud83d\udcb0 '+pp+' AED</div></div><div class="wrap"><div class="sec"><h2>\ud83c\udfc6 Leaderboard</h2>'+(S.data.champion?'<div style="margin-bottom:12px;padding:6px 14px;border-radius:8px;background:#d1fae5;color:#065f46;font-weight:600;display:inline-block">\ud83c\udfc6 Champion: '+(FL[S.data.champion]||"")+" "+S.data.champion+"</div>":"")+'<table style="width:100%;border-collapse:collapse"><thead><tr style="background:#1e3a5f;color:#fff"><th style="padding:10px;text-align:left">Rank</th><th style="padding:10px;text-align:left">Player</th><th style="padding:10px;text-align:center">Champion Pick</th><th style="padding:10px;text-align:right">Points</th></tr></thead><tbody>'+lbr+'</tbody></table></div><div class="sec"><h2>\u26bd Group Stage</h2>'+gs+'</div></div><div class="ft">WC2026 Predictions · '+now+'</div></body></html>';
-  const bl=new Blob([html],{type:"text/html"});const a=document.createElement("a");a.href=URL.createObjectURL(bl);a.download="WC2026_"+new Date().toISOString().slice(0,10)+".html";a.click();
+  const ko=KOR.map(round=>{
+    const rows=Array.from({length:round.slots/2},(_,idx)=>{const m=kom(round.key,idx),winner=S.data.knockoutResults?.[round.key]?.[idx];if(!m.home&&!m.away)return'';const cells=l.map(({name})=>{const pick=S.data.players?.[name]?.knockoutPreds?.[round.key]?.[idx];if(!pick)return'<td class="muted center">—</td>';const pts=winner?kp(pick,winner,round.pts):null;return'<td class="'+(pts===round.pts?'exact':pts===0?'wrong':'pending')+' center">'+esc(FL[pick]||"")+" "+esc(pick)+(pts===round.pts?' 🎯':pts===0?' ✗':'')+'</td>';}).join("");return'<tr><td>Match '+(idx+1)+'</td><td>'+esc(FL[m.home]||"")+" "+esc(m.home||"TBD")+'</td><td>'+esc(FL[m.away]||"")+" "+esc(m.away||"TBD")+'</td><td class="score">'+(winner?esc(FL[winner]||"")+" "+esc(winner):"—")+'</td>'+cells+'</tr>';}).join("");
+    return rows?'<section class="sec page-avoid"><h3>'+esc(round.label)+' — +'+round.pts+' pts</h3><div class="table-wrap"><table><thead><tr><th>Match</th><th>Home</th><th>Away</th><th>Winner</th>'+ph+'</tr></thead><tbody>'+rows+'</tbody></table></div></section>':'';
+  }).join("");
+  const html='<!DOCTYPE html><html><head><meta charset="UTF-8"/><title>WC2026 Dashboard PDF</title><style>'+ 
+    '@page{size:A4 landscape;margin:10mm}*{box-sizing:border-box}body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#f1f5f9;color:#0f172a;margin:0;font-size:11px}.toolbar{position:sticky;top:0;background:#0f172a;color:white;padding:10px 16px;display:flex;gap:10px;align-items:center;justify-content:space-between;z-index:10}.toolbar button{border:0;border-radius:20px;padding:8px 14px;font-weight:700;cursor:pointer}.toolbar .primary{background:#16a34a;color:white}.toolbar .secondary{background:#e5e7eb;color:#111827}.hdr{background:linear-gradient(135deg,#042C53,#185FA5);color:#fff;padding:18px 24px;display:flex;align-items:center;justify-content:space-between;gap:16px}.hdr h1{font-size:24px;margin:0}.sub{font-size:12px;opacity:.75;margin-top:4px}.prize{background:#FFD700;color:#4A1B0C;padding:8px 18px;border-radius:20px;font-weight:800;font-size:18px}.wrap{padding:16px}.sec{background:#fff;border-radius:10px;padding:14px;margin-bottom:14px;box-shadow:0 1px 3px rgba(0,0,0,.08)}h2{font-size:18px;margin:0 0 10px}h3{font-size:14px;margin:0 0 8px;color:#1e3a5f;border-bottom:1px solid #e2e8f0;padding-bottom:5px}.champ{margin-bottom:10px;padding:7px 14px;border-radius:8px;background:#d1fae5;color:#065f46;font-weight:700;display:inline-block}.table-wrap{overflow-x:auto}table{width:100%;border-collapse:collapse;font-size:10px}th{padding:7px;background:#1e3a5f;color:#fff;text-align:left;white-space:nowrap}td{padding:6px;border-bottom:1px solid #e5e7eb;white-space:nowrap}.center{text-align:center}.pts{text-align:right;font-size:18px;font-weight:800;color:#0f172a}.top .pts{color:#b45309}.top{background:#fffbea}.even{background:#fafafa}.score{text-align:center;font-weight:800}.muted{color:#9ca3af}.exact{background:#d1fae5}.result{background:#fef3c7}.wrong{background:#fee2e2}.pending{background:#f3f4f6}.legend{display:flex;gap:14px;flex-wrap:wrap;color:#64748b;font-size:11px;margin:12px 0}.ft{text-align:center;font-size:10px;color:#94a3b8;padding:12px}@media print{body{background:white}.toolbar{display:none}.wrap{padding:0}.sec{box-shadow:none;border:1px solid #e5e7eb;break-inside:avoid}.page-avoid{break-inside:avoid}.hdr{break-inside:avoid}a{color:inherit;text-decoration:none}thead{display:table-header-group}}'+
+    '</style></head><body><div class="toolbar"><div><strong>WC2026 PDF Export</strong><span style="opacity:.7;margin-left:8px">Choose “Save as PDF” in the print dialog.</span></div><div><button class="secondary" onclick="window.close()">Close</button><button class="primary" onclick="window.print()">Save as PDF</button></div></div><div class="hdr"><div><h1>🏆 World Cup 2026 — Dashboard</h1><div class="sub">'+esc(now)+' · '+Object.keys(S.data.players||{}).length+' players · 200 AED entry</div></div><div class="prize">💰 '+pp+' AED</div></div><div class="wrap"><section class="sec"><h2>🏆 Leaderboard</h2>'+(S.data.champion?'<div class="champ">🏆 Champion: '+esc(FL[S.data.champion]||"")+" "+esc(S.data.champion)+'</div>':'')+'<table><thead><tr><th>Rank</th><th>Player</th><th class="center">Champion Pick</th><th class="pts">Points</th></tr></thead><tbody>'+lbr+'</tbody></table></section><div class="legend"><span>🎯 Exact / correct pick</span><span>✓ Correct result</span><span>✗ Wrong</span><span>⚔️ R32+2 R16+3 QF+4 SF+5 F+6</span><span>🏆 Champion +10</span></div><h2>⚽ Group Stage</h2>'+gs+'<h2>⚔️ Knockout Stage</h2>'+ko+'</div><div class="ft">WC2026 Predictions · '+esc(now)+'</div><script>window.addEventListener("load",()=>setTimeout(()=>window.print(),500));<\/script></body></html>';
+  const finalHtml=isAr()?localizeString(html).replace("<html>","<html lang=\"ar\" dir=\"rtl\">"):html.replace("<html>","<html lang=\"en\" dir=\"ltr\">");
+  const w=window.open("","_blank");
+  if(!w){toast("Popup blocked. Allow popups, then try Export PDF again.",true);return;}
+  w.document.open();w.document.write(finalHtml);w.document.close();
 }
 
 /* ── DOM helpers ── */
@@ -256,8 +397,9 @@ function sName(){
         SP({},["Players: ",el("strong",{},[String(pc)])]),
       ]),
     ]),
-    el("input",{type:"text",placeholder:"Your name",value:S.name,sty:{width:"100%",textAlign:"center",fontSize:"16px",marginBottom:"10px"},oninput:e=>ss({name:e.target.value}),onkeydown:e=>{if(e.key==="Enter"&&S.name.trim()){loadMe(S.name.trim());ss({screen:"groups"});}}}),
-    BT({cls:"btn btn-pr"+(S.name.trim()?"":" disabled"),sty:{width:"100%",justifyContent:"center",padding:"10px"},onclick:()=>{if(S.name.trim()){loadMe(S.name.trim());ss({screen:"groups"});}}},[" Start predicting →"]),
+    el("input",{type:"text",placeholder:"Your name",value:S.name,sty:{width:"100%",textAlign:"center",fontSize:"16px",marginBottom:"10px"},oninput:e=>{S.name=e.target.value;const b=document.getElementById("startBtn");if(b)b.className="btn btn-pr"+(S.name.trim()?"":" disabled");},onkeydown:e=>{if(e.key==="Enter"&&S.name.trim()){loadMe(S.name.trim());ss({screen:"groups"});}}}),
+    D({sty:{display:"flex",alignItems:"center",justifyContent:"center",gap:"8px",marginBottom:"12px",fontSize:"13px",color:"var(--text2)"}},[SP({},[tr("Language")+":"]),el("select",{value:S.lang,sty:{fontSize:"13px",padding:"6px 10px",borderRadius:"20px",border:"1.5px solid var(--border2)",background:"var(--surface)",color:"var(--text)"},onchange:e=>setLang(e.target.value)},[el("option",{value:"ar",selected:S.lang==="ar"||undefined},["العربية"]),el("option",{value:"en",selected:S.lang==="en"||undefined},["English"])])]),
+    BT({id:"startBtn",cls:"btn btn-pr"+(S.name.trim()?"":" disabled"),sty:{width:"100%",justifyContent:"center",padding:"10px"},onclick:()=>{if(S.name.trim()){loadMe(S.name.trim());ss({screen:"groups"});}}},[" Start predicting →"]),
   ]);
 }
 
@@ -380,7 +522,7 @@ function sDash(){
     /* ── Tabs + Export ── */
     D({sty:{display:"flex",gap:"6px",marginBottom:"1rem",borderBottom:"1px solid var(--border)",paddingBottom:"10px",flexWrap:"wrap",alignItems:"center"}},[
       ...[{k:"lb",l:"🏆 Leaderboard"},{k:"gr",l:"📋 Groups"},{k:"ko",l:"⚔️ Knockout"}].map(({k,l})=>BT({cls:"chip"+(S.dtab===k?" on":""),onclick:()=>ss({dtab:k})},[l])),
-      D({sty:{marginLeft:"auto"}},[BT({cls:"btn btn-ok btn-sm",onclick:exportDash},["↓ Export dashboard"])]),
+      D({sty:{marginLeft:"auto"}},[BT({cls:"btn btn-ok btn-sm",onclick:exportDash},["↓ "+tr("Export PDF")])]),
     ]),
     /* Leaderboard */
     S.dtab==="lb"?D({},[
@@ -466,10 +608,12 @@ ALTER TABLE wc2026 DISABLE ROW LEVEL SECURITY;`;
 
 /* ── Main render ── */
 function render(){
+  document.documentElement.lang=isAr()?"ar":"en";
+  document.documentElement.dir=isAr()?"rtl":"ltr";
   const root=document.getElementById("root");root.innerHTML="";
   /* Loading */
   if(S.loading||S.screen==="loading"){
-    root.appendChild(D({sty:{display:"flex",alignItems:"center",justifyContent:"center",height:"220px",flexDirection:"column",gap:"12px"}},[D({sty:{fontSize:"36px"}},["⚽"]),D({sty:{color:"var(--text2)",fontSize:"14px"}},["Connecting to Supabase…"])]));
+    root.appendChild(D({sty:{display:"flex",alignItems:"center",justifyContent:"center",height:"220px",flexDirection:"column",gap:"12px"}},[D({sty:{fontSize:"36px"}},["⚽"]),D({sty:{color:"var(--text2)",fontSize:"14px"}},[tr("Connecting to Supabase…")])]));
     return;
   }
   const wrap=D({cls:"app"},[]);
@@ -543,6 +687,7 @@ function render(){
   wrap.appendChild(content);
   if(S.toast) wrap.appendChild(D({cls:"toast"+(S.terr?" err":"")},[S.toast]));
   root.appendChild(wrap);
+  localizeDOM(root);
   if(S.showLogin) setTimeout(()=>{const i=document.getElementById("apw");if(i)i.focus();},50);
 }
 

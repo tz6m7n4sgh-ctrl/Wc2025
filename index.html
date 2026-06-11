@@ -4,6 +4,7 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
 <title>World Cup 2026 – Predictions</title>
+<!-- wc2026-remove-old-dec18-date-2026-06-11 -->
 <meta name="wc2026-version" content="uae-time-schedule-display-2026-06-11"/>
 <!-- VERSION: all-matches-api-cors-fallback-2026-06-11 -->
 <style>
@@ -88,6 +89,7 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
 [dir="rtl"] body{text-align:right}[dir="rtl"] .hdr,[dir="rtl"] .hdr-right,[dir="rtl"] .hdr-left,[dir="rtl"] .admin-bar{direction:rtl}[dir="rtl"] .lbr{direction:rtl}[dir="rtl"] .toast{right:auto;left:22px}.lang-select{font-size:12px;padding:5px 8px;border-radius:18px;border:none;background:rgba(255,255,255,.15);color:#fff}.lang-select option{color:#0f172a;background:#fff}
 @media(max-width:600px){.hdr{border-radius:0}}
 </style>
+<meta name="wc2026-version" content="dashboard-today-winner-player-predictions-2026-06-11"/>
 </head>
 <body>
 <div id="root"><div style="max-width:520px;margin:3rem auto;padding:1rem;text-align:center;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:#475569"><div style="font-size:42px;margin-bottom:10px">⚽</div><h2 style="color:#0f172a;margin:0 0 6px">Opening World Cup 2026…</h2><p style="margin:0">If this message stays, JavaScript did not start. The repaired file will show the exact error below.</p></div></div>
@@ -285,7 +287,7 @@ let _pt=null;
 function startPoll(cb){clearInterval(_pt);_pt=setInterval(async()=>{try{const d=await dbRead();cb(d);}catch(e){}},8000);}
 
 /* ── State ── */
-let S={view:"dashboard",screen:"loading",name:"",ag:"A",ako:"r32",gp:{},kp:{},ch:null,data:EMPTY,loading:true,sync:"ok",admin:false,showLogin:false,ainput:"",dtab:"lb",predPlayer:"",dg:"A",toast:null,terr:false,dbErr:null,lang:(localStorage.getItem("wc2026_lang")==="en"?"en":"ar"),live:{matches:[],last:"",loading:false,error:null}};
+let S={view:"dashboard",screen:"loading",name:"",ag:"A",ako:"r32",gp:{},kp:{},ch:null,data:EMPTY,loading:true,sync:"ok",admin:false,showLogin:false,ainput:"",dtab:"charts",predPlayer:"",dg:"A",toast:null,terr:false,dbErr:null,lang:(localStorage.getItem("wc2026_lang")==="en"?"en":"ar"),live:{matches:[],last:"",loading:false,error:null}};
 
 
 /* ── Language / i18n ── */
@@ -492,7 +494,36 @@ Object.assign(AR_MAP,{
   "Higher group rank":"ترتيب أعلى في المجموعة",
   "No group prediction":"لا يوجد توقع للمجموعة",
   "No schedule loaded":"لم يتم تحميل الجدول",
-  "Refresh schedule":"تحديث الجدول"
+  "Refresh schedule":"تحديث الجدول",
+  "Charts Dashboard":"لوحة الرسوم",
+  "Charts":"الرسوم",
+
+  "Today winner predictions":"توقعات فائز مباريات اليوم",
+  "Actual / current winner":"الفائز الفعلي / الحالي",
+  "Predicted winner by players":"الفائز المتوقع حسب اللاعبين",
+  "No today matches loaded":"لم يتم تحميل مباريات اليوم",
+  "Load today matches":"تحميل مباريات اليوم",
+  "Draw":"تعادل",
+  "No score yet":"لا توجد نتيجة بعد",
+  "No player predictions for this match":"لا توجد توقعات لهذا المباراة",
+  "Predicted":"توقع",
+  "Actual":"فعلي",
+  "Current":"حالي",
+  "Prediction charts":"رسوم التوقعات",
+  "Mobile overview":"نظرة مختصرة للجوال",
+  "Champion picks":"توقعات البطل",
+  "Leaderboard points":"نقاط الترتيب",
+  "Group winner consensus":"إجماع متصدري المجموعات",
+  "Most picked first place":"الأكثر اختياراً للمركز الأول",
+  "No champion picks yet":"لا توجد توقعات للبطل بعد",
+  "No ranking predictions yet":"لا توجد توقعات ترتيب بعد",
+  "Top pick":"الاختيار الأعلى",
+  "picks":"اختيارات",
+  "pick":"اختيار",
+  "1st":"الأول",
+  "2nd":"الثاني",
+  "3rd":"الثالث",
+  "Prediction summary":"ملخص التوقعات"
 });
 function isAr(){return S.lang==="ar";}
 function tr(s){return isAr()?(AR_MAP[String(s)]||String(s)):String(s);}
@@ -609,6 +640,7 @@ const TEAM_BY_NORM={};ALL_T.forEach(t=>{TEAM_BY_NORM[normName(t)]=t;});Object.en
 function canonTeam(x){const n=normName(x);return TEAM_BY_NORM[n]||Object.values(TEAM_BY_NORM).find(t=>normName(t)===n)||String(x||"").trim();}
 function isKnownTournamentTeam(t){return ALL_T.includes(t);}
 function isWorldCupMatchObj(m){const league=normName(deepGet(m.raw||{},['strLeague','league.name','competition.name','tournament','name'])||m.round||'');return (isKnownTournamentTeam(m.home)&&isKnownTournamentTeam(m.away))||league.includes('fifa world cup')||league.includes('world cup');}
+function isWc2026MatchDate(m){const t=matchTime(m);if(!t)return true;return uaeParts(t).y==='2026';}
 function deepGet(o,paths){for(const path of paths){let v=o;for(const k of path.split('.')){if(v==null){v=undefined;break;}v=v[k];}if(v!==undefined&&v!==null&&v!=="")return v;}return undefined;}
 function asArrayPayload(json){if(Array.isArray(json))return json;return json?.events||json?.event||json?.games||json?.game&&[json.game]||json?.matches||json?.fixtures||json?.response||json?.data||json?.results||[];}
 function statusRaw(m){return String(deepGet(m,['strStatus','strProgress','status','status.short','status.long','fixture.status.short','fixture.status.long','time.status','time_elapsed','state','matchStatus'])||'').toLowerCase();}
@@ -734,7 +766,7 @@ async function fetchScheduleMatches(){
   for(const url of urls){
     try{
       const json=await fetchJsonFromApi(url,sessionStorage.getItem('wc2026_results_token')||'');
-      asArrayPayload(json).map(parseMatch).filter(Boolean).filter(isWorldCupMatchObj).forEach(m=>{
+      asArrayPayload(json).map(parseMatch).filter(Boolean).filter(isWorldCupMatchObj).filter(isWc2026MatchDate).forEach(m=>{
         const key=[normName(m.home),normName(m.away),m.utcDate||'',m.round||''].join('|');
         const old=byKey.get(key);
         if(!old || (old.homeScore===null&&m.homeScore!==null))byKey.set(key,m);
@@ -1222,7 +1254,7 @@ function sPredictionViewer(){
   ]);
 }
 
-function dateKeyForMatch(m){const t=matchTime(m);return t?new Date(t).toLocaleDateString([], {weekday:'short', month:'short', day:'numeric'}):tr('TBD');}
+function dateKeyForMatch(m){const t=matchTime(m);return t?uaeDateKey(t):tr('TBD');}
 function sAllMatches(){
   const matches=(S.live.matches||[]).slice().sort((a,b)=>(matchTime(a)||9e15)-(matchTime(b)||9e15));
   const grouped={};matches.forEach(m=>{const k=dateKeyForMatch(m);(grouped[k]||(grouped[k]=[])).push(m);});
@@ -1248,6 +1280,129 @@ function sAllMatches(){
 
 
 
+function sortedCounts(obj){return Object.entries(obj||{}).sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0]));}
+function playerCount(){return Object.keys(S.data.players||{}).length;}
+function championPickCounts(){const c={};Object.values(S.data.players||{}).forEach(pd=>{if(pd?.champion)c[pd.champion]=(c[pd.champion]||0)+1;});return c;}
+function groupPositionCounts(g,pos){const c={};Object.values(S.data.players||{}).forEach(pd=>{const t=groupPredPick(pd?.groupPreds?.[g],String(pos));if(t)c[t]=(c[t]||0)+1;});return c;}
+function pct(n,d){return d?Math.round((n/d)*100):0;}
+function chartBar(label,value,max,opts){opts=opts||{};const pc=pct(value,max||1);return D({sty:{marginBottom:'10px'}},[
+  D({sty:{display:'flex',alignItems:'center',gap:'8px',justifyContent:'space-between',fontSize:'12px',marginBottom:'4px'}},[
+    SP({sty:{fontWeight:700,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}},[label]),
+    SP({sty:{color:'var(--text2)',fontWeight:700,whiteSpace:'nowrap'}},[String(value)+(opts.suffix||'')])
+  ]),
+  D({sty:{height:'9px',borderRadius:'999px',background:'var(--border)',overflow:'hidden'}},[
+    D({sty:{height:'100%',width:Math.max(3,pc)+'%',borderRadius:'999px',background:opts.color||'var(--blue)'}},[])
+  ])
+]);}
+function chartCard(title,subtitle,children,icon){return D({cls:'card',sty:{padding:'1rem',marginBottom:'1rem'}},[
+  D({sty:{display:'flex',alignItems:'center',gap:'9px',marginBottom:'12px'}},[
+    SP({sty:{fontSize:'20px'}},[icon||'📊']),
+    D({sty:{minWidth:0}},[D({sty:{fontWeight:900,fontSize:'15px'}},[title]),subtitle?D({sty:{fontSize:'11px',color:'var(--text2)',marginTop:'2px'}},[subtitle]):null])
+  ]),
+  ...children
+]);}
+function miniStat(value,label){return D({cls:'stile',sty:{padding:'12px 10px'}},[D({sty:{fontSize:'20px',fontWeight:900,lineHeight:'1.1'}},[String(value)]),D({sty:{fontSize:'11px',color:'var(--text3)',marginTop:'4px'}},[label])]);}
+
+function matchActualWinner(mt){
+  if(mt.homeScore===null||mt.awayScore===null)return '';
+  if(mt.homeScore>mt.awayScore)return mt.home;
+  if(mt.awayScore>mt.homeScore)return mt.away;
+  return 'Draw';
+}
+function playerPredictedWinnerForMatch(pd,mt){
+  const g=groupForMatch(mt), home=canonTeam(mt.home), away=canonTeam(mt.away);
+  if(g){
+    const rh=rankOfTeamInPred(pd,g,home), ra=rankOfTeamInPred(pd,g,away);
+    if(rh&&ra)return rh<ra?home:(ra<rh?away:'Draw');
+    if(rh&&!ra)return home;
+    if(ra&&!rh)return away;
+    return '';
+  }
+  const ko=findKnockoutPickForMatch(pd,home,away);
+  return ko?canonTeam(ko.replace(/^.*?\s/,'')):'';
+}
+function todayWinnerPredictionRows(){
+  const matches=(S.live.matches||[])
+    .filter(m=>{const t=matchTime(m);return t?sameLocalDay(t):(matchState(m)==='live');})
+    .sort((a,b)=>(matchTime(a)||9e15)-(matchTime(b)||9e15));
+  const players=Object.entries(S.data.players||{});
+  return matches.map(mt=>{
+    const counts={}, namesByWinner={};
+    players.forEach(([name,pd])=>{
+      const w=playerPredictedWinnerForMatch(pd,mt);
+      if(!w)return;
+      counts[w]=(counts[w]||0)+1;
+      (namesByWinner[w]||(namesByWinner[w]=[])).push(name);
+    });
+    return {match:mt,actual:matchActualWinner(mt),counts,namesByWinner,total:players.length};
+  });
+}
+function todayWinnerDashboard(){
+  const rows=todayWinnerPredictionRows();
+  const maxCount=Math.max(1,...rows.flatMap(r=>Object.values(r.counts)));
+  return chartCard(tr('Today winner predictions'),tr('Predicted winner by players'),[
+    rows.length?D({sty:{display:'grid',gridTemplateColumns:'1fr',gap:'12px'}},rows.map(r=>{
+      const mt=r.match, st=matchState(mt), actual=r.actual;
+      const sorted=sortedCounts(r.counts);
+      return D({cls:'csm',sty:{padding:'12px'}},[
+        D({sty:{display:'flex',justifyContent:'space-between',alignItems:'flex-start',gap:'8px',flexWrap:'wrap',marginBottom:'10px'}},[
+          D({},[
+            D({sty:{fontWeight:900,fontSize:'14px'}},[(FL[mt.home]||'🏳')+' '+mt.home+'  '+getScoreText(mt)+'  '+(FL[mt.away]||'🏳')+' '+mt.away]),
+            D({sty:{fontSize:'11px',color:'var(--text2)',marginTop:'2px'}},[fmtMatchTime(mt)+(groupForMatch(mt)?' · '+tr('Group')+' '+groupForMatch(mt):'')])
+          ]),
+          SP({sty:{fontSize:'11px',fontWeight:900,padding:'4px 9px',borderRadius:'20px',background:st==='finished'?'var(--green-light)':st==='live'?'var(--red-light)':'var(--blue-light)',color:st==='finished'?'var(--green-dark)':st==='live'?'var(--red)':'var(--blue)'}},[tr(st==='finished'?'Finished':st==='live'?'Live now':'Upcoming')])
+        ]),
+        D({sty:{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(135px,1fr))',gap:'8px',marginBottom:'10px'}},[
+          D({cls:'stile',sty:{padding:'9px'}},[D({sty:{fontSize:'12px',color:'var(--text3)',fontWeight:800}},[tr(st==='upcoming'?'Actual / current winner':'Actual / current winner')]),D({sty:{fontSize:'14px',fontWeight:900,marginTop:'3px'}},[actual?((FL[actual]||'')+' '+tr(actual)):(st==='live'?tr('No score yet'):tr('TBD'))])]),
+          D({cls:'stile',sty:{padding:'9px'}},[D({sty:{fontSize:'12px',color:'var(--text3)',fontWeight:800}},[tr('Players')]),D({sty:{fontSize:'14px',fontWeight:900,marginTop:'3px'}},[String(r.total)])])
+        ]),
+        sorted.length?D({},sorted.map(([team,count])=>D({sty:{marginBottom:'10px'}},[
+          chartBar((team==='Draw'?tr('Draw'):(FL[team]||'')+' '+team),count,maxCount,{suffix:' '+tr(count===1?'player':'players'),color:team===actual?'var(--green)':'var(--blue)'}),
+          D({sty:{fontSize:'11px',color:'var(--text2)',lineHeight:'1.5',padding:'0 2px'}},[(r.namesByWinner[team]||[]).join(' · ')])
+        ]))):D({sty:{fontSize:'13px',color:'var(--text3)'}},[tr('No player predictions for this match')])
+      ]);
+    })):D({sty:{fontSize:'13px',color:'var(--text3)',display:'flex',alignItems:'center',gap:'8px',flexWrap:'wrap'}},[
+      SP({},[S.live.loading?'⏳ '+tr('Connecting to Supabase…'):tr('No today matches loaded')]),
+      BT({cls:'btn btn-ok btn-sm',onclick:()=>fetchTodayMatches(false)},['🔄 '+tr('Load today matches')])
+    ])
+  ],'📅');
+}
+
+function sChartsDashboard(){
+  const players=Object.entries(S.data.players||{});
+  const total=players.length;
+  const leaders=lb().slice(0,8);
+  const maxPts=Math.max(1,...leaders.map(x=>x.points));
+  const champ=sortedCounts(championPickCounts());
+  const maxChamp=Math.max(1,...champ.map(x=>x[1]));
+  const groupCards=Object.keys(GROUPS).map(g=>{
+    const first=sortedCounts(groupPositionCounts(g,1))[0];
+    const second=sortedCounts(groupPositionCounts(g,2))[0];
+    const third=sortedCounts(groupPositionCounts(g,3))[0];
+    const rows=[[tr('1st'),first],[tr('2nd'),second],[tr('3rd'),third]].map(([lab,item])=>D({sty:{display:'flex',alignItems:'center',justifyContent:'space-between',gap:'8px',padding:'7px 0',borderBottom:'1px solid var(--border)'}},[
+      SP({sty:{fontSize:'12px',color:'var(--text2)',fontWeight:700}},[lab]),
+      SP({sty:{fontSize:'12px',fontWeight:800,textAlign:'end'}},[item?(FL[item[0]]||'')+' '+item[0]+' · '+item[1]:'—'])
+    ]));
+    return D({cls:'csm',sty:{padding:'12px'}},[
+      D({sty:{fontWeight:900,marginBottom:'6px'}},[tr('Group')+' '+g]),
+      ...rows
+    ]);
+  });
+  return D({},[
+    D({sty:{display:'grid',gridTemplateColumns:'repeat(2,minmax(0,1fr))',gap:'8px',marginBottom:'1rem'}},[
+      miniStat(total,tr('Players')),
+      miniStat(Object.keys(GROUPS).length,tr('Groups')),
+      miniStat(championNow()?(FL[championNow()]||'')+' '+championNow():tr('TBD'),tr('Champion')),
+      miniStat((total*ENTRY_FEE)+' AED',tr('Prize pool'))
+    ]),
+    todayWinnerDashboard(),
+    chartCard(tr('Leaderboard points'),tr('Mobile overview'),leaders.length?leaders.map((p,i)=>chartBar((i+1)+'. '+p.name,p.points,maxPts,{suffix:' '+tr('pts'),color:i===0?'var(--amber)':'var(--blue)'})):[D({sty:{fontSize:'13px',color:'var(--text3)'}},[tr('No predictions yet!')])],'🏆'),
+    chartCard(tr('Champion picks'),tr('Prediction summary'),champ.length?champ.slice(0,8).map(([team,count])=>chartBar((FL[team]||'')+' '+team,count,maxChamp,{suffix:' '+tr(count===1?'pick':'picks'),color:'var(--green)'})):[D({sty:{fontSize:'13px',color:'var(--text3)'}},[tr('No champion picks yet')])],'⭐'),
+    chartCard(tr('Group winner consensus'),tr('Most picked first place'),[D({cls:'g3'},groupCards)],'📋')
+  ]);
+}
+
+
 function sDash(){
   const l=lb(),pc=Object.keys(S.data.players||{}).length,pp=pc*ENTRY_FEE,rIn=Object.values(S.data.groupResults||{}).filter(r=>r.home!==undefined&&r.home!=="").length;
   return D({},[
@@ -1259,9 +1414,10 @@ function sDash(){
     ]):null,
     /* ── Tabs + Export ── */
     D({sty:{display:"flex",gap:"6px",marginBottom:"1rem",borderBottom:"1px solid var(--border)",paddingBottom:"10px",flexWrap:"wrap",alignItems:"center"}},[
-      ...[{k:"lb",l:"🏆 Leaderboard"},{k:"gr",l:"📋 Groups"},{k:"ko",l:"⚔️ Knockout"},{k:"br",l:"🏆 "+tr("Bracket View")}].map(({k,l})=>BT({cls:"chip"+(S.dtab===k?" on":""),onclick:()=>ss({dtab:k})},[l])),
+      ...[{k:"charts",l:"📊 "+tr("Charts")},{k:"lb",l:"🏆 "+tr("Leaderboard")},{k:"gr",l:"📋 "+tr("Groups")},{k:"ko",l:"⚔️ "+tr("Knockout")},{k:"br",l:"🏆 "+tr("Bracket View")}].map(({k,l})=>BT({cls:"chip"+(S.dtab===k?" on":""),onclick:()=>ss({dtab:k})},[l])),
       D({sty:{marginLeft:"auto"}},[BT({cls:"btn btn-ok btn-sm",onclick:exportDash},["↓ "+tr("Export PDF")])]),
     ]),
+    S.dtab==="charts"?sChartsDashboard():null,
     /* Leaderboard */
     S.dtab==="lb"?D({},[
       l.length===0?D({sty:{padding:"3rem",textAlign:"center",color:"var(--text3)",fontSize:"14px",background:"var(--surface)",borderRadius:"var(--radius)"}},["No predictions yet!"]):
@@ -1449,7 +1605,7 @@ init();
 }catch(e){ showFatal(e); }
 })();
 
-/* VERSION: FINAL_READY_DAILY_PREDICTION_OVERVIEW_2026-06-11 */
+/* VERSION: FINAL_READY_MOBILE_CHART_DASHBOARD_2026-06-11 */
 </script>
 </body>
 </html>

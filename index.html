@@ -1670,7 +1670,7 @@ function todayWinnerDashboard(){
 
 function sChartsDashboard(){
   const total=Object.keys(S.data.players||{}).length;
-  const leaders=lb().slice(0,8);
+  const leaders=lb().slice(0,11);
   const maxPts=Math.max(1,...leaders.map(x=>x.points));
   const champ=sortedCounts(championPickCounts());
   const maxChamp=Math.max(1,...champ.map(x=>x[1]));

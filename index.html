@@ -1550,21 +1550,194 @@ function playerMatchPredictionText(pd,mt){
 
 function dailyOverviewMatchCard(mt,players){
   const state=matchState(mt),g=groupForMatch(mt);
+  const home=canonTeam(mt.home),away=canonTeam(mt.away);
+
+  function getPlayerPrediction(pd){
+    if(g){
+      const rh=rankOfTeamInPred(pd,g,home);
+      const ra=rankOfTeamInPred(pd,g,away);
+
+      let edge='';
+      if(rh&&ra)edge=rh<ra?home:ra<rh?away:'Draw';
+      else if(rh&&!ra)edge=home;
+      else if(ra&&!rh)edge=away;
+
+      return {rh,ra,edge,type:'group'};
+    }
+
+    const ko=findKnockoutPickForMatch(pd,home,away);
+    const edge=ko?canonTeam(ko.replace(/^.*?\s/,'')):'';
+    return {rh:null,ra:null,edge,type:'knockout',text:playerMatchPredictionText(pd,mt)};
+  }
+
+  function edgeLabel(edge){
+    if(!edge)return tr('TBD');
+    if(edge==='Draw')return tr('Draw');
+    return (FL[edge]||'🏳')+' '+edge;
+  }
+
+  function edgeStyle(edge){
+    if(!edge){
+      return {
+        background:'var(--surface)',
+        color:'var(--text3)',
+        border:'1px solid var(--border)'
+      };
+    }
+
+    if(edge==='Draw'){
+      return {
+        background:'var(--amber-light)',
+        color:'var(--amber-dark)',
+        border:'1px solid var(--amber)'
+      };
+    }
+
+    return {
+      background:'var(--green-light)',
+      color:'var(--green-dark)',
+      border:'1px solid var(--green)'
+    };
+  }
+
+  function teamPredictionBox(team,rank,isSelected){
+    return D({sty:{
+      border:'1.5px solid '+(isSelected?'var(--green)':'var(--border)'),
+      background:isSelected?'var(--green-light)':'var(--surface)',
+      borderRadius:'10px',
+      padding:'9px 7px',
+      textAlign:'center',
+      minWidth:0
+    }},[
+      D({sty:{fontSize:'25px',lineHeight:'1'}},[FL[team]||'🏳']),
+      D({sty:{
+        fontSize:'12px',
+        fontWeight:900,
+        marginTop:'5px',
+        whiteSpace:'nowrap',
+        overflow:'hidden',
+        textOverflow:'ellipsis'
+      }},[team]),
+      D({sty:{
+        fontSize:'12px',
+        fontWeight:900,
+        marginTop:'4px',
+        color:rank?'var(--blue)':'var(--text3)'
+      }},[
+        rank?'#'+rank:'—'
+      ])
+    ]);
+  }
+
   return D({cls:'card',sty:{padding:'0',overflow:'hidden'}},[
-    D({sty:{padding:'12px 14px',borderBottom:'1px solid var(--border)',background:'var(--surface2)',display:'flex',justifyContent:'space-between',alignItems:'center',gap:'8px',flexWrap:'wrap'}},[
+    D({sty:{
+      padding:'12px 14px',
+      borderBottom:'1px solid var(--border)',
+      background:'var(--surface2)',
+      display:'flex',
+      justifyContent:'space-between',
+      alignItems:'center',
+      gap:'8px',
+      flexWrap:'wrap'
+    }},[
       D({},[
-        D({sty:{fontWeight:900,fontSize:'15px'}},[(FL[mt.home]||'🏳')+' '+mt.home+'  '+getScoreText(mt)+'  '+(FL[mt.away]||'🏳')+' '+mt.away]),
-        D({sty:{fontSize:'12px',color:'var(--text2)',marginTop:'2px'}},[fmtMatchTime(mt)+(g?' · '+tr('Group')+' '+g:'')])
+        D({sty:{fontWeight:900,fontSize:'15px'}},[
+          (FL[home]||'🏳')+' '+home+'  '+getScoreText(mt)+'  '+(FL[away]||'🏳')+' '+away
+        ]),
+        D({sty:{fontSize:'12px',color:'var(--text2)',marginTop:'2px'}},[
+          fmtMatchTime(mt)+(g?' · '+tr('Group')+' '+g:'')
+        ])
       ]),
-      SP({sty:{fontSize:'11px',fontWeight:800,padding:'4px 10px',borderRadius:'20px',background:state==='finished'?'var(--green-light)':state==='live'?'var(--red-light)':'var(--blue-light)',color:state==='finished'?'var(--green-dark)':state==='live'?'var(--red)':'var(--blue)'}},[tr(state==='finished'?'Finished':state==='live'?'Live now':'Upcoming')])
+      SP({sty:{
+        fontSize:'11px',
+        fontWeight:800,
+        padding:'4px 10px',
+        borderRadius:'20px',
+        background:state==='finished'?'var(--green-light)':state==='live'?'var(--red-light)':'var(--blue-light)',
+        color:state==='finished'?'var(--green-dark)':state==='live'?'var(--red)':'var(--blue)'
+      }},[
+        tr(state==='finished'?'Finished':state==='live'?'Live now':'Upcoming')
+      ])
     ]),
-    players.length?D({sty:{display:'flex',flexDirection:'column'}},players.map(name=>{
+
+    players.length?D({sty:{
+      display:'grid',
+      gridTemplateColumns:'repeat(auto-fit,minmax(240px,1fr))',
+      gap:'10px',
+      padding:'12px',
+      background:'var(--surface)'
+    }},players.map(name=>{
       const pd=S.data.players?.[name]||{};
-      return D({sty:{display:'grid',gridTemplateColumns:'minmax(120px,180px) 1fr',gap:'10px',padding:'9px 14px',borderBottom:'1px solid var(--border)',alignItems:'center'}},[
-        SP({sty:{fontWeight:800,fontSize:'13px',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}},[name]),
-        SP({sty:{fontSize:'12px',color:'var(--text2)',lineHeight:'1.4'}},[playerMatchPredictionText(pd,mt)])
+      const pred=getPlayerPrediction(pd);
+      const badge=edgeStyle(pred.edge);
+
+      return D({sty:{
+        border:'1px solid var(--border)',
+        borderRadius:'var(--radius)',
+        background:'var(--surface2)',
+        boxShadow:'var(--shadow)',
+        padding:'10px',
+        display:'flex',
+        flexDirection:'column',
+        gap:'9px'
+      }},[
+        D({sty:{
+          display:'flex',
+          alignItems:'center',
+          justifyContent:'space-between',
+          gap:'8px',
+          paddingBottom:'8px',
+          borderBottom:'1px solid var(--border)'
+        }},[
+          SP({sty:{
+            fontWeight:900,
+            fontSize:'13px',
+            whiteSpace:'nowrap',
+            overflow:'hidden',
+            textOverflow:'ellipsis'
+          }},[name]),
+          SP({sty:{
+            fontSize:'11px',
+            fontWeight:900,
+            padding:'4px 9px',
+            borderRadius:'999px',
+            whiteSpace:'nowrap',
+            background:badge.background,
+            color:badge.color,
+            border:badge.border
+          }},[
+            edgeLabel(pred.edge)
+          ])
+        ]),
+
+        pred.type==='group'
+          ? D({sty:{
+              display:'grid',
+              gridTemplateColumns:'1fr 1fr',
+              gap:'8px'
+            }},[
+              teamPredictionBox(home,pred.rh,pred.edge===home),
+              teamPredictionBox(away,pred.ra,pred.edge===away)
+            ])
+          : D({sty:{
+              fontSize:'12px',
+              color:'var(--text2)',
+              lineHeight:'1.5',
+              background:'var(--surface)',
+              border:'1px solid var(--border)',
+              borderRadius:'8px',
+              padding:'8px'
+            }},[
+              pred.text||tr('TBD')
+            ])
       ]);
-    })):D({sty:{padding:'12px 14px',color:'var(--text3)',fontSize:'13px'}},[tr('No predictions yet!')])
+    })):D({sty:{
+      padding:'12px 14px',
+      color:'var(--text3)',
+      fontSize:'13px'
+    }},[
+      tr('No predictions yet!')
+    ])
   ]);
 }
 

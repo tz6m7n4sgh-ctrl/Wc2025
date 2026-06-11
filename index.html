@@ -399,12 +399,72 @@ function groupRankPts(pd,g,gR){
   });
   return pts;
 }
+function groupMatchPredWinner(pd,g,match){
+  const pred=pd?.groupPreds?.[g];
+  if(!pred)return "";
+
+  const rh=rankOfTeamInPred(pd,g,match.home);
+  const ra=rankOfTeamInPred(pd,g,match.away);
+
+  if(rh&&ra)return rh<ra?match.home:ra<rh?match.away:"";
+  if(rh&&!ra)return match.home;
+  if(ra&&!rh)return match.away;
+
+  return "";
+}
+
+function groupMatchActualWinner(res,match){
+  if(!res||res.home===undefined||res.home===""||res.away===undefined||res.away==="")return null;
+
+  const h=+res.home;
+  const a=+res.away;
+
+  if(isNaN(h)||isNaN(a))return null;
+  if(h>a)return match.home;
+  if(a>h)return match.away;
+
+  return "Draw";
+}
+
+function groupMatchPts(pd,g,gR){
+  let pts=0;
+
+  GM[g].forEach((match,i)=>{
+    const res=gR?.[g+"_"+i];
+    const actual=groupMatchActualWinner(res,match);
+
+    if(!actual||actual==="Draw")return;
+
+    const pick=groupMatchPredWinner(pd,g,match);
+
+    if(pick&&pick===actual)pts+=1;
+  });
+
+  return pts;
+}
 
 function tot(pd,gR,kR,ch){
   let p=0;
-  Object.keys(GROUPS).forEach(g=>{const x=groupRankPts(pd,g,gR);if(x)p+=x;});
-  KOR.forEach(r=>{Object.entries(kR?.[r.key]||{}).forEach(([i,w])=>{const x=kp(pd?.knockoutPreds?.[r.key]?.[i],w,r.pts);if(x)p+=x;});});
+
+  // Group stage:
+  // 1 point for each correct predicted winner.
+  Object.keys(GROUPS).forEach(g=>{
+    p+=groupMatchPts(pd,g,gR);
+  });
+
+  // Knockout stage:
+  // R32 = 2, R16 = 3, QF = 4, SF = 5, Final = 6
+  KOR.forEach(r=>{
+    Object.entries(kR?.[r.key]||{}).forEach(([i,w])=>{
+      const x=kp(pd?.knockoutPreds?.[r.key]?.[i],w,r.pts);
+      if(x)p+=x;
+    });
+  });
+
+  // Champion:
+  // 10 points
   if(ch&&pd?.champion===ch)p+=10;
+
   return p;
 }
 
@@ -874,9 +934,34 @@ function isFinishedMatch(m){
   ].some(x=>st===x||st.includes(x));
 }
 
+
+
 function isLiveMatch(m){
   const st=statusRaw(m);
-  return ['live','1h','2h','ht','et','p','pen','in play','halftime','half time','extra time'].some(x=>st===x||st.includes(x));
+
+  return [
+    'live',
+    'in play',
+    'inplay',
+    '1h',
+    '1st half',
+    'first half',
+    '2h',
+    '2nd half',
+    'second half',
+    'ht',
+    'halftime',
+    'half time',
+    'et',
+    'extra time',
+    'penalty',
+    'penalties',
+    'progress',
+    'in progress',
+    'ongoing',
+    'playing',
+    'started'
+  ].some(x=>st===x || st.includes(x));
 }
 
 function parseMatch(m){
@@ -1879,7 +1964,18 @@ function playerPredictedWinnerForMatch(pd,mt){
 
 function todayWinnerPredictionRows(){
   const matches=(S.live.matches||[])
-    .filter(m=>{const t=matchTime(m);return t?sameUaeDay(t):(matchState(m)==='live');})
+    .filter(m=>{
+      const st=matchState(m);
+      const t=matchTime(m);
+
+      // Always show live games, even if API date/time is shifted.
+      if(st==='live')return true;
+
+      // Show today's UAE matches.
+      if(t&&sameUaeDay(t))return true;
+
+      return false;
+    })
     .sort((a,b)=>(matchTime(a)||9e15)-(matchTime(b)||9e15));
   const players=Object.entries(S.data.players||{});
   return matches.map(mt=>{

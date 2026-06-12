@@ -770,7 +770,7 @@ const AR_MAP={
   "No champion picks yet":"لا توجد توقعات للبطل بعد",
   "No ranking predictions yet":"لا توجد توقعات ترتيب بعد",
   "Top pick":"الاختيار الأعلى","picks":"اختيارات",
-  "Prediction summary":"ملخص التوقعات","1st":"الأول","2nd":"الثاني","3rd":"الثالث",
+  "Prediction summary":"ملخص التوقعات","1st":"الأول","2nd":"الثاني","3rd":"الثالث","4th":"الرابع",
   "Current group table":"جدول المجموعة الحالي",
   "This table is calculated from the actual match results entered by Admin or fetched from the API.":"هذا الجدول محسوب من نتائج المباريات الفعلية التي أدخلها المسؤول أو جُلبت من API.",
   "group positions filled":"مركز محدد",
@@ -2029,7 +2029,8 @@ function sChartsDashboard(){
     const first=sortedCounts(groupPositionCounts(g,1))[0];
     const second=sortedCounts(groupPositionCounts(g,2))[0];
     const third=sortedCounts(groupPositionCounts(g,3))[0];
-    const rows=[[tr('1st'),first],[tr('2nd'),second],[tr('3rd'),third]].map(([lab,item])=>D({sty:{display:'flex',alignItems:'center',justifyContent:'space-between',gap:'8px',padding:'7px 0',borderBottom:'1px solid var(--border)'}},[
+    const fourth=sortedCounts(groupPositionCounts(g,4))[0];
+    const rows=[[tr('1st'),first],[tr('2nd'),second],[tr('3rd'),third],[tr('4th'),fourth]].map(([lab,item])=>D({sty:{display:'flex',alignItems:'center',justifyContent:'space-between',gap:'8px',padding:'7px 0',borderBottom:'1px solid var(--border)'}},[
       SP({sty:{fontSize:'12px',color:'var(--text2)',fontWeight:700}},[lab]),
       SP({sty:{fontSize:'12px',fontWeight:800,textAlign:'end'}},[item?(FL[item[0]]||'')+' '+item[0]+' · '+item[1]:'—'])
     ]));
@@ -2816,7 +2817,7 @@ window.openPointsAudit=function(){
 
   const w=window.open('','_blank');
   if(!w){
-    toast('Popup blocked. Allow popups and try again.',true);
+    toast('Popup blocked. Allow popups and try again.',true);wc2026admin
     return;
   }
 

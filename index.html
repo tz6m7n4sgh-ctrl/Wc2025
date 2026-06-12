@@ -1130,6 +1130,19 @@ function applyFetchedMatches(matches,silent=false){
     });
   });
   if(groupUpdated||koUpdated){
+      const r32=buildDynamicR32FromGroups(nd.groupResults||{});
+
+  if(r32){
+    nd.knockoutMatches={
+      ...(nd.knockoutMatches||{}),
+      r32:{...((nd.knockoutMatches||{}).r32||{})}
+    };
+
+    Object.entries(r32).forEach(([i,m])=>{
+      nd.knockoutMatches.r32[i+'_home']=m.home;
+      nd.knockoutMatches.r32[i+'_away']=m.away;
+    });
+  }
     mut(nd);
     if(!silent)toast(`${tr('Fetched results')}: ${groupUpdated} ${tr('Group results updated')}, ${koUpdated} ${tr('Knockout winners updated')}`);
   }else if(!silent){
@@ -1532,8 +1545,106 @@ function bracketMatchBox(roundKey,idx){
     w?D({sty:{fontSize:'11px',padding:'5px 8px',color:'var(--green-dark)',fontWeight:800,textAlign:'center'}},[tr('Winner')+': '+(FL[w]||'🏳')+' '+w]):null
   ]);
 }
+function bestThirdTeams(gR){
+  const thirds=[];
 
+  Object.keys(GROUPS).forEach(g=>{
+    if(!groupComplete(g,gR))return;
+
+    const table=groupTable(g,gR);
+    if(table[2]){
+      thirds.push({
+        group:g,
+        team:table[2].team,
+        pts:table[2].pts,
+        gd:table[2].gd,
+        gf:table[2].gf
+      });
+    }
+  });
+
+  return thirds
+    .sort((a,b)=>
+      b.pts-a.pts ||
+      b.gd-a.gd ||
+      b.gf-a.gf ||
+      a.team.localeCompare(b.team)
+    )
+    .slice(0,8)
+    .map(x=>x.team);
+}
+
+function buildDynamicR32FromGroups(gR){
+  const top={};
+  const second={};
+  const third=bestThirdTeams(gR);
+
+  Object.keys(GROUPS).forEach(g=>{
+    if(!groupComplete(g,gR))return;
+
+    const table=groupTable(g,gR);
+    top[g]=table[0]?.team||'';
+    second[g]=table[1]?.team||'';
+  });
+
+  const allGroupsComplete=Object.keys(GROUPS).every(g=>groupComplete(g,gR));
+
+  if(!allGroupsComplete){
+    return null;
+  }
+
+  if(third.length<8){
+    return null;
+  }
+
+  return {
+    0:{home:top.A, away:third[7]},
+    1:{home:top.B, away:third[6]},
+    2:{home:top.C, away:third[5]},
+    3:{home:top.D, away:third[4]},
+    4:{home:top.E, away:third[3]},
+    5:{home:top.F, away:third[2]},
+    6:{home:top.G, away:third[1]},
+    7:{home:top.H, away:third[0]},
+
+    8:{home:top.I, away:second.A},
+    9:{home:top.J, away:second.B},
+    10:{home:top.K, away:second.C},
+    11:{home:top.L, away:second.D},
+
+    12:{home:second.E, away:second.F},
+    13:{home:second.G, away:second.H},
+    14:{home:second.I, away:second.J},
+    15:{home:second.K, away:second.L}
+  };
+}
+
+function syncDynamicKnockoutBracket(){
+  const r32=buildDynamicR32FromGroups(S.data.groupResults||{});
+
+  if(!r32)return false;
+
+  const old=S.data.knockoutMatches||{};
+  const next={...old,r32:{...(old.r32||{})}};
+
+  Object.entries(r32).forEach(([i,m])=>{
+    next.r32[i+'_home']=m.home;
+    next.r32[i+'_away']=m.away;
+  });
+
+  const changed=JSON.stringify(old.r32||{})!==JSON.stringify(next.r32||{});
+
+  if(changed){
+    mut({
+      ...S.data,
+      knockoutMatches:next
+    });
+  }
+
+  return changed;
+}
 function sBracket(){
+  syncDynamicKnockoutBracket();
   const hasAny=KOR.some(r=>Object.values(S.data.knockoutMatches?.[r.key]||{}).some(Boolean)||Object.values(S.data.knockoutResults?.[r.key]||{}).some(Boolean));
   const champ=championNow();
   return D({},[

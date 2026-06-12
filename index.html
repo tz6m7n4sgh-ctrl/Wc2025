@@ -2307,6 +2307,548 @@ function render(){
     }
   }
 
+
+/* ─────────────────────────────────────────────
+   ADMIN POINTS AUDIT PAGE
+   Paste this block before init();
+───────────────────────────────────────────── */
+
+const INCLUDE_GROUP_RANKING_POINTS_IN_TOTAL = true;
+
+function auditEsc(x){
+  return String(x ?? '').replace(/[&<>"]/g,c=>({
+    '&':'&amp;',
+    '<':'&lt;',
+    '>':'&gt;',
+    '"':'&quot;'
+  }[c]));
+}
+
+function auditPlayerPoints(pd,gR,kR,ch){
+  const out={
+    groupMatchPoints:0,
+    groupRankPoints:0,
+    knockoutPoints:0,
+    championPoints:0,
+    total:0,
+    groups:{},
+    knockout:{},
+    champion:{}
+  };
+
+  Object.keys(GROUPS).forEach(g=>{
+    const groupInfo={
+      matchPoints:0,
+      rankPoints:null,
+      predictedTop3:[],
+      actualTop3:[],
+      matches:[]
+    };
+
+    const pred=pd?.groupPreds?.[g]||{};
+    groupInfo.predictedTop3=['1','2','3'].map(pos=>groupPredPick(pred,pos)||'');
+
+    const actual=actualGroupTop(g,gR);
+    groupInfo.actualTop3=actual.slice(0,3);
+
+    GM[g].forEach((match,i)=>{
+      const key=g+'_'+i;
+      const res=gR?.[key];
+
+      const actualWinner=groupMatchActualWinner(res,match);
+      const predictedWinner=groupMatchPredWinner(pd,g,match);
+
+      let pts=0;
+      let reason='Pending';
+
+      if(!res || res.home===undefined || res.home==="" || res.away===undefined || res.away===""){
+        reason='Pending result';
+      }else if(actualWinner==='Draw'){
+        reason='Draw = 0';
+      }else if(predictedWinner && predictedWinner===actualWinner){
+        pts=1;
+        reason='Correct winner +1';
+      }else{
+        reason='Wrong winner +0';
+      }
+
+      groupInfo.matchPoints+=pts;
+
+      groupInfo.matches.push({
+        key,
+        home:match.home,
+        away:match.away,
+        result:res||null,
+        actualWinner,
+        predictedWinner,
+        points:pts,
+        reason
+      });
+    });
+
+    const rp=groupRankPts(pd,g,gR);
+    groupInfo.rankPoints=rp;
+
+    out.groupMatchPoints+=groupInfo.matchPoints;
+
+    if(rp!==null){
+      out.groupRankPoints+=rp;
+    }
+
+    out.groups[g]=groupInfo;
+  });
+
+  KOR.forEach(r=>{
+    const roundInfo={
+      label:r.label,
+      pointsPerCorrect:r.pts,
+      points:0,
+      matches:[]
+    };
+
+    Object.entries(kR?.[r.key]||{}).forEach(([i,w])=>{
+      const pick=pd?.knockoutPreds?.[r.key]?.[i];
+      const pts=kp(pick,w,r.pts)||0;
+      const m=kom(r.key,i);
+
+      roundInfo.points+=pts;
+
+      roundInfo.matches.push({
+        index:Number(i),
+        home:m.home,
+        away:m.away,
+        winner:w,
+        pick,
+        points:pts,
+        reason:pick ? pick===w ? 'Correct +'+r.pts : 'Wrong +0' : 'No pick +0'
+      });
+    });
+
+    out.knockoutPoints+=roundInfo.points;
+    out.knockout[r.key]=roundInfo;
+  });
+
+  out.champion={
+    pick:pd?.champion||null,
+    actual:ch||null,
+    points:ch && pd?.champion===ch ? 10 : 0,
+    reason:ch ? pd?.champion===ch ? 'Correct champion +10' : 'Wrong champion +0' : 'Pending'
+  };
+
+  out.championPoints=out.champion.points;
+
+  out.total=
+    out.groupMatchPoints+
+    (INCLUDE_GROUP_RANKING_POINTS_IN_TOTAL ? out.groupRankPoints : 0)+
+    out.knockoutPoints+
+    out.championPoints;
+
+  return out;
+}
+
+/* Make leaderboard use the same calculation as audit */
+tot=function(pd,gR,kR,ch){
+  return auditPlayerPoints(pd,gR,kR,ch).total;
+};
+
+function auditResultText(res){
+  if(!res || res.home===undefined || res.home==="" || res.away===undefined || res.away===""){
+    return 'Pending';
+  }
+  return auditEsc(res.home)+'–'+auditEsc(res.away);
+}
+
+function auditTeam(t){
+  return (FL[t]||'🏳')+' '+auditEsc(t||'—');
+}
+
+function buildPointsAuditHtml(){
+  const players=Object.entries(S.data.players||{})
+    .map(([name,pd])=>({
+      name,
+      pd,
+      audit:auditPlayerPoints(pd,S.data.groupResults,S.data.knockoutResults,championNow())
+    }))
+    .sort((a,b)=>b.audit.total-a.audit.total||a.name.localeCompare(b.name));
+
+  const now=new Date().toLocaleString('en-AE',{timeZone:'Asia/Dubai'});
+
+  const summaryRows=players.map((p,i)=>`
+    <tr>
+      <td>${i+1}</td>
+      <td><strong>${auditEsc(p.name)}</strong></td>
+      <td>${p.audit.groupMatchPoints}</td>
+      <td>${p.audit.groupRankPoints}${INCLUDE_GROUP_RANKING_POINTS_IN_TOTAL?'':' <span class="muted">(not counted)</span>'}</td>
+      <td>${p.audit.knockoutPoints}</td>
+      <td>${p.audit.championPoints}</td>
+      <td class="total">${p.audit.total}</td>
+    </tr>
+  `).join('');
+
+  const playerSections=players.map(p=>{
+    const a=p.audit;
+
+    const groupSections=Object.keys(GROUPS).map(g=>{
+      const gi=a.groups[g];
+
+      const matchRows=gi.matches.map(m=>`
+        <tr>
+          <td>${auditEsc(m.key)}</td>
+          <td>${auditTeam(m.home)} vs ${auditTeam(m.away)}</td>
+          <td>${auditResultText(m.result)}</td>
+          <td>${auditEsc(m.actualWinner||'Pending')}</td>
+          <td>${auditEsc(m.predictedWinner||'—')}</td>
+          <td class="${m.points?'ok':'zero'}">${m.points}</td>
+          <td>${auditEsc(m.reason)}</td>
+        </tr>
+      `).join('');
+
+      const predictedTop3=gi.predictedTop3.map((t,i)=>
+        `${i+1}. ${t?auditTeam(t):'—'}`
+      ).join(' · ');
+
+      const actualTop3=gi.actualTop3.length
+        ? gi.actualTop3.map((t,i)=>`${i+1}. ${auditTeam(t)}`).join(' · ')
+        : 'Pending until all group matches have results';
+
+      return `
+        <section class="group">
+          <div class="group-head">
+            <h3>Group ${auditEsc(g)}</h3>
+            <div>
+              <span class="pill">Match pts: ${gi.matchPoints}</span>
+              <span class="pill ${gi.rankPoints===null?'pending':'ok-bg'}">
+                Rank pts: ${gi.rankPoints===null?'Pending':gi.rankPoints}
+              </span>
+            </div>
+          </div>
+
+          <div class="twocol">
+            <div class="box">
+              <div class="label">Predicted top 3</div>
+              <div>${predictedTop3}</div>
+            </div>
+            <div class="box">
+              <div class="label">Actual top 3</div>
+              <div>${actualTop3}</div>
+            </div>
+          </div>
+
+          <table>
+            <thead>
+              <tr>
+                <th>Key</th>
+                <th>Match</th>
+                <th>Result</th>
+                <th>Actual winner</th>
+                <th>Player pick</th>
+                <th>Pts</th>
+                <th>Reason</th>
+              </tr>
+            </thead>
+            <tbody>${matchRows}</tbody>
+          </table>
+        </section>
+      `;
+    }).join('');
+
+    const knockoutRows=KOR.map(r=>{
+      const ri=a.knockout[r.key];
+      if(!ri || !ri.matches.length){
+        return `
+          <tr>
+            <td>${auditEsc(r.label)}</td>
+            <td colspan="6" class="muted">No winners entered yet</td>
+          </tr>
+        `;
+      }
+
+      return ri.matches.map(m=>`
+        <tr>
+          <td>${auditEsc(r.label)}</td>
+          <td>${m.index+1}</td>
+          <td>${auditTeam(m.home)} vs ${auditTeam(m.away)}</td>
+          <td>${auditEsc(m.winner||'Pending')}</td>
+          <td>${auditEsc(m.pick||'—')}</td>
+          <td class="${m.points?'ok':'zero'}">${m.points}</td>
+          <td>${auditEsc(m.reason)}</td>
+        </tr>
+      `).join('');
+    }).join('');
+
+    return `
+      <section class="player">
+        <h2>${auditEsc(p.name)}</h2>
+
+        <div class="stats">
+          <div><strong>${a.groupMatchPoints}</strong><span>Group match pts</span></div>
+          <div><strong>${a.groupRankPoints}</strong><span>Group rank pts</span></div>
+          <div><strong>${a.knockoutPoints}</strong><span>Knockout pts</span></div>
+          <div><strong>${a.championPoints}</strong><span>Champion pts</span></div>
+          <div class="gold"><strong>${a.total}</strong><span>Total</span></div>
+        </div>
+
+        ${groupSections}
+
+        <section class="group">
+          <h3>Knockout</h3>
+          <table>
+            <thead>
+              <tr>
+                <th>Round</th>
+                <th>#</th>
+                <th>Match</th>
+                <th>Actual winner</th>
+                <th>Player pick</th>
+                <th>Pts</th>
+                <th>Reason</th>
+              </tr>
+            </thead>
+            <tbody>${knockoutRows}</tbody>
+          </table>
+        </section>
+
+        <section class="group">
+          <h3>Champion</h3>
+          <table>
+            <tbody>
+              <tr><td>Pick</td><td>${auditEsc(a.champion.pick||'—')}</td></tr>
+              <tr><td>Actual</td><td>${auditEsc(a.champion.actual||'Pending')}</td></tr>
+              <tr><td>Points</td><td>${a.champion.points}</td></tr>
+              <tr><td>Reason</td><td>${auditEsc(a.champion.reason)}</td></tr>
+            </tbody>
+          </table>
+        </section>
+      </section>
+    `;
+  }).join('');
+
+  return `
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>WC2026 Points Audit</title>
+<style>
+*{box-sizing:border-box}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  background:#f1f5f9;
+  color:#0f172a;
+  margin:0;
+  padding:18px;
+  font-size:13px;
+}
+.header{
+  background:#042C53;
+  color:#fff;
+  border-radius:14px;
+  padding:18px 20px;
+  margin-bottom:16px;
+  display:flex;
+  justify-content:space-between;
+  gap:12px;
+  align-items:center;
+  flex-wrap:wrap;
+}
+.header h1{margin:0;font-size:22px}
+.header p{margin:4px 0 0;color:rgba(255,255,255,.7);font-size:12px}
+button{
+  border:0;
+  border-radius:999px;
+  padding:9px 14px;
+  font-weight:800;
+  cursor:pointer;
+}
+.print{background:#16a34a;color:#fff}
+.card,.player,.group{
+  background:#fff;
+  border-radius:12px;
+  box-shadow:0 1px 3px rgba(0,0,0,.08);
+  padding:14px;
+  margin-bottom:14px;
+}
+h2{margin:0 0 10px;font-size:20px}
+h3{margin:0 0 10px;font-size:15px;color:#042C53}
+table{
+  width:100%;
+  border-collapse:collapse;
+  font-size:12px;
+}
+th,td{
+  padding:7px;
+  border-bottom:1px solid #e2e8f0;
+  text-align:left;
+  vertical-align:top;
+}
+th{
+  background:#f8fafc;
+  font-size:11px;
+  text-transform:uppercase;
+  letter-spacing:.03em;
+  color:#475569;
+}
+.total{
+  font-size:16px;
+  font-weight:900;
+  color:#185FA5;
+}
+.ok{color:#0f6e56;font-weight:900}
+.zero{color:#94a3b8;font-weight:700}
+.muted{color:#94a3b8}
+.stats{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(130px,1fr));
+  gap:8px;
+  margin-bottom:12px;
+}
+.stats div{
+  background:#f8fafc;
+  border-radius:10px;
+  padding:10px;
+  text-align:center;
+}
+.stats strong{
+  display:block;
+  font-size:22px;
+}
+.stats span{
+  display:block;
+  font-size:11px;
+  color:#64748b;
+}
+.stats .gold{
+  background:#FAEEDA;
+  color:#854F0B;
+}
+.group-head{
+  display:flex;
+  justify-content:space-between;
+  gap:10px;
+  align-items:center;
+  flex-wrap:wrap;
+}
+.pill{
+  display:inline-block;
+  border-radius:999px;
+  background:#E6F1FB;
+  color:#042C53;
+  padding:4px 9px;
+  font-size:11px;
+  font-weight:800;
+  margin-left:4px;
+}
+.ok-bg{
+  background:#E1F5EE;
+  color:#0F6E56;
+}
+.pending{
+  background:#f8fafc;
+  color:#94a3b8;
+}
+.twocol{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
+  gap:8px;
+  margin-bottom:10px;
+}
+.box{
+  border:1px solid #e2e8f0;
+  border-radius:10px;
+  padding:9px;
+  background:#f8fafc;
+}
+.label{
+  font-size:11px;
+  font-weight:900;
+  color:#64748b;
+  margin-bottom:4px;
+}
+@media print{
+  body{background:#fff}
+  .header button{display:none}
+  .card,.player,.group{
+    box-shadow:none;
+    border:1px solid #e2e8f0;
+    break-inside:avoid;
+  }
+}
+</style>
+</head>
+<body>
+  <div class="header">
+    <div>
+      <h1>🧮 WC2026 Points Audit</h1>
+      <p>Generated ${auditEsc(now)} UAE · Group ranking counted: ${INCLUDE_GROUP_RANKING_POINTS_IN_TOTAL?'Yes':'No'}</p>
+    </div>
+    <button class="print" onclick="window.print()">Print / Save PDF</button>
+  </div>
+
+  <section class="card">
+    <h2>Leaderboard audit summary</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Rank</th>
+          <th>Player</th>
+          <th>Group match</th>
+          <th>Group ranking</th>
+          <th>Knockout</th>
+          <th>Champion</th>
+          <th>Total</th>
+        </tr>
+      </thead>
+      <tbody>${summaryRows}</tbody>
+    </table>
+  </section>
+
+  ${playerSections}
+</body>
+</html>
+  `;
+}
+
+window.openPointsAudit=function(){
+  if(!S.admin){
+    toast('Admin only',true);
+    return;
+  }
+
+  const w=window.open('','_blank');
+  if(!w){
+    toast('Popup blocked. Allow popups and try again.',true);
+    return;
+  }
+
+  w.document.open();
+  w.document.write(buildPointsAuditHtml());
+  w.document.close();
+};
+
+/* Inject an Admin-only button after every render */
+const _renderBeforePointsAudit=render;
+render=function(){
+  _renderBeforePointsAudit();
+
+  try{
+    if(!S.admin)return;
+
+    const adminBar=document.querySelector('.admin-bar');
+    if(!adminBar || document.getElementById('pointsAuditBtn'))return;
+
+    const b=document.createElement('button');
+    b.id='pointsAuditBtn';
+    b.className='btn btn-pr btn-sm';
+    b.textContent='🧮 Points Audit';
+    b.onclick=window.openPointsAudit;
+
+    adminBar.appendChild(b);
+  }catch(e){
+    console.warn('Points Audit button inject failed:',e);
+  }
+};
+
+
   /* Main content area */
   const content=D({sty:{padding:"0 1rem"}});
 

@@ -420,31 +420,68 @@ function groupRankPts(pd,g,gR){
 
   return p;
 }
+/*function groupMatchPredWinner(pd,g,match){
+  const pred=pd?.groupPreds?.[g]||{};
+
+  const h=canonTeam(match.home);
+  const a=canonTeam(match.away);
+
+  let hp=999;
+  let ap=999;
+
+  ['1','2','3','4'].forEach(pos=>{
+    const picked=canonTeam(groupPredPick(pred,pos));
+
+    if(picked===h)hp=Number(pos);
+    if(picked===a)ap=Number(pos);
+  });
+
+  if(hp===999 || ap===999){
+    return null;
+  }
+
+  return hp<ap ? h : a;
+}*/
+
+
+
 function groupMatchPredWinner(pd,g,match){
-  const pred=pd?.groupPreds?.[g];
-  if(!pred)return "";
+  const pred=pd?.groupPreds?.[g]||{};
 
-  const rh=rankOfTeamInPred(pd,g,match.home);
-  const ra=rankOfTeamInPred(pd,g,match.away);
+  const h=canonTeam(match.home);
+  const a=canonTeam(match.away);
 
-  if(rh&&ra)return rh<ra?match.home:ra<rh?match.away:"";
-  if(rh&&!ra)return match.home;
-  if(ra&&!rh)return match.away;
+  let hp=999;
+  let ap=999;
 
-  return "";
+  ['1','2','3','4'].forEach(pos=>{
+    const picked=canonTeam(groupPredPick(pred,pos));
+
+    if(picked===h)hp=Number(pos);
+    if(picked===a)ap=Number(pos);
+  });
+
+  if(hp===999 || ap===999){
+    return null;
+  }
+
+  return hp<ap ? match.home : match.away;
 }
 
 function groupMatchActualWinner(res,match){
-  if(!res||res.home===undefined||res.home===""||res.away===undefined||res.away==="")return null;
+  if(!res || res.home===undefined || res.home==="" || res.away===undefined || res.away===""){
+    return null;
+  }
 
-  const h=+res.home;
-  const a=+res.away;
+  const hs=Number(res.home);
+  const as=Number(res.away);
 
-  if(isNaN(h)||isNaN(a))return null;
-  if(h>a)return match.home;
-  if(a>h)return match.away;
+  if(!Number.isFinite(hs)||!Number.isFinite(as))return null;
 
-  return "Draw";
+  if(hs>as)return canonTeam(match.home);
+  if(as>hs)return canonTeam(match.away);
+
+  return 'Draw';
 }
 
 function groupMatchPts(pd,g,gR){
@@ -917,9 +954,32 @@ const TEAM_BY_NORM={};
 ALL_T.forEach(t=>{TEAM_BY_NORM[normName(t)]=t;});
 Object.entries(TEAM_ALIASES).forEach(([k,v])=>TEAM_BY_NORM[normName(k)]=v);
 
-function canonTeam(x){
+/*function canonTeam(x){
   const n=normName(x);
   return TEAM_BY_NORM[n]||Object.values(TEAM_BY_NORM).find(t=>normName(t)===n)||String(x||"").trim();
+}*/
+function canonTeam(t){
+  t=String(t||'').trim();
+
+  const map={
+    'USA':'United States',
+    'United States of America':'United States',
+    'USMNT':'United States',
+
+    'Korea Republic':'South Korea',
+    'Republic of Korea':'South Korea',
+
+    'Czech Republic':'Czechia',
+
+    'Cabo Verde':'Cape Verde',
+
+    'Bosnia-Herzegovina':'Bosnia and Herzegovina',
+    'Bosnia & Herzegovina':'Bosnia and Herzegovina',
+    'Bosnia and Herzegovina':'Bosnia and Herzegovina',
+    'Bosnia':'Bosnia and Herzegovina'
+  };
+
+  return map[t]||t;
 }
 function isKnownTournamentTeam(t){return ALL_T.includes(t);}
 
@@ -1742,19 +1802,71 @@ function sAllMatches(){
 /* ─────────────────────────────────────────────
    SCREENS — DAILY OVERVIEW
 ───────────────────────────────────────────── */
-function groupForMatch(mt){
+/*function groupForMatch(mt){
   const r=String(mt?.round||'');
   let m=r.match(/Group\s*([A-L])/i);if(m)return m[1].toUpperCase();
   m=r.match(/\b([A-L])\b/);if(m&&GROUPS[m[1]])return m[1];
   const h=canonTeam(mt?.home),a=canonTeam(mt?.away);
   return Object.keys(GROUPS).find(g=>(GROUPS[g]||[]).includes(h)&&(GROUPS[g]||[]).includes(a))||'';
+}*/
+
+
+function teamCompareKey(t){
+  return String(t||'')
+    .toLowerCase()
+    .replace(/&/g,'and')
+    .replace(/-/g,' ')
+    .replace(/\band/g,' ')
+    .replace(/[^a-z0-9]+/g,' ')
+    .replace(/\s+/g,' ')
+    .trim();
 }
 
-function rankOfTeamInPred(pd,g,team){
+function groupForMatch(mt){
+  if(!mt)return null;
+
+  const h=teamCompareKey(mt.home);
+  const a=teamCompareKey(mt.away);
+
+  for(const [g,matches] of Object.entries(GM)){
+    for(const m of matches){
+      const mh=teamCompareKey(m.home);
+      const ma=teamCompareKey(m.away);
+
+      if((mh===h && ma===a) || (mh===a && ma===h)){
+        return g;
+      }
+    }
+  }
+
+  return null;
+}
+
+/*function rankOfTeamInPred(pd,g,team){
   const pred=pd?.groupPreds?.[g];if(!pred||!team)return null;
   for(const pos of['1','2','3','4']){if(canonTeam(groupPredPick(pred,pos))===canonTeam(team))return Number(pos);}
   return null;
+}*/
+
+function rankOfTeamInPred(pd,g,team){
+  const pred=pd?.groupPreds?.[g];
+  const target=canonTeam(team);
+
+  for(const pos of ['1','2','3','4']){
+    const picked=groupPredPick(pred,pos);
+
+    if(canonTeam(picked)===target){
+      return Number(pos);
+    }
+  }
+
+  return null;
 }
+const mt=GM.B[2];
+
+console.log('match:', mt);
+console.log('groupForMatch:', groupForMatch(mt));
+console.log('text:', playerMatchPredictionText(S.data.players['Dani Haddad'], mt));
 
 function findKnockoutPickForMatch(pd,home,away){
   for(const r of KOR){
@@ -1770,7 +1882,7 @@ function findKnockoutPickForMatch(pd,home,away){
   return '';
 }
 
-function playerMatchPredictionText(pd,mt){
+/*function playerMatchPredictionText(pd,mt){
   const g=groupForMatch(mt),home=canonTeam(mt.home),away=canonTeam(mt.away);
   if(g){
     const rh=rankOfTeamInPred(pd,g,home),ra=rankOfTeamInPred(pd,g,away);
@@ -1779,6 +1891,47 @@ function playerMatchPredictionText(pd,mt){
     return tr('No group prediction');
   }
   const ko=findKnockoutPickForMatch(pd,home,away);
+  return ko?tr('Winner')+': '+ko:tr('TBD');
+}*/
+
+function playerMatchPredictionText(pd,mt){
+  const g=groupForMatch(mt);
+
+  const homeRaw=mt.home;
+  const awayRaw=mt.away;
+
+  const homeKey=canonTeam(homeRaw);
+  const awayKey=canonTeam(awayRaw);
+
+  if(g){
+    const rh=rankOfTeamInPred(pd,g,homeKey);
+    const ra=rankOfTeamInPred(pd,g,awayKey);
+
+    if(rh&&ra){
+      const edgeRaw=rh<ra?homeRaw:ra<rh?awayRaw:'';
+
+      return (FL[homeRaw]||FL[homeKey]||'🏳')+' '+homeRaw+' #'+rh+
+        '  ·  '+
+        (FL[awayRaw]||FL[awayKey]||'🏳')+' '+awayRaw+' #'+ra+
+        (edgeRaw
+          ? '  → '+tr('Predicted edge')+': '+(FL[edgeRaw]||FL[canonTeam(edgeRaw)]||'🏳')+' '+edgeRaw
+          : ''
+        );
+    }
+
+    if(rh||ra){
+      const knownRaw=rh?homeRaw:awayRaw;
+      const knownKey=canonTeam(knownRaw);
+      const rank=rh||ra;
+
+      return (FL[knownRaw]||FL[knownKey]||'🏳')+' '+knownRaw+' #'+rank+
+        ' · '+tr('No group prediction');
+    }
+
+    return tr('No group prediction');
+  }
+
+  const ko=findKnockoutPickForMatch(pd,homeKey,awayKey);
   return ko?tr('Winner')+': '+ko:tr('TBD');
 }
 
@@ -2547,6 +2700,10 @@ function auditPlayerPoints(pd,gR,kR,ch){
 
     out.groups[g]=groupInfo;
   });
+
+
+
+
 
   KOR.forEach(r=>{
     const roundInfo={

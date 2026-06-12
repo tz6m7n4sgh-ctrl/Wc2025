@@ -1210,24 +1210,9 @@ function applyFetchedMatches(matches,silent=false){
   }
 }
 
-function fullScheduleUrls(){
-  const start=new Date('2026-06-11T00:00:00Z');
-  const end=new Date('2026-07-19T00:00:00Z');
-  const urls=[];
-
-  for(let d=new Date(start); d<=end; d=addDays(d,1)){
-    urls.push(
-      'https://www.thesportsdb.com/api/v1/json/3/eventsday.php?d='+ymd(d)+'&l=4429'
-    );
-  }
-
-  return urls;
-}
-
 async function fetchScheduleMatches(){
   const saved=S.data.settings?.resultsApiUrl||localStorage.getItem('wc2026_results_url')||'';
-  //const urls=(saved&&!isOldBlockedScheduleUrl(saved))?[expandApiUrl(saved,new Date())]:defaultScheduleUrls();
-  const urls=fullScheduleUrls();
+  const urls=(saved&&!isOldBlockedScheduleUrl(saved))?[expandApiUrl(saved,new Date())]:defaultScheduleUrls();
   const byKey=new Map();
   const errors=[];
   for(const url of urls){

@@ -388,16 +388,37 @@ function groupPredAsObject(pred){
 }
 
 function groupRankPts(pd,g,gR){
-  const pred=pd?.groupPreds?.[g];
   const actual=actualGroupTop(g,gR);
-  if(!pred||actual.length<3)return null;
-  let pts=0;const top3=actual.slice(0,3);
-  ['1','2','3'].forEach((pos,idx)=>{
-    const t=groupPredPick(pred,pos);if(!t)return;
-    if(t===actual[idx])pts+=3;
-    else if(top3.includes(t))pts+=1;
+
+  // Wait until all 4 teams have final ranking
+  if(!actual || actual.length<4)return null;
+
+  const pred=pd?.groupPreds?.[g]||{};
+
+  const picks=[
+    groupPredPick(pred,'1'),
+    groupPredPick(pred,'2'),
+    groupPredPick(pred,'3'),
+    groupPredPick(pred,'4')
+  ];
+
+  let p=0;
+
+  picks.forEach((team,i)=>{
+    if(!team)return;
+
+    // Exact position = 3 points
+    if(actual[i]===team){
+      p+=3;
+    }
+
+    // Wrong position but still in the group top 4 = 1 point
+    else if(actual.includes(team)){
+      p+=1;
+    }
   });
-  return pts;
+
+  return p;
 }
 function groupMatchPredWinner(pd,g,match){
   const pred=pd?.groupPreds?.[g];
@@ -2341,16 +2362,16 @@ function auditPlayerPoints(pd,gR,kR,ch){
     const groupInfo={
       matchPoints:0,
       rankPoints:null,
-      predictedTop3:[],
-      actualTop3:[],
+      predictedTop4:[],
+      actualTop4:[],
       matches:[]
     };
 
     const pred=pd?.groupPreds?.[g]||{};
-    groupInfo.predictedTop3=['1','2','3'].map(pos=>groupPredPick(pred,pos)||'');
+    groupInfo.predictedTop4=['1','2','3','4'].map(pos=>groupPredPick(pred,pos)||'');
 
     const actual=actualGroupTop(g,gR);
-    groupInfo.actualTop3=actual.slice(0,3);
+    groupInfo.actualTop4=actual.slice(0,4);
 
     GM[g].forEach((match,i)=>{
       const key=g+'_'+i;
@@ -2504,12 +2525,12 @@ function buildPointsAuditHtml(){
         </tr>
       `).join('');
 
-      const predictedTop3=gi.predictedTop3.map((t,i)=>
+      const predictedTop4=gi.predictedTop4.map((t,i)=>
         `${i+1}. ${t?auditTeam(t):'—'}`
       ).join(' · ');
 
-      const actualTop3=gi.actualTop3.length
-        ? gi.actualTop3.map((t,i)=>`${i+1}. ${auditTeam(t)}`).join(' · ')
+      const actualTop4=gi.actualTop4.length
+        ? gi.actualTop4.map((t,i)=>`${i+1}. ${auditTeam(t)}`).join(' · ')
         : 'Pending until all group matches have results';
 
       return `
@@ -2526,12 +2547,12 @@ function buildPointsAuditHtml(){
 
           <div class="twocol">
             <div class="box">
-              <div class="label">Predicted top 3</div>
-              <div>${predictedTop3}</div>
+              <div class="label">Predicted top 4</div>
+              <div>${predictedTop4}</div>
             </div>
             <div class="box">
-              <div class="label">Actual top 3</div>
-              <div>${actualTop3}</div>
+              <div class="label">Actual top 4</div>
+              <div>${actualTop4}</div>
             </div>
           </div>
 

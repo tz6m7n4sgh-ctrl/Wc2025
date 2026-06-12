@@ -489,7 +489,7 @@ function tot(pd,gR,kR,ch){
   return p;
 }
 
-function gf(pr,g){return['1','2','3'].filter(k=>groupPredPick(pr?.[g],k)).length;}
+function gf(pr,g){return['1','2','3','4'].filter(k=>groupPredPick(pr?.[g],k)).length;}
 function lb(){
   return Object.entries(S.data.players||{})
     .map(([n,pd])=>({name:n,points:tot(pd,S.data.groupResults,S.data.knockoutResults,championNow()),champion:pd.champion}))
@@ -514,11 +514,18 @@ function setGroupRankPick(g,pos,team){
   ss({gp:{...S.gp,[g]:cur}});
 }
 
-function groupRankLabel(pos){return pos==='1'?tr('1st place'):pos==='2'?tr('2nd place'):tr('3rd place');}
+function groupRankLabel(pos){
+  return {
+    '1': tr('1st place'),
+    '2': tr('2nd place'),
+    '3': tr('3rd place'),
+    '4': tr('4th place')
+  }[String(pos)] || tr('4th place');
+}
 function groupRankScoreLabel(pts){return pts===null?tr('Pending'):String(pts)+' '+tr('pts');}
 
 function groupRankOptions(g,pos){
-  const used=new Set(['1','2','3'].filter(p=>p!==pos).map(p=>groupPredPick(S.gp?.[g],p)).filter(Boolean));
+  const used=new Set(['1','2','3','4'].filter(p=>p!==pos).map(p=>groupPredPick(S.gp?.[g],p)).filter(Boolean));
   return [el('option',{value:''},['— '+groupRankLabel(pos)+' —'])].concat(
     (GROUPS[g]||[]).map(t=>el('option',{value:t,selected:groupPredPick(S.gp?.[g],pos)===t||undefined,disabled:used.has(t)||undefined},[(FL[t]||'🏳')+' '+t]))
   );
@@ -526,12 +533,12 @@ function groupRankOptions(g,pos){
 
 function groupActualText(g){
   const a=actualGroupTop(g,S.data.groupResults);
-  return a.length?a.slice(0,3).map((t,i)=>(i+1)+'. '+(FL[t]||'🏳')+' '+t).join(' · '):tr('Pending');
+  return a.length?a.slice(0,4).map((t,i)=>(i+1)+'. '+(FL[t]||'🏳')+' '+t).join(' · '):tr('Pending');
 }
 
 function playerGroupRankText(pd,g){
   const p=pd?.groupPreds?.[g]||{};
-  return ['1','2','3'].map(pos=>{const t=groupPredPick(p,pos);return t?pos+'. '+(FL[t]||'🏳')+' '+t:pos+'. —';}).join(' · ');
+  return ['1','2','3','4'].map(pos=>{const t=groupPredPick(p,pos);return t?pos+'. '+(FL[t]||'🏳')+' '+t:pos+'. —';}).join(' · ');
 }
 
 function groupOrderList(g,limit){
@@ -546,7 +553,7 @@ function groupOrderList(g,limit){
 }
 
 function groupActualList(g){
-  const a=actualGroupTop(g,S.data.groupResults).slice(0,3);
+  const a=actualGroupTop(g,S.data.groupResults).slice(0,4);
   if(!a.length)return SP({sty:{color:'var(--text3)'}},[tr('Pending')]);
   return D({sty:{display:'flex',flexDirection:'column',gap:'4px',marginTop:'6px'}},
     a.map((t,i)=>D({sty:{display:'flex',alignItems:'center',gap:'8px',padding:'5px 8px',borderRadius:'8px',background:'var(--green-light)',fontSize:'12px',direction:'ltr',textAlign:'left'}},[
@@ -560,7 +567,7 @@ function groupActualList(g){
 function playerGroupRankList(pd,g){
   const pred=pd?.groupPreds?.[g]||{};
   return D({sty:{display:'flex',flexDirection:'column',gap:'4px'}},
-    ['1','2','3'].map(pos=>{
+    ['1','2','3','4'].map(pos=>{
       const t=groupPredPick(pred,pos);
       return D({sty:{display:'flex',alignItems:'center',gap:'8px',padding:'5px 8px',borderRadius:'8px',background:'var(--surface2)',fontSize:'12px',direction:'ltr',textAlign:'left'}},[
         SP({sty:{width:'22px',height:'22px',borderRadius:'50%',background:'var(--blue-light)',color:'var(--blue-dark)',display:'inline-flex',alignItems:'center',justifyContent:'center',fontWeight:700,flexShrink:0}},[pos]),
@@ -582,13 +589,13 @@ function groupRankCard(g){
     ]),
     D({sty:{fontSize:'13px',color:'var(--text2)',marginBottom:'12px'}},[tr('Pick the final group order: 1st, 2nd and 3rd.')]),
     D({sty:{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(160px,1fr))',gap:'8px'}},
-      ['1','2','3'].map(pos=>D({},[
+      ['1','2','3','4'].map(pos=>D({},[
         D({sty:{fontSize:'11px',fontWeight:700,color:'var(--text3)',marginBottom:'4px'}},[groupRankLabel(pos)]),
         el('select',{value:groupPredPick(pred,pos)||'',disabled:locked()||undefined,sty:{width:'100%'},onchange:e=>setGroupRankPick(g,pos,e.target.value)},groupRankOptions(g,pos))
       ]))
     ),
     D({sty:{marginTop:'12px',paddingTop:'10px',borderTop:'1px solid var(--border)',fontSize:'12px',color:'var(--text2)'}},[
-      SP({sty:{fontWeight:700}},[tr('Actual top 3')+': ']),
+      SP({sty:{fontWeight:700}},[tr('Actual Top 4')+': ']),
       SP({},[groupActualText(g)])
     ]),
     saved?D({sty:{fontSize:'11px',color:'var(--text3)',marginTop:'6px'}},[tr('Saved')+': '+playerGroupRankText({groupPreds:{[g]:saved}},g)]):null,
@@ -757,7 +764,7 @@ const AR_MAP={
   "Use Admin mode to set teams and winners from the Knockout Stage.":"استخدم وضع المسؤول لتحديد الفرق والفائزين من صفحة خروج المغلوب.",
   "Show All":"عرض الكل","Completed results imported":"تم استيراد النتائج المكتملة",
   "Group ranking":"ترتيب المجموعة","Predict group outcome":"توقع ترتيب المجموعة",
-  "1st place":"المركز الأول","2nd place":"المركز الثاني","3rd place":"المركز الثالث",
+  "1st place":"المركز الأول","2nd place":"المركز الثاني","3rd place":"المركز الثالث","4th":"المركز الرابع","4th place":"المركز الرابع",
   "Group ranking points":"نقاط ترتيب المجموعة","Actual group table":"جدول المجموعة الفعلي",
   "Pending":"قيد الانتظار","Played":"لعب","GD":"فارق",
   "Select team":"اختر الفريق",
@@ -797,7 +804,7 @@ const AR_MAP={
   "group positions filled":"مركز محدد",
   "Pick the final group order: 1st, 2nd and 3rd.":"اختر الترتيب النهائي للمجموعة: الأول والثاني والثالث.",
   "Actual match results determine the group table. Enter results in the match list below.":"نتائج المباريات الفعلية تحدد جدول المجموعة. أدخل النتائج في قائمة المباريات أدناه.",
-  "Teams in group order":"الفرق بترتيب المجموعة","Actual top 3":"أفضل 3 فعلياً",
+  "Teams in group order":"الفرق بترتيب المجموعة","Actual Top 4":"أفضل 4 فعلياً",
   "rankings":"الترتيب"
 };
 
@@ -1265,7 +1272,7 @@ function exportDash(){
   const gs=Object.entries(GROUPS).map(([g,teams])=>{
     const actual=actualGroupTop(g,S.data.groupResults);
     const rows=l.map(({name})=>{const pd=S.data.players?.[name],pts=groupRankPts(pd,g,S.data.groupResults);return '<tr><td>'+escHtml(name)+'</td><td>'+escHtml(playerGroupRankText(pd,g))+'</td><td class="score">'+(pts===null?'—':pts)+'</td></tr>';}).join('');
-    return '<section class="sec page-avoid"><h3>Group '+escHtml(g)+' — '+teams.map(escHtml).join(' · ')+'</h3><div class="champ">Actual top 3: '+(actual.length?actual.slice(0,3).map((t,i)=>(i+1)+'. '+(FL[t]||'')+' '+escHtml(t)).join(' · '):'Pending')+'</div><div class="table-wrap"><table><thead><tr><th>Player</th><th>Group ranking prediction</th><th>Points</th></tr></thead><tbody>'+rows+'</tbody></table></div></section>';
+    return '<section class="sec page-avoid"><h3>Group '+escHtml(g)+' — '+teams.map(escHtml).join(' · ')+'</h3><div class="champ">Actual Top 4: '+(actual.length?actual.slice(0,4).map((t,i)=>(i+1)+'. '+(FL[t]||'')+' '+escHtml(t)).join(' · '):'Pending')+'</div><div class="table-wrap"><table><thead><tr><th>Player</th><th>Group ranking prediction</th><th>Points</th></tr></thead><tbody>'+rows+'</tbody></table></div></section>';
   }).join('');
   const ko=KOR.map(round=>{
     const rows=Array.from({length:round.slots/2},(_,idx)=>{
@@ -1290,7 +1297,17 @@ function exportPlayerPrediction(name){
   const dir=isAr()?'rtl':'ltr';
   const groupRows=Object.entries(GROUPS).map(([g])=>{
     const pred=pd?.groupPreds?.[g]||{};
-    const rows=['1','2','3'].map(pos=>{const t=groupPredPick(pred,pos);return'<tr><td>'+escHtml(tr(pos==='1'?'1st place':pos==='2'?'2nd place':'3rd place'))+'</td><td>'+(FL[t]||'')+' '+escHtml(t||'—')+'</td></tr>';}).join('');
+   const rows=['1','2','3','4'].map(pos=>{
+  const t=groupPredPick(pred,pos);
+  const label={
+    '1':'1st place',
+    '2':'2nd place',
+    '3':'3rd place',
+    '4':'4th place'
+  }[pos]||pos;
+
+  return '<tr><td>'+escHtml(tr(label))+'</td><td>'+(FL[t]||'')+' '+escHtml(t||'—')+'</td></tr>';
+}).join('');
     return'<section class="sec"><h3>'+escHtml(tr('Group'))+' '+escHtml(g)+'</h3><table><tbody>'+rows+'</tbody></table></section>';
   }).join('');
   const ko=KOR.map(r=>{
@@ -1374,7 +1391,7 @@ function sGroups(){
         done?D({cls:'mac',sty:{background:'var(--green)'}},[]):null,
         D({sty:{display:'flex',justifyContent:'space-between',marginBottom:'8px'}},[SP({sty:{fontWeight:600,fontSize:'14px'}},[tr('Group')+' '+g]),SP({sty:{fontSize:'11px',padding:'2px 7px',borderRadius:'12px',background:done?'var(--green-light)':f>0?'var(--blue-light)':'var(--surface2)',color:done?'var(--green-dark)':f>0?'var(--blue)':'var(--text3)',fontWeight:500}},[f+'/3'])]),
         D({sty:{display:'flex',flexWrap:'wrap',gap:'4px',marginBottom:'8px'}},teams.map(t=>SP({sty:{fontSize:'18px'}},[FL[t]||'🏳']))),
-        pts!==null?D({sty:{fontSize:'11px',color:pts>0?'var(--green-dark)':'var(--red)',fontWeight:700,marginBottom:'6px'}},[groupRankScoreLabel(pts)]):D({sty:{fontSize:'11px',color:'var(--text3)',marginBottom:'6px'}},[tr('Predict top 3')]),
+        pts!==null?D({sty:{fontSize:'11px',color:pts>0?'var(--green-dark)':'var(--red)',fontWeight:700,marginBottom:'6px'}},[groupRankScoreLabel(pts)]):D({sty:{fontSize:'11px',color:'var(--text3)',marginBottom:'6px'}},[tr('Predict Top 4')]),
         D({cls:'pbar'},[D({cls:'pfill',sty:{width:Math.round((f/3)*100)+'%',background:done?'var(--green)':'var(--blue)'}},[])]),
       ]);
     })),
@@ -1910,7 +1927,7 @@ function sPredictionViewer(){
           const pred=pd?.groupPreds?.[g]||{};
           return D({cls:'csm'},[
             D({sty:{fontWeight:800,marginBottom:'8px'}},[tr('Group')+' '+g]),
-            ...['1','2','3'].map(pos=>{const t=groupPredPick(pred,pos);return D({sty:{display:'flex',justifyContent:'space-between',gap:'8px',padding:'5px 0',borderBottom:'1px solid var(--border)'}},[SP({sty:{color:'var(--text2)',fontSize:'12px'}},[groupRankLabel(pos)]),SP({sty:{fontWeight:700,fontSize:'13px'}},[(FL[t]||'')+' '+(t||'—')])]);})
+            ...['1','2','3','4'].map(pos=>{const t=groupPredPick(pred,pos);return D({sty:{display:'flex',justifyContent:'space-between',gap:'8px',padding:'5px 0',borderBottom:'1px solid var(--border)'}},[SP({sty:{color:'var(--text2)',fontSize:'12px'}},[groupRankLabel(pos)]),SP({sty:{fontWeight:700,fontSize:'13px'}},[(FL[t]||'')+' '+(t||'—')])]);})
           ]);
         }))
       ]),
@@ -2114,7 +2131,7 @@ function sDash(){
         D({sty:{fontWeight:700,fontSize:'15px',marginBottom:'8px'}},[tr('Group')+' '+S.dg+' '+tr('rankings')]),
         D({sty:{fontSize:'12px',color:'var(--text2)',marginBottom:'6px'}},[tr('Teams in group order')+':']),
         groupOrderList(S.dg),
-        D({sty:{fontSize:'12px',color:'var(--text2)',marginTop:'12px',marginBottom:'6px'}},[tr('Actual top 3')+':']),
+        D({sty:{fontSize:'12px',color:'var(--text2)',marginTop:'12px',marginBottom:'6px'}},[tr('Actual Top 4')+':']),
         groupActualList(S.dg),
         D({sty:{overflowX:'auto'}},[el('table',{sty:{width:'100%',borderCollapse:'collapse',fontSize:'12px'}},[
           el('thead',{},[el('tr',{},[tr('Player'),tr('Prediction'),tr('Points')].map(h=>el('th',{sty:{textAlign:'left',padding:'7px',borderBottom:'1px solid var(--border)'}},[h])))]),
@@ -2153,7 +2170,7 @@ function sDash(){
     ]):null,
     S.dtab==="br"?sBracket():null,
     D({sty:{marginTop:"1.5rem",display:"flex",gap:"12px",fontSize:"12px",color:"var(--text3)",flexWrap:"wrap"}},
-      ['🎯 '+tr('Exact group position = 3 pts'),'✓ '+tr('Team in top 3 wrong position = 1 pt'),'⚔️ R32+2 R16+3 QF+4 SF+5 F+6','🏆 '+tr('Champion = 10 pts')].map(t=>SP({},[t]))
+      ['🎯 '+tr('Exact group position = 3 pts'),'✓ '+tr('Team in Top 4 wrong position = 1 pt'),'⚔️ R32+2 R16+3 QF+4 SF+5 F+6','🏆 '+tr('Champion = 10 pts')].map(t=>SP({},[t]))
     ),
   ]);
 }

@@ -4,8 +4,8 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
 <meta name="theme-color" content="#0a1f17"/>
-<meta name="application-name" content="WC2026 Pick'em"/>
-<meta name="apple-mobile-web-app-title" content="WC2026 Pick'em"/>
+<meta name="application-name" content="World Cup 2026"/>
+<meta name="apple-mobile-web-app-title" content="World Cup 2026"/>
 <meta name="apple-mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
 <meta name="mobile-web-app-capable" content="yes"/>
@@ -14,7 +14,7 @@
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png"/>
 <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png"/>
 
-<title>WC2026 Pick'em</title>
+<title>World Cup 2026</title>
 <style>
 /* ===== Part 1: design tokens + mobile-first CSS (RTL-aware) ===== */
 :root{
@@ -125,20 +125,24 @@ h1,h2,h3,h4{margin:0;line-height:1.2}
 /* Team flags + superhero avatars */
 .player-inline{display:inline-flex;align-items:center;gap:10px;min-width:0;max-width:100%}
 .player-inline .txt{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.avatar{display:inline-flex;align-items:center;justify-content:center;border-radius:50%;position:relative;flex:none;color:#fff;font-weight:900;text-transform:uppercase;box-shadow:0 8px 18px rgba(0,0,0,.14), inset 0 1px 0 rgba(255,255,255,.18);border:2px solid rgba(255,255,255,.82);overflow:hidden}
-.avatar::before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 28% 28%, rgba(255,255,255,.3), transparent 38%)}
-.avatar .hero-glyph{position:absolute;bottom:-2px;right:-2px;font-size:.72em;filter:drop-shadow(0 2px 2px rgba(0,0,0,.2))}
-.avatar .init{position:relative;z-index:1;letter-spacing:.04em}
-.avatar-sm{width:38px;height:38px;font-size:12px}
-.avatar-lg{width:72px;height:72px;font-size:22px}
-.avatar-theme-0{background:linear-gradient(135deg,#ef4444,#991b1b)}
-.avatar-theme-1{background:linear-gradient(135deg,#2563eb,#1e3a8a)}
-.avatar-theme-2{background:linear-gradient(135deg,#7c3aed,#4c1d95)}
-.avatar-theme-3{background:linear-gradient(135deg,#ea580c,#9a3412)}
-.avatar-theme-4{background:linear-gradient(135deg,#059669,#065f46)}
-.avatar-theme-5{background:linear-gradient(135deg,#db2777,#831843)}
-.avatar-theme-6{background:linear-gradient(135deg,#0891b2,#164e63)}
-.avatar-theme-7{background:linear-gradient(135deg,#ca8a04,#713f12)}
+.avatar{display:inline-flex;align-items:center;justify-content:center;border-radius:50%;position:relative;flex:none;color:#fff;font-weight:800;text-transform:uppercase;box-shadow:0 6px 16px rgba(0,0,0,.22), inset 0 1px 0 rgba(255,255,255,.22);border:2px solid rgba(255,255,255,.9);overflow:hidden;isolation:isolate}
+/* football-kit vertical stripe */
+.avatar::before{content:"";position:absolute;inset:0;background:linear-gradient(90deg,transparent 0 38%, rgba(255,255,255,.16) 38% 50%, transparent 50% 62%, rgba(255,255,255,.16) 62% 74%, transparent 74%);mix-blend-mode:overlay}
+.avatar .init{position:relative;z-index:2;letter-spacing:.02em;text-shadow:0 1px 2px rgba(0,0,0,.35);line-height:1}
+/* squad number badge */
+.avatar .kit-no{position:absolute;z-index:3;inset-block-end:-3px;inset-inline-end:-3px;min-width:1.4em;height:1.4em;padding:0 .22em;display:flex;align-items:center;justify-content:center;font-size:.5em;font-weight:800;border-radius:999px;background:#fff;color:var(--ink,#102019);box-shadow:0 2px 5px rgba(0,0,0,.3);border:1.5px solid rgba(0,0,0,.06)}
+.avatar-sm{width:40px;height:40px;font-size:14px}
+.avatar-lg{width:74px;height:74px;font-size:25px}
+.avatar-lg .kit-no{font-size:.42em}
+/* high-contrast football kit palettes (white initials remain legible on all) */
+.avatar-theme-0{background:linear-gradient(140deg,#e11d48,#9f1239)}
+.avatar-theme-1{background:linear-gradient(140deg,#1d4ed8,#1e3a8a)}
+.avatar-theme-2{background:linear-gradient(140deg,#6d28d9,#4c1d95)}
+.avatar-theme-3{background:linear-gradient(140deg,#c2410c,#7c2d12)}
+.avatar-theme-4{background:linear-gradient(140deg,#047857,#064e3b)}
+.avatar-theme-5{background:linear-gradient(140deg,#be185d,#831843)}
+.avatar-theme-6{background:linear-gradient(140deg,#0e7490,#155e63)}
+.avatar-theme-7{background:linear-gradient(140deg,#a16207,#713f12)}
 .big-flag{font-size:1.55em;line-height:1;vertical-align:-0.12em;display:inline-block;margin-inline-end:3px;filter:drop-shadow(0 1px 1px rgba(0,0,0,.12))}
 .teams .big-flag{font-size:1.9em;vertical-align:-0.18em}
 .gtable .big-flag,.barrow .big-flag{font-size:1.45em}
@@ -2995,27 +2999,292 @@ body.no-voice .micbtn{display:none!important}
 }
 .hub-bottom-space{margin-top:16px}
 
+
+/* ===== v71 Today popup redesign ===== */
+.today-popup-shell{
+  display:grid;
+  gap:12px;
+}
+.today-popup-head{
+  padding:4px 4px 0;
+}
+.today-popup-kicker{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  border-radius:999px;
+  background:#e8f8ef;
+  color:#087343;
+  font-size:11px;
+  font-weight:1000;
+  padding:4px 9px;
+}
+.today-popup-head h3{
+  margin:8px 0 4px;
+  font-size:20px;
+}
+.today-popup-sub{
+  color:var(--muted);
+  font-size:12px;
+  font-weight:800;
+}
+.today-popup-summary{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:8px;
+}
+.today-popup-stat{
+  border:1px solid var(--border);
+  background:linear-gradient(180deg,#fff,#f7fbf8);
+  border-radius:14px;
+  padding:9px;
+  min-width:0;
+}
+.today-popup-stat b{
+  display:block;
+  font-size:20px;
+  line-height:1;
+  color:var(--pitch);
+}
+.today-popup-stat span{
+  display:block;
+  margin-top:4px;
+  font-size:10.5px;
+  color:var(--muted);
+  font-weight:900;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.today-popup-list{
+  display:grid;
+  gap:10px;
+  max-height:min(58vh,520px);
+  overflow:auto;
+  padding-inline-end:2px;
+}
+.today-popup-card{
+  border:1px solid rgba(16,32,25,.09);
+  border-radius:18px;
+  padding:12px;
+  background:linear-gradient(180deg,#fff,#f8fbf9);
+  box-shadow:0 5px 18px rgba(7,21,16,.05);
+}
+.today-popup-card.final{
+  border-color:rgba(34,199,122,.28);
+  background:linear-gradient(180deg,#f7fff9,#fff);
+}
+.today-popup-card.live{
+  border-color:rgba(247,201,72,.48);
+  background:linear-gradient(180deg,#fffaf0,#fff);
+}
+.today-popup-card.soon{
+  border-color:rgba(34,199,122,.22);
+}
+.today-popup-top{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:10px;
+}
+.today-popup-main{
+  min-width:0;
+}
+.today-popup-teams{
+  font-weight:1000;
+  font-size:15px;
+  line-height:1.25;
+}
+.today-popup-teams span.vs{
+  color:var(--muted);
+  font-size:11px;
+  margin:0 5px;
+}
+.today-popup-score{
+  font-family:var(--num);
+  font-size:20px;
+  font-weight:1000;
+  color:var(--pitch);
+  white-space:nowrap;
+}
+.today-popup-status{
+  display:inline-flex;
+  align-items:center;
+  gap:5px;
+  border-radius:999px;
+  padding:5px 9px;
+  font-size:11px;
+  font-weight:1000;
+  white-space:nowrap;
+  background:var(--soft);
+  color:var(--muted);
+}
+.today-popup-status.final{background:#e5faef;color:#087343}
+.today-popup-status.live{background:#fff2bf;color:#80600b}
+.today-popup-status.soon{background:#e9fbf1;color:#087343}
+.today-popup-status.upcoming{background:#edf2ef;color:#66766f}
+.today-popup-meta{
+  margin-top:5px;
+  color:var(--muted);
+  font-size:11.5px;
+  font-weight:800;
+}
+.today-popup-time-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:8px;
+  margin-top:10px;
+}
+.today-popup-time{
+  border:1px solid var(--border);
+  background:#fff;
+  border-radius:13px;
+  padding:8px;
+  min-width:0;
+}
+.today-popup-time span{
+  display:block;
+  color:var(--muted);
+  font-size:10.5px;
+  font-weight:1000;
+  text-transform:uppercase;
+  letter-spacing:.04em;
+}
+.today-popup-time b{
+  display:block;
+  margin-top:3px;
+  color:var(--ink);
+  font-size:12px;
+  font-weight:1000;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.today-popup-picks{
+  margin-top:9px;
+}
+.today-popup-split{
+  height:8px;
+  display:flex;
+  overflow:hidden;
+  border-radius:999px;
+  background:var(--soft);
+  box-shadow:inset 0 0 0 1px #e8edea;
+}
+.today-popup-split .home{background:var(--grass-d)}
+.today-popup-split .away{background:#e7b94e}
+.today-popup-split .none{background:#cfd8d3}
+.today-popup-pick-labels{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:6px;
+  margin-top:6px;
+  font-size:10.5px;
+  color:var(--muted);
+  font-weight:900;
+}
+.today-popup-pick-labels span{
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.today-popup-note{
+  margin-top:8px;
+  border-radius:12px;
+  background:#f3f6f4;
+  color:var(--muted);
+  padding:8px;
+  font-size:11px;
+  font-weight:800;
+}
+.today-popup-actions{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:8px;
+}
+@media(max-width:620px){
+  .today-popup-summary,
+  .today-popup-time-grid,
+  .today-popup-actions{
+    grid-template-columns:1fr;
+  }
+  .today-popup-top{
+    flex-direction:column;
+  }
+  .today-popup-score{
+    width:max-content;
+  }
+}
+
+/* ===== v80 Deploy Today Update Popup ===== */
+.today-update-shell{display:grid;gap:12px;color:var(--ink)}
+.today-update-head{padding:4px 4px 0}
+.today-update-kicker{display:inline-flex;align-items:center;gap:6px;border-radius:999px;background:#e8f8ef;color:#087343;font-size:11px;font-weight:1000;padding:5px 10px}
+.today-update-head h3{margin:9px 0 4px;font-size:21px;letter-spacing:-.02em}
+.today-update-sub{color:var(--muted);font-size:12px;font-weight:800;line-height:1.45}
+.today-update-summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.today-update-stat{border:1px solid var(--border);background:linear-gradient(180deg,#fff,#f7fbf8);border-radius:15px;padding:10px;min-width:0}
+.today-update-stat b{display:block;font-family:var(--num);font-size:21px;line-height:1;color:var(--pitch)}
+.today-update-stat span{display:block;margin-top:4px;font-size:10.5px;color:var(--muted);font-weight:950;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.today-update-list{display:grid;gap:10px;max-height:min(60vh,560px);overflow:auto;padding-inline-end:2px}
+.today-update-card{border:1px solid rgba(16,32,25,.09);border-radius:18px;padding:12px;background:linear-gradient(180deg,#fff,#f8fbf9);box-shadow:0 5px 18px rgba(7,21,16,.05)}
+.today-update-card.final{border-color:rgba(34,199,122,.30);background:linear-gradient(180deg,#f7fff9,#fff)}
+.today-update-card.live{border-color:rgba(247,201,72,.52);background:linear-gradient(180deg,#fffaf0,#fff)}
+.today-update-card.soon{border-color:rgba(34,199,122,.24)}
+.today-update-top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+.today-update-main{min-width:0}.today-update-teams{font-weight:1000;font-size:15px;line-height:1.3}.today-update-teams .vs{color:var(--muted);font-size:11px;margin:0 5px}.today-update-meta{margin-top:5px;color:var(--muted);font-size:11.5px;font-weight:800;line-height:1.45}
+.today-update-score{font-family:var(--num);font-size:22px;font-weight:1000;color:var(--pitch);white-space:nowrap;text-align:end}.today-update-score.pending{font-size:16px;color:var(--muted)}
+.today-update-status{display:inline-flex;align-items:center;gap:5px;border-radius:999px;padding:5px 9px;font-size:11px;font-weight:1000;white-space:nowrap;background:var(--soft);color:var(--muted)}
+.today-update-status.final{background:#e5faef;color:#087343}.today-update-status.live{background:#fff2bf;color:#80600b}.today-update-status.soon{background:#e9fbf1;color:#087343}.today-update-status.upcoming{background:#edf2ef;color:#66766f}
+.today-update-time-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}.today-update-time{border:1px solid var(--border);background:#fff;border-radius:13px;padding:8px;min-width:0}.today-update-time span{display:block;color:var(--muted);font-size:10.5px;font-weight:1000;text-transform:uppercase;letter-spacing:.04em}.today-update-time b{display:block;margin-top:3px;color:var(--ink);font-size:12px;font-weight:1000;white-space:normal;overflow-wrap:anywhere;line-height:1.35}
+.today-update-source{margin-top:9px;display:grid;gap:5px;border:1px dashed #dce6e1;background:#fbfdfc;border-radius:13px;padding:8px;color:var(--muted);font-size:11px;font-weight:850;line-height:1.35}.today-update-source b{color:var(--ink)}
+.today-update-picks{margin-top:9px}.today-update-split{height:8px;display:flex;overflow:hidden;border-radius:999px;background:var(--soft);box-shadow:inset 0 0 0 1px #e8edea}.today-update-split .home{background:var(--grass-d)}.today-update-split .away{background:#e7b94e}.today-update-split .none{background:#cfd8d3}
+.today-update-pick-labels{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin-top:6px;font-size:10.5px;color:var(--muted);font-weight:900}.today-update-pick-labels span{white-space:normal;overflow-wrap:anywhere;line-height:1.3}
+.today-update-note{margin-top:8px;border-radius:12px;background:#f3f6f4;color:var(--muted);padding:8px;font-size:11px;font-weight:850;line-height:1.4}.today-update-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}.today-update-empty{border:1px solid var(--border);border-radius:16px;padding:14px;background:#fff;color:var(--muted);font-weight:850}
+@media(max-width:680px){.today-update-summary{grid-template-columns:repeat(2,minmax(0,1fr))}.today-update-time-grid,.today-update-actions{grid-template-columns:1fr}.today-update-top{flex-direction:column}.today-update-score{text-align:start;width:max-content}}
+/* ===== v45 design round: readability, hierarchy & points chart ===== */
+/* Brighten small text on the dark hero so every word is easy to read */
+.hub-hero .hub-brief-label{color:#d8ffec;font-size:11.5px;letter-spacing:.07em}
+.hub-hero .hub-brief-sub{color:#eafff5;font-size:13.5px}
+.hub-hero .hub-brief-mini span,.hub-hero .hub-kpi span{color:#dcf4ea;font-size:12.5px}
+.hub-hero .hub-pill{color:#fff;background:rgba(255,255,255,.18)}
+.hub-hero .hero-kicker{color:#9ff0c6;font-weight:1000;letter-spacing:.04em}
+/* Sharpen hierarchy: the "Today" headline is the loudest thing on the page */
+.hub-hero h2{font-weight:1000;text-shadow:0 2px 12px rgba(0,0,0,.28)}
+/* Lift muted text on white panels to a more legible tone + a touch more air */
+.hub-panel .hub-meta{font-size:12.5px;color:#566660}
+.hub-panel .hint{color:#566660}
+.hub-panel h3{font-size:16px;letter-spacing:-.01em}
+.hub-panel{padding:18px}
+/* Points bar chart (vanilla, RTL-safe) */
+.pts-chart{display:flex;flex-direction:column;gap:9px;margin:2px 0 14px;padding:13px 14px;border:1px solid var(--border);border-radius:16px;background:linear-gradient(180deg,#f7fbf8,#fff)}
+.pts-chart-row{display:grid;grid-template-columns:minmax(74px,38%) 1fr auto;gap:10px;align-items:center}
+.pts-chart-name{font-size:12.5px;font-weight:800;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pts-chart-track{height:14px;border-radius:999px;background:var(--soft);overflow:hidden}
+.pts-chart-bar{display:block;height:100%;border-radius:999px;background:linear-gradient(90deg,var(--grass-d),var(--grass));transition:inline-size .5s ease}
+.pts-chart-val{font-family:var(--num);font-weight:1000;font-size:13px;color:var(--grass-d);min-width:1.7em;text-align:end}
+.pts-chart-row.me .pts-chart-bar{background:linear-gradient(90deg,#caa106,var(--gold))}
+.pts-chart-row.me .pts-chart-name{color:var(--grass-d)}
+.pts-chart-row.me .pts-chart-val{color:#9c7905}
+@media(max-width:560px){.pts-chart-row{grid-template-columns:minmax(64px,42%) 1fr auto}}
+
+.hub-brief-mini b,.hub-brief-mini span,.hub-brief-main,.hub-brief-sub,.wc-status-tile b,.wc-status-tile small{unicode-bidi:isolate}
+.sheet{position:relative}.sheet-close{position:absolute;top:10px;inset-inline-end:12px;z-index:6;width:34px;height:34px;border-radius:50%;border:none;background:var(--soft);color:var(--ink);font-size:22px;font-weight:700;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 6px rgba(0,0,0,.12)}.sheet-close:active{background:var(--border)}
 </style>
 <!-- Analytics is initialized once in loadAnalytics() to avoid duplicate page_view hits. -->
 </head>
 <body>
 <div class="topbar">
-  <div class="brand"><span class="dot"></span><span id="brandTxt">WC2026 Pick'em</span></div>
+  <div class="brand"><span class="dot"></span><span id="brandTxt">World Cup 2026</span></div>
   <div class="spacer"></div>
   <div class="clockpill" id="clockPill"><span class="date">—</span><span class="time">—</span></div>
   <button class="iconbtn" id="langBtn" onclick="toggleLang()">EN</button>
   <button class="iconbtn gold hide" id="adminBtn" onclick="openAdmin()">Admin</button>
-  <button class="iconbtn" id="installBtn" onclick="installPWA()" style="display:none">Install</button>
 </div>
 <div class="phase wrap" id="phaseStrip"></div>
 <main class="wrap" id="view"></main>
 
 <nav class="botnav" id="botnav"></nav>
-<div class="install-banner" id="installBanner">
-  <div class="txt"><div class="title">📲 Install WC2026 Pick'em</div><div class="sub">Add it to your phone home screen for app-like access.</div></div>
-  <button class="btn gold sm" onclick="installPWA()">Install</button>
-  <button class="btn ghost sm" onclick="dismissInstallBanner()">Later</button>
-</div>
 
 <div class="sheet-bg" id="sheetBg" onclick="if(event.target===this)closeSheet()">
   <div class="sheet" id="sheet" role="dialog" aria-modal="true"></div>
@@ -3085,7 +3354,7 @@ const TEAM_ALIASES={
 /* --- i18n --- */
 const I18N={
   en:{
-    brand:"WC2026 Pick'em", admin:"Admin", langName:"EN",
+    brand:"World Cup 2026", admin:"Admin", langName:"EN",
     nav_dashboard:"Home", nav_today:"Today", nav_leaderboard:"Table", nav_matches:"Matches", nav_profile:"Profile", nav_more:"More", v_alerts:"Alerts", v_backup:"Backup / Restore", v_sharecards:"Share cards", v_health:"Health check", v_syncResults:"Result sync check",
     v_dashboard:"Dashboard", v_today:"Today's matches", v_matches:"All matches", v_groups:"Group tables",
     v_predictions:"All predictions", v_consensus:"Group leaders consensus", v_knockout:"Knockout bracket",
@@ -3224,7 +3493,7 @@ function trackPageView(view){
     if(!analyticsEnabled()) return;
     loadAnalytics();
     gtag('event','page_view',{
-      page_title:'WC2026 Pickem - '+(view||APP.view||'dashboard'),
+      page_title:'World Cup 2026 - '+(view||APP.view||'dashboard'),
       page_location:location.href.split('#')[0]+'#'+(view||APP.view||'dashboard'),
       page_path:'/'+(view||APP.view||'dashboard'),
       app_version:'v33',
@@ -3548,7 +3817,7 @@ function teamText(team, empty='—'){ if(team==null||team==='') return empty; co
 function teamHtml(team, empty='—'){ if(team==null||team==='') return esc(empty); const c=canonTeam(team); const f=flagForTeam(c); return (f?`<span class="big-flag">${esc(f)}</span> `:'')+esc(c); }
 function playerInitials(name){ return String(name||'').trim().split(/\s+/).filter(Boolean).slice(0,2).map(x=>x[0]).join('').toUpperCase()||'WC'; }
 function hashCode(s){ s=String(s||''); let h=0; for(let i=0;i<s.length;i++) h=(h*31+s.charCodeAt(i))>>>0; return h>>>0; }
-function playerAvatar(name,size='sm'){ const h=hashCode(name||'player'); const theme=h%8, glyph=HERO_GLYPHS[h%HERO_GLYPHS.length], initials=playerInitials(name); return `<span class="avatar avatar-${size} avatar-theme-${theme}" title="${esc(name||'Player')}"><span class="init">${esc(initials)}</span><span class="hero-glyph">${glyph}</span></span>`; }
+function playerAvatar(name,size='sm'){ const h=hashCode(name||'player'); const theme=h%8, kitNo=(h%26)+1, initials=playerInitials(name); return `<span class="avatar avatar-${size} avatar-theme-${theme}" title="${esc(name||'Player')}"><span class="init">${esc(initials)}</span><span class="kit-no">${kitNo}</span></span>`; }
 function playerNameHtml(name,size='sm'){ return `<span class="player-inline">${playerAvatar(name,size)}<span class="txt">${esc(name||'')}</span></span>`; }
 
 /* normalize a prediction (array OR object {1:..}) → array length up to 4 */
@@ -4210,14 +4479,9 @@ const NAV=[
 const MORE_ITEMS=[
   {id:'today',ic:'📅',key:'nav_today'},
   {id:'matches',ic:'⚽',key:'nav_matches'},
-  {id:'alerts',ic:'🔔',key:'v_alerts'},
-  {id:'scenarios',ic:'⚡',key:'v_scenarios'},
-  {id:'ai',ic:'🤖',key:'v_ai'},
-  {id:'sharecards',ic:'📲',key:'v_sharecards'},
   {id:'predictions',ic:'📝',key:'v_predictions'},
   {id:'consensus',ic:'👥',key:'v_consensus'},
   {id:'knockout',ic:'🎯',key:'v_knockout'},
-  {id:'impact',ic:'🔥',key:'v_impact'},
   {id:'help',ic:'❓',key:'v_help'}
 ];
 const ADMIN_ITEMS=[
@@ -4242,14 +4506,14 @@ function openMore(){
   let adminLogin = APP.isAdmin ? [] : [{id:'_adminLogin',ic:'🔒',key:'admin',adm:true,login:true}];
   let adm = APP.isAdmin ? ADMIN_ITEMS.map(i=>({...i,adm:true})) : [];
   const allItems=items.concat(adminLogin,adm);
-  $('sheet').innerHTML=`<div class="grab"></div>
+  $('sheet').innerHTML=`<div class="grab"></div><button class="sheet-close" onclick="closeSheet()" aria-label="Close">×</button>
     <h3 style="padding:0 8px 8px">${esc(t('nav_more'))}</h3>
     ${allItems.map(i=>`<div class="menu-item ${i.adm?'adm':''}" onclick="${i.login?'openAdmin()':`go('${i.id}')`};closeSheet()">
       <span class="ic">${i.ic}</span><span>${esc(t(i.key))}</span>${i.adm?`<span class="spacer" style="flex:1"></span><span class="tag adm">${esc(i.login?t('admin'):t('adminOnly'))}</span>`:''}</div>`).join('')}
     ${APP.isAdmin?`<div class="menu-item" onclick="logoutAdmin();closeSheet()"><span class="ic">🚪</span><span>${esc(t('logout'))}</span></div>`:''}`;
   $('sheetBg').classList.add('open');
 }
-function openSheet(html){ $('sheet').innerHTML='<div class="grab"></div>'+html; $('sheetBg').classList.add('open'); }
+function openSheet(html){ $('sheet').innerHTML='<div class="grab"></div><button class="sheet-close" onclick="closeSheet()" aria-label="Close">×</button>'+html; $('sheetBg').classList.add('open'); }
 function closeSheet(){ $('sheetBg').classList.remove('open'); }
 
 function go(view){ APP.view=view; closeSheet(); render(); window.scrollTo(0,0); trackPageView(view); trackEvent('nav_click',{view}); }
@@ -4303,15 +4567,10 @@ function render(){
     results:viewResults,
     repair:viewRepair,
     settings:viewSettings,
-    impact:viewImpact,
-    scenarios:viewScenarios,
-    alerts:viewAlerts,
     backup:viewBackup,
-    sharecards:viewShareCards,
     health:viewHealth,
     syncresults:viewSyncResults,
-    help:viewHelp,
-    ai:viewAI
+    help:viewHelp
   };
 
   const fn=map[APP.view]||viewDashboard;
@@ -4388,8 +4647,7 @@ function renderHomeHero(lb,leader,next){
       ${statTile(next?matchDateTime(next):completedMatchCount()+'/72',next?tl('Next match','المباراة القادمة'):t('completedMatches'))}
     </div>
     <div class="hero-actions">
-      <button class="btn gold sm" onclick="go('ai')">🤖 ${esc(t('v_ai'))}</button>
-      <button class="btn ghost sm" onclick="go('scenarios')">⚡ ${esc(t('v_scenarios'))}</button>
+      
       <button class="btn ghost sm" onclick="go('leaderboard')">🏆 ${esc(t('v_leaderboard'))}</button>
       <button class="btn ghost sm" onclick="shareLeaderboard()">📲 ${esc(t('share'))}</button>
     </div>
@@ -4419,26 +4677,7 @@ function renderNextMatchImpact(m){
       <div class="insight"><div class="title">${esc(tl('If','إذا فاز'))} ${teamHtml(m.home)}</div><div class="impact-list"><span class="impact-pill good">+${SCORING.edgeCorrect}: ${sc.home.length}</span></div><div class="sub">${esc(sc.home.slice(0,8).join(', ')||t('none'))}${sc.home.length>8?'…':''}</div></div>
       <div class="insight"><div class="title">${esc(tl('If','إذا فاز'))} ${teamHtml(m.away)}</div><div class="impact-list"><span class="impact-pill gold">+${SCORING.edgeCorrect}: ${sc.away.length}</span></div><div class="sub">${esc(sc.away.slice(0,8).join(', ')||t('none'))}${sc.away.length>8?'…':''}</div></div>
     </div>
-    <div class="voice-row"><button class="btn sm" onclick="go('scenarios')">🤖 ${esc(tl('Simulate with AI','محاكاة بالذكاء'))}</button><button class="btn ghost sm" onclick="shareTodayImpact()">${esc(t('share'))}</button></div>
   </div>`;
-}
-function renderHomeAIQuick(next){
-  const ex=next?`${next.home} 2-1 ${next.away}`:tl('If Brazil beats Morocco 2-1','إذا فازت البرازيل على المغرب 2-1');
-  return `<div class="home-ai">
-    <textarea id="homeAiBox" placeholder="${esc(tl('Ask with voice or text: what changes if…','اسأل بالصوت أو الكتابة: ماذا يتغير إذا…'))}">${esc(ex)}</textarea>
-    <div class="voice-row">
-      <button class="micbtn" onclick="startVoiceInput('homeAiBox','ai')">🎙️ ${esc(tl('Speak','تحدث'))}</button>
-      <button class="btn sm" onclick="askAIFromHome()">🤖 ${esc(tl('Ask AI','اسأل الذكاء'))}</button>
-      <button class="btn ghost sm" onclick="$('homeAiBox').value='';$('homeAiAns').innerHTML=''">${esc(t('clear'))}</button>
-    </div>
-    <div id="homeAiAns"></div>
-  </div>`;
-}
-function askAIFromHome(){
-  const q=$('homeAiBox')?$('homeAiBox').value:'';
-  if(!q.trim()) return;
-  const ans=answerLocalAI(q,'scenario',LANG);
-  $('homeAiAns').innerHTML=`<div class="ai-ans">${esc(ans)}</div><button class="btn ghost sm" style="margin-top:8px" onclick='copyText(${JSON.stringify(ans)})'>${esc(t('copy'))}</button>`;
 }
 function renderBiggestMovers(latest){
   let rows=[];
@@ -4645,7 +4884,7 @@ function completedMatchesOnDate(date){
 }
 function resultLine(m){
   const r=matchResult(m.group,m.idx);
-  if(!r.complete) return `${teamText(m.home)} vs ${teamText(m.away)}`;
+  if(!r.complete) return `⁦${teamText(m.home)} vs ${teamText(m.away)}⁩`;
   return `${teamText(r.home)} ${r.hs}-${r.as} ${teamText(r.away)}`;
 }
 function groupLeaderLine(g){
@@ -4731,19 +4970,6 @@ function leaderboardNarrative(){
   const top=lb.slice(0,5).map(r=>`#${r.rank} ${r.name} ${r.total} ${t('pts')}`).join(' · ');
   const gap=lb[1] ? `${tl('The gap between first and second is','الفارق بين الأول والثاني')} ${lb[0].total-lb[1].total} ${t('pts')}.` : '';
   return `${top}. ${gap}`;
-}
-function aiSummaryInsightBadges(){
-  const today=matchesOnDate(uaeToday()).filter(m=>m.group&&m.idx!=null);
-  const y=completedMatchesOnDate(uaeDateOffset(-1));
-  const past=pastUncompletedMatches(20);
-  const activeGroups=GROUP_KEYS.filter(g=>computeGroupTable(g).some(x=>x.P>0)).length;
-  return [
-    {v:`${completedMatchCount()}/${totalGroupMatchCount()}`,l:tl('Completed','مكتملة')},
-    {v:String(y.length),l:tl('Yesterday results','نتائج أمس')},
-    {v:String(today.length),l:tl('Match Center','مركز المباريات')},
-    {v:String(activeGroups),l:tl('Active groups','مجموعات بدأت')},
-    {v:String(past.length),l:tl('Need results','تحتاج نتائج')}
-  ];
 }
 
 
@@ -4906,7 +5132,7 @@ function renderFullTodayMatchCard(m){
         <div class="sub">${esc(tl('Group','المجموعة'))} ${esc(m.group)} · ${esc(matchDateTime(m))}</div>
       </div>
       <div class="today-actions">
-        <button class="btn ghost sm" onclick="go('scenarios')">⚡ ${esc(t('v_scenarios'))}</button>
+        
         ${APP.isAdmin?`<button class="btn ghost sm" onclick="go('results')">✏️ ${esc(t('v_results'))}</button>`:''}
       </div>
     </div>
@@ -4953,7 +5179,7 @@ function renderCompleteGroupsCard(){
 function renderCompleteTodayCard(){
   const today=matchesOnDate(uaeToday()).filter(m=>m.group&&m.idx!=null);
   return `<section class="matchday-section">
-    <div class="section-title"><div><h3>📅 ${esc(tl('Today matches and all player predictions','مباريات اليوم وكل توقعات اللاعبين'))}</h3><p>${esc(uaeToday())} · ${esc(tl('UAE time','بتوقيت الإمارات'))}</p></div></div>
+    <div class="section-title"><div><h3>📅 ${esc(tl('Today matches and all player predictions','مباريات اليوم وكل توقعات اللاعبين'))}</h3><p>${esc(uaeToday())} · ${esc(tl('your time','بتوقيتك'))}</p></div></div>
     ${today.length?today.map(renderFullTodayMatchCard).join(''):`<div class="banner">${esc(t('noToday'))}</div>`}
   </section>`;
 }
@@ -4982,7 +5208,7 @@ function dataCompletenessWarnings(){
 
 function homeResultLine(m){
   if(!m) return '—';
-  if(m.api) return `${teamText(m.home)} ${m.hs}-${m.as} ${teamText(m.away)}`;
+  if(m.api) return `⁦${teamText(m.home)} ${m.hs}-${m.as} ${teamText(m.away)}⁩`;
   const r=matchResult(m.group,m.idx);
   return r&&r.complete?`${teamText(r.home)} ${r.hs}-${r.as} ${teamText(r.away)}`:'—';
 }
@@ -5003,8 +5229,8 @@ function renderMatchdayStatusBar(){
     <div class="wc-card-head">
       <div>
         <div class="wc-kicker">⚽ ${esc(tl('WC Status','حالة كأس العالم'))}</div>
-        <h2>${esc(tl('Today · UAE time','اليوم · توقيت الإمارات'))}</h2>
-        <p>${esc(uaeToday())} · ${esc(formatUaeDateTimeParts().time)} UAE · ${esc(source)}</p>
+        <h2>${esc(tl('Today · your time','اليوم · بتوقيتك'))}</h2>
+        <p>${esc(uaeToday())} · ${esc(formatUaeDateTimeParts().time)} · ${esc(source)}</p>
       </div>
     </div>
     <div class="wc-status-grid">
@@ -5047,7 +5273,7 @@ function summaryResultBox(m){
   if(!m.api && !r.complete) return '';
   return `<div class="summary-result-box ${m.api?'api-live':''}">
     <div class="summary-result-teams">${teamHtml(r.home)} <b class="num">${r.hs}-${r.as}</b> ${teamHtml(r.away)}</div>
-    <div class="summary-result-meta">${esc(tl('Group','المجموعة'))} ${esc(m.group)} · ${esc(m.api?(m.date+' · '+m.time+' UAE · Live'):matchDateTime(m))}</div>
+    <div class="summary-result-meta">${esc(tl('Group','المجموعة'))} ${esc(m.group)} · ${esc(m.api?(m.date+' · '+m.time+' · Live'):matchDateTime(m))}</div>
   </div>`;
 }
 function summaryTodayMatchBox(m){
@@ -5069,61 +5295,6 @@ function summaryTodayMatchBox(m){
   </div>`;
 }
 
-function renderShortAISummary(){
-  const today=matchesOnDate(uaeToday()).filter(m=>m.group&&m.idx!=null);
-  const results=allCompletedResultsForHome().matches;
-  const groups=allRelevantGroupsForHome();
-  const lb=buildLeaderboard();
-  const past=pastUncompletedMatches(20);
-  const latest=results.length?results[results.length-1]:null;
-  const focus=today[0];
-
-  return `<div class="card short-ai-card summary-box-card">
-    <div class="between summary-box-head">
-      <div>
-        <div class="hero-kicker dark">🤖 ${esc(tl('AI Summary','ملخص ذكي'))}</div>
-        <h3>${esc(tl('What changed and what matters today','ما تغير وما يهم اليوم'))}</h3>
-      </div>
-      <div class="ai-summary-actions">
-        <button class="btn ghost sm" onclick="copyText(aiMatchdaySummaryText())">📋 ${esc(t('copy'))}</button>
-        <button class="btn ghost sm" onclick="shareText(aiMatchdaySummaryText())">📲 ${esc(t('share'))}</button>
-      </div>
-    </div>
-
-    <div class="summary-box-layout">
-      <section class="summary-panel">
-        <div class="summary-panel-title">🕘 ${esc(tl('Latest result','آخر نتيجة'))}</div>
-        ${latest?summaryResultBox(latest):`<div class="summary-empty">${esc(tl('No saved result yet.','لا توجد نتيجة محفوظة بعد.'))}</div>`}
-      </section>
-
-      <section class="summary-panel">
-        <div class="summary-panel-title">📊 ${esc(tl('Active groups','المجموعات النشطة'))}</div>
-        <div class="summary-groups-grid">
-          ${groups.length?groups.slice(0,4).map(summaryGroupBox).join(''):`<div class="summary-empty">${esc(tl('No active groups yet.','لا توجد مجموعات نشطة بعد.'))}</div>`}
-        </div>
-      </section>
-
-      <section class="summary-panel today-focus-panel">
-        <div class="summary-panel-title">📅 ${esc(tl('Today focus','محور اليوم'))}</div>
-        ${focus?summaryTodayMatchBox(focus):`<div class="summary-empty">${esc(tl('No matches are scheduled for today in the app schedule.','لا توجد مباريات مجدولة اليوم في التطبيق.'))}</div>`}
-      </section>
-
-      <section class="summary-panel">
-        <div class="summary-panel-title">👥 ${esc(tl('Players','اللاعبون'))}</div>
-        ${lb[0]?`<div class="summary-player-box">
-          <div class="summary-player-main">${playerNameHtml(lb[0].name,'sm')}</div>
-          <div class="summary-player-score num">${lb[0].total} ${esc(t('pts'))}</div>
-          <div class="summary-player-meta">${lb[1]?`${esc(tl('Chasing','يلاحق'))}: ${esc(lb[1].name)} · ${lb[1].total} ${esc(t('pts'))}`:esc(tl('Current leader','المتصدر الحالي'))}</div>
-        </div>`:`<div class="summary-empty">${esc(t('noData'))}</div>`}
-      </section>
-
-      ${past.length?`<section class="summary-panel warning">
-        <div class="summary-panel-title">⚠️ ${esc(tl('Action needed','إجراء مطلوب'))}</div>
-        <div class="summary-empty">${past.length} ${esc(tl('past match(es) need results.','مباراة سابقة تحتاج نتائج.'))}</div>
-      </section>`:''}
-    </div>
-  </div>`;
-}
 function wcSection(title,subtitle,body,cls){
   return `<div class="card wc-home-card ${cls||''}">
     <div class="wc-section-title"><div><h3>${title}</h3>${subtitle?`<p>${esc(subtitle)}</p>`:''}</div></div>
@@ -5225,7 +5396,7 @@ function homeAISummaryText(){
   if(today.length){
     lines.push(tl(`Match Center: ${today.length} live API match${today.length>1?'es':''}.`,`مركز المباريات: ${today.length} مباراة من API مباشر.`));
   }else{
-    lines.push(tl('Match Center: no live API matches in the current UAE window.','مركز المباريات: لا توجد مباريات من API مباشر ضمن نافذة الإمارات الحالية.'));
+    lines.push(tl('Match Center: no live API matches in the current match window.','مركز المباريات: لا توجد مباريات من API مباشر ضمن نافذة المباريات الحالية.'));
   }
   if(next){
     lines.push(tl(`Next live kickoff: ${teamText(next.home)} vs ${teamText(next.away)} at ${matchDateTime(next)}.`,`المباراة القادمة من API: ${teamText(next.home)} ضد ${teamText(next.away)} في ${matchDateTime(next)}.`));
@@ -5361,6 +5532,24 @@ function renderYourMatchdayCard(){
     </div>
   </div>`;
 }
+function pointsBarChart(rows){
+  const data=rows.slice(0,5);
+  if(!data.length) return '';
+  const max=Math.max(1,...data.map(r=>Number(r.total)||0));
+  const me=currentPlayerName();
+  return `<div class="pts-chart" role="img" aria-label="${esc(tl('Top players by points','الأوائل حسب النقاط'))}">
+    ${data.map(r=>{
+      const val=Number(r.total)||0;
+      const pct=Math.max(6,Math.round((val/max)*100));
+      const mine=r.name===me;
+      return `<div class="pts-chart-row${mine?' me':''}">
+        <span class="pts-chart-name">${r.rank}. ${esc(r.name)}</span>
+        <span class="pts-chart-track"><span class="pts-chart-bar" style="inline-size:${pct}%"></span></span>
+        <span class="pts-chart-val">${val}</span>
+      </div>`;
+    }).join('')}
+  </div>`;
+}
 function renderLeaderboardPulseCard(){
   const rows=buildLeaderboard();
   const name=currentPlayerName();
@@ -5368,6 +5557,7 @@ function renderLeaderboardPulseCard(){
   const me=rows.find(r=>r.name===name);
   return `<div class="hub-panel">
     <h3>🏆 ${esc(tl('Leaderboard Pulse','نبض الترتيب'))}<span class="hint">${esc(tl('Top + your position','الأوائل + مركزك'))}</span></h3>
+    ${pointsBarChart(rows)}
     ${top.map(r=>`<div class="hub-leader-row ${r.name===name?'me':''}">
       <div class="hub-leader-rank">${r.rank}</div>
       <div><div class="hub-name">${esc(r.name)}</div><div class="hub-meta">${esc(r.paid?tl('Paid','مدفوع'):tl('Unpaid','غير مدفوع'))}</div></div>
@@ -5383,11 +5573,11 @@ function renderLeaderboardPulseCard(){
 }
 function hubMatchName(m){
   if(!m) return '—';
-  return `${teamText(m.home)} vs ${teamText(m.away)}`;
+  return `⁦${teamText(m.home)} vs ${teamText(m.away)}⁩`;
 }
 function latestScoreLabel(m){
   if(!m) return '—';
-  return `${teamText(m.home)} ${m.hs}-${m.as} ${teamText(m.away)}`;
+  return `⁦${teamText(m.home)} ${m.hs}-${m.as} ${teamText(m.away)}⁩`;
 }
 
 function renderMatchdayHero(){
@@ -5453,7 +5643,7 @@ function renderMatchCenterHub(){
       </div>
       ${pickRows}
     </div>`;
-  }).join(''):`<div class="hub-empty">${esc(tl('No live API matches in the current UAE window. Saved schedule is not used on Home.','لا توجد مباريات من الـ API المباشر ضمن نافذة الإمارات الحالية. لا يتم استخدام الجدول المحفوظ في الصفحة الرئيسية.'))}</div>`;
+  }).join(''):`<div class="hub-empty">${esc(tl('No live API matches in the current match window. Saved schedule is not used on Home.','لا توجد مباريات من الـ API المباشر ضمن نافذة المباريات الحالية. لا يتم استخدام الجدول المحفوظ في الصفحة الرئيسية.'))}</div>`;
   return `<div class="hub-panel">
     <h3>📅 ${esc(tl('Match Center','مركز المباريات'))}<span class="hint">${esc(tl('live API + prediction split','API مباشر + انقسام التوقعات'))}</span></h3>
     ${body}
@@ -5482,7 +5672,6 @@ function renderLatestResultsImpactHub(){
   return `<div class="hub-panel">
     <h3>🕘 ${esc(data.label||tl('Live results','النتائج المباشرة'))}<span class="hint">${esc(tl('live score + prediction impact','نتيجة مباشرة + تأثير التوقعات'))}</span></h3>
     ${body}
-    <div class="hub-actions"><button class="btn ghost sm" onclick="go('impact')">${esc(tl('Open impact','افتح التأثير'))}</button></div>
   </div>`;
 }
 function renderGroupPulseHub(){
@@ -5495,28 +5684,6 @@ function renderGroupPulseHub(){
   </div>`;
 }
 
-function renderHomeAISummary(){
-  const today=todayApiMatches();
-  const yesterday=apiYesterdayResults();
-  const latest=latestApiResults(1)[0]||null;
-  const next=nextApiMatch();
-  return `<div class="card wc-home-card wc-ai-summary-card">
-    <div class="wc-ai-head">
-      <div>
-        <div class="wc-kicker">🤖 ${esc(tl('Matchday Summary','ملخص يوم المباريات'))}</div>
-        <h2>${esc(tl('Yesterday + today status','حالة أمس واليوم'))}</h2>
-      </div>
-      <span class="wc-ai-source">${esc(homeUsesApiResults()?tl('Live data','بيانات مباشرة'):tl('Latest saved data','آخر بيانات محفوظة'))}</span>
-    </div>
-    <p class="wc-ai-copy">${esc(homeAISummaryText())}</p>
-    <div class="wc-ai-mini-grid">
-      <div><b class="num">${yesterday.length}</b><span>${esc(tl('Yesterday finals','نتائج أمس'))}</span></div>
-      <div><b class="num">${today.length}</b><span>${esc(tl('Match Center','مركز المباريات'))}</span></div>
-      <div><b>${latest?latest.hs+'-'+latest.as:'—'}</b><span>${esc(tl('Latest final','آخر نتيجة'))}</span></div>
-      <div><b>${next?next.time:'—'}</b><span>${esc(tl('Next UAE kickoff','القادمة بتوقيت الإمارات'))}</span></div>
-    </div>
-  </div>`;
-}
 function renderPredictionDashboard(){
   const today=todayApiMatches();
   if(!today.length) return wcSection(`📈 ${esc(tl('Prediction Dashboard','لوحة التوقعات'))}`,tl('Prediction split appears when matches are in the hub.','يظهر انقسام التوقعات عندما توجد مباريات في المركز.'),`<div class="wc-empty">${esc(APP._homeApiError?tl('Live match data is temporarily unavailable.','بيانات المباريات المباشرة غير متاحة مؤقتاً.'):t('noToday'))}</div>`,'wc-pred-dashboard');
@@ -5589,7 +5756,7 @@ function renderGroupsFeed(){
 function renderTodayFeed(){
   const today=todayApiMatches();
   const body=today.length?`<div class="wc-today-list">${today.map(renderTodayMatchFeedCard).join('')}</div>`:`<div class="wc-empty">${esc(t('noToday'))}</div>`;
-  return wcSection(`📅 ${esc(tl('Match Center','مركز المباريات'))}`,tl('Live match window · UAE time · player predictions','نافذة المباريات الحالية · توقيت الإمارات · توقعات اللاعبين'),body,'wc-today-card');
+  return wcSection(`📅 ${esc(tl('Match Center','مركز المباريات'))}`,tl('Current match window · your time · player predictions','نافذة المباريات الحالية · بتوقيتك · توقعات اللاعبين'),body,'wc-today-card');
 }
 function renderTodayMatchFeedCard(m){
   const split=playerPredictionSplit(m);
@@ -5633,67 +5800,6 @@ function renderTodayMatchFeedCard(m){
   </div>`;
 }
 
-function renderAIMatchdaySummary(){
-  const warnings=dataCompletenessWarnings();
-  const today=matchesOnDate(uaeToday()).filter(m=>m.group&&m.idx!=null);
-  const results=allCompletedResultsForHome();
-  const groups=allRelevantGroupsForHome();
-  return `<div class="card ai-complete-briefing">
-    <div class="briefing-hero">
-      <div>
-        <div class="hero-kicker dark">🤖 ${esc(tl('Complete Matchday Briefing','موجز كامل ليوم المباريات'))}</div>
-        <h2>${esc(tl('Results, groups, today matches, and player predictions','النتائج والمجموعات ومباريات اليوم وتوقعات اللاعبين'))}</h2>
-        <p>${esc(tl('This Home page is built from saved results, group tables, today schedule, and every player prediction.','هذه الصفحة مبنية من النتائج المحفوظة وجداول المجموعات وجدول اليوم وكل توقعات اللاعبين.'))}</p>
-      </div>
-      <div class="ai-summary-actions">
-        <button class="btn gold sm" onclick="copyText(aiMatchdaySummaryText())">📋 ${esc(t('copy'))}</button>
-        <button class="btn ghost sm" onclick="shareText(aiMatchdaySummaryText())">📲 ${esc(t('share'))}</button>
-        <button class="btn ghost sm" onclick="go('syncresults')">🔄 ${esc(tl('Sync','مزامنة'))}</button>
-      </div>
-    </div>
-
-    <div class="briefing-kpis">
-      <div><b class="num">${completedMatchCount()}/${totalGroupMatchCount()}</b><span>${esc(tl('Completed group matches','مباريات مجموعات مكتملة'))}</span></div>
-      <div><b class="num">${results.matches.length}</b><span>${esc(results.label)}</span></div>
-      <div><b class="num">${today.length}</b><span>${esc(tl('Match Center','مركز المباريات'))}</span></div>
-      <div><b class="num">${groups.length}</b><span>${esc(tl('Groups covered','مجموعات مشمولة'))}</span></div>
-      <div><b class="num">${playerNames().length}</b><span>${esc(tl('Players','لاعبون'))}</span></div>
-    </div>
-
-    ${warnings.length?`<div class="briefing-warning">⚠️ ${warnings.map(esc).join('<br>')}</div>`:''}
-
-    ${renderCompleteResultsCard()}
-    ${renderCompleteGroupsCard()}
-    ${renderCompleteTodayCard()}
-    ${renderCompletePlayersCard()}
-  </div>`;
-}
-function aiMatchdaySummaryText(){
-  const today=matchesOnDate(uaeToday()).filter(m=>m.group&&m.idx!=null);
-  const resultRows=latestResultNarrativeRows();
-  const groupRows=currentGroupNarrativeRows();
-  const todayRows=todayPredictionNarrativeRows();
-  const lines=[
-    tl('AI Matchday Briefing','موجز اليوم بالذكاء'),
-    `${uaeToday()} · UAE`,
-    '',
-    tl('WC2026 update','تحديث WC2026'),
-    `${completedMatchCount()}/${totalGroupMatchCount()} ${tl('group matches completed','مباراة مجموعات مكتملة')}. ${today.length} ${tl('matches today','مباريات اليوم')}.`,
-    '',
-    tl('Yesterday / latest results','نتائج أمس / آخر النتائج'),
-    resultRows.length?resultRows.map(r=>`- ${r.title} (${r.meta})${r.impact.length?' | '+r.impact.join(', '):''}`).join('\n'):tl('No saved results yet.','لا توجد نتائج محفوظة بعد.'),
-    '',
-    tl('Groups summary','ملخص المجموعات'),
-    groupRows.length?groupRows.map(g=>`- ${g.text}`).join('\n'):tl('No group has started yet.','لم تبدأ أي مجموعة بعد.'),
-    '',
-    tl('Players summary','ملخص اللاعبين'),
-    leaderboardNarrative(),
-    '',
-    tl('Today matches and prediction split','مباريات اليوم وانقسام التوقعات'),
-    todayRows.length?todayRows.map(m=>`- ${m.title} (${m.meta}): ${m.blocks.map(b=>`${b.label} ${b.count}`).join(' / ')}`).join('\n'):tl('No matches today.','لا مباريات اليوم.')
-  ];
-  return lines.join('\n');
-}
 function renderYesterdayResultsSection(){
   const y=uaeDateOffset(-1);
   let list=completedMatchesOnDate(y);
@@ -5748,7 +5854,7 @@ function renderTodayPredictionCard(m){
   return `<div class="today-pred-card">
     <div class="today-pred-head">
       <div><b>${teamHtml(m.home)} vs ${teamHtml(m.away)}</b><div class="sub">${esc(tl('Group','المجموعة'))} ${esc(m.group)} · ${esc(matchDateTime(m))}</div></div>
-      <button class="btn ghost sm" onclick="go('scenarios')">⚡ ${esc(t('v_scenarios'))}</button>
+      
     </div>
     <div class="split-grid">
       <div class="split-box home"><b>${teamHtml(m.home)}</b><span class="num">${split.home.length}</span><small>${esc(split.home.map(x=>x.name).join(', ')||t('none'))}</small></div>
@@ -5770,11 +5876,11 @@ function mdhFreshnessBadge(){
 }
 function mdhMatchName(m){
   if(!m) return '—';
-  return `${teamText(m.home)} vs ${teamText(m.away)}`;
+  return `⁦${teamText(m.home)} vs ${teamText(m.away)}⁩`;
 }
 function mdhLatestScoreLabel(m){
   if(!m) return '—';
-  return `${teamText(m.home)} ${m.hs}-${m.as} ${teamText(m.away)}`;
+  return `⁦${teamText(m.home)} ${m.hs}-${m.as} ${teamText(m.away)}⁩`;
 }
 function mdhMatchStatus(m){
   if(!m) return {key:'upcoming',label:tl('Upcoming','قادمة')};
@@ -5967,47 +6073,6 @@ function mdhUaeTimeLabel(m){
 
   return tl('UAE conversion unavailable','تحويل الإمارات غير متوفر');
 }
-function mdhAiSummaryData(){
-  const matches=matchCenterMatches();
-  const latest=latestApiResults(1)[0]||null;
-  const yesterday=apiYesterdayResults();
-  const next=nextApiMatch?nextApiMatch():matches[0]||null;
-  const divided=typeof mostDividedTodayMatch==='function'?mostDividedTodayMatch():null;
-  const warnings=mdhWarningItems?mdhWarningItems():{total:0};
-
-  return [
-    {
-      title:tl('What happened','ماذا حدث'),
-      body:latest?tl(`${mdhLatestScoreLabel(latest)} was the latest final.`,`${mdhLatestScoreLabel(latest)} هي آخر نتيجة نهائية.`):tl('No final result has been saved yet.','لم يتم حفظ أي نتيجة نهائية بعد.')
-    },
-    {
-      title:tl('What is next','ما القادم'),
-      body:next?tl(`${mdhMatchName(next)} kicks off ${mdhUaeTimeLabel(next)}.`,`${mdhMatchName(next)} تنطلق ${mdhUaeTimeLabel(next)}.`):tl('No upcoming match is currently detected.','لا توجد مباراة قادمة حالياً.')
-    },
-    {
-      title:tl('Prediction watch','متابعة التوقعات'),
-      body:divided&&divided.match?tl(`${mdhMatchName(divided.match)} is the most divided pool pick.`,`${mdhMatchName(divided.match)} هي أكثر مباراة منقسمة في التوقعات.`):tl('Prediction split appears when match picks are available.','يظهر انقسام التوقعات عند توفر اختيارات اللاعبين.')
-    },
-    {
-      title:tl('Needs attention','يحتاج انتباه'),
-      body:warnings.total?tl(`${warnings.total} data/result item needs review.`,`${warnings.total} عنصر بيانات/نتائج يحتاج مراجعة.`):tl('No urgent data warnings.','لا توجد تنبيهات بيانات عاجلة.')
-    }
-  ];
-}
-function renderMdhAiSummary(){
-  const rows=mdhAiSummaryData();
-  return `<div class="mdh-card mdh-ai-structured">
-    <div class="mdh-section-head">
-      <div>
-        <h3>🤖 ${esc(tl('AI-style summary','ملخص ذكي منظم'))}</h3>
-        <p>${esc(tl('Structured view of what happened, what is next, and what matters for picks.','عرض منظم لما حدث، وما القادم، وما يهم للتوقعات.'))}</p>
-      </div>
-    </div>
-    <div class="mdh-ai-grid">
-      ${rows.map(x=>`<div class="mdh-ai-item"><strong>${esc(x.title)}</strong><p>${esc(x.body)}</p></div>`).join('')}
-    </div>
-  </div>`;
-}
 
 function renderMdhStatusHero(){
   const parts=formatUaeDateTimeParts();
@@ -6034,7 +6099,7 @@ function renderMdhStatusHero(){
         <div class="mdh-note">${esc(nextNote)}</div>
         ${next?`<div class="mdh-time-grid">
           <div class="mdh-time-cell"><span>${esc(tl('API / provider time','وقت API / المصدر'))}</span><b>${esc(mdhApiTimeLabel(next))}</b></div>
-          <div class="mdh-time-cell"><span>${esc(tl('Converted UAE time','الوقت المحول للإمارات'))}</span><b>${esc(mdhUaeTimeLabel(next))}</b></div>
+          <div class="mdh-time-cell"><span>${esc(tl('Your local time','وقتك المحلي'))}</span><b>${esc(mdhUaeTimeLabel(next))}</b></div>
         </div>`:''}
       </div>
       <div class="mdh-kpis">
@@ -6058,7 +6123,7 @@ function renderMdhMatchCard(m){
     </div>
     <div class="mdh-time-grid">
       <div class="mdh-time-cell"><span>${esc(tl('API / provider time','وقت API / المصدر'))}</span><b>${esc(mdhApiTimeLabel(m))}</b></div>
-      <div class="mdh-time-cell"><span>${esc(tl('Converted UAE time','الوقت المحول للإمارات'))}</span><b>${esc(mdhUaeTimeLabel(m))}</b></div>
+      <div class="mdh-time-cell"><span>${esc(tl('Your local time','وقتك المحلي'))}</span><b>${esc(mdhUaeTimeLabel(m))}</b></div>
     </div>
     ${renderMdhSplitBar(m)}
     ${renderMdhPlayerPicksTable(m)}
@@ -6066,7 +6131,7 @@ function renderMdhMatchCard(m){
 }
 function renderMdhTodayMatches(){
   const matches=matchCenterMatches();
-  const body=matches.length?matches.map(renderMdhMatchCard).join(''):`<div class="mdh-empty">${esc(tl('No match in the current UAE window. Check the full schedule for upcoming fixtures.','لا توجد مباراة ضمن نافذة الإمارات الحالية. راجع الجدول الكامل للمباريات القادمة.'))}</div>`;
+  const body=matches.length?matches.map(renderMdhMatchCard).join(''):`<div class="mdh-empty">${esc(tl('No match in the current match window. Check the full schedule for upcoming fixtures.','لا توجد مباراة ضمن نافذة المباريات الحالية. راجع الجدول الكامل للمباريات القادمة.'))}</div>`;
   return `<div class="mdh-card">
     <div class="mdh-section-head"><div><h3>📅 ${esc(tl('Today’s matches','مباريات اليوم'))}</h3><p>${esc(tl('Kickoff, group, status, and pool split.','وقت الانطلاق، المجموعة، الحالة، وانقسام التوقعات.'))}</p></div><button class="mdh-link" onclick="go('matches')">${esc(t('v_matches'))} →</button></div>
     ${body}
@@ -6090,7 +6155,7 @@ function renderMdhLatestResults(){
     </div>`;
   }).join(''):`<div class="mdh-empty">${esc(tl('No final results yet.','لا توجد نتائج نهائية بعد.'))}</div>`;
   return `<div class="mdh-card">
-    <div class="mdh-section-head"><div><h3>🕘 ${esc(tl('Latest results + gainers','آخر النتائج والرابحين'))}</h3><p>${esc(tl('Scores and prediction points impact.','النتائج وتأثير نقاط التوقعات.'))}</p></div><button class="mdh-link" onclick="go('impact')">${esc(tl('Impact','التأثير'))} →</button></div>
+    <div class="mdh-section-head"><div><h3>🕘 ${esc(tl('Latest results + gainers','آخر النتائج والرابحين'))}</h3><p>${esc(tl('Scores and prediction points impact.','النتائج وتأثير نقاط التوقعات.'))}</p></div></div>
     ${body}
   </div>`;
 }
@@ -6314,30 +6379,7 @@ function scenarioCard(m){
       <div class="insight"><div class="title">${esc(tl('If','إذا فاز'))} ${teamHtml(m.away)}</div><div class="impact-list"><span class="impact-pill gold">+${SCORING.edgeCorrect} ${esc(t('pts'))}: ${sc.away.length}</span></div><div class="sub">${esc(sc.away.slice(0,12).join(', ')||t('none'))}${sc.away.length>12?'…':''}</div></div>
     </div>
     ${sc.noEdge.length?`<div class="sub" style="margin-top:8px">${esc(t('noPred'))}: ${esc(sc.noEdge.slice(0,10).join(', '))}${sc.noEdge.length>10?'…':''}</div>`:''}
-    <div class="voice-row">
-      <button class="btn ghost sm" onclick="renderScenarioSimulation('${esc(m.home).replace(/'/g,'')} 2-1 ${esc(m.away).replace(/'/g,'')}','scenarioAiOut');go('scenarios')">🤖 ${esc(tl('AI simulate home win','محاكاة فوز الأول'))}</button>
-      <button class="btn ghost sm" onclick="renderScenarioSimulation('${esc(m.home).replace(/'/g,'')} 1-2 ${esc(m.away).replace(/'/g,'')}','scenarioAiOut');go('scenarios')">🤖 ${esc(tl('AI simulate away win','محاكاة فوز الثاني'))}</button>
-    </div>
   </div>`;
-}
-function viewScenarios(){
-  const today=(APP._today||[]).filter(m=>m.group&&m.idx!=null&&!matchResult(m.group,m.idx).complete);
-  const matches=(today.length?today:upcomingGroupMatches(12));
-  return `<div class="card"><div class="between"><h3>⚡ ${esc(t('v_scenarios'))}</h3><button class="btn ghost sm" onclick="shareTodayImpact()">${esc(t('share'))}</button></div>
-    <div class="sub">${esc(tl('Preview who gains points depending on upcoming match winners.','معاينة من سيكسب نقاطاً حسب الفائز في المباريات القادمة.'))}</div>
-    <div class="scenario-ai-box">
-      <h3>🤖 ${esc(tl('AI scenario simulator','محاكي السيناريو بالذكاء'))}</h3>
-      <div class="sub">${esc(tl('Speak or type, for example: “If Brazil beats Morocco 2-1”.','تحدث أو اكتب مثلاً: إذا فازت البرازيل على المغرب 2-1.'))}</div>
-      <textarea id="scenarioVoiceBox" placeholder="${esc(tl('Type or speak a scenario…','اكتب أو قل السيناريو…'))}" style="margin-top:10px"></textarea>
-      <div class="voice-row">
-        <button class="micbtn" onclick="startVoiceInput('scenarioVoiceBox','scenario')">🎙️ ${esc(tl('Speak','تحدث'))}</button>
-        <button class="btn sm" onclick="renderScenarioSimulation($('scenarioVoiceBox').value,'scenarioAiOut')">⚡ ${esc(tl('Simulate','محاكاة'))}</button>
-        <button class="btn ghost sm" onclick="$('scenarioVoiceBox').value='';$('scenarioAiOut').innerHTML=''">${esc(t('clear'))}</button>
-      </div>
-      <div id="scenarioAiOut"></div>
-    </div>
-  </div>`+
-    (matches.length?matches.map(scenarioCard).join(''):`<div class="card"><div class="state">${esc(t('noData'))}</div></div>`);
 }
 function impactSummaryCard(item){
   const d=matchImpactData(item.group,item.idx), r=d.match;
@@ -6350,12 +6392,6 @@ function impactSummaryCard(item){
     </div>
     <div class="row" style="margin-top:8px;gap:8px"><button class="btn ghost sm" onclick="openMatchImpact('${item.group}',${item.idx})">${esc(t('whyPoints'))}</button><button class="btn ghost sm" onclick="shareMatch('${item.group}',${item.idx})">${esc(t('share'))}</button></div>
   </div>`;
-}
-function viewImpact(){
-  const list=completedMatchesList().reverse();
-  return `<div class="card"><div class="between"><h3>🔥 ${esc(t('v_impact'))}</h3><button class="btn ghost sm" onclick="shareTodayImpact()">${esc(t('share'))}</button></div>
-    <div class="sub">${esc(tl('Every completed match with who gained points and who missed.','كل مباراة مكتملة مع من كسب النقاط ومن خسر الفرصة.'))}</div></div>`+
-    (list.length?list.slice(0,40).map(impactSummaryCard).join(''):`<div class="card"><div class="state">${esc(t('noData'))}</div></div>`);
 }
 
 
@@ -6408,7 +6444,7 @@ function fullMatchCard(m){
   return `<div class="match"><div class="head"><span>${esc(m.group?('Group '+m.group+' · '+m.key):'')}</span>
       <span><span class="match-time">${esc(matchDateTime(m))}</span> <span class="tag ${srcTag}">${esc(t(srcTxt))}</span></span></div>
     <div class="teams"><span>${teamHtml(m.home)}</span><span class="sc num">${sc}</span><span>${teamHtml(m.away)}</span></div>
-    ${impact}${complete?`<button class="btn ghost sm" style="margin-top:8px;width:100%" onclick="openMatchImpact('${m.group}',${m.idx})">${esc(t('matchImpact'))}</button>`:(m.group&&m.idx!=null?`<button class="btn ghost sm" style="margin-top:8px;width:100%" onclick="go('scenarios')">⚡ ${esc(t('v_scenarios'))}</button>`:'')}</div>`;
+    ${impact}</div>`;
 }
 
 /* ================= GROUP TABLES ================= */
@@ -6519,8 +6555,7 @@ function renderPlayerHero(name,p,c,me){
     </div>
     <div class="profile-actions">
       <button class="btn gold sm" onclick="sharePlayer('${esc(name).replace(/'/g,'')}')">📲 ${esc(t('whatsapp'))}</button>
-      <button class="btn ghost sm" onclick="go('scenarios')">⚡ ${esc(t('v_scenarios'))}</button>
-      <button class="btn ghost sm" onclick="go('ai')">🤖 ${esc(t('v_ai'))}</button>
+      
     </div>
   </div>`;
 }
@@ -7137,32 +7172,8 @@ function buildSafeAIContext(){
     isAdmin:APP.isAdmin
   };
 }
-function aiSource(kind){ return `\n\n— ${t('answerFrom')}: ${t(kind)}`; }
 
 /* ---- routed Q&A ---- */
-function answerLeaderboardQuestion(ctx){
-  if(!ctx.players.length) return t('noData')+aiSource('from_appdata');
-  const top=ctx.players.slice(0,5).map(p=>`${p.rank}. ${p.name} — ${p.total} ${t('pts')}`).join('\n');
-  return `🏆 ${t('v_leaderboard')}\n${top}`+aiSource('from_calc');
-}
-function answerPlayerPointsQuestion(ctx,q){
-  const p=ctx.players.find(x=>q.toLowerCase().includes(x.name.toLowerCase()));
-  if(!p) return answerLeaderboardQuestion(ctx);
-  return `👤 ${p.name} — #${p.rank}, ${p.total} ${t('pts')}\n• ${t('groupMatchPts')}: ${p.groupMatch}\n• ${t('groupRankPts')}: ${p.groupRank}\n• ${t('koPts')}: ${p.knockout}\n• ${t('champPts')}: ${p.champ}`+aiSource('from_calc');
-}
-function answerPredictionQuestion(ctx){
-  const c=ctx.champConsensus.map(x=>`${x.key}: ${x.count}`).join('\n')||t('noData');
-  return `👑 ${t('champConsensus')}\n${c}`+aiSource('from_appdata');
-}
-function answerScheduleQuestion(ctx){
-  if(!ctx.today.length) return t('noToday')+aiSource('from_api');
-  return `📅 ${t('todayMatches')}\n`+ctx.today.map(m=>`${m.home} vs ${m.away} (${m.group})`).join('\n')+aiSource('from_api');
-}
-function answerWinnerQuestion(ctx){
-  if(!ctx.players.length) return t('noData')+aiSource('from_appdata');
-  const p=ctx.players[0];
-  return `🏆 ${t('projWinner')}: ${p.name} — ${p.total} ${t('pts')}`+aiSource('from_calc');
-}
 
 function scenarioMatchesPool(){
   const sched=(Array.isArray(APP.data.scheduleMatches)&&APP.data.scheduleMatches.length)?APP.data.scheduleMatches:buildLocalSchedule();
@@ -7218,74 +7229,8 @@ function simulateLeaderboardForMatch(m,hs,as){
     invalidateLeaderboardCache();
   }
 }
-function scenarioWinnerText(m,hs,as){
-  if(hs>as) return teamText(m.home);
-  if(as>hs) return teamText(m.away);
-  return tl('Draw','تعادل');
-}
-function renderScenarioSimulation(q, targetId){
-  const parsed=parseScenarioCommand(q);
-  const target=targetId?$(targetId):$('scenarioAiOut');
-  if(!target) return;
-  if(!parsed){ target.innerHTML=`<div class="banner warn">${esc(t('noData'))}</div>`; return; }
-  const {match:m,hs,as}=parsed;
-  const rows=simulateLeaderboardForMatch(m,hs,as);
-  const movers=rows.filter(r=>r.deltaPts!==0||r.deltaRank!==0).sort((a,b)=>b.deltaPts-a.deltaPts || b.deltaRank-a.deltaRank).slice(0,8);
-  const top=rows.slice(0,5);
-  const summary=tl(
-    `Scenario: ${teamText(m.home)} ${hs}-${as} ${teamText(m.away)}. Winner: ${scenarioWinnerText(m,hs,as)}.`,
-    `السيناريو: ${teamText(m.home)} ${hs}-${as} ${teamText(m.away)}. النتيجة: ${scenarioWinnerText(m,hs,as)}.`
-  );
-  target.innerHTML=`<div class="ai-ans">${summary}</div>
-    <div class="sim-table">
-      ${top.map(r=>`<div class="sim-row"><div class="rank num">#${r.rank}</div><div class="name">${playerNameHtml(r.name,'sm')}</div><div class="num">${r.total} ${esc(t('pts'))}</div><div class="delta ${r.deltaRank>0?'up':r.deltaRank<0?'down':'same'}">${r.deltaRank>0?'▲'+r.deltaRank:r.deltaRank<0?'▼'+Math.abs(r.deltaRank):'–'} ${r.deltaPts?`+${r.deltaPts}`:''}</div></div>`).join('')}
-    </div>
-    <div class="sub" style="margin-top:10px">${esc(tl('Players affected','اللاعبون المتأثرون'))}: ${esc(movers.map(r=>`${r.name} +${r.deltaPts}`).join(', ')||t('none'))}</div>
-    <div class="voice-row"><button class="btn ghost sm" onclick="copyText(${JSON.stringify(summary)})">${esc(t('copy'))}</button><button class="btn ghost sm" onclick="askAI('explain scenario ${m.home} ${hs}-${as} ${m.away}')">🤖 ${esc(t('v_ai'))}</button></div>`;
-}
-function answerScenarioQuestion(question){
-  const parsed=parseScenarioCommand(question);
-  if(!parsed) return t('noData')+aiSource('from_calc');
-  const {match:m,hs,as}=parsed;
-  const rows=simulateLeaderboardForMatch(m,hs,as);
-  const top=rows.slice(0,5).map(r=>`${r.rank}. ${r.name} — ${r.total} ${t('pts')} (${r.deltaPts>=0?'+':''}${r.deltaPts})`).join('\n');
-  return `⚡ ${tl('Scenario simulation','محاكاة السيناريو')}\n${teamText(m.home)} ${hs}-${as} ${teamText(m.away)}\n${tl('Winner','الفائز')}: ${scenarioWinnerText(m,hs,as)}\n\n${top}`+aiSource('from_calc');
-}
 let VOICE_REC=null;
 function voiceSupported(){ return !!(window.SpeechRecognition||window.webkitSpeechRecognition); }
-function startVoiceInput(targetId, autoAsk){
-  const btn=event&&event.currentTarget?event.currentTarget:null;
-  if(!voiceSupported()){ toast(tl('Voice is not supported in this browser. Try Chrome or Edge.','الصوت غير مدعوم في هذا المتصفح. جرّب Chrome أو Edge.')); return; }
-  if(VOICE_REC){ try{VOICE_REC.stop();}catch(e){} VOICE_REC=null; if(btn)btn.classList.remove('listening'); return; }
-  const Rec=window.SpeechRecognition||window.webkitSpeechRecognition;
-  const rec=new Rec(); VOICE_REC=rec;
-  rec.lang=LANG==='ar'?'ar-AE':'en-US'; rec.interimResults=false; rec.continuous=false;
-  if(btn) btn.classList.add('listening');
-  rec.onresult=(e)=>{
-    const text=(e.results&&e.results[0]&&e.results[0][0]&&e.results[0][0].transcript)||'';
-    const el=$(targetId); if(el) el.value=(el.value?el.value+' ':'')+text;
-    if(autoAsk==='ai') askAI(text);
-    if(autoAsk==='scenario') renderScenarioSimulation(text,'scenarioAiOut');
-  };
-  rec.onerror=(e)=>toast(tl('Voice error: ','خطأ في الصوت: ')+(e.error||''));
-  rec.onend=()=>{VOICE_REC=null; if(btn)btn.classList.remove('listening');};
-  rec.start();
-}
-function answerLocalAI(question,mode,language){
-  const ctx=buildSafeAIContext(); const q=(question||'').toLowerCase();
-  if(mode==='write') return generateWritingResponse(ctx,question,language);
-  if(mode==='scenario') return answerScenarioQuestion(question);
-  const has=(...ws)=>ws.some(w=>q.includes(w));
-  if(has('winner','projected','فائز','الفائز')) return answerWinnerQuestion(ctx);
-  if(has('lead','top','winning','first','متصدر','الأول','يتصدر')) return answerLeaderboardQuestion(ctx);
-  if(has('champion','winner pick','بطل','يتوقع البطل')) return answerPredictionQuestion(ctx);
-  if(has('scenario','simulate','simulation','what if','if ','beat','beats','win','wins','draw','سيناريو','محاكاة','إذا','لو','فاز','تعادل')) return answerScenarioQuestion(question);
-  if(has('impact','gain','gained','change','تأثير','تغير','كسب')) return buildTodayImpactText()+aiSource('from_calc');
-  if(has('today','match today','اليوم','مباريات اليوم')) return answerScheduleQuestion(ctx);
-  if(ctx.players.some(p=>q.includes(p.name.toLowerCase()))) return answerPlayerPointsQuestion(ctx,question);
-  if(has('point','score','نقاط','نقطة')) return answerLeaderboardQuestion(ctx);
-  return answerLeaderboardQuestion(ctx);
-}
 
 /* ---- writing mode ---- */
 function generateWritingResponse(ctx,question,language){
@@ -7296,7 +7241,7 @@ function generateWritingResponse(ctx,question,language){
     return ar
       ? `🏆 *توقعات كأس العالم 2026*
 الفائز المتوقع حالياً: ${leader?leader.name:'—'} (${leader?leader.total:0} نقطة).`
-      : `🏆 *WC2026 Pick'em*
+      : `🏆 *World Cup 2026*
 Current projected winner: ${leader?leader.name:'—'} (${leader?leader.total:0} pts).`;
   }
   // default: leaderboard / matchday update
@@ -7517,12 +7462,6 @@ function appAlerts(){
   if(!navigator.onLine) alerts.push({emoji:'📴',title:tl('Offline mode','وضع عدم الاتصال'),meta:tl('Using cached data until connection returns.','يتم استخدام البيانات المحفوظة حتى عودة الاتصال.'),level:'high'});
   return alerts;
 }
-function viewAlerts(){
-  const alerts=appAlerts();
-  return `<div class="card"><div class="between"><h3>🔔 ${esc(t('v_alerts'))}</h3><span class="chip">${alerts.length}</span></div>
-    <div class="sub">${esc(tl('Live notes about leaders, match impact, completed groups and data quality.','ملاحظات مباشرة عن المتصدرين وتأثير المباريات والمجموعات المكتملة وجودة البيانات.'))}</div></div>
-    <div class="card">${alerts.map(a=>`<div class="alert-card ${a.level==='high'?'high':''}" onclick="${a.view?`go('${a.view}')`:''}"><div class="emoji">${a.emoji}</div><div><div class="title">${esc(a.title)}</div><div class="meta">${esc(a.meta)}</div></div><span class="tag">${esc(a.level==='high'?tl('Important','مهم'):tl('Info','معلومة'))}</span></div>`).join('')||`<div class="state">${esc(t('noData'))}</div>`}</div>`;
-}
 function renderScenarioLab(matches){
   const opts=(matches||upcomingGroupMatches(12)).filter(m=>m.group&&m.idx!=null&&!matchResult(m.group,m.idx).complete);
   const first=opts[0];
@@ -7606,16 +7545,6 @@ function shareCardText(type){
   if(latest){ const r=matchResult(latest.group,latest.idx); return `⚽ ${teamText(r.home)} ${r.hs}-${r.as} ${teamText(r.away)}\n🔥 ${buildTodayImpactText()}`; }
   return buildTodayImpactText();
 }
-function viewShareCards(){
-  const lb=buildLeaderboard().slice(0,5);
-  const n=APP.sel.player||localStorage.getItem('wc2026_last_profile')||playerNames()[0]||'';
-  const c=n?calcPlayerPoints(getPlayer(n),APP.data.groupResults,APP.data.knockoutResults,APP.data.champion):null;
-  return `<div class="card"><h3>📲 ${esc(t('v_sharecards'))}</h3><div class="sub">${esc(tl('Clean screenshot-ready cards plus copyable WhatsApp text.','بطاقات جاهزة للسكرين شوت مع نص واتساب قابل للنسخ.'))}</div></div>
-  <div class="card"><div class="share-preview"><h3>🏆 ${esc(t('v_leaderboard'))}</h3>${lb.map(r=>`<div class="lb-row"><span class="rank">#${r.rank}</span><span class="nm">${playerNameHtml(r.name,'sm')}</span><span class="pts">${r.total}</span></div>`).join('')}</div><button class="btn ghost sm" style="margin-top:10px" onclick="copyText(shareCardText('leaderboard'))">${esc(t('copy'))}</button></div>
-  <div class="card"><div class="share-preview"><h3>👤 ${esc(n||t('player'))}</h3>${n?`<div class="grid g2">${statTile(c.total,t('points'),true)}${statTile(getPlayer(n).champion||'—',t('champion'))}</div>`:`<div class="sub">${esc(t('noData'))}</div>`}</div><button class="btn ghost sm" style="margin-top:10px" onclick="copyText(shareCardText('player'))">${esc(t('copy'))}</button></div>
-  <div class="card"><div class="share-preview"><h3>🛣️ ${esc(tl('Road to win','طريق الفوز'))}</h3><pre style="white-space:pre-wrap">${esc(shareCardText('road'))}</pre></div><button class="btn ghost sm" style="margin-top:10px" onclick="copyText(shareCardText('road'))">${esc(t('copy'))}</button></div>
-  <div class="card"><div class="share-preview"><h3>🔥 ${esc(t('matchImpact'))}</h3><pre style="white-space:pre-wrap">${esc(shareCardText('match'))}</pre></div><button class="btn ghost sm" style="margin-top:10px" onclick="copyText(shareCardText('match'))">${esc(t('copy'))}</button></div>`;
-}
 
 function playerCount(){
   const players=APP&&APP.data?APP.data.players:null;
@@ -7634,7 +7563,7 @@ function healthShapeReport(){
     {label:'Audit log',value:Array.isArray(d.auditLog)?d.auditLog.length:'Missing'},
     {label:'Data quality issues',value:auditDataQuality().length},
     {label:'Online',value:navigator.onLine?'YES':'NO'},
-    {label:'PWA mode',value:isStandalonePWA()?'Installed':'Browser'},
+    {label:'PWA mode',value:(window.matchMedia('(display-mode: standalone)').matches||window.navigator.standalone===true)?'Installed':'Browser'},
     {label:'Results storage',value:(APP._resultsTableStatus&&APP._resultsTableStatus.ok)?'normalized table':'JSON fallback'},
     {label:'Normalized rows',value:(APP._resultsTableStatus&&APP._resultsTableStatus.rows)!=null?APP._resultsTableStatus.rows:'—'},
     {label:'Analytics',value:analyticsEnabled()?'GA4 enabled':'Disabled / missing ID'}
@@ -7742,29 +7671,6 @@ function viewHelp(){
 }
 
 /* ================= AI VIEW ================= */
-function viewAI(){
-  const mode=APP.sel.aiMode||'text';
-  return `<div class="card"><div class="between"><h3>🤖 ${esc(t('v_ai'))}</h3></div>
-    <div class="seg" style="margin-bottom:10px">
-      <button class="${mode==='text'?'on':''}" onclick="APP.sel.aiMode='text';render()">${esc(t('ai_text'))}</button>
-      <button class="${mode==='scenario'?'on':''}" onclick="APP.sel.aiMode='scenario';render()">${esc(tl('Scenario','سيناريو'))}</button>
-      <button class="${mode==='write'?'on':''}" onclick="APP.sel.aiMode='write';render()">${esc(t('ai_write'))}</button>
-    </div>
-    <div class="chips">${(I18N[LANG].ai_examples||[]).concat([tl('If Brazil beats Morocco 2-1, what changes?','إذا فازت البرازيل على المغرب 2-1 ماذا يتغير؟')]).map(x=>`<button onclick="askAI(${JSON.stringify(x).replace(/"/g,'&quot;')})">${esc(x)}</button>`).join('')}</div>
-    <textarea id="aiBox" placeholder="${esc(mode==='scenario'?tl('Ask a scenario: If team A beats team B 2-1…','اسأل سيناريو: إذا فاز فريق على فريق 2-1…'):t('ai_q'))}" style="margin-top:10px"></textarea>
-    <div class="voice-row">
-      <button class="micbtn" onclick="startVoiceInput('aiBox','ai')">🎙️ ${esc(tl('Speak','تحدث'))}</button>
-      <button class="btn sm" onclick="askAI($('aiBox').value)">${esc(t('v_ai'))}</button>
-      <button class="btn ghost sm" onclick="$('aiBox').value='';$('aiAns').innerHTML=''">${esc(t('clear'))}</button>
-    </div>
-    <div id="aiAns"></div>
-  </div>`;
-}
-function askAI(q){ if(!q||!q.trim()) return;
-  const ans=answerLocalAI(q,APP.sel.aiMode||'text',LANG);
-  $('aiAns').innerHTML=`<div class="ai-ans">${esc(ans)}</div>
-    <button class="btn ghost sm" style="margin-top:8px" onclick='copyText(${JSON.stringify(ans)})'>${esc(t('copy'))}</button>`;
-}
 
 /* ================= admin auth ================= */
 function adminHash(s){ let h=0; for(let i=0;i<s.length;i++){ h=(h*31+s.charCodeAt(i))>>>0; } return h.toString(16); }
@@ -7963,47 +7869,6 @@ async function testApis(){
 }
 
 
-/* ================= PWA install ================= */
-let deferredInstallPrompt=null;
-function isStandalonePWA(){
-  return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone===true;
-}
-function updateInstallUI(){
-  const btn=$('installBtn'), banner=$('installBanner');
-  const dismissed=localStorage.getItem('wc2026_install_dismissed')==='1';
-  const canInstall=!!deferredInstallPrompt && !isStandalonePWA() && !dismissed;
-  if(btn) btn.style.display=canInstall?'inline-flex':'none';
-  if(banner) banner.classList.toggle('show',canInstall);
-}
-window.addEventListener('beforeinstallprompt',(e)=>{
-  e.preventDefault();
-  deferredInstallPrompt=e;
-  updateInstallUI();
-});
-window.addEventListener('appinstalled',()=>{
-  deferredInstallPrompt=null;
-  localStorage.setItem('wc2026_install_dismissed','1');
-  toast('Installed');
-  updateInstallUI();
-});
-async function installPWA(){
-  if(!deferredInstallPrompt){
-    openSheet(`<h3 style="padding:0 8px">📲 Install app</h3>
-      <div class="card flat"><b>iPhone / iPad</b><div class="sub">Open in Safari → Share → Add to Home Screen.</div></div>
-      <div class="card flat"><b>Android / Chrome</b><div class="sub">Open the menu ⋮ → Install app or Add to Home screen.</div></div>
-      <div class="banner warn">Install works after hosting this folder on HTTPS, like GitHub Pages, Netlify, or Vercel.</div>
-      <button class="btn ghost" onclick="closeSheet()">Close</button>`);
-    return;
-  }
-  deferredInstallPrompt.prompt();
-  await deferredInstallPrompt.userChoice;
-  deferredInstallPrompt=null;
-  updateInstallUI();
-}
-function dismissInstallBanner(){
-  localStorage.setItem('wc2026_install_dismissed','1');
-  updateInstallUI();
-}
 async function registerPWA(){
   try{
     if('serviceWorker' in navigator && location.protocol.startsWith('http')){
@@ -8013,6 +7878,549 @@ async function registerPWA(){
   }catch(e){ console.warn('PWA service worker registration failed',e); }
 }
 
+
+/* ================= v72 canonical source/user time layer =================
+   Applied to newest active code version.
+   Product rules:
+   - Match cards and Home hero show original source time only.
+   - Today popup shows original source time + browser-local time.
+   - Countdown/sorting use a real absolute instant.
+   - Admin auth/logic is untouched.
+*/
+function toAmPmFromHHMM(hhmm){
+  if(!hhmm) return '';
+  const m=String(hhmm).match(/^(\d{1,2}):(\d{2})/);
+  if(!m) return String(hhmm);
+
+  let h=Number(m[1]);
+  const min=m[2];
+  const ampm=h>=12?'PM':'AM';
+
+  h=h%12;
+  if(h===0) h=12;
+
+  return h+':'+min+' '+ampm;
+}
+
+function parseTimeTo24(time){
+  if(!time) return null;
+
+  const s=String(time).trim().toUpperCase();
+
+  let m=s.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/);
+  if(m){
+    let h=Number(m[1]);
+    const min=Number(m[2]);
+
+    if(m[3]==='PM' && h<12) h+=12;
+    if(m[3]==='AM' && h===12) h=0;
+
+    return {h,min};
+  }
+
+  m=s.match(/^(\d{1,2}):(\d{2})/);
+  if(m){
+    return {h:Number(m[1]),min:Number(m[2])};
+  }
+
+  return null;
+}
+
+function browserTimeZone(){
+  try{
+    return Intl.DateTimeFormat().resolvedOptions().timeZone || 'Asia/Dubai';
+  }catch(e){
+    return 'Asia/Dubai';
+  }
+}
+
+function isValidIanaTimeZone(tz){
+  if(!tz || typeof tz!=='string') return false;
+  try{
+    new Intl.DateTimeFormat('en-US',{timeZone:tz}).format(new Date());
+    return true;
+  }catch(e){
+    return false;
+  }
+}
+
+function timeZoneShortName(tz,d){
+  try{
+    const safeTz=isValidIanaTimeZone(tz)?tz:'America/New_York';
+    const parts=new Intl.DateTimeFormat('en-US',{
+      timeZone:safeTz,
+      timeZoneName:'short'
+    }).formatToParts(d||new Date());
+
+    return parts.find(p=>p.type==='timeZoneName')?.value || safeTz;
+  }catch(e){
+    return tz || 'America/New_York';
+  }
+}
+
+function sportsDbFallbackSourceTimeZone(eOrRow){
+  const candidate =
+    (eOrRow&&eOrRow.sourceTimeZone) ||
+    (eOrRow&&eOrRow.sourceTimezone) ||
+    (eOrRow&&eOrRow.timeZone) ||
+    (eOrRow&&eOrRow.timezone) ||
+    '';
+
+  return isValidIanaTimeZone(candidate) ? candidate : 'America/New_York';
+}
+
+function parseAbsoluteTimestamp(stamp){
+  if(!stamp) return null;
+
+  const s=String(stamp).trim();
+
+  if(/[zZ]$|[+-]\d{2}:?\d{2}$/.test(s)){
+    const d=new Date(s);
+    return Number.isFinite(d.getTime()) ? d : null;
+  }
+
+  const m=s.match(/^(\d{4}-\d{2}-\d{2})[T\s](\d{2}:\d{2})(?::\d{2})?$/);
+  if(m){
+    const d=new Date(`${m[1]}T${m[2]}:00Z`);
+    return Number.isFinite(d.getTime()) ? d : null;
+  }
+
+  const d=new Date(s);
+  return Number.isFinite(d.getTime()) ? d : null;
+}
+
+function instantFromDateTimeInZone(date,time,tz){
+  if(!date || !time || !tz) return null;
+
+  const safeTz=isValidIanaTimeZone(tz)?tz:'America/New_York';
+  const tm=parseTimeTo24(time);
+  if(!tm) return null;
+
+  let guess=Date.UTC(
+    Number(date.slice(0,4)),
+    Number(date.slice(5,7))-1,
+    Number(date.slice(8,10)),
+    tm.h,
+    tm.min,
+    0
+  );
+
+  for(let i=0;i<4;i++){
+    const d=new Date(guess);
+
+    const parts=new Intl.DateTimeFormat('en-CA',{
+      timeZone:safeTz,
+      year:'numeric',
+      month:'2-digit',
+      day:'2-digit',
+      hour:'2-digit',
+      minute:'2-digit',
+      hourCycle:'h23'
+    }).formatToParts(d);
+
+    const get=t=>parts.find(p=>p.type===t)?.value || '';
+
+    const wallDate=`${get('year')}-${get('month')}-${get('day')}`;
+    const wallHour=Number(get('hour')==='24'?'0':get('hour'));
+    const wallMin=Number(get('minute')||0);
+
+    const wall=Date.UTC(
+      Number(wallDate.slice(0,4)),
+      Number(wallDate.slice(5,7))-1,
+      Number(wallDate.slice(8,10)),
+      wallHour,
+      wallMin,
+      0
+    );
+
+    const target=Date.UTC(
+      Number(date.slice(0,4)),
+      Number(date.slice(5,7))-1,
+      Number(date.slice(8,10)),
+      tm.h,
+      tm.min,
+      0
+    );
+
+    const diff=target-wall;
+
+    if(Math.abs(diff)<60000){
+      return new Date(guess);
+    }
+
+    guess+=diff;
+  }
+
+  const out=new Date(guess);
+  return Number.isFinite(out.getTime()) ? out : null;
+}
+
+function sportsDbTimeInstant(eOrRow){
+  if(!eOrRow) return null;
+
+  const stamp=(eOrRow.strTimestamp || eOrRow.sourceTimestamp || '');
+  if(stamp){
+    const parsed=parseAbsoluteTimestamp(stamp);
+    if(parsed) return parsed;
+  }
+
+  if(eOrRow.kickoffUtc){
+    const parsed=parseAbsoluteTimestamp(eOrRow.kickoffUtc);
+    if(parsed) return parsed;
+  }
+
+  const apiDate=
+    eOrRow.dateEvent ||
+    eOrRow.sourceDate ||
+    eOrRow.apiDate ||
+    eOrRow.rawDate ||
+    '';
+
+  const apiTime=
+    eOrRow.strTime ||
+    eOrRow.sourceTime ||
+    eOrRow.strEventTime ||
+    eOrRow.apiTime ||
+    eOrRow.rawTime ||
+    '';
+
+  if(apiDate && apiTime){
+    const tz=sportsDbFallbackSourceTimeZone(eOrRow);
+    const zoned=instantFromDateTimeInZone(apiDate,apiTime,tz);
+    if(zoned) return zoned;
+  }
+
+  return null;
+}
+
+function shortDateTimeInZone(d,tz){
+  if(!d || !Number.isFinite(d.getTime())) return '—';
+
+  const safeTz=isValidIanaTimeZone(tz)?tz:'America/New_York';
+
+  const date=new Intl.DateTimeFormat('en-GB',{
+    timeZone:safeTz,
+    day:'2-digit',
+    month:'short'
+  }).format(d);
+
+  const time=new Intl.DateTimeFormat('en-US',{
+    timeZone:safeTz,
+    hour:'numeric',
+    minute:'2-digit',
+    hour12:true
+  }).format(d);
+
+  return `${date}, ${time} ${timeZoneShortName(safeTz,d)}`;
+}
+
+function sourceDateTimeRawParts(eOrRow){
+  if(!eOrRow) return {date:'',time:''};
+
+  const date=
+    eOrRow.dateEvent ||
+    eOrRow.sourceDate ||
+    eOrRow.apiDate ||
+    eOrRow.rawDate ||
+    '';
+
+  const time=
+    eOrRow.strTime ||
+    eOrRow.sourceTime ||
+    eOrRow.strEventTime ||
+    eOrRow.apiTime ||
+    eOrRow.rawTime ||
+    '';
+
+  return {date,time};
+}
+
+function shortSourceDateTime(eOrRow){
+  if(!eOrRow) return '—';
+
+  const p=sourceDateTimeRawParts(eOrRow);
+  const sourceTz=sportsDbFallbackSourceTimeZone(eOrRow);
+
+  if(p.date || p.time){
+    let shortDate=p.date;
+
+    const m=String(p.date).match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if(m){
+      const fakeUtc=new Date(Date.UTC(
+        Number(m[1]),
+        Number(m[2])-1,
+        Number(m[3]),
+        12,
+        0,
+        0
+      ));
+
+      shortDate=new Intl.DateTimeFormat('en-GB',{
+        timeZone:'UTC',
+        day:'2-digit',
+        month:'short'
+      }).format(fakeUtc);
+    }
+
+    const instant=sportsDbTimeInstant(eOrRow);
+    const sourceTzName=timeZoneShortName(sourceTz,instant || new Date());
+
+    return `${shortDate}${p.time?', '+toAmPmFromHHMM(p.time):''} ${sourceTzName}`.trim();
+  }
+
+  const instant=sportsDbTimeInstant(eOrRow);
+  if(instant){
+    return shortDateTimeInZone(instant,sourceTz);
+  }
+
+  return '—';
+}
+
+function shortUserDateTime(eOrRow){
+  const d=sportsDbTimeInstant(eOrRow);
+  return shortDateTimeInZone(d,browserTimeZone());
+}
+
+function sportsDbSourceDisplayLabel(eOrRow){
+  return shortSourceDateTime(eOrRow);
+}
+
+function sportsDbUserLocalLabel(eOrRow){
+  return shortUserDateTime(eOrRow);
+}
+
+function sportsDbSourceLabel(eOrRow){
+  return shortSourceDateTime(eOrRow);
+}
+
+function sportsDbUaeLabel(eOrRow){
+  const d=sportsDbTimeInstant(eOrRow);
+  return shortDateTimeInZone(d,'Asia/Dubai');
+}
+
+function apiTimeToInstant(m){
+  return sportsDbTimeInstant(m);
+}
+
+function apiTimeToUaeLabel(m){
+  return sportsDbSourceDisplayLabel(m);
+}
+
+function apiTimeSourceLabel(m){
+  return sportsDbSourceDisplayLabel(m);
+}
+
+function hubApiTimeLabel(m){
+  return sportsDbSourceDisplayLabel(m);
+}
+
+function hubUaeTimeLabel(m){
+  return sportsDbSourceDisplayLabel(m);
+}
+
+function matchDateTime(m){
+  if(!m) return '';
+
+  const apiLike=!!(
+    m.api ||
+    m.eventId ||
+    m.source==='live' ||
+    m.source==='api' ||
+    m.sourceDate ||
+    m.sourceTime ||
+    m.sourceTimestamp ||
+    m.strTimestamp ||
+    m.kickoffUtc
+  );
+
+  if(apiLike){
+    return sportsDbSourceDisplayLabel(m);
+  }
+
+  const date=(m&&m.uaeDate) || (m&&m.date) || '';
+  const time=(m&&m.uaeTime) || (m&&m.time) || (m&&m.strTime ? toAmPmFromHHMM(m.strTime) : '');
+
+  if(date && time){
+    return date+' · '+time+(m.tz?' '+m.tz:'');
+  }
+
+  return date || time || '';
+}
+
+function matchUaeTimestamp(m){
+  if(!m) return 0;
+
+  const apiLike=!!(
+    m.api ||
+    m.eventId ||
+    m.source==='live' ||
+    m.source==='api' ||
+    m.sourceDate ||
+    m.sourceTime ||
+    m.sourceTimestamp ||
+    m.strTimestamp ||
+    m.kickoffUtc
+  );
+
+  if(apiLike){
+    const d=sportsDbTimeInstant(m);
+    if(d) return d.getTime();
+  }
+
+  if(m.kickoffUtc){
+    const d=parseAbsoluteTimestamp(m.kickoffUtc);
+    if(d) return d.getTime();
+  }
+
+  if(!m.date) return 0;
+
+  const tm=parseTimeTo24(m.time || m.strTime || '00:00');
+  const h=tm ? tm.h : 0;
+  const min=tm ? tm.min : 0;
+
+  // Legacy non-API rows were stored as UAE display rows.
+  return Date.UTC(
+    Number(m.date.slice(0,4)),
+    Number(m.date.slice(5,7))-1,
+    Number(m.date.slice(8,10)),
+    h-4,
+    min,
+    0
+  );
+}
+
+function matchKickoffTimestamp(m){
+  return matchUaeTimestamp(m);
+}
+
+function countdownText(m){
+  const ts=matchUaeTimestamp(m);
+  if(!ts) return '';
+
+  const diff=ts-Date.now();
+
+  if(diff<=-130*60*1000){
+    return tl('Finished / past window','انتهت / خارج النافذة');
+  }
+
+  if(diff<=0){
+    return tl('Kickoff window','نافذة الانطلاق');
+  }
+
+  const mins=Math.ceil(diff/60000);
+  const h=Math.floor(mins/60);
+  const mm=mins%60;
+
+  if(h>=24){
+    return tl(`in ${Math.round(h/24)}d`,`بعد ${Math.round(h/24)} يوم`);
+  }
+
+  if(h>0){
+    return tl(`in ${h}h ${mm}m`,`بعد ${h}س ${mm}د`);
+  }
+
+  return tl(`in ${mm}m`,`بعد ${mm}د`);
+}
+
+function dateKeyInZone(d,tz){
+  if(!d || !Number.isFinite(d.getTime())) return '';
+
+  const safeTz=isValidIanaTimeZone(tz)?tz:'Asia/Dubai';
+  const parts=new Intl.DateTimeFormat('en-CA',{
+    timeZone:safeTz,
+    year:'numeric',
+    month:'2-digit',
+    day:'2-digit'
+  }).formatToParts(d);
+
+  const get=t=>parts.find(p=>p.type===t)?.value || '';
+
+  return `${get('year')}-${get('month')}-${get('day')}`;
+}
+
+function todayInZone(tz){
+  return dateKeyInZone(new Date(),tz);
+}
+
+function todayPopupShownKey(){
+  const tz=browserTimeZone();
+  return 'wc2026_today_popup_'+tz+'_'+todayInZone(tz);
+}
+
+function todayPopupRows(){
+  const tz=browserTimeZone();
+  const today=todayInZone(tz);
+
+  return homeSchedule()
+    .filter(m=>{
+      if(!m || !m.group || m.idx==null) return false;
+
+      const instant=sportsDbTimeInstant(m);
+      if(instant){
+        return dateKeyInZone(instant,tz)===today;
+      }
+
+      return m.date===today;
+    })
+    .sort((a,b)=>matchUaeTimestamp(a)-matchUaeTimestamp(b));
+}
+
+function apiEventKickoffMeta(e){
+  if(!e) return {
+    kickoffUtc:null,uaeDate:'',uaeTime:'',date:'',time:'',
+    sourceDate:'',sourceTime:'',sourceTimeZone:'',sourceTimestamp:'',
+    sourceLocalDate:'',sourceLocalTime:'',sourceLabel:''
+  };
+
+  const sourceDate=e.dateEvent||'';
+  const sourceTime=e.strTime||e.strEventTime||'';
+  const sourceTimestamp=e.strTimestamp||'';
+  const sourceLocalDate=e.dateEventLocal||'';
+  const sourceLocalTime=e.strTimeLocal||'';
+  const sourceTimeZone=sportsDbFallbackSourceTimeZone(e);
+  const d=sportsDbTimeInstant(e);
+
+  return {
+    kickoffUtc:d?d.toISOString():null,
+    uaeDate:'',
+    uaeTime:'',
+    date:sourceDate,
+    time:sourceTime?toAmPmFromHHMM(sourceTime):'',
+    sourceDate,
+    sourceTime,
+    sourceTimeZone,
+    sourceTimestamp,
+    sourceLocalDate,
+    sourceLocalTime,
+    sourceLabel:sportsDbSourceLabel(e)
+  };
+}
+
+function normalizeSportsDbRow(row){
+  if(!row||typeof row!=='object') return row;
+
+  const m={...row};
+  const d=sportsDbTimeInstant(m);
+  const source=sourceDateTimeRawParts(m);
+
+  if(d){
+    m.kickoffUtc=d.toISOString();
+  }
+
+  if(source.date) m.date=source.date;
+  if(source.time) m.time=toAmPmFromHHMM(source.time);
+
+  m.sourceDate=m.sourceDate||m.dateEvent||source.date||'';
+  m.sourceTime=m.sourceTime||m.strTime||m.strEventTime||source.time||'';
+  m.sourceTimeZone=sportsDbFallbackSourceTimeZone(m);
+  m.sourceLabel=sportsDbSourceLabel(m);
+
+  return m;
+}
+
+function normalizeScheduleRowsForGst(rows){
+  return (Array.isArray(rows)?rows:[]).map(normalizeSportsDbRow);
+}
 
 /* ================= boot ================= */
 async function boot(){
@@ -8028,7 +8436,6 @@ async function boot(){
   trackEvent('app_open',{view:APP.view||'dashboard'});
   trackPageView(APP.view||'dashboard');
   registerPWA();
-  updateInstallUI();
   document.body.classList.toggle('no-voice', !voiceSupported());
   updateHeaderDateTime();
   if(!APP._clockTimer) APP._clockTimer=setInterval(updateHeaderDateTime,30000);
@@ -8531,30 +8938,179 @@ function todayPopupRows(){
     .sort((a,b)=>matchUaeTimestamp(a)-matchUaeTimestamp(b));
 }
 
+function popupResultForMatch(m){
+  if(!m) return null;
+
+  if(m.hs!==undefined && m.as!==undefined && m.hs!==null && m.as!==null && m.hs!=='' && m.as!==''){
+    return {
+      hs:Number(m.hs),
+      as:Number(m.as),
+      status:m.status||'Final',
+      api:!!m.api
+    };
+  }
+
+  const apiRows=typeof apiHomeMatches==='function'?apiHomeMatches():[];
+  const hit=apiRows.find(x=>{
+    if(!x) return false;
+    if(m.eventId && x.eventId && String(m.eventId)===String(x.eventId)) return true;
+    if(m.group && x.group && String(m.group)===String(x.group) && m.idx!=null && x.idx!=null && Number(m.idx)===Number(x.idx)) return true;
+    return sameTeam(m.home,x.home)&&sameTeam(m.away,x.away);
+  });
+
+  if(hit && hit.hs!==undefined && hit.as!==undefined && hit.hs!==null && hit.as!==null){
+    return {
+      hs:Number(hit.hs),
+      as:Number(hit.as),
+      status:hit.status||'Final',
+      api:!!hit.api
+    };
+  }
+
+  if(m.group && m.idx!=null){
+    const r=matchResult(m.group,m.idx);
+    if(r&&r.complete){
+      return {
+        hs:Number(r.hs),
+        as:Number(r.as),
+        status:'Final',
+        api:false
+      };
+    }
+  }
+
+  return null;
+}
+
+function popupMatchStatus(m){
+  const res=popupResultForMatch(m);
+  if(res){
+    const raw=String(res.status||'').toLowerCase();
+    if(raw.includes('live') || raw.includes('1h') || raw.includes('2h') || raw.includes('ht')) return {key:'live',label:tl('Live','مباشرة')};
+    return {key:'final',label:tl('Final','نهائية')};
+  }
+
+  const base=hubMatchStatus(m);
+  return base||{key:'upcoming',label:tl('Upcoming','قادمة')};
+}
+
+function popupMatchScoreHtml(m){
+  const res=popupResultForMatch(m);
+  if(!res) return `<span class="today-popup-score">vs</span>`;
+  return `<span class="today-popup-score">${esc(res.hs)}-${esc(res.as)}</span>`;
+}
+
+function popupSplitData(m){
+  if(!m || !m.group || m.idx==null) return {home:[],away:[],none:[]};
+  try{
+    return playerPredictionSplit(m);
+  }catch(e){
+    return {home:[],away:[],none:[]};
+  }
+}
+
+function popupSplitHtml(m){
+  const sp=popupSplitData(m);
+  const total=Math.max(1,sp.home.length+sp.away.length+sp.none.length);
+  const hp=Math.round(sp.home.length/total*100);
+  const ap=Math.round(sp.away.length/total*100);
+  const np=Math.max(0,100-hp-ap);
+
+  return `<div class="today-popup-picks">
+    <div class="today-popup-split" aria-label="${esc(tl('Prediction split','انقسام التوقعات'))}">
+      <span class="home" style="width:${hp}%"></span>
+      <span class="away" style="width:${ap}%"></span>
+      <span class="none" style="width:${np}%"></span>
+    </div>
+    <div class="today-popup-pick-labels">
+      <span>${teamHtml(m.home)} · ${sp.home.length}</span>
+      <span>${teamHtml(m.away)} · ${sp.away.length}</span>
+      <span>${esc(tl('No edge','بدون أفضلية'))} · ${sp.none.length}</span>
+    </div>
+  </div>`;
+}
+
+function popupMatchNote(m){
+  const res=popupResultForMatch(m);
+  if(res){
+    const homeWin=res.hs>res.as, awayWin=res.as>res.hs;
+    const winner=homeWin?teamText(m.home):(awayWin?teamText(m.away):tl('Draw','تعادل'));
+    return tl(`Result: ${winner}. Prediction impact is reflected in the Match Center.`,`النتيجة: ${winner}. تأثير التوقعات يظهر في مركز المباريات.`);
+  }
+
+  const status=popupMatchStatus(m);
+  const countdown=countdownText(m);
+  if(status.key==='soon' || status.key==='live') return countdown||status.label;
+
+  return tl('Tip: compare Original vs Your time before making picks.','نصيحة: قارن الوقت الأصلي مع وقتك قبل اختيار التوقع.');
+}
+
+function popupSummaryStats(rows){
+  const finals=rows.filter(m=>popupMatchStatus(m).key==='final').length;
+  const live=rows.filter(m=>popupMatchStatus(m).key==='live').length;
+  const upcoming=rows.length-finals-live;
+
+  return {finals,live,upcoming};
+}
+
 function renderTodayMatchesPopup(){
   const rows=todayPopupRows();
   const tz=browserTimeZone();
+  const stats=popupSummaryStats(rows);
 
   if(!rows.length) return '';
 
-  return `<h3 style="padding:0 8px">⚽ ${esc(tl('Today matches','مباريات اليوم'))}</h3>
-    <div class="sub" style="padding:0 8px 8px">${esc(tz)}</div>
-    ${rows.map(m=>`
-      <div class="match">
-        <div class="teams">
-          <span>${teamHtml(m.home)}</span>
-          <span class="sc num">vs</span>
-          <span>${teamHtml(m.away)}</span>
-        </div>
-        <div class="edge">
-          <b>${esc(tl('Original','الأصلي'))}:</b> ${esc(shortSourceDateTime(m))}
-        </div>
-        <div class="edge">
-          <b>${esc(tl('Your time','وقتك'))}:</b> ${esc(shortUserDateTime(m))}
-        </div>
-      </div>
-    `).join('')}
-    <button class="btn ghost" style="margin-top:10px" onclick="closeSheet()">${esc(t('close'))}</button>`;
+  return `<div class="today-popup-shell">
+    <div class="today-popup-head">
+      <span class="today-popup-kicker">⚽ ${esc(tl('Today Match Center','مركز مباريات اليوم'))}</span>
+      <h3>${esc(tl('Today matches','مباريات اليوم'))}</h3>
+      <div class="today-popup-sub">${esc(todayInZone(tz))} · ${esc(tz)} · ${esc(tl('Original time + your local time','الوقت الأصلي + وقتك المحلي'))}</div>
+    </div>
+
+    <div class="today-popup-summary">
+      <div class="today-popup-stat"><b class="num">${rows.length}</b><span>${esc(tl('Matches','مباريات'))}</span></div>
+      <div class="today-popup-stat"><b class="num">${stats.finals}</b><span>${esc(tl('Final results','نتائج نهائية'))}</span></div>
+      <div class="today-popup-stat"><b class="num">${stats.upcoming+stats.live}</b><span>${esc(tl('Live / upcoming','مباشرة / قادمة'))}</span></div>
+    </div>
+
+    <div class="today-popup-list">
+      ${rows.map(m=>{
+        const status=popupMatchStatus(m);
+        const venue=m.venue?` · ${esc(m.venue)}`:'';
+        return `<div class="today-popup-card ${esc(status.key)}">
+          <div class="today-popup-top">
+            <div class="today-popup-main">
+              <div class="today-popup-teams">${teamHtml(m.home)} <span class="vs">vs</span> ${teamHtml(m.away)}</div>
+              <div class="today-popup-meta">${esc(tl('Group','المجموعة'))} ${esc(m.group||'—')}${venue}</div>
+            </div>
+            <div>
+              ${popupMatchScoreHtml(m)}
+              <div style="margin-top:5px"><span class="today-popup-status ${esc(status.key)}">${esc(status.label)}</span></div>
+            </div>
+          </div>
+
+          <div class="today-popup-time-grid">
+            <div class="today-popup-time">
+              <span>${esc(tl('Original','الأصلي'))}</span>
+              <b>${esc(shortSourceDateTime(m))}</b>
+            </div>
+            <div class="today-popup-time">
+              <span>${esc(tl('Your time','وقتك'))}</span>
+              <b>${esc(shortUserDateTime(m))}</b>
+            </div>
+          </div>
+
+          ${popupSplitHtml(m)}
+          <div class="today-popup-note">${esc(popupMatchNote(m))}</div>
+        </div>`;
+      }).join('')}
+    </div>
+
+    <div class="today-popup-actions">
+      <button class="btn ghost" onclick="go('matches');closeSheet()">${esc(t('v_matches'))}</button>
+      <button class="btn" onclick="closeSheet()">${esc(t('close'))}</button>
+    </div>
+  </div>`;
 }
 
 function showTodayMatchesPopupOnce(){
@@ -8704,7 +9260,6 @@ async function boot(){
   trackEvent('app_open',{view:APP.view||'dashboard'});
   trackPageView(APP.view||'dashboard');
   registerPWA();
-  updateInstallUI();
   document.body.classList.toggle('no-voice', !voiceSupported());
   updateHeaderDateTime();
   if(!APP._clockTimer) APP._clockTimer=setInterval(updateHeaderDateTime,30000);
@@ -8723,6 +9278,388 @@ async function boot(){
 window.addEventListener('online',()=>{ if(APP.cached) boot(); });
 window.addEventListener('keydown',(e)=>{ if(e.key==='Escape'){ const bg=$('sheetBg'); if(bg&&bg.classList.contains('open')) closeSheet(); } });
 boot();
+
+/* ================= v80 deploy final: source/user time + today update popup ================= */
+function toAmPmFromHHMM(hhmm){
+  if(!hhmm) return '';
+  const m=String(hhmm).match(/^(\d{1,2}):(\d{2})/);
+  if(!m) return String(hhmm);
+  let h=Number(m[1]);
+  const min=m[2];
+  const ampm=h>=12?'PM':'AM';
+  h=h%12;
+  if(h===0) h=12;
+  return h+':'+min+' '+ampm;
+}
+function parseTimeTo24(time){
+  if(!time) return null;
+  const s=String(time).trim().toUpperCase();
+  let m=s.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/);
+  if(m){
+    let h=Number(m[1]);
+    const min=Number(m[2]);
+    if(m[3]==='PM' && h<12) h+=12;
+    if(m[3]==='AM' && h===12) h=0;
+    return {h,min};
+  }
+  m=s.match(/^(\d{1,2}):(\d{2})/);
+  if(m) return {h:Number(m[1]),min:Number(m[2])};
+  return null;
+}
+function browserTimeZone(){
+  try{ return Intl.DateTimeFormat().resolvedOptions().timeZone || 'Asia/Dubai'; }
+  catch(e){ return 'Asia/Dubai'; }
+}
+function isValidIanaTimeZone(tz){
+  if(!tz || typeof tz!=='string') return false;
+  try{ new Intl.DateTimeFormat('en-US',{timeZone:tz}).format(new Date()); return true; }
+  catch(e){ return false; }
+}
+function timeZoneShortName(tz,d){
+  try{
+    const safeTz=isValidIanaTimeZone(tz)?tz:'America/New_York';
+    const parts=new Intl.DateTimeFormat('en-US',{timeZone:safeTz,timeZoneName:'short'}).formatToParts(d||new Date());
+    return parts.find(p=>p.type==='timeZoneName')?.value || safeTz;
+  }catch(e){ return tz || 'America/New_York'; }
+}
+function sportsDbFallbackSourceTimeZone(eOrRow){
+  const candidate=(eOrRow&&eOrRow.sourceTimeZone)||(eOrRow&&eOrRow.sourceTimezone)||(eOrRow&&eOrRow.timeZone)||(eOrRow&&eOrRow.timezone)||'';
+  return isValidIanaTimeZone(candidate)?candidate:'America/New_York';
+}
+function parseAbsoluteTimestamp(stamp){
+  if(!stamp) return null;
+  const s=String(stamp).trim();
+  if(/[zZ]$|[+-]\d{2}:?\d{2}$/.test(s)){
+    const d=new Date(s);
+    return Number.isFinite(d.getTime())?d:null;
+  }
+  const m=s.match(/^(\d{4}-\d{2}-\d{2})[T\s](\d{2}:\d{2})(?::\d{2})?$/);
+  if(m){
+    const d=new Date(`${m[1]}T${m[2]}:00Z`);
+    return Number.isFinite(d.getTime())?d:null;
+  }
+  const d=new Date(s);
+  return Number.isFinite(d.getTime())?d:null;
+}
+function instantFromDateTimeInZone(date,time,tz){
+  if(!date||!time||!tz) return null;
+  const safeTz=isValidIanaTimeZone(tz)?tz:'America/New_York';
+  const tm=parseTimeTo24(time);
+  if(!tm) return null;
+  let guess=Date.UTC(Number(date.slice(0,4)),Number(date.slice(5,7))-1,Number(date.slice(8,10)),tm.h,tm.min,0);
+  for(let i=0;i<4;i++){
+    const d=new Date(guess);
+    const parts=new Intl.DateTimeFormat('en-CA',{timeZone:safeTz,year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).formatToParts(d);
+    const get=t=>parts.find(p=>p.type===t)?.value||'';
+    const wallDate=`${get('year')}-${get('month')}-${get('day')}`;
+    const wallHour=Number(get('hour')==='24'?'0':get('hour'));
+    const wallMin=Number(get('minute')||0);
+    const wall=Date.UTC(Number(wallDate.slice(0,4)),Number(wallDate.slice(5,7))-1,Number(wallDate.slice(8,10)),wallHour,wallMin,0);
+    const target=Date.UTC(Number(date.slice(0,4)),Number(date.slice(5,7))-1,Number(date.slice(8,10)),tm.h,tm.min,0);
+    const diff=target-wall;
+    if(Math.abs(diff)<60000) return new Date(guess);
+    guess+=diff;
+  }
+  const out=new Date(guess);
+  return Number.isFinite(out.getTime())?out:null;
+}
+function sportsDbTimeInstant(eOrRow){
+  if(!eOrRow) return null;
+  const stamp=(eOrRow.strTimestamp||eOrRow.sourceTimestamp||'');
+  if(stamp){ const parsed=parseAbsoluteTimestamp(stamp); if(parsed) return parsed; }
+  if(eOrRow.kickoffUtc){ const parsed=parseAbsoluteTimestamp(eOrRow.kickoffUtc); if(parsed) return parsed; }
+  const apiDate=eOrRow.dateEvent||eOrRow.sourceDate||eOrRow.apiDate||eOrRow.rawDate||'';
+  const apiTime=eOrRow.strTime||eOrRow.sourceTime||eOrRow.strEventTime||eOrRow.apiTime||eOrRow.rawTime||'';
+  if(apiDate&&apiTime){
+    const zoned=instantFromDateTimeInZone(apiDate,apiTime,sportsDbFallbackSourceTimeZone(eOrRow));
+    if(zoned) return zoned;
+  }
+  return null;
+}
+function shortDateTimeInZone(d,tz){
+  if(!d||!Number.isFinite(d.getTime())) return '—';
+  const safeTz=isValidIanaTimeZone(tz)?tz:'America/New_York';
+  const date=new Intl.DateTimeFormat('en-GB',{timeZone:safeTz,day:'2-digit',month:'short'}).format(d);
+  const time=new Intl.DateTimeFormat('en-US',{timeZone:safeTz,hour:'numeric',minute:'2-digit',hour12:true}).format(d);
+  return `${date}, ${time} ${timeZoneShortName(safeTz,d)}`;
+}
+function sourceDateTimeRawParts(eOrRow){
+  if(!eOrRow) return {date:'',time:''};
+  const date=eOrRow.dateEvent||eOrRow.sourceDate||eOrRow.apiDate||eOrRow.rawDate||'';
+  const time=eOrRow.strTime||eOrRow.sourceTime||eOrRow.strEventTime||eOrRow.apiTime||eOrRow.rawTime||'';
+  return {date,time};
+}
+function shortSourceDateTime(eOrRow){
+  if(!eOrRow) return '—';
+  const p=sourceDateTimeRawParts(eOrRow);
+  const sourceTz=sportsDbFallbackSourceTimeZone(eOrRow);
+  if(p.date||p.time){
+    let shortDate=p.date;
+    const m=String(p.date).match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if(m){
+      const fakeUtc=new Date(Date.UTC(Number(m[1]),Number(m[2])-1,Number(m[3]),12,0,0));
+      shortDate=new Intl.DateTimeFormat('en-GB',{timeZone:'UTC',day:'2-digit',month:'short'}).format(fakeUtc);
+    }
+    const instant=sportsDbTimeInstant(eOrRow);
+    const sourceTzName=timeZoneShortName(sourceTz,instant||new Date());
+    return `${shortDate}${p.time?', '+toAmPmFromHHMM(p.time):''} ${sourceTzName}`.trim();
+  }
+  const instant=sportsDbTimeInstant(eOrRow);
+  if(instant) return shortDateTimeInZone(instant,sourceTz);
+  return '—';
+}
+function shortUserDateTime(eOrRow){ return shortDateTimeInZone(sportsDbTimeInstant(eOrRow),browserTimeZone()); }
+function sportsDbSourceDisplayLabel(eOrRow){ return shortSourceDateTime(eOrRow); }
+function sportsDbUserLocalLabel(eOrRow){ return shortUserDateTime(eOrRow); }
+function sportsDbSourceLabel(eOrRow){ return shortSourceDateTime(eOrRow); }
+function sportsDbUaeLabel(eOrRow){ return shortDateTimeInZone(sportsDbTimeInstant(eOrRow),'Asia/Dubai'); }
+function apiTimeToInstant(m){ return sportsDbTimeInstant(m); }
+function apiTimeToUaeLabel(m){ return sportsDbSourceDisplayLabel(m); }
+function apiTimeSourceLabel(m){ return sportsDbSourceDisplayLabel(m); }
+function hubApiTimeLabel(m){ return sportsDbSourceDisplayLabel(m); }
+function hubUaeTimeLabel(m){ return sportsDbSourceDisplayLabel(m); }
+function matchDateTime(m){
+  if(!m) return '';
+  const apiLike=!!(m.api||m.eventId||m.source==='live'||m.source==='api'||m.sourceDate||m.sourceTime||m.sourceTimestamp||m.strTimestamp||m.kickoffUtc);
+  if(apiLike) return sportsDbSourceDisplayLabel(m);
+  const date=(m&&m.uaeDate)||(m&&m.date)||'';
+  const time=(m&&m.uaeTime)||(m&&m.time)||(m&&m.strTime?toAmPmFromHHMM(m.strTime):'');
+  if(date&&time) return date+' · '+time+(m.tz?' '+m.tz:'');
+  return date||time||'';
+}
+function matchUaeTimestamp(m){
+  if(!m) return 0;
+  const apiLike=!!(m.api||m.eventId||m.source==='live'||m.source==='api'||m.sourceDate||m.sourceTime||m.sourceTimestamp||m.strTimestamp||m.kickoffUtc);
+  if(apiLike){ const d=sportsDbTimeInstant(m); if(d) return d.getTime(); }
+  if(m.kickoffUtc){ const d=parseAbsoluteTimestamp(m.kickoffUtc); if(d) return d.getTime(); }
+  if(!m.date) return 0;
+  const tm=parseTimeTo24(m.time||m.strTime||'00:00');
+  const h=tm?tm.h:0, min=tm?tm.min:0;
+  return Date.UTC(Number(m.date.slice(0,4)),Number(m.date.slice(5,7))-1,Number(m.date.slice(8,10)),h-4,min,0);
+}
+function matchKickoffTimestamp(m){ return matchUaeTimestamp(m); }
+function countdownText(m){
+  const ts=matchUaeTimestamp(m);
+  if(!ts) return '';
+  const diff=ts-Date.now();
+  if(diff<=-130*60*1000) return tl('Finished / past window','انتهت / خارج النافذة');
+  if(diff<=0) return tl('Kickoff window','نافذة الانطلاق');
+  const mins=Math.ceil(diff/60000);
+  const h=Math.floor(mins/60), mm=mins%60;
+  if(h>=24) return tl(`in ${Math.round(h/24)}d`,`بعد ${Math.round(h/24)} يوم`);
+  if(h>0) return tl(`in ${h}h ${mm}m`,`بعد ${h}س ${mm}د`);
+  return tl(`in ${mm}m`,`بعد ${mm}د`);
+}
+function dateKeyInZone(d,tz){
+  if(!d||!Number.isFinite(d.getTime())) return '';
+  const safeTz=isValidIanaTimeZone(tz)?tz:'Asia/Dubai';
+  const parts=new Intl.DateTimeFormat('en-CA',{timeZone:safeTz,year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(d);
+  const get=t=>parts.find(p=>p.type===t)?.value||'';
+  return `${get('year')}-${get('month')}-${get('day')}`;
+}
+function todayInZone(tz){ return dateKeyInZone(new Date(),tz); }
+function todayPopupShownKey(){
+  const tz=browserTimeZone();
+  return 'wc2026_today_popup_'+tz+'_'+todayInZone(tz);
+}
+function todayPopupRows(){
+  const tz=browserTimeZone();
+  const today=todayInZone(tz);
+  return homeSchedule().filter(m=>{
+    if(!m||!m.group||m.idx==null) return false;
+    const instant=sportsDbTimeInstant(m);
+    if(instant) return dateKeyInZone(instant,tz)===today;
+    return m.date===today;
+  }).sort((a,b)=>matchUaeTimestamp(a)-matchUaeTimestamp(b));
+}
+function apiEventKickoffMeta(e){
+  if(!e) return {kickoffUtc:null,uaeDate:'',uaeTime:'',date:'',time:'',sourceDate:'',sourceTime:'',sourceTimeZone:'',sourceTimestamp:'',sourceLocalDate:'',sourceLocalTime:'',sourceLabel:''};
+  const sourceDate=e.dateEvent||'';
+  const sourceTime=e.strTime||e.strEventTime||'';
+  const sourceTimestamp=e.strTimestamp||'';
+  const sourceLocalDate=e.dateEventLocal||'';
+  const sourceLocalTime=e.strTimeLocal||'';
+  const sourceTimeZone=sportsDbFallbackSourceTimeZone(e);
+  const d=sportsDbTimeInstant(e);
+  return {kickoffUtc:d?d.toISOString():null,uaeDate:'',uaeTime:'',date:sourceDate,time:sourceTime?toAmPmFromHHMM(sourceTime):'',sourceDate,sourceTime,sourceTimeZone,sourceTimestamp,sourceLocalDate,sourceLocalTime,sourceLabel:sportsDbSourceLabel(e)};
+}
+function normalizeSportsDbRow(row){
+  if(!row||typeof row!=='object') return row;
+  const m={...row};
+  const d=sportsDbTimeInstant(m);
+  const source=sourceDateTimeRawParts(m);
+  if(d) m.kickoffUtc=d.toISOString();
+  if(source.date) m.date=source.date;
+  if(source.time) m.time=toAmPmFromHHMM(source.time);
+  m.sourceDate=m.sourceDate||m.dateEvent||source.date||'';
+  m.sourceTime=m.sourceTime||m.strTime||m.strEventTime||source.time||'';
+  m.sourceTimeZone=sportsDbFallbackSourceTimeZone(m);
+  m.sourceLabel=sportsDbSourceLabel(m);
+  return m;
+}
+function normalizeScheduleRowsForGst(rows){ return (Array.isArray(rows)?rows:[]).map(normalizeSportsDbRow); }
+function popupResultForMatch(m){
+  if(!m) return null;
+  if(m.hs!==undefined&&m.as!==undefined&&m.hs!==null&&m.as!==null&&m.hs!==''&&m.as!=='') return {hs:Number(m.hs),as:Number(m.as),status:m.status||'Final',api:!!m.api};
+  const apiRows=typeof apiHomeMatches==='function'?apiHomeMatches():[];
+  const hit=apiRows.find(x=>{
+    if(!x) return false;
+    if(m.eventId&&x.eventId&&String(m.eventId)===String(x.eventId)) return true;
+    if(m.group&&x.group&&String(m.group)===String(x.group)&&m.idx!=null&&x.idx!=null&&Number(m.idx)===Number(x.idx)) return true;
+    return sameTeam(m.home,x.home)&&sameTeam(m.away,x.away);
+  });
+  if(hit&&hit.hs!==undefined&&hit.as!==undefined&&hit.hs!==null&&hit.as!==null) return {hs:Number(hit.hs),as:Number(hit.as),status:hit.status||'Final',api:!!hit.api};
+  if(m.group&&m.idx!=null){
+    const r=matchResult(m.group,m.idx);
+    if(r&&r.complete) return {hs:Number(r.hs),as:Number(r.as),status:'Final',api:false};
+  }
+  return null;
+}
+function popupMatchStatus(m){
+  const res=popupResultForMatch(m);
+  if(res){
+    const raw=String(res.status||'').toLowerCase();
+    if(raw.includes('live')||raw.includes('1h')||raw.includes('2h')||raw.includes('ht')) return {key:'live',label:tl('Live','مباشرة')};
+    return {key:'final',label:tl('Final','نهائية')};
+  }
+  const base=hubMatchStatus(m);
+  return base||{key:'upcoming',label:tl('Upcoming','قادمة')};
+}
+function popupMatchScoreHtml(m){
+  const res=popupResultForMatch(m);
+  if(!res) return `<span class="today-update-score pending">vs</span>`;
+  return `<span class="today-update-score">${esc(res.hs)}-${esc(res.as)}</span>`;
+}
+function popupSplitData(m){
+  if(!m||!m.group||m.idx==null) return {home:[],away:[],none:[]};
+  try{ return playerPredictionSplit(m); }catch(e){ return {home:[],away:[],none:[]}; }
+}
+function popupSplitHtml(m){
+  const sp=popupSplitData(m);
+  const total=Math.max(1,sp.home.length+sp.away.length+sp.none.length);
+  const hp=Math.round(sp.home.length/total*100);
+  const ap=Math.round(sp.away.length/total*100);
+  const np=Math.max(0,100-hp-ap);
+  return `<div class="today-update-picks"><div class="today-update-split" aria-label="${esc(tl('Prediction split','انقسام التوقعات'))}"><span class="home" style="width:${hp}%"></span><span class="away" style="width:${ap}%"></span><span class="none" style="width:${np}%"></span></div><div class="today-update-pick-labels"><span>${teamHtml(m.home)} · ${sp.home.length}</span><span>${teamHtml(m.away)} · ${sp.away.length}</span><span>${esc(tl('No edge','بدون أفضلية'))} · ${sp.none.length}</span></div></div>`;
+}
+function popupSourceInfoHtml(m){
+  const sourceName='TheSportsDB';
+  const eventId=m.eventId?String(m.eventId):'—';
+  const sourceTz=sportsDbFallbackSourceTimeZone(m);
+  const venue=m.venue?m.venue:'—';
+  const srcDate=m.sourceDate||m.dateEvent||m.apiDate||m.rawDate||'—';
+  const srcTime=m.sourceTime||m.strTime||m.strEventTime||m.apiTime||m.rawTime||'—';
+  return `<div class="today-update-source"><div><b>${esc(tl('Source','المصدر'))}:</b> ${esc(sourceName)} · ${esc(tl('Event','الحدث'))} ${esc(eventId)}</div><div><b>${esc(tl('Source fields','حقول المصدر'))}:</b> ${esc(srcDate)} ${esc(srcTime)} · ${esc(sourceTz)}</div><div><b>${esc(tl('Venue','الملعب'))}:</b> ${esc(venue)}</div></div>`;
+}
+function popupMatchNote(m){
+  const res=popupResultForMatch(m);
+  if(res){
+    const homeWin=res.hs>res.as, awayWin=res.as>res.hs;
+    const winner=homeWin?teamText(m.home):(awayWin?teamText(m.away):tl('Draw','تعادل'));
+    return tl(`Result update: ${winner}. Prediction impact is reflected in Match Center.`,`تحديث النتيجة: ${winner}. تأثير التوقعات يظهر في مركز المباريات.`);
+  }
+  const status=popupMatchStatus(m);
+  const countdown=countdownText(m);
+  if(status.key==='soon'||status.key==='live') return countdown||status.label;
+  return tl('Review the original kickoff and your local time before picks lock.','راجع وقت الانطلاق الأصلي ووقتك المحلي قبل إغلاق التوقعات.');
+}
+function popupSummaryStats(rows){
+  const finals=rows.filter(m=>popupMatchStatus(m).key==='final').length;
+  const live=rows.filter(m=>popupMatchStatus(m).key==='live').length;
+  const upcoming=rows.length-finals-live;
+  return {finals,live,upcoming};
+}
+function renderTodayMatchesPopup(){
+  const rows=todayPopupRows();
+  const tz=browserTimeZone();
+  const stats=popupSummaryStats(rows);
+  if(!rows.length){
+    return `<div class="today-update-shell"><div class="today-update-head"><span class="today-update-kicker">⚽ ${esc(tl('Today Update','تحديث اليوم'))}</span><h3>${esc(tl('No matches today','لا توجد مباريات اليوم'))}</h3><div class="today-update-sub">${esc(todayInZone(tz))} · ${esc(tz)}</div></div><div class="today-update-empty">${esc(tl('No source matches found for your local today.','لم يتم العثور على مباريات من المصدر ليومك المحلي.'))}</div><button class="btn" onclick="closeSheet()">${esc(t('close'))}</button></div>`;
+  }
+  return `<div class="today-update-shell"><div class="today-update-head"><span class="today-update-kicker">⚽ ${esc(tl('Today Update','تحديث اليوم'))}</span><h3>${esc(tl('Matches, results and times','المباريات والنتائج والأوقات'))}</h3><div class="today-update-sub">${esc(todayInZone(tz))} · ${esc(tz)} · ${esc(tl('Source time plus your local time','وقت المصدر بالإضافة إلى وقتك المحلي'))}</div></div><div class="today-update-list">${rows.map(m=>{const status=popupMatchStatus(m);const group=m.group?`${esc(tl('Group','المجموعة'))} ${esc(m.group)}`:'—';return `<div class="today-update-card ${esc(status.key)}"><div class="today-update-top"><div class="today-update-main"><div class="today-update-teams">${teamHtml(m.home)} <span class="vs">vs</span> ${teamHtml(m.away)}</div><div class="today-update-meta">${group}</div></div><div>${popupMatchScoreHtml(m)}<div style="margin-top:5px"><span class="today-update-status ${esc(status.key)}">${esc(status.label)}</span></div></div></div><div class="today-update-time-grid"><div class="today-update-time"><span>${esc(tl('Original source time','وقت المصدر الأصلي'))}</span><b>${esc(shortSourceDateTime(m))}</b></div><div class="today-update-time"><span>${esc(tl('Your time','وقتك'))}</span><b>${esc(shortUserDateTime(m))}</b></div></div>${popupSplitHtml(m)}<div class="today-update-note">${esc(popupMatchNote(m))}</div></div>`;}).join('')}</div><div class="today-update-actions"><button class="btn ghost" onclick="go('matches');closeSheet()">${esc(t('v_matches'))}</button><button class="btn" onclick="closeSheet()">${esc(t('close'))}</button></div></div>`;
+}
+function showTodayMatchesPopupOnce(){
+  try{
+    const key=todayPopupShownKey();
+    if(sessionStorage.getItem(key)==='1') return;
+    sessionStorage.setItem(key,'1');
+    const html=renderTodayMatchesPopup();
+    if(html) openSheet(html);
+  }catch(e){ console.warn('Today popup failed',e); }
+}
+function renderMatchdayHero(){
+  const today=todayApiMatches();
+  const yesterday=apiYesterdayResults();
+  const latest=latestApiResults(1)[0]||null;
+  const next=nextApiMatch();
+  const nextStatus=next?hubMatchStatus(next):null;
+  const nextLine=next?`${hubMatchName(next)}`:tl('No upcoming match found','لا توجد مباراة قادمة حالياً');
+  const nextSub=next?`${esc(matchDateTime(next))} · ${esc(countdownText(next))} · ${esc(nextStatus.label)}`:tl('No live API fixture in the current window.','لا توجد مباراة من API المباشر ضمن النافذة الحالية.');
+  const latestLine=latest?latestScoreLabel(latest):tl('No final result yet','لا توجد نتيجة نهائية بعد');
+  const latestSub=latest?`${esc(matchDateTime(latest))}`:'—';
+  const hubText=today.length?tl(`${today.length} match${today.length>1?'es':''}`,`${today.length} مباراة`):tl('No match window','لا توجد نافذة مباريات');
+  const yesterdayText=yesterday.length?tl(`${yesterday.length} final${yesterday.length>1?'s':''}`,`${yesterday.length} نتيجة نهائية`):tl('No finals found','لا توجد نتائج نهائية');
+  return `<div class="card hub-hero"><div class="hero-kicker">⚽ ${esc(tl('Matchday Hub','مركز يوم المباريات'))}</div><h2>${esc(tl('Today','اليوم'))}</h2><div class="hub-brief-grid"><div class="hub-brief-card primary"><div class="hub-brief-label">${esc(tl('Next match','المباراة القادمة'))}</div><div class="hub-brief-main">${esc(nextLine)}</div><div class="hub-brief-sub">${nextSub}</div><div class="hub-brief-nextline"><span class="hub-pill">${esc(todayInZone(browserTimeZone()))}</span></div></div><div class="hub-brief-stack"><div class="hub-brief-mini"><div class="hub-brief-label">${esc(tl('Latest final','آخر نتيجة'))}</div><b>${esc(latestLine)}</b><span>${latestSub}</span></div><div class="hub-brief-mini"><div class="hub-brief-label">${esc(tl('Match center','مركز المباريات'))}</div><b>${esc(hubText)}</b><span>${esc(tl('Status','الحالة'))}</span></div><div class="hub-brief-mini"><div class="hub-brief-label">${esc(tl('Yesterday','أمس'))}</div><b>${esc(yesterdayText)}</b><span>${esc(tl('Final results','النتائج النهائية'))}</span></div></div></div></div>`;
+}
+async function boot(){
+  if(!APP.data) APP.data=ensureShape({});
+  APP.loaded=false;
+  render();
+  try{ const r=localStorage.getItem('wc2026_ranks'); if(r) APP.prevRanks=JSON.parse(r); }catch(_){}
+  if(sessionStorage.getItem(ADMIN_FLAG)==='1') APP.isAdmin=true;
+  await loadState();
+  if(Array.isArray(APP.data.scheduleMatches)&&APP.data.scheduleMatches.length){ APP.data.scheduleMatches=normalizeScheduleRowsForGst(APP.data.scheduleMatches); }
+  APP._schedule=(Array.isArray(APP.data.scheduleMatches)&&APP.data.scheduleMatches.length)?APP.data.scheduleMatches:buildLocalSchedule();
+  render();
+  loadAnalytics();
+  trackEvent('app_open',{view:APP.view||'dashboard'});
+  trackPageView(APP.view||'dashboard');
+  registerPWA();
+  document.body.classList.toggle('no-voice', !voiceSupported());
+  updateHeaderDateTime();
+  if(!APP._clockTimer) APP._clockTimer=setInterval(updateHeaderDateTime,30000);
+  loadHomeApiUpdates().then(()=>{ render(); showTodayMatchesPopupOnce(); return loadToday(); }).catch(e=>{ APP._homeApiError=String(e&&e.message?e.message:e); render(); });
+}
+
+/* ===== v53 user-timezone display (authoritative overrides; display-only) ===== */
+function formatInstantUserTz(ts){
+  if(!ts) return '';
+  const d=new Date(ts); if(!Number.isFinite(d.getTime())) return '';
+  const tz=browserTimeZone(); const loc=LANG==='ar'?'ar-AE':'en-GB';
+  const date=new Intl.DateTimeFormat(loc,{timeZone:tz,weekday:'short',day:'2-digit',month:'short'}).format(d);
+  const time=new Intl.DateTimeFormat('en-US',{timeZone:tz,hour:'numeric',minute:'2-digit',hour12:true}).format(d);
+  return `${date} · ⁦${time} ${timeZoneShortName(tz,d)}⁩`;
+}
+function matchDateTime(m){
+  if(!m) return '';
+  const ts=matchUaeTimestamp(m);
+  if(ts) return formatInstantUserTz(ts);
+  const apiLike=!!(m.api||m.eventId||m.source==='live'||m.source==='api'||m.sourceDate||m.sourceTime||m.sourceTimestamp||m.strTimestamp||m.kickoffUtc);
+  if(apiLike) return sportsDbSourceDisplayLabel(m);
+  const date=(m&&m.uaeDate)||(m&&m.date)||'';
+  const time=(m&&m.uaeTime)||(m&&m.time)||(m&&m.strTime?toAmPmFromHHMM(m.strTime):'');
+  if(date&&time) return date+' · '+time+(m.tz?' '+m.tz:'');
+  return date||time||'';
+}
+function formatUaeDateTimeParts(){
+  const now=new Date(); const tz=browserTimeZone(); const loc=LANG==='ar'?'ar-AE':'en-GB';
+  const date=new Intl.DateTimeFormat(loc,{timeZone:tz,weekday:'short',day:'2-digit',month:'short',year:'numeric'}).format(now);
+  const time=new Intl.DateTimeFormat('en-US',{timeZone:tz,hour:'numeric',minute:'2-digit',hour12:true}).format(now);
+  return {date, time, tzLabel: timeZoneShortName(tz,now)};
+}
+function updateHeaderDateTime(){
+  const el=$('clockPill'); if(!el) return;
+  const p=formatUaeDateTimeParts();
+  const dateEl=el.querySelector('.date'), timeEl=el.querySelector('.time');
+  if(dateEl) dateEl.textContent=p.date+(p.tzLabel?' '+p.tzLabel:'');
+  if(timeEl) timeEl.textContent=p.time;
+}
+
+
+/* v53b: convert remaining time labels to the user's local timezone */
+function mdhUaeTimeLabel(m){ const ts=matchUaeTimestamp(m); return ts?formatInstantUserTz(ts):''; }
+function hubUaeTimeLabel(m){ const ts=matchUaeTimestamp(m); return ts?formatInstantUserTz(ts):sportsDbSourceDisplayLabel(m); }
+
 </script>
 </body>
 </html>

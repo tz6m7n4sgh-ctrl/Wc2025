@@ -4504,6 +4504,33 @@ body[data-view="dashboard"] .hub-next-meta-pill b{
 .std-foot .src-tag{font-size:11px}
 .std-detail .pts{display:inline-flex;align-items:center;gap:6px;background:#eafaf1;border:1px solid #bfe9d2;color:var(--good);border-radius:10px;padding:6px 11px;font-size:12.5px;font-weight:900}
 .std-detail .split-players{margin-top:2px}
+
+/* ===== Live updates ticker dock (appears only while a match is live) ===== */
+#liveDock{position:fixed;left:0;right:0;z-index:49;pointer-events:none}
+#liveDock>*{pointer-events:auto}
+.live-strip{display:flex;align-items:center;gap:10px;background:linear-gradient(90deg,#0a1f17,#123026);color:#fff;padding:9px 12px;cursor:pointer;box-shadow:0 -8px 24px rgba(7,21,16,.18)}
+.live-strip .ld{width:8px;height:8px;border-radius:50%;background:#ff5b4d;flex:0 0 auto;animation:livepulse 1.3s infinite}
+@keyframes livepulse{0%{box-shadow:0 0 0 0 rgba(255,91,77,.55)}70%{box-shadow:0 0 0 8px rgba(255,91,77,0)}100%{box-shadow:0 0 0 0 rgba(255,91,77,0)}}
+@media(prefers-reduced-motion:reduce){.live-strip .ld{animation:none}.live-marquee>span{animation:none;padding-left:0}}
+.live-strip .live-lbl{font-size:11px;font-weight:900;letter-spacing:.04em;flex:0 0 auto}
+.live-marquee{flex:1;overflow:hidden;white-space:nowrap;-webkit-mask-image:linear-gradient(90deg,transparent,#000 7%,#000 93%,transparent);mask-image:linear-gradient(90deg,transparent,#000 7%,#000 93%,transparent)}
+.live-marquee>span{display:inline-block;padding-left:100%;animation:livescroll 18s linear infinite;font-size:13px;font-weight:600}
+@keyframes livescroll{from{transform:translateX(0)}to{transform:translateX(-100%)}}
+.live-strip .live-chev{flex:0 0 auto;opacity:.85;font-weight:900;transition:transform .15s}
+#liveDock.open .live-strip .live-chev{transform:rotate(180deg)}
+.live-feed{display:none;background:#fff;border-top:1px solid #eef2f0;padding:10px 12px;max-height:46vh;overflow:auto;box-shadow:0 -10px 30px rgba(7,21,16,.12)}
+#liveDock.open .live-feed{display:block}
+.live-feed-h{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px}
+.live-feed-h .t{font-size:12px;font-weight:900;display:inline-flex;align-items:center;gap:7px}
+.live-feed-h .x{font-size:12px;color:var(--muted);font-weight:800;background:none;border:none;cursor:pointer}
+.live-grp{font-size:11px;font-weight:900;color:var(--muted);margin:10px 0 2px}
+.live-ev{display:flex;gap:10px;align-items:flex-start;padding:6px 0;border-top:1px solid #f3f6f4}
+.live-ev:first-child{border-top:none}
+.live-ev .min{font-size:11px;font-weight:900;color:var(--muted);min-width:34px;font-variant-numeric:tabular-nums}
+.live-ev .txt{font-size:13px;font-weight:600}
+.live-ev .txt.goal{color:var(--grass-d);font-weight:900}
+.live-open{margin-top:10px;width:100%;height:38px;border:none;border-radius:10px;background:var(--grass);color:#04150d;font-weight:900;cursor:pointer}
+body.has-live{padding-bottom:52px}
 </style>
 <!-- Analytics is initialized once in loadAnalytics() to avoid duplicate page_view hits. -->
 </head>
@@ -7193,6 +7220,100 @@ function renderMatchCard(m,opts){
 function toggleMatchCard(btn){
   const card=btn.closest('.std-card');
   if(card) card.classList.toggle('open');
+}
+/* ===== Live updates ticker (free, derived from score + status changes) ===== */
+function liveMatchKey(m){
+  return (m.key)||((m.group!=null&&m.idx!=null)?('g'+m.group+'i'+m.idx):'')||m.eventId||(teamText(m.home)+'__'+teamText(m.away));
+}
+function liveElapsedMin(m){
+  try{
+    const ts=matchUaeTimestamp(m); if(!ts) return null;
+    let mn=Math.floor((uaeNowMs()-ts)/60000);
+    if(mn<0) return null;
+    if(mn>120) mn=120;
+    return mn;
+  }catch(e){ return null; }
+}
+function liveMatchesNow(){
+  let rows=[];
+  try{ rows=todayApiMatches()||[]; }catch(e){ rows=[]; }
+  return rows.filter(m=>{ try{ return (typeof popupMatchStatus==='function'?popupMatchStatus(m):hubMatchStatus(m)).key==='live'; }catch(e){ return false; } });
+}
+function liveMinLabel(mn){ return (mn==null?'':(mn>90?"90+'":(mn+"'"))); }
+function updateLiveFeed(){
+  if(!APP._liveFeeds) APP._liveFeeds={};
+  const feeds=APP._liveFeeds;
+  const live=liveMatchesNow();
+  const liveKeys={};
+  live.forEach(m=>{
+    const key=liveMatchKey(m); liveKeys[key]=1;
+    const pair=matchScorePair(m);
+    const hs=pair?Number(pair.hs):0, as=pair?Number(pair.as):0;
+    const mn=liveElapsedMin(m);
+    let f=feeds[key];
+    if(!f){
+      f=feeds[key]={hs:hs,as:as,started:Date.now(),ended:false,home:teamText(m.home),away:teamText(m.away),
+        homeHtml:teamHtml(m.home),awayHtml:teamHtml(m.away),events:[]};
+      f.events.push({min:0,ts:Date.now(),kind:'ko',text:tl('Kick-off','انطلاق المباراة')});
+      if(hs||as) f.events.push({min:liveMinLabel(mn),ts:Date.now(),kind:'',text:`${esc(f.home)} ${hs}–${as} ${esc(f.away)}`});
+    } else {
+      if(hs>f.hs){ f.events.push({min:liveMinLabel(mn),ts:Date.now(),kind:'goal',text:`${tl('GOAL','هدف')}! ${esc(f.home)} — ${hs}–${as}`}); }
+      if(as>f.as){ f.events.push({min:liveMinLabel(mn),ts:Date.now(),kind:'goal',text:`${tl('GOAL','هدف')}! ${esc(f.away)} — ${hs}–${as}`}); }
+      f.hs=hs; f.as=as;
+    }
+    f.curMin=mn;
+  });
+  // full-time for matches that just left the live set
+  Object.keys(feeds).forEach(key=>{
+    const f=feeds[key];
+    if(!liveKeys[key]&&!f.ended){ f.ended=true; f.events.push({min:"FT",ts:Date.now(),kind:'',text:`${tl('Full-time','انتهت المباراة')} — ${esc(f.home)} ${f.hs}–${f.as} ${esc(f.away)}`}); }
+  });
+  renderLiveDock(live);
+}
+function ensureLiveDock(){
+  let dock=document.getElementById('liveDock');
+  if(!dock){
+    dock=document.createElement('div'); dock.id='liveDock';
+    dock.innerHTML='<div id="liveFeedPanel" class="live-feed"></div><div id="liveStrip" class="live-strip" onclick="toggleLiveFeed()"></div>';
+    document.body.appendChild(dock);
+  }
+  return dock;
+}
+function positionLiveDock(){
+  const dock=document.getElementById('liveDock'); if(!dock) return;
+  const nav=document.querySelector('.botnav');
+  const bottom=nav?Math.max(0,window.innerHeight-nav.getBoundingClientRect().top):0;
+  dock.style.bottom=bottom+'px';
+}
+function renderLiveDock(live){
+  const feeds=APP._liveFeeds||{};
+  const dock=ensureLiveDock();
+  if(!live||!live.length){ dock.style.display='none'; document.body.classList.remove('has-live'); return; }
+  dock.style.display='block'; document.body.classList.add('has-live');
+  // strip: leading match minute + marquee of latest events across live matches
+  const lead=live[0]; const leadKey=liveMatchKey(lead); const leadMin=feeds[leadKey]?feeds[leadKey].curMin:liveElapsedMin(lead);
+  const ticks=live.map(m=>{ const f=feeds[liveMatchKey(m)]; const last=f&&f.events.length?f.events[f.events.length-1]:null;
+    return `${f?f.hs:0}–${f?f.as:0} ${esc(teamText(m.home))} v ${esc(teamText(m.away))}${last?(' · '+last.text):''}`; });
+  const marquee=ticks.join('   ·   ')+'   ·   ';
+  const strip=document.getElementById('liveStrip');
+  strip.innerHTML=`<span class="ld"></span><span class="live-lbl">${esc(tl('LIVE','مباشر'))} ${esc(liveMinLabel(leadMin))}</span>`
+    +`<div class="live-marquee"><span>${marquee}${marquee}</span></div><span class="live-chev">⌃</span>`;
+  // feed panel: events newest-first, grouped by match
+  const panel=document.getElementById('liveFeedPanel');
+  const groups=live.map(m=>{ const f=feeds[liveMatchKey(m)]; if(!f) return '';
+    const evs=[...f.events].reverse().map(e=>`<div class="live-ev"><span class="min">${esc(e.min)}</span><span class="txt ${e.kind==='goal'?'goal':''}">${e.text}</span></div>`).join('');
+    return `<div class="live-grp">${f.homeHtml} ${f.hs}–${f.as} ${f.awayHtml} · ${esc(liveMinLabel(f.curMin))}</div>${evs}`;
+  }).join('');
+  panel.innerHTML=`<div class="live-feed-h"><span class="t"><span class="ld"></span>${esc(tl('Live updates','تحديثات مباشرة'))}</span><button class="x" onclick="toggleLiveFeed()">${esc(tl('Hide','إخفاء'))} ⌄</button></div>${groups}<button class="live-open" onclick="openLiveMatch()">${esc(tl('Open match','فتح المباراة'))}</button>`;
+  positionLiveDock();
+}
+function toggleLiveFeed(){ const dock=document.getElementById('liveDock'); if(dock) dock.classList.toggle('open'); }
+function openLiveMatch(){ const dock=document.getElementById('liveDock'); if(dock) dock.classList.remove('open'); try{ go('dashboard'); }catch(e){} }
+window.addEventListener('resize',()=>{ try{ positionLiveDock(); }catch(e){} });
+if(typeof window!=='undefined' && !window._liveTickerSet){
+  window._liveTickerSet=true;
+  window.addEventListener('load',()=>{ setTimeout(()=>{ try{ updateLiveFeed(); }catch(e){} },1500); });
+  setInterval(()=>{ try{ updateLiveFeed(); }catch(e){} }, 30000);
 }
 
 function renderMatchCenterHub(){

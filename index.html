@@ -1687,12 +1687,12 @@ body{
 }
 
 
-/* ===== v51 Home uses API results ===== */
+/* ===== v51 Home uses results ===== */
 .api-live{
   border-color:rgba(34,199,122,.36)!important;
 }
 .api-live::after{
-  content:"API";
+  content:"Data";
   display:inline-flex;
   margin-inline-start:8px;
   vertical-align:middle;
@@ -2149,7 +2149,7 @@ body[data-view="dashboard"] .priority-today{
 }
 
 
-/* ===== v59 API Home full info ===== */
+/* ===== v59 Home full info ===== */
 .wc-status-grid{
   grid-template-columns:repeat(4,minmax(0,1fr))!important;
 }
@@ -2973,7 +2973,7 @@ body.no-voice .micbtn{display:none!important}
 }
 
 
-/* ===== v47 Live-API-only home refinements ===== */
+/* ===== v47 Live-Data-only home refinements ===== */
 .hub-live-note{
   color:#d8f5e6;
   font-size:13px;
@@ -3740,6 +3740,493 @@ body[data-view="dashboard"] .hub-next-meta-pill.wide{
   }
 }
 
+
+/* ===== Readable centered Match Center cards ===== */
+.match-center-readable .hub-match-card.readable{
+  text-align:center;
+  padding:14px;
+}
+.match-center-readable .hub-match-top.readable{
+  display:block;
+}
+.match-center-readable .hub-match-main{
+  min-width:0;
+}
+.match-center-readable .hub-match-title.centered{
+  justify-content:center;
+  text-align:center;
+  font-size:18px;
+  line-height:1.25;
+}
+.match-center-readable .hub-match-title.centered span{
+  color:var(--muted);
+  font-size:12px;
+  font-weight:1000;
+  text-transform:uppercase;
+  margin:0 4px;
+}
+.match-center-readable .hub-match-result{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:6px;
+  margin:10px auto 0;
+  padding:8px 12px;
+  border-radius:999px;
+  background:#e9fbf1;
+  color:var(--good);
+  font-weight:1000;
+  font-size:13px;
+}
+.match-center-readable .hub-match-meta-grid{
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:8px;
+  margin:12px auto 0;
+}
+.match-center-readable .hub-match-meta-pill{
+  min-width:0;
+  border:1px solid var(--border);
+  border-radius:16px;
+  background:var(--soft);
+  padding:9px 10px;
+  text-align:center;
+}
+.match-center-readable .hub-match-meta-pill span{
+  display:block;
+  color:var(--muted);
+  font-size:10.5px;
+  font-weight:1000;
+  text-transform:uppercase;
+  letter-spacing:.04em;
+  margin-bottom:3px;
+}
+.match-center-readable .hub-match-meta-pill b{
+  display:block;
+  color:var(--pitch);
+  font-size:12.5px;
+  font-weight:1000;
+  line-height:1.22;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.match-center-readable .hub-match-meta-pill.status b{
+  color:var(--gold-d);
+}
+.match-center-readable .hub-your-edge{
+  display:inline-block;
+  margin-top:10px;
+  padding:7px 10px;
+  border-radius:999px;
+  background:#fff7df;
+  color:#7a5600;
+  font-size:12px;
+  font-weight:900;
+}
+.match-center-readable .hub-section-title.centered{
+  justify-content:center;
+  margin-top:12px;
+  margin-bottom:8px;
+  color:var(--muted);
+  font-size:12px;
+}
+.match-center-readable .hub-split{
+  margin-top:0;
+}
+@media(max-width:860px){
+  .match-center-readable .hub-match-meta-grid{
+    grid-template-columns:repeat(2,minmax(0,1fr));
+  }
+}
+@media(max-width:430px){
+  .match-center-readable .hub-match-meta-grid{
+    grid-template-columns:1fr;
+  }
+}
+
+
+/* ===== Readable centered Today's matches cards ===== */
+.today-readable-page .today-readable-card{
+  text-align:center;
+  padding:15px;
+  border-radius:20px;
+  background:rgba(255,255,255,.92);
+  border:1px solid var(--border);
+  box-shadow:0 10px 26px rgba(8,40,24,.06);
+}
+.today-readable-page .today-readable-group{
+  color:var(--muted);
+  font-size:11px;
+  font-weight:1000;
+  text-transform:uppercase;
+  letter-spacing:.05em;
+  margin-bottom:7px;
+}
+.today-readable-page .today-readable-title{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:6px;
+  flex-wrap:wrap;
+  font-size:18px;
+  font-weight:1000;
+  color:var(--pitch);
+  line-height:1.25;
+}
+.today-readable-page .today-readable-title span{
+  color:var(--muted);
+  font-size:12px;
+  font-weight:1000;
+  text-transform:uppercase;
+}
+.today-readable-page .today-readable-result{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:6px;
+  margin:10px auto 0;
+  padding:8px 12px;
+  border-radius:999px;
+  background:#e9fbf1;
+  color:var(--good);
+  font-weight:1000;
+  font-size:13px;
+}
+.today-readable-page .hub-match-meta-grid{
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:8px;
+  margin:12px auto 0;
+}
+.today-readable-page .hub-match-meta-pill{
+  min-width:0;
+  border:1px solid var(--border);
+  border-radius:16px;
+  background:var(--soft);
+  padding:9px 10px;
+  text-align:center;
+}
+.today-readable-page .hub-match-meta-pill span{
+  display:block;
+  color:var(--muted);
+  font-size:10.5px;
+  font-weight:1000;
+  text-transform:uppercase;
+  letter-spacing:.04em;
+  margin-bottom:3px;
+}
+.today-readable-page .hub-match-meta-pill b{
+  display:block;
+  color:var(--pitch);
+  font-size:12.5px;
+  font-weight:1000;
+  line-height:1.22;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.today-readable-page .hub-match-meta-pill.status b{
+  color:var(--gold-d);
+}
+.today-readable-page .today-readable-source{
+  margin-top:10px;
+}
+.today-readable-page .today-readable-impact{
+  margin-top:10px;
+  border-radius:16px;
+  background:#fff7df;
+  color:#7a5600;
+  padding:9px 10px;
+  font-size:12.5px;
+  font-weight:900;
+}
+@media(max-width:860px){
+  .today-readable-page .hub-match-meta-grid{
+    grid-template-columns:repeat(2,minmax(0,1fr));
+  }
+}
+@media(max-width:430px){
+  .today-readable-page .hub-match-meta-grid{
+    grid-template-columns:1fr;
+  }
+}
+
+
+/* ===== Readable centered Latest results cards ===== */
+.latest-readable-panel .latest-readable-card{
+  text-align:center;
+  padding:15px;
+  border-radius:20px;
+  background:rgba(255,255,255,.92);
+  border:1px solid var(--border);
+  box-shadow:0 10px 26px rgba(8,40,24,.06);
+  margin:10px 0;
+}
+.latest-readable-panel .latest-readable-title{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:6px;
+  flex-wrap:wrap;
+  color:var(--pitch);
+  font-size:17px;
+  font-weight:1000;
+  line-height:1.25;
+}
+.latest-readable-panel .latest-readable-title span{
+  color:var(--muted);
+  font-size:12px;
+  font-weight:1000;
+  text-transform:uppercase;
+}
+.latest-readable-panel .latest-score-box{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);
+  align-items:center;
+  gap:10px;
+  margin:12px auto 0;
+  padding:12px;
+  border-radius:22px;
+  background:linear-gradient(135deg,#e9fbf1,#fff7df);
+  border:1px solid rgba(15,138,85,.16);
+}
+.latest-readable-panel .latest-score-box span{
+  min-width:0;
+  font-size:12.5px;
+  font-weight:900;
+  color:var(--pitch);
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+.latest-readable-panel .latest-score-box b{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-width:86px;
+  padding:8px 12px;
+  border-radius:16px;
+  background:#fff;
+  color:var(--pitch);
+  font-size:26px;
+  font-weight:1000;
+  box-shadow:0 8px 20px rgba(8,40,24,.08);
+}
+.latest-readable-panel .hub-match-meta-grid{
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:8px;
+  margin:12px auto 0;
+}
+.latest-readable-panel .hub-match-meta-pill{
+  min-width:0;
+  border:1px solid var(--border);
+  border-radius:16px;
+  background:var(--soft);
+  padding:9px 10px;
+  text-align:center;
+}
+.latest-readable-panel .hub-match-meta-pill span{
+  display:block;
+  color:var(--muted);
+  font-size:10.5px;
+  font-weight:1000;
+  text-transform:uppercase;
+  letter-spacing:.04em;
+  margin-bottom:3px;
+}
+.latest-readable-panel .hub-match-meta-pill b{
+  display:block;
+  color:var(--pitch);
+  font-size:12.5px;
+  font-weight:1000;
+  line-height:1.22;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.latest-readable-panel .hub-match-meta-pill.status b{
+  color:var(--gold-d);
+}
+.latest-readable-panel .latest-impact-title{
+  margin-top:12px;
+  color:var(--muted);
+  font-size:12px;
+  font-weight:1000;
+  text-transform:uppercase;
+  letter-spacing:.04em;
+}
+.latest-readable-panel .latest-readable-impact{
+  justify-content:center;
+  margin-top:8px;
+}
+@media(max-width:860px){
+  .latest-readable-panel .hub-match-meta-grid{
+    grid-template-columns:repeat(2,minmax(0,1fr));
+  }
+}
+@media(max-width:520px){
+  .latest-readable-panel .latest-score-box{
+    grid-template-columns:1fr;
+    gap:6px;
+  }
+  .latest-readable-panel .latest-score-box b{
+    width:max-content;
+    justify-self:center;
+  }
+}
+@media(max-width:430px){
+  .latest-readable-panel .hub-match-meta-grid{
+    grid-template-columns:1fr;
+  }
+}
+
+
+/* ===== Match Center completed score clarity ===== */
+.match-center-readable .hub-match-card.completed{
+  border-color:rgba(15,138,85,.28);
+  background:linear-gradient(180deg,rgba(233,251,241,.95),rgba(255,255,255,.96));
+}
+.match-center-readable .hub-match-completed-label{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  margin:9px auto 0;
+  padding:7px 11px;
+  border-radius:999px;
+  background:#e9fbf1;
+  color:var(--good);
+  font-size:12px;
+  font-weight:1000;
+}
+.match-center-readable .hub-match-score-clear{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);
+  align-items:center;
+  gap:10px;
+  margin:10px auto 0;
+  padding:12px;
+  border-radius:22px;
+  background:linear-gradient(135deg,#e9fbf1,#fff7df);
+  border:1px solid rgba(15,138,85,.16);
+}
+.match-center-readable .hub-match-score-clear span{
+  min-width:0;
+  font-size:12.5px;
+  font-weight:900;
+  color:var(--pitch);
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+.match-center-readable .hub-match-score-clear b{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-width:86px;
+  padding:8px 12px;
+  border-radius:16px;
+  background:#fff;
+  color:var(--pitch);
+  font-size:26px;
+  font-weight:1000;
+  box-shadow:0 8px 20px rgba(8,40,24,.08);
+}
+@media(max-width:520px){
+  .match-center-readable .hub-match-score-clear{
+    grid-template-columns:1fr;
+    gap:6px;
+  }
+  .match-center-readable .hub-match-score-clear b{
+    width:max-content;
+    justify-self:center;
+  }
+}
+
+
+/* ===== Match status accuracy + color chips ===== */
+.match-center-readable .hub-match-meta-pill.status.final,
+.today-readable-page .hub-match-meta-pill.status.final,
+.latest-readable-panel .hub-match-meta-pill.status.final,
+body[data-view="dashboard"] .hub-next-meta-pill.status.final{
+  background:#e9fbf1;
+  border-color:rgba(15,138,85,.28);
+}
+.match-center-readable .hub-match-meta-pill.status.final b,
+.today-readable-page .hub-match-meta-pill.status.final b,
+.latest-readable-panel .hub-match-meta-pill.status.final b,
+body[data-view="dashboard"] .hub-next-meta-pill.status.final b{
+  color:var(--good);
+}
+.match-center-readable .hub-match-meta-pill.status.live,
+.today-readable-page .hub-match-meta-pill.status.live,
+.latest-readable-panel .hub-match-meta-pill.status.live,
+body[data-view="dashboard"] .hub-next-meta-pill.status.live{
+  background:#ffe3df;
+  border-color:rgba(181,58,46,.28);
+}
+.match-center-readable .hub-match-meta-pill.status.live b,
+.today-readable-page .hub-match-meta-pill.status.live b,
+.latest-readable-panel .hub-match-meta-pill.status.live b,
+body[data-view="dashboard"] .hub-next-meta-pill.status.live b{
+  color:#b53a2e;
+}
+.match-center-readable .hub-match-meta-pill.status.soon,
+.today-readable-page .hub-match-meta-pill.status.soon,
+.latest-readable-panel .hub-match-meta-pill.status.soon,
+body[data-view="dashboard"] .hub-next-meta-pill.status.soon{
+  background:#fff7df;
+  border-color:rgba(154,106,0,.28);
+}
+.match-center-readable .hub-match-meta-pill.status.soon b,
+.today-readable-page .hub-match-meta-pill.status.soon b,
+.latest-readable-panel .hub-match-meta-pill.status.soon b,
+body[data-view="dashboard"] .hub-next-meta-pill.status.soon b{
+  color:#9a6a00;
+}
+.match-center-readable .hub-match-meta-pill.status.upcoming,
+.today-readable-page .hub-match-meta-pill.status.upcoming,
+.latest-readable-panel .hub-match-meta-pill.status.upcoming,
+body[data-view="dashboard"] .hub-next-meta-pill.status.upcoming{
+  background:#e7f0ff;
+  border-color:rgba(43,95,184,.25);
+}
+.match-center-readable .hub-match-meta-pill.status.upcoming b,
+.today-readable-page .hub-match-meta-pill.status.upcoming b,
+.latest-readable-panel .hub-match-meta-pill.status.upcoming b,
+body[data-view="dashboard"] .hub-next-meta-pill.status.upcoming b{
+  color:#2b5fb8;
+}
+.match-center-readable .hub-match-meta-pill.status.past,
+.today-readable-page .hub-match-meta-pill.status.past,
+.latest-readable-panel .hub-match-meta-pill.status.past,
+body[data-view="dashboard"] .hub-next-meta-pill.status.past{
+  background:#eee;
+  border-color:#ddd;
+}
+.match-center-readable .hub-match-meta-pill.status.past b,
+.today-readable-page .hub-match-meta-pill.status.past b,
+.latest-readable-panel .hub-match-meta-pill.status.past b,
+body[data-view="dashboard"] .hub-next-meta-pill.status.past b{
+  color:#777;
+}
+
+
+/* ===== Today briefing Next Match: remove status chip and center remaining chips ===== */
+body[data-view="dashboard"] .hub-next-meta-grid.no-status{
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  max-width:680px;
+  margin-inline:auto;
+}
+@media(max-width:760px){
+  body[data-view="dashboard"] .hub-next-meta-grid.no-status{
+    grid-template-columns:repeat(2,minmax(0,1fr));
+  }
+}
+@media(max-width:420px){
+  body[data-view="dashboard"] .hub-next-meta-grid.no-status{
+    grid-template-columns:1fr;
+  }
+}
+
 </style>
 <!-- Analytics is initialized once in loadAnalytics() to avoid duplicate page_view hits. -->
 </head>
@@ -3767,8 +4254,8 @@ body[data-view="dashboard"] .hub-next-meta-pill.wide{
 /* --- Supabase (anon key is a public, RLS-protected placeholder) --- */
 const SB_URL='https://jrwkhogoewhlfrzlsmlh.supabase.co';
 const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Impyd2tob2dvZXdobGZyemxzbWxoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODExNjU2MzEsImV4cCI6MjA5Njc0MTYzMX0.1TF9PSzu4t9661aDXfaqc1tZPZ5uxeAW6Q5hE2My6Qc';
-const API=SB_URL+'/rest/v1/wc2026';
-const RESULTS_API=SB_URL+'/rest/v1/wc2026_match_results';
+const Data=SB_URL+'/rest/v1/wc2026';
+const RESULTS_Data=SB_URL+'/rest/v1/wc2026_match_results';
 
 // Google Analytics 4.
 // Replace this with your GA4 Measurement ID, for example: G-ABC123XYZ.
@@ -3829,7 +4316,7 @@ const I18N={
     v_dashboard:"Dashboard", v_today:"Today's matches", v_matches:"All matches", v_groups:"Group tables",
     v_predictions:"All predictions", v_consensus:"Group leaders consensus", v_knockout:"Knockout bracket",
     v_leaderboard:"Leaderboard", v_player:"Player details", v_audit:"Prediction audit",
-    v_results:"Results editor", v_repair:"Data repair", v_settings:"Settings & API", v_ai:"AI Assistant", v_impact:"Match impact", v_scenarios:"What can change", v_help:"Help & points logic",
+    v_results:"Results editor", v_repair:"Data repair", v_settings:"Settings & Data", v_ai:"AI Assistant", v_impact:"Match impact", v_scenarios:"What can change", v_help:"Help & points logic",
     phase_group:"Group stage", phase_ko:"Knockout stage", phase_done:"Tournament complete", phase_pre:"Pre-tournament",
     leader:"Current leader", top3:"Top 3", players:"Players", entryFee:"Entry status", prizePool:"Winner status",
     paid:"Complete", unpaid:"Pending", completedMatches:"Group matches done", groupsDone:"Groups completed",
@@ -3854,7 +4341,7 @@ const I18N={
     offline:"You're offline. Showing cached data.", cached:"Cached copy",
     save:"Save", saved:"Saved.", cancel:"Cancel", confirm:"Confirm", apply:"Apply", preview:"Preview", close:"Close",
     enterResults:"Enter group results", fetchSchedule:"Fetch schedule", source:"Source",
-    src_api:"API fetched", src_admin:"Admin entered", src_corr:"Admin corrected", src_pending:"Pending",
+    src_api:"Data fetched", src_admin:"Admin entered", src_corr:"Admin corrected", src_pending:"Pending",
     repairTools:"Repair tools", missingPicks:"Missing picks", dupTeams:"Duplicate teams", only3:"Only 3 picks",
     invalidTeam:"Invalid teams", nullPred:"Null prediction", nameMismatch:"Name mismatch",
     detectedMissing:"Detected missing", proposed:"Proposed", before:"Before", after:"After",
@@ -3865,7 +4352,7 @@ const I18N={
     activityLog:"Activity log", deadline:"Prediction deadline", locked:"Predictions locked", unlocked:"Predictions open", unlock:"Unlock",
     ai_q:"Ask about predictions, points, results…", ai_text:"Q&A", ai_write:"Writing",
     ai_examples:["Who is leading?","Who is projected winner?","Who gained points?","Match summary"],
-    mode:"Mode", from_appdata:"app data", from_calc:"calculated results", from_api:"schedule API", from_admin:"admin data",
+    mode:"Mode", from_appdata:"app data", from_calc:"calculated results", from_api:"schedule Data", from_admin:"admin data",
     answerFrom:"Answer based on", adminOnly:"Admin only", pwPrompt:"Enter admin password", wrongPw:"Wrong password",
     logout:"Log out admin", consensusNote:"All four positions shown.", noData:"Nothing here yet."
   },
@@ -3875,7 +4362,7 @@ const I18N={
     v_dashboard:"لوحة التحكم", v_today:"مباريات اليوم", v_matches:"كل المباريات", v_groups:"جداول المجموعات",
     v_predictions:"كل التوقعات", v_consensus:"إجماع المجموعات", v_knockout:"خروج المغلوب",
     v_leaderboard:"الترتيب", v_player:"تفاصيل اللاعب", v_audit:"تدقيق التوقعات",
-    v_results:"تحرير النتائج", v_repair:"إصلاح البيانات", v_settings:"الإعدادات والـ API", v_ai:"المساعد الذكي", v_impact:"تأثير المباريات", v_scenarios:"ما الذي قد يتغير", v_help:"المساعدة وطريقة النقاط",
+    v_results:"تحرير النتائج", v_repair:"إصلاح البيانات", v_settings:"الإعدادات والبيانات", v_ai:"المساعد الذكي", v_impact:"تأثير المباريات", v_scenarios:"ما الذي قد يتغير", v_help:"المساعدة وطريقة النقاط",
     phase_group:"دور المجموعات", phase_ko:"الأدوار الإقصائية", phase_done:"انتهت البطولة", phase_pre:"قبل البطولة",
     leader:"المتصدر الحالي", top3:"الأوائل الثلاثة", players:"اللاعبون", entryFee:"رسوم الاشتراك", prizePool:"حالة الفائز",
     paid:"دفعوا", unpaid:"لم يدفعوا", completedMatches:"مباريات المجموعات المكتملة", groupsDone:"مجموعات مكتملة",
@@ -3900,7 +4387,7 @@ const I18N={
     offline:"أنت غير متصل. عرض نسخة محفوظة.", cached:"نسخة محفوظة",
     save:"حفظ", saved:"تم الحفظ.", cancel:"إلغاء", confirm:"تأكيد", apply:"تطبيق", preview:"معاينة", close:"إغلاق",
     enterResults:"إدخال نتائج المجموعات", fetchSchedule:"جلب الجدول", source:"المصدر",
-    src_api:"من الـ API", src_admin:"إدخال المشرف", src_corr:"تصحيح المشرف", src_pending:"قيد الانتظار",
+    src_api:"من البيانات المباشرة", src_admin:"إدخال المشرف", src_corr:"تصحيح المشرف", src_pending:"قيد الانتظار",
     repairTools:"أدوات الإصلاح", missingPicks:"توقعات ناقصة", dupTeams:"فرق مكررة", only3:"3 اختيارات فقط",
     invalidTeam:"فرق غير صحيحة", nullPred:"توقع فارغ", nameMismatch:"اختلاف بالاسم",
     detectedMissing:"الناقص المكتشف", proposed:"المقترح", before:"قبل", after:"بعد",
@@ -3911,7 +4398,7 @@ const I18N={
     activityLog:"سجل النشاط", deadline:"موعد إقفال التوقعات", locked:"التوقعات مقفلة", unlocked:"التوقعات مفتوحة", unlock:"فتح",
     ai_q:"اسأل عن التوقعات، النقاط، النتائج…", ai_text:"سؤال وجواب", ai_write:"كتابة",
     ai_examples:["من المتصدر؟","من الفائز المتوقع؟","من كسب نقاط؟","ملخص المباريات"],
-    mode:"الوضع", from_appdata:"بيانات التطبيق", from_calc:"نتائج محسوبة", from_api:"جدول الـAPI", from_admin:"بيانات المشرف",
+    mode:"الوضع", from_appdata:"بيانات التطبيق", from_calc:"نتائج محسوبة", from_api:"جدول الـData", from_admin:"بيانات المشرف",
     answerFrom:"الإجابة مبنية على", adminOnly:"للمشرف فقط", pwPrompt:"أدخل كلمة مرور المشرف", wrongPw:"كلمة مرور خاطئة",
     logout:"خروج المشرف", consensusNote:"تُعرض المراكز الأربعة كاملة.", noData:"لا توجد بيانات بعد."
   }
@@ -4011,7 +4498,7 @@ function isSandboxOrFile(){
   return location.protocol==='file:' || location.origin==='null' || location.href.startsWith('sandbox:') || location.hostname.includes('sandbox');
 }
 
-/* ---- always-return-array guard for flaky APIs ---- */
+/* ---- always-return-array guard for flaky Datas ---- */
 function asArrayPayload(json){
   if(Array.isArray(json)) return json;
   if(json && Array.isArray(json.events)) return json.events;
@@ -4063,7 +4550,7 @@ function normalizedResultToApp(row){
   if(row.status!=='final'||row.home_score==null||row.away_score==null) return null;
 
   // Important fix:
-  // The API schedule order can differ from the old local round-robin index.
+  // The schedule order can differ from the old local round-robin index.
   // Do not blindly trust match_key / match_idx when applying normalized results.
   // Resolve by stored home_team + away_team first, then orient the score to the
   // current app fixture order.
@@ -4093,7 +4580,7 @@ function normalizedResultToApp(row){
 async function loadNormalizedResultsIntoApp(){
   APP._resultsTableStatus={ok:false, mode:'fallback-json'};
   try{
-    const r=await fetchWithTimeout(RESULTS_API+'?select=match_key,group_key,match_idx,home_team,away_team,home_score,away_score,status,source,updated_at&order=match_key.asc',{headers:H},10000);
+    const r=await fetchWithTimeout(RESULTS_Data+'?select=match_key,group_key,match_idx,home_team,away_team,home_score,away_score,status,source,updated_at&order=match_key.asc',{headers:H},10000);
     if(!r.ok){
       let txt=''; try{txt=await r.text();}catch(_){}
       throw new Error('Results table HTTP '+r.status+' '+txt.slice(0,160));
@@ -4144,7 +4631,7 @@ function normalizedResultRow(g,i,homeScore,awayScore,source,status){
 }
 async function upsertNormalizedResult(row){
   try{
-    const r=await fetchWithTimeout(RESULTS_API+'?on_conflict=match_key',{
+    const r=await fetchWithTimeout(RESULTS_Data+'?on_conflict=match_key',{
       method:'POST',
       headers:{...H,Prefer:'resolution=merge-duplicates,return=minimal'},
       body:JSON.stringify(row)
@@ -4165,7 +4652,7 @@ async function upsertNormalizedResult(row){
 async function upsertNormalizedResults(rows){
   if(!rows||!rows.length) return true;
   try{
-    const r=await fetchWithTimeout(RESULTS_API+'?on_conflict=match_key',{
+    const r=await fetchWithTimeout(RESULTS_Data+'?on_conflict=match_key',{
       method:'POST',
       headers:{...H,Prefer:'resolution=merge-duplicates,return=minimal'},
       body:JSON.stringify(rows)
@@ -4187,7 +4674,7 @@ async function upsertNormalizedResults(rows){
 async function loadState(){
   APP.error=null; APP.apiStatus=null;
   try{
-    const r=await fetchWithTimeout(API+'?id=eq.main&select=data',{headers:H},10000);
+    const r=await fetchWithTimeout(Data+'?id=eq.main&select=data',{headers:H},10000);
     APP.apiStatus={name:'supabase', ok:r.ok, status:r.status, statusText:r.statusText};
     if(!r.ok){
       let txt='';
@@ -4213,7 +4700,7 @@ async function loadState(){
 async function saveState(actionLabel,beforePath){
   localStorage.setItem(CACHE_KEY, JSON.stringify(APP.data)); // local-first
   try{
-    const r=await fetchWithTimeout(API,{
+    const r=await fetchWithTimeout(Data,{
       method:'POST',
       headers:{...H,Prefer:'resolution=merge-duplicates,return=minimal'},
       body:JSON.stringify({id:'main',data:APP.data})
@@ -4360,7 +4847,7 @@ function groupForMatch(match){
   if(match&&match.group) return match.group;
   if(!match) return null;
 
-  // Important: many schedule/API matches are plain objects like
+  // Important: many schedule/Data matches are plain objects like
   // {home:"Canada", away:"Bosnia-Herzegovina"} and do not carry a group.
   // Detect the group by comparing normalized team names against generated GM.
   const h=teamCompareKey(match.home);
@@ -4728,10 +5215,10 @@ function formatInstantAsUae(d){
 }
 function apiTimeToUaeLabel(m){
   const fmt=formatInstantAsUae(apiTimeToInstant(m));
-  if(fmt) return fmt.label;
+  if(fmt) return cleanTimeZoneLabel(fmt.label);
   const d=(m&&m.uaeDate)||'';
   const t=(m&&m.uaeTime)||'';
-  if(d||t) return `${d}${t?' · '+t:''} UAE`;
+  if(d||t) return cleanTimeZoneLabel(`${d}${t?' · '+t:''} UAE`);
   return tl('UAE conversion unavailable','تحويل الإمارات غير متوفر');
 }
 function apiTimeSourceLabel(m){
@@ -4741,7 +5228,7 @@ function apiTimeSourceLabel(m){
   const sourceTime=m.strTime||m.sourceTime||m.strEventTime||m.apiTime||m.rawTime||'';
   if(sourceDate||sourceTime) return `${sourceDate}${sourceTime?' '+sourceTime:''} (dateEvent + strTime UTC)`.trim();
   if(m.kickoffUtc) return `${m.kickoffUtc} (normalized instant)`;
-  return tl('Not provided by API','غير متوفر من API');
+  return tl('Not provided by Data','غير متوفر من Data');
 }
 function normalizeSportsDbRow(row){
   if(!row||typeof row!=='object') return row;
@@ -4806,14 +5293,24 @@ function eventInstantFromSportsEvent(e){
 }
 function eventDateUAE(e){ return apiEventKickoffMeta(e).uaeDate; }
 function eventTimeUAE(e){ return apiEventKickoffMeta(e).uaeTime; }
+
+function cleanTimeZoneLabel(v){
+  return String(v==null?'':v)
+    .replace(/GMT\s*\+4/g,'UAE')
+    .replace(/GMT\+4/g,'UAE')
+    .replace(/GMT\s*\+04:00/g,'UAE')
+    .replace(/UTC\s*\+4/g,'UAE')
+    .replace(/UTC\+4/g,'UAE');
+}
+
 function matchDateTime(m){
   if(!m) return '';
   const apiLike=!!(m.api||m.eventId||m.source==='live'||m.source==='api'||m.sourceDate||m.sourceTime||m.sourceTimestamp||m.strTimestamp);
-  if(apiLike) return apiTimeToUaeLabel(m);
+  if(apiLike) return cleanTimeZoneLabel(apiTimeToUaeLabel(m));
   const date=(m&&m.uaeDate)||m&&m.date?((m&&m.uaeDate)||m.date):'';
   const time=(m&&m.uaeTime)||m&&m.time?((m&&m.uaeTime)||m.time):(m&&m.strTime?toAmPmFromHHMM(m.strTime):'');
-  if(date&&time) return date+' · '+time+(m.tz?' '+m.tz:' UAE');
-  return date||time||'';
+  if(date&&time) return cleanTimeZoneLabel(date+' · '+time+(m.tz?' '+m.tz:' UAE'));
+  return cleanTimeZoneLabel(date||time||'');
 }
 function addHoursToDisplayTime(time,hours){
   const tm=parseTimeTo24(time||'');
@@ -5288,7 +5785,7 @@ function normalizeScheduleRowForGst(row){
     }
   }
 
-  // Last-resort migration for API-like rows saved before source fields existed.
+  // Last-resort migration for Data-like rows saved before source fields existed.
   // Treat their displayed date/time as the provider UTC time and convert to GST.
   if(m.date&&m.time){
     const originalDate=m.date;
@@ -5319,7 +5816,7 @@ function homeApiSchedule(){
 function liveApiOnlyNotice(){ return ''; }
 function yesterdayResultText(){
   const rows=apiYesterdayResults();
-  if(!rows.length) return {main:tl('No live final yesterday','لا توجد نتيجة مباشرة أمس'),sub:tl('Live API only','من الـ API المباشر فقط')};
+  if(!rows.length) return {main:tl('No live final yesterday','لا توجد نتيجة مباشرة أمس'),sub:tl('Live only','من الـ المباشر فقط')};
   const m=rows[rows.length-1];
   return {
     main:`${teamText(m.home)} ${m.hs}-${m.as} ${teamText(m.away)}`,
@@ -5328,7 +5825,7 @@ function yesterdayResultText(){
 }
 function latestLiveResultText(){
   const m=latestApiResults(1)[0]||null;
-  if(!m) return {main:tl('No live final yet','لا توجد نتيجة مباشرة بعد'),sub:tl('Live API only','من الـ API المباشر فقط')};
+  if(!m) return {main:tl('No live final yet','لا توجد نتيجة مباشرة بعد'),sub:tl('Live only','من الـ المباشر فقط')};
   return {main:`${teamText(m.home)} ${m.hs}-${m.as} ${teamText(m.away)}`,sub:`${m.date||''}${m.time?' · '+m.time+' GST':''}`};
 }
 function apiGroupTableHome(g){
@@ -5358,7 +5855,7 @@ function renderApiGroupPulseCard(g){
   const table=apiGroupTableHome(g);
   const played=table.some(x=>x.P>0);
   return `<div class="mini-group">
-    <div class="between"><b>${esc(tl('Group','المجموعة'))} ${esc(g)}</b><span class="tag">${played?esc(tl('Live API','API مباشر')):esc(tl('Not started','لم تبدأ'))}</span></div>
+    <div class="between"><b>${esc(tl('Group','المجموعة'))} ${esc(g)}</b><span class="tag">${played?esc(tl('Live','مباشر')):esc(tl('Not started','لم تبدأ'))}</span></div>
     ${played?table.slice(0,2).map((x,i)=>`<div class="mini-row"><span>${i+1}. ${teamHtml(x.team)}</span><b class="num">${x.Pts}</b></div>`).join(''):`<div class="hub-empty">${esc(tl('No live final result yet.','لا توجد نتيجة مباشرة نهائية بعد.'))}</div>`}
   </div>`;
 }
@@ -5606,12 +6103,12 @@ async function loadHomeApiUpdates(){
 function allCompletedResultsForHome(){
   const y=uaeDateOffset(-1);
   const yesterday=apiYesterdayResults();
-  if(yesterday.length) return {label:tl('Yesterday live results','نتائج أمس المباشرة'),date:y,matches:yesterday,api:true};
+  if(yesterday.length) return {label:tl('Yesterday results','نتائج أمس المباشرة'),date:y,matches:yesterday,api:true};
 
   const live=apiHomeMatches();
-  if(live.length) return {label:tl('Latest live results','آخر النتائج المباشرة'),date:tl('Live API','API مباشر'),matches:live.slice(-6),api:true};
+  if(live.length) return {label:tl('Latest results','آخر النتائج'),date:tl('Live','مباشر'),matches:live.slice(-6),api:true};
 
-  return {label:tl('Live results','النتائج المباشرة'),date:tl('Live API only','API مباشر فقط'),matches:[],api:true};
+  return {label:tl('Results','النتائج المباشرة'),date:tl('Live only','مباشر فقط'),matches:[],api:true};
 }
 function homeGroupCard(g){
   const table=computeGroupTableHome(g);
@@ -5715,7 +6212,7 @@ function renderCompletePlayersCard(){
 }
 function dataCompletenessWarnings(){
   const warnings=[];
-  if(!(Array.isArray(APP.data.scheduleMatches)&&APP.data.scheduleMatches.length)) warnings.push(tl('Schedule is using local fallback, not fetched API schedule.','الجدول يستخدم نسخة احتياطية محلية وليس جدول الإمارات.'));
+  if(!(Array.isArray(APP.data.scheduleMatches)&&APP.data.scheduleMatches.length)) warnings.push(tl('Schedule is using local fallback, not fetched schedule.','الجدول يستخدم نسخة احتياطية محلية وليس جدول الإمارات.'));
   const past=pastUncompletedMatches(20);
   if(past.length) warnings.push(`${past.length} ${tl('past match(es) need result entry/sync.','مباراة سابقة تحتاج إدخال أو مزامنة نتيجة.')}`);
   if(!playerNames().length) warnings.push(tl('No players found.','لا يوجد لاعبون.'));
@@ -5914,18 +6411,18 @@ function homeAISummaryText(){
     const m=yesterday[yesterday.length-1];
     lines.push(tl(`Yesterday live final: ${teamText(m.home)} ${m.hs}-${m.as} ${teamText(m.away)}.`,`نتيجة أمس المباشرة: ${teamText(m.home)} ${m.hs}-${m.as} ${teamText(m.away)}.`));
   }else{
-    lines.push(tl('Yesterday: no live API final result.','أمس: لا توجد نتيجة نهائية من API مباشر.'));
+    lines.push(tl('Yesterday: no live final result.','أمس: لا توجد نتيجة نهائية من مباشر.'));
   }
   if(latest){
     lines.push(tl(`Latest live final: ${teamText(latest.home)} ${latest.hs}-${latest.as} ${teamText(latest.away)}.`,`آخر نتيجة مباشرة: ${teamText(latest.home)} ${latest.hs}-${latest.as} ${teamText(latest.away)}.`));
   }
   if(today.length){
-    lines.push(tl(`Match Center: ${today.length} live API match${today.length>1?'es':''}.`,`مركز المباريات: ${today.length} مباراة من API مباشر.`));
+    lines.push(tl(`Match Center: ${today.length} match${today.length>1?'es':''}.`,`مركز المباريات: ${today.length} مباراة من مباشر.`));
   }else{
-    lines.push(tl('Match Center: no live API matches in the current match window.','مركز المباريات: لا توجد مباريات من API مباشر ضمن نافذة المباريات الحالية.'));
+    lines.push(tl('Match Center: no matches in the current match window.','مركز المباريات: لا توجد مباريات من مباشر ضمن نافذة المباريات الحالية.'));
   }
   if(next){
-    lines.push(tl(`Next live kickoff: ${teamText(next.home)} vs ${teamText(next.away)} at ${matchDateTime(next)}.`,`المباراة القادمة من API: ${teamText(next.home)} ضد ${teamText(next.away)} في ${matchDateTime(next)}.`));
+    lines.push(tl(`Next live kickoff: ${teamText(next.home)} vs ${teamText(next.away)} at ${matchDateTime(next)}.`,`المباراة القادمة من Data: ${teamText(next.home)} ضد ${teamText(next.away)} في ${matchDateTime(next)}.`));
   }
   if(divided&&divided.match){
     const sp=divided.split;
@@ -5936,16 +6433,21 @@ function homeAISummaryText(){
 function dataFreshnessLabel(){
   const now=formatUaeDateTimeParts();
   if(homeUsesApiResults()) return tl('Live data · updated now','بيانات مباشرة · محدثة الآن');
-  if(APP._homeApiError) return tl('Saved data · live API unavailable','بيانات محفوظة · البيانات المباشرة غير متاحة');
+  if(APP._homeApiError) return tl('Saved data · live unavailable','بيانات محفوظة · البيانات المباشرة غير متاحة');
   return tl('Saved data','بيانات محفوظة');
 }
 function hubMatchStatus(m){
   if(!m) return {key:'upcoming',label:tl('Upcoming','قادمة')};
   const r=m.group&&m.idx!=null?matchResult(m.group,m.idx):null;
-  if(m.api || (r&&r.complete)) return {key:'final',label:tl('Final','نهائية')};
+  const hasScore=Number.isFinite(Number(m.hs))&&Number.isFinite(Number(m.as));
+  const rawStatus=String(m.status||'').toLowerCase();
+  if((r&&r.complete)||hasScore||['final','complete','completed','finished'].includes(rawStatus)){
+    return {key:'final',label:tl('Completed','مكتملة')};
+  }
   const ts=matchUaeTimestamp(m);
   const now=uaeNowMs();
-  if(ts && now>=ts && now<=ts+130*60*1000) return {key:'live',label:tl('Live / in window','مباشرة / ضمن النافذة')};
+  if(ts && now>ts+130*60*1000) return {key:'past',label:tl('Past','سابقة')};
+  if(ts && now>=ts && now<=ts+130*60*1000) return {key:'live',label:tl('Live','مباشرة')};
   if(ts && ts-now<=2*60*60*1000 && ts>now) return {key:'soon',label:tl('Starts soon','تبدأ قريباً')};
   return {key:'upcoming',label:tl('Upcoming','قادمة')};
 }
@@ -6208,16 +6710,15 @@ function nextMatchReadableParts(m,status){
     date=dt;
   }
   const starts=countdownText(m)||'';
-  return {date,time,starts,status:(status&&status.label)||''};
+  return {date,time,starts,status:(status&&status.label)||'',statusKey:(status&&status.key)||''};
 }
 function renderNextMatchReadableMeta(m,status){
   const p=nextMatchReadableParts(m,status);
   if(!p) return `<div class="hub-next-meta-grid"><div class="hub-next-meta-pill wide">${esc(tl('Waiting for schedule.','بانتظار الجدول.'))}</div></div>`;
-  return `<div class="hub-next-meta-grid">
+  return `<div class="hub-next-meta-grid no-status">
     ${p.date?`<div class="hub-next-meta-pill"><span>${esc(tl('Date','التاريخ'))}</span><b>${esc(p.date)}</b></div>`:''}
     ${p.time?`<div class="hub-next-meta-pill"><span>${esc(tl('Time','الوقت'))}</span><b>${esc(p.time)}</b></div>`:''}
     ${p.starts?`<div class="hub-next-meta-pill"><span>${esc(tl('Starts','يبدأ'))}</span><b>${esc(p.starts)}</b></div>`:''}
-    ${p.status?`<div class="hub-next-meta-pill status"><span>${esc(tl('Status','الحالة'))}</span><b>${esc(p.status)}</b></div>`:''}
   </div>`;
 }
 
@@ -6237,6 +6738,52 @@ function renderMatchdayHero(){
     </div>
   </div>`;
 }
+
+function matchReadableParts(m,status){
+  if(!m) return null;
+  const dt=matchDateTime(m)||'';
+  let date='', time='';
+  if(dt.includes(' · ')){
+    const parts=dt.split(' · ');
+    date=parts[0]||'';
+    time=parts.slice(1).join(' · ')||'';
+  }else{
+    date=dt;
+  }
+  const key=status&&status.key?status.key:'';
+  const windowText=(key==='final'||key==='past')?'':(countdownText(m)||'');
+  return {date,time,windowText,status:(status&&status.label)||'',statusKey:key};
+}
+function matchScoreLine(m){
+  if(!m) return '';
+  const r=m.group&&m.idx!=null?matchResult(m.group,m.idx):null;
+  const hasApiScore=Number.isFinite(Number(m.hs))&&Number.isFinite(Number(m.as));
+  const complete=(r&&r.complete)||hasApiScore||m.api;
+  if(r&&r.complete) return `${teamText(r.home)} ${r.hs}-${r.as} ${teamText(r.away)}`;
+  if(hasApiScore) return `${teamText(m.home)} ${Number(m.hs)}-${Number(m.as)} ${teamText(m.away)}`;
+  return '';
+}
+function renderMatchCenterMeta(m,status){
+  const p=matchReadableParts(m,status);
+  if(!p) return '';
+  return `<div class="hub-match-meta-grid">
+    ${p.date?`<div class="hub-match-meta-pill"><span>${esc(tl('Date','التاريخ'))}</span><b>${esc(p.date)}</b></div>`:''}
+    ${p.time?`<div class="hub-match-meta-pill"><span>${esc(tl('Time','الوقت'))}</span><b>${esc(p.time)}</b></div>`:''}
+    ${p.windowText?`<div class="hub-match-meta-pill window ${esc(p.statusKey||'')}"><span>${esc(tl('Starts','يبدأ'))}</span><b>${esc(p.windowText)}</b></div>`:''}
+    ${p.status?`<div class="hub-match-meta-pill status ${esc(p.statusKey||'')}"><span>${esc(tl('Status','الحالة'))}</span><b>${esc(p.status)}</b></div>`:''}
+  </div>`;
+}
+
+
+function matchScoreOnly(m){
+  if(!m) return '';
+  const r=m.group&&m.idx!=null?matchResult(m.group,m.idx):null;
+  const hasApiScore=Number.isFinite(Number(m.hs))&&Number.isFinite(Number(m.as));
+  if(r&&r.complete) return `${r.hs} - ${r.as}`;
+  if(hasApiScore) return `${Number(m.hs)} - ${Number(m.as)}`;
+  return '';
+}
+
 function renderMatchCenterHub(){
   const rows=todayApiMatches();
   const body=rows.length?rows.map(m=>{
@@ -6244,19 +6791,25 @@ function renderMatchCenterHub(){
     const pickRows=renderHubSplit(m);
     const user=currentPlayerName();
     const pick=user?playerPickForMatch(user,m):null;
-    return `<div class="hub-match-card">
-      <div class="hub-match-top">
-        <div>
-          <div class="hub-match-title">${teamHtml(m.home)} vs ${teamHtml(m.away)}</div>
-          <div class="hub-meta">${esc(matchDateTime(m))} · ${esc(countdownText(m))}${pick?` · ${esc(tl('Your edge','أفضليتك'))}: ${esc(pick.edge)}`:''}</div>
+    const scoreLine=matchScoreLine(m);
+    const scoreOnly=matchScoreOnly(m);
+    const completed=!!scoreOnly || st.key==='final';
+    return `<div class="hub-match-card readable ${completed?'completed':''}">
+      <div class="hub-match-top readable">
+        <div class="hub-match-main">
+          <div class="hub-match-title centered">${teamHtml(m.home)} <span>vs</span> ${teamHtml(m.away)}</div>
+          ${completed?`<div class="hub-match-completed-label">✅ ${esc(tl('Completed','مكتملة'))}</div>`:''}
+          ${scoreOnly?`<div class="hub-match-score-clear"><span>${teamHtml(m.home)}</span><b class="num">${esc(scoreOnly)}</b><span>${teamHtml(m.away)}</span></div>`:(scoreLine?`<div class="hub-match-result">🏁 ${esc(scoreLine)}</div>`:'')}
+          ${renderMatchCenterMeta(m,st)}
+          ${pick?`<div class="hub-your-edge">${esc(tl('Your edge','أفضليتك'))}: <b>${esc(pick.edge)}</b></div>`:''}
         </div>
-        <span class="hub-status ${st.key}">${esc(st.label)}</span>
       </div>
+      <div class="hub-section-title centered">📊 ${esc(tl('Prediction split','انقسام التوقعات'))}</div>
       ${pickRows}
     </div>`;
-  }).join(''):`<div class="hub-empty">${esc(tl('No live API matches in the current match window. Saved schedule is not used on Home.','لا توجد مباريات من الـ API المباشر ضمن نافذة المباريات الحالية. لا يتم استخدام الجدول المحفوظ في الصفحة الرئيسية.'))}</div>`;
-  return `<div class="hub-panel">
-    <h3>📅 ${esc(tl('Match Center','مركز المباريات'))}<span class="hint">${esc(tl('live API + prediction split','API مباشر + انقسام التوقعات'))}</span></h3>
+  }).join(''):`<div class="hub-empty">${esc(tl('No matches found for today.','لا توجد مباريات اليوم.'))}</div>`;
+  return `<div class="hub-panel match-center-readable">
+    <h3>📅 ${esc(tl('Match Center','مركز المباريات'))}<span class="hint">${esc(tl('today matches + prediction split','مباريات اليوم + انقسام التوقعات'))}</span></h3>
     ${body}
     <div class="hub-actions"><button class="btn ghost sm" onclick="go('matches')">${esc(t('v_matches'))}</button></div>
   </div>`;
@@ -6265,29 +6818,33 @@ function renderLatestResultsImpactHub(){
   const data=allCompletedResultsForHome();
   const rows=(data.matches||[]).slice(-4).reverse();
   const body=rows.length?rows.map(m=>{
-    const r=m;
     const imp=latestResultImpact(m);
-    return `<div class="hub-result-row">
-      <div class="hub-leader-rank">🏁</div>
-      <div>
-        <div class="hub-name">${teamHtml(r.home)} <b class="num">${r.hs}-${r.as}</b> ${teamHtml(r.away)}</div>
-        <div class="hub-meta">${esc(tl('Group','المجموعة'))} ${esc(m.group||'')} · ${esc(matchDateTime(m))}</div>
-        <div class="hub-impact-list">
-          ${imp.right&&imp.right.length?imp.right.slice(0,5).map(x=>`<span class="hub-impact">+${x.got||''} ${esc(x.name||x)}</span>`).join(''):`<span class="hub-impact miss">${esc(tl('No player edge points','لا نقاط أفضلية للاعبين'))}</span>`}
-          ${imp.missed&&imp.missed.length?`<span class="hub-impact miss">${esc(tl('Missed','أخطأوا'))}: ${imp.missed.length}</span>`:''}
-        </div>
+    const st={key:'final',label:m.status||tl('Final','نهائية')};
+    const hs=Number.isFinite(Number(m.hs))?Number(m.hs):'—';
+    const as=Number.isFinite(Number(m.as))?Number(m.as):'—';
+    return `<div class="latest-readable-card">
+      <div class="latest-readable-title">${teamHtml(m.home)} <span>vs</span> ${teamHtml(m.away)}</div>
+      <div class="latest-score-box">
+        <span>${teamHtml(m.home)}</span>
+        <b class="num">${hs} - ${as}</b>
+        <span>${teamHtml(m.away)}</span>
       </div>
-      <div class="hub-pts">${esc(m.status||tl('Final','نهائية'))}</div>
+      ${renderMatchCenterMeta(m,st)}
+      <div class="latest-impact-title">🎯 ${esc(tl('Prediction impact','تأثير التوقعات'))}</div>
+      <div class="hub-impact-list latest-readable-impact">
+        ${imp.right&&imp.right.length?imp.right.slice(0,5).map(x=>`<span class="hub-impact">+${x.got||''} ${esc(x.name||x)}</span>`).join(''):`<span class="hub-impact miss">${esc(tl('No player edge points','لا نقاط أفضلية للاعبين'))}</span>`}
+        ${imp.missed&&imp.missed.length?`<span class="hub-impact miss">${esc(tl('Missed','أخطأوا'))}: ${imp.missed.length}</span>`:''}
+      </div>
     </div>`;
-  }).join(''):`<div class="hub-empty">${esc(tl('No live API final results yet. Saved/admin results are not used on Home.','لا توجد نتائج نهائية من الـ API المباشر بعد. لا يتم استخدام نتائج محفوظة/مدير في الصفحة الرئيسية.'))}</div>`;
-  return `<div class="hub-panel">
-    <h3>🕘 ${esc(tl('Latest live results','آخر النتائج المباشرة'))}<span class="hint">${esc(tl('score + prediction impact','النتيجة + تأثير التوقعات'))}</span></h3>
+  }).join(''):`<div class="hub-empty">${esc(tl('No final results yet.','لا توجد نتائج نهائية بعد.'))}</div>`;
+  return `<div class="hub-panel latest-readable-panel">
+    <h3>🕘 ${esc(tl('Latest results','آخر النتائج'))}<span class="hint">${esc(tl('clear score + prediction impact','نتيجة واضحة + تأثير التوقعات'))}</span></h3>
     ${body}
   </div>`;
 }
 function renderGroupPulseHub(){
   const relevant=[...new Set([...groupKeysFromMatches(todayApiMatches()),...groupKeysFromMatches(latestApiResults(8)),...homeApiSchedule().map(m=>m.group).filter(Boolean)])].slice(0,4);
-  const body=relevant.length?`<div class="wc-groups-grid">${relevant.map(renderApiGroupPulseCard).join('')}</div>`:`<div class="hub-empty">${esc(tl('No live API group data yet.','لا توجد بيانات مجموعات مباشرة من API بعد.'))}</div>`;
+  const body=relevant.length?`<div class="wc-groups-grid">${relevant.map(renderApiGroupPulseCard).join('')}</div>`:`<div class="hub-empty">${esc(tl('No live group data yet.','لا توجد بيانات مجموعات مباشرة من بعد.'))}</div>`;
   return `<div class="hub-panel">
     <h3>📊 ${esc(tl('Group Pulse','نبض المجموعات'))}</h3>
     ${body}
@@ -6297,7 +6854,7 @@ function renderGroupPulseHub(){
 
 function renderPredictionDashboard(){
   const today=todayApiMatches();
-  if(!today.length) return wcSection(`📈 ${esc(tl('Prediction Dashboard','لوحة التوقعات'))}`,tl('Prediction split appears when matches are in the hub.','يظهر انقسام التوقعات عندما توجد مباريات في المركز.'),`<div class="wc-empty">${esc(APP._homeApiError?tl('Live match data is temporarily unavailable.','بيانات المباريات المباشرة غير متاحة مؤقتاً.'):t('noToday'))}</div>`,'wc-pred-dashboard');
+  if(!today.length) return wcSection(`📈 ${esc(tl('Prediction Dashboard','لوحة التوقعات'))}`,tl('Prediction split appears when matches are in the hub.','يظهر انقسام التوقعات عندما توجد مباريات في المركز.'),`<div class="wc-empty">${esc(APP._homeApiError?tl('Match data is temporarily unavailable.','بيانات المباريات غير متاحة مؤقتاً.'):t('noToday'))}</div>`,'wc-pred-dashboard');
   const divided=mostDividedTodayMatch();
   const edge=biggestPredictionEdgeToday();
   const totalPlayers=playerNames().length;
@@ -6339,7 +6896,7 @@ function renderYesterdayFeed(){
       <div class="wc-row-meta">${esc(tl('Group','المجموعة'))} ${esc(m.group)} · ${esc(matchDateTime(m))} · ${esc(m.status||tl('Final','نهائية'))}</div>
       <div class="wc-row-chip">${esc(tl('Edge right','توقعوا الأفضلية'))}: <b class="num">${impact.right.length}</b> · ${esc(tl('Missed','أخطأوا'))}: <b class="num">${impact.missed.length}</b></div>
     </div>`;
-  }).join('')}</div>`:`<div class="wc-empty">${esc(APP._homeApiError?tl('Live results could not load, showing latest saved data.','تعذر تحميل النتائج المباشرة، يتم عرض آخر بيانات محفوظة.'):tl('No final results found yet.','لا توجد نتائج نهائية حالياً.'))}</div>`;
+  }).join('')}</div>`:`<div class="wc-empty">${esc(APP._homeApiError?tl('Results could not load, showing latest saved data.','تعذر تحميل النتائج المباشرة، يتم عرض آخر بيانات محفوظة.'):tl('No final results found yet.','لا توجد نتائج نهائية حالياً.'))}</div>`;
   return wcSection(`🕘 ${esc(data.label)}`,data.date||'',body,'wc-results-card');
 }
 function nextMatchForGroupHome(g){
@@ -6362,7 +6919,7 @@ function compactGroupStatusCard(g){
 function renderGroupsFeed(){
   const relevant=[...new Set([...groupKeysFromMatches(todayApiMatches()),...groupKeysFromMatches(latestApiResults(4)),...allRelevantGroupsForHome()])].slice(0,6);
   const body=relevant.length?`<div class="wc-groups-grid">${relevant.map(compactGroupStatusCard).join('')}</div>`:`<div class="wc-empty">${esc(t('noData'))}</div>`;
-  return wcSection(`📊 ${esc(tl('Group Pulse','نبض المجموعات'))}`,tl('API schedule/results with compact standings. Full tables are in Groups.','جدول والنتائج النهائية مع ترتيب مختصر. الجداول الكاملة في المجموعات.'),body,'wc-groups-card');
+  return wcSection(`📊 ${esc(tl('Group Pulse','نبض المجموعات'))}`,tl('Data schedule/results with compact standings. Full tables are in Groups.','جدول والنتائج النهائية مع ترتيب مختصر. الجداول الكاملة في المجموعات.'),body,'wc-groups-card');
 }
 function renderTodayFeed(){
   const today=todayApiMatches();
@@ -6642,7 +7199,7 @@ function mdhApiTimeLabel(m){
 
   const date=m.sourceDate||m.rawDate||m.apiDate||m.dateEvent||'';
   const time=m.sourceTime||m.rawTime||m.apiTime||'';
-  const zone=m.sourceTimeZone||m.timeZone||m.tzSource||'API';
+  const zone=m.sourceTimeZone||m.timeZone||m.tzSource||'Data';
   if(date||time) return `${date}${time?' '+time:''} ${zone?`(${zone})`:''}`.trim();
 
   if(m.kickoffUtc) return `${m.kickoffUtc} (UTC instant)`;
@@ -6650,7 +7207,7 @@ function mdhApiTimeLabel(m){
   // Local/static fallback schedule has no provider source time.
   if(m.source==='local'||!m.api) return tl('Local schedule time','وقت الجدول المحلي');
 
-  return tl('Not provided by API','غير متوفر من API');
+  return tl('Not provided by Data','غير متوفر من Data');
 }
 function mdhUaeTimeLabel(m){
   if(!m) return '—';
@@ -6709,7 +7266,7 @@ function renderMdhStatusHero(){
         <div class="mdh-main">${esc(nextLine)}</div>
         <div class="mdh-note">${esc(nextNote)}</div>
         ${next?`<div class="mdh-time-grid">
-          <div class="mdh-time-cell"><span>${esc(tl('API / provider time','وقت API / المصدر'))}</span><b>${esc(mdhApiTimeLabel(next))}</b></div>
+          <div class="mdh-time-cell"><span>${esc(tl('Data / provider time','وقت / المصدر'))}</span><b>${esc(mdhApiTimeLabel(next))}</b></div>
           <div class="mdh-time-cell"><span>${esc(tl('Your local time','وقتك المحلي'))}</span><b>${esc(mdhUaeTimeLabel(next))}</b></div>
         </div>`:''}
       </div>
@@ -6733,7 +7290,7 @@ function renderMdhMatchCard(m){
       <span class="mdh-status ${st.key}">${esc(st.label)}</span>
     </div>
     <div class="mdh-time-grid">
-      <div class="mdh-time-cell"><span>${esc(tl('API / provider time','وقت API / المصدر'))}</span><b>${esc(mdhApiTimeLabel(m))}</b></div>
+      <div class="mdh-time-cell"><span>${esc(tl('Data / provider time','وقت / المصدر'))}</span><b>${esc(mdhApiTimeLabel(m))}</b></div>
       <div class="mdh-time-cell"><span>${esc(tl('Your local time','وقتك المحلي'))}</span><b>${esc(mdhUaeTimeLabel(m))}</b></div>
     </div>
     ${renderMdhSplitBar(m)}
@@ -6873,12 +7430,12 @@ function matchImpactData(group,idx){
 
 function renderMiniImpactHome(m){
   const d=matchImpactDataForHome(m), r=d.match;
-  return `<div class="insight"><div class="title">🔥 ${esc(tl('Latest API match impact','تأثير آخر مباراة من API'))}</div>
+  return `<div class="insight"><div class="title">🔥 ${esc(tl('Latest match impact','تأثير آخر مباراة من Data'))}</div>
     <div class="teams"><span>${teamHtml(r.home)}</span><span class="sc num">${r.hs}-${r.as}</span><span>${teamHtml(r.away)}</span></div>
     <div class="impact-list">
       <span class="impact-pill good">${esc(t('gotRight'))}: ${d.right.length}</span>
       <span class="impact-pill bad">${esc(t('gotWrong'))}: ${d.missed.length}</span>
-      <span class="impact-pill gold">API</span>
+      <span class="impact-pill gold">Data</span>
     </div>
     ${d.right.length?`<div class="sub" style="margin-top:8px">${esc(t('gotRight'))}: ${esc(d.right.slice(0,8).map(x=>x.name).join(', '))}${d.right.length>8?'…':''}</div>`:''}
   </div>`;
@@ -7033,7 +7590,7 @@ function openPlayer(name){ chooseProfile(name); }
 function viewToday(){
   const list=APP._today||[];
   const impactList=list.filter(m=>m.group&&m.idx!=null&&!matchResult(m.group,m.idx).complete);
-  return `<div class="card"><div class="between"><h3>📅 ${esc(t('v_today'))} <span class="sub">(${esc(uaeToday())} UAE)</span></h3><button class="btn ghost sm" onclick="shareTodayImpact()">${esc(t('share'))}</button></div>
+  return `<div class="card today-readable-page"><div class="between"><h3>📅 ${esc(t('v_today'))} <span class="sub">(${esc(uaeToday())} UAE)</span></h3><button class="btn ghost sm" onclick="shareTodayImpact()">${esc(t('share'))}</button></div>
     ${impactList.length?`<div class="insight"><div class="title">⚡ ${esc(tl('What can change today','ما الذي قد يتغير اليوم؟'))}</div>${renderWhatCanChange(impactList)}</div>`:''}
     ${APP._todayLoading?stateLoading():(list.length?list.map(fullMatchCard).join(''):`<div class="state">${esc(t('noToday'))}</div>`)}
   </div>`;
@@ -7051,19 +7608,24 @@ function viewMatches(){
 function fullMatchCard(m){
   const r=(m.group&&m.idx!=null)?matchResult(m.group,m.idx):null;
   const complete=r&&r.complete;
-  const sc=complete?`${r.hs}-${r.as}`:'vs';
+  const scoreLine=matchScoreLine(m);
   const meta=(APP.data.resultMeta||{})[m.key]||(complete?'admin':'pending');
   const srcTag={api:'api',admin:'adm',corrected:'corr',pending:'pend'}[meta]||'pend';
   const srcTxt={api:'src_api',admin:'src_admin',corrected:'src_corr',pending:'src_pending'}[meta]||'src_pending';
+  const st=hubMatchStatus(m);
   let impact='';
   if(complete){ const a=auditMatch(m.group,m.idx);
     const right=a.rows.filter(x=>x.got>0).length, total=a.rows.length;
-    impact=`<div class="edge">🎯 ${esc(t('gotRight'))}: <b>${right}</b>/${total} · ${esc(t(r.outcome==='draw'?'draw':'winner'))}: <b>${esc(r.outcome==='draw'?'—':canonTeam(r.winner))}</b></div>`;
+    impact=`<div class="today-readable-impact">🎯 ${esc(t('gotRight'))}: <b>${right}</b>/${total} · ${esc(t(r.outcome==='draw'?'draw':'winner'))}: <b>${esc(r.outcome==='draw'?'—':canonTeam(r.winner))}</b></div>`;
   }
-  return `<div class="match"><div class="head"><span>${esc(m.group?('Group '+m.group+' · '+m.key):'')}</span>
-      <span><span class="match-time">${esc(matchDateTime(m))}</span> <span class="tag ${srcTag}">${esc(t(srcTxt))}</span></span></div>
-    <div class="teams"><span>${teamHtml(m.home)}</span><span class="sc num">${sc}</span><span>${teamHtml(m.away)}</span></div>
-    ${impact}</div>`;
+  return `<div class="match today-readable-card">
+    <div class="today-readable-group">${esc(m.group?('Group '+m.group+' · '+m.key):'')}</div>
+    <div class="today-readable-title">${teamHtml(m.home)} <span>vs</span> ${teamHtml(m.away)}</div>
+    ${scoreLine?`<div class="today-readable-result">🏁 ${esc(scoreLine)}</div>`:''}
+    ${renderMatchCenterMeta(m,st)}
+    <div class="today-readable-source"><span class="tag ${srcTag}">${esc(t(srcTxt))}</span></div>
+    ${impact}
+  </div>`;
 }
 
 /* ================= GROUP TABLES ================= */
@@ -7543,7 +8105,7 @@ function resultEntryCard(g,i){
     <div class="quick-score">
       ${['1-0','2-1','0-0','1-1','0-1','1-2'].map(s=>`<button onclick="setQuickScore('${g}',${i},'${s}')">${s}</button>`).join('')}
     </div>
-    <div class="field" style="margin-top:8px"><label>${esc(tl('Result source','مصدر النتيجة'))}</label><select id="src_${g}_${i}"><option value="admin" ${meta==='admin'?'selected':''}>Admin</option><option value="api" ${meta==='api'?'selected':''}>API</option><option value="corrected" ${meta==='corrected'?'selected':''}>Corrected</option></select></div>
+    <div class="field" style="margin-top:8px"><label>${esc(tl('Result source','مصدر النتيجة'))}</label><select id="src_${g}_${i}"><option value="admin" ${meta==='admin'?'selected':''}>Admin</option><option value="api" ${meta==='api'?'selected':''}>Data</option><option value="corrected" ${meta==='corrected'?'selected':''}>Corrected</option></select></div>
     <div id="pv_${g}_${i}" class="result-preview">${resultPreviewHtml(g,i,res.home,res.away)}</div>
     <div class="result-actions">
       <button class="btn sm" onclick="saveOneResult('${g}',${i})">💾 ${esc(tl('Save match','حفظ المباراة'))}</button>
@@ -7712,9 +8274,9 @@ function viewSettings(){
   <div class="card"><h3>🌐 ${esc(t('fetchSchedule'))}</h3>
     <button class="btn ghost" onclick="doFetchSchedule()">${esc(t('fetchSchedule'))}</button>
   </div>
-  <div class="card"><h3>🧪 API / CORS</h3>
+  <div class="card"><h3>🧪 / CORS</h3>
     <div class="sub">Origin: ${esc(location.origin||'null')} · Protocol: ${esc(location.protocol)}</div>
-    ${isSandboxOrFile()?`<div class="banner warn">⚠ This is running from file/sandbox origin. External API calls may be blocked. Host it on HTTPS, GitHub Pages, Netlify, or Vercel for a real browser test.</div>`:''}
+    ${isSandboxOrFile()?`<div class="banner warn">⚠ This is running from file/sandbox origin. External calls may be blocked. Host it on HTTPS, GitHub Pages, Netlify, or Vercel for a real browser test.</div>`:''}
     <button class="btn ghost" style="margin-top:8px" onclick="testApis()">Test Supabase + SportsDB</button>
     <div id="apiTestOut" class="ai-ans" style="display:none"></div>
   </div>`;
@@ -7916,7 +8478,7 @@ function compareApiEventToApp(e){
 async function fetchCompletedApiComparisons(){
   APP._syncError=null;
   APP._syncDebug={days:0,events:0,completed:0,mapped:0};
-  try{ await ensureApiScheduleIndexed(true); }catch(e){ console.warn('Could not refresh API schedule before sync',e); APP._syncError=String(e&&e.message?e.message:e); }
+  try{ await ensureApiScheduleIndexed(true); }catch(e){ console.warn('Could not refresh schedule before sync',e); APP._syncError=String(e&&e.message?e.message:e); }
   const end=uaeToday()>WC_END?WC_END:uaeToday();
   const dates=dateRange(WC_START,end);
   const rows=[];
@@ -7951,12 +8513,12 @@ function syncStatusLabel(s){
   if(s==='match') return tl('Synced','متطابق');
   if(s==='missing') return tl('Missing in app','غير موجود في التطبيق');
   if(s==='mismatch') return tl('Different score','نتيجة مختلفة');
-  if(s==='unmapped') return tl('Unmapped API event','مباراة API غير معروفة');
+  if(s==='unmapped') return tl('Unmapped event','مباراة غير معروفة');
   return s;
 }
 function renderSyncComparisonRows(rows){
-  if(!rows) return `<div class="state">${esc(tl('Press Compare API vs App to check completed matches.','اضغط مقارنة API مع التطبيق لفحص المباريات المكتملة.'))}</div>`;
-  if(!rows.length) return `<div class="state">${esc(tl('No completed API matches found yet.','لا توجد مباريات مكتملة من API حالياً.'))}${APP._syncDebug?`<div class="sub" style="margin-top:8px">${esc('Checked days: '+APP._syncDebug.days+' · events: '+APP._syncDebug.events+' · completed: '+APP._syncDebug.completed)}</div>`:''}${APP._syncError?`<div class="banner err">${esc(APP._syncError)}</div>`:''}</div>`;
+  if(!rows) return `<div class="state">${esc(tl('Press Compare vs App to check completed matches.','اضغط مقارنة مع التطبيق لفحص المباريات المكتملة.'))}</div>`;
+  if(!rows.length) return `<div class="state">${esc(tl('No completed matches found yet.','لا توجد مباريات مكتملة من حالياً.'))}${APP._syncDebug?`<div class="sub" style="margin-top:8px">${esc('Checked days: '+APP._syncDebug.days+' · events: '+APP._syncDebug.events+' · completed: '+APP._syncDebug.completed)}</div>`:''}${APP._syncError?`<div class="banner err">${esc(APP._syncError)}</div>`:''}</div>`;
   return rows.map((r,idx)=>{
     const cls=r.status==='match'?'ok':r.status==='missing'?'miss':r.status==='mismatch'?'bad':'';
     const title=r.match?`${teamHtml(r.match.home)} vs ${teamHtml(r.match.away)}`:`${esc(r.event.strHomeTeam||'')} vs ${esc(r.event.strAwayTeam||'')}`;
@@ -7964,7 +8526,7 @@ function renderSyncComparisonRows(rows){
     const api=r.api?`${r.api.home}-${r.api.away}`:'—';
     return `<div class="sync-row">
       <div class="main"><div class="title">${title}</div><div class="meta">${esc((r.event.dateEvent||'')+' · '+(r.match?r.match.key:tl('not mapped','غير مرتبطة')))}</div></div>
-      <div class="sync-score ${cls}">API ${esc(api)} · App ${esc(app)}</div>
+      <div class="sync-score ${cls}">Data ${esc(api)} · App ${esc(app)}</div>
       <div class="sync-tools">
         <span class="tag ${r.status==='match'?'paid':r.status==='mismatch'?'corr':'pend'}">${esc(syncStatusLabel(r.status))}</span>
         ${(r.status==='missing'||r.status==='mismatch')&&r.match?`<button class="btn sm" onclick="applyApiResult(${idx})">${esc(tl('Apply','تطبيق'))}</button>`:''}
@@ -8029,7 +8591,7 @@ function viewSyncResults(){
   return `<div class="card"><div class="between"><h3>🔄 ${esc(t('v_syncResults'))}</h3><span class="chip">${APP._lastSyncCheck?esc(APP._lastSyncCheck.slice(0,16).replace('T',' ')):esc(tl('Not checked','لم يتم الفحص'))}</span></div>
     <div class="banner warn">⚠️ ${esc(tl('The app now reads/writes the normalized wc2026_match_results table, while keeping the old JSON as fallback.','التطبيق الآن يقرأ ويكتب من جدول wc2026_match_results مع إبقاء JSON القديم كاحتياطي.'))}</div>
     <div class="sync-tools">
-      <button class="btn" onclick="runResultSyncCompare()">🔎 ${esc(tl('Compare API vs App','مقارنة API مع التطبيق'))}</button>
+      <button class="btn" onclick="runResultSyncCompare()">🔎 ${esc(tl('Compare vs App','مقارنة مع التطبيق'))}</button>
       <button class="btn ghost" onclick="doFetchSchedule()">🌐 ${esc(t('fetchSchedule'))}</button>
       <button class="btn gold" onclick="applyAllApiResults()">✅ ${esc(tl('Apply all missing/different','تطبيق كل الناقص/المختلف'))}</button>
       <button class="btn ghost" onclick="cleanAndSaveGroupResultsFromNormalized()">🧹 ${esc(tl('Clean group results','تنظيف نتائج المجموعات'))}</button>
@@ -8181,11 +8743,11 @@ function healthShapeReport(){
 }
 function viewHealth(){
   const rows=healthShapeReport();
-  return `<div class="card"><div class="between"><h3>🧪 ${esc(t('v_health'))}</h3><button class="btn sm" onclick="testApis()">${esc(tl('Run API test','تشغيل فحص API'))}</button><button class="btn ghost sm" onclick="go('syncresults')">🔄 ${esc(t('v_syncResults'))}</button></div>
-    <div class="sub">${esc(tl('Checks database shape, local status, PWA status, and external API connectivity.','يفحص شكل قاعدة البيانات وحالة الاتصال والتطبيق وواجهات API.'))}</div>
+  return `<div class="card"><div class="between"><h3>🧪 ${esc(t('v_health'))}</h3><button class="btn sm" onclick="testApis()">${esc(tl('Run test','تشغيل فحص Data'))}</button><button class="btn ghost sm" onclick="go('syncresults')">🔄 ${esc(t('v_syncResults'))}</button></div>
+    <div class="sub">${esc(tl('Checks database shape, local status, PWA status, and external connectivity.','يفحص شكل قاعدة البيانات وحالة الاتصال والتطبيق وواجهات.'))}</div>
   </div>
   <div class="card"><div class="health-grid">${rows.map(r=>`<div class="health-tile"><div class="label">${esc(r.label)}</div><div class="value">${esc(String(r.value))}</div></div>`).join('')}</div></div>
-  <div class="card"><h3>🔎 API test output</h3><pre id="apiTestOut" style="white-space:pre-wrap;display:block;max-height:320px;overflow:auto">${esc(tl('Press Run API test.','اضغط تشغيل فحص API.'))}</pre></div>
+  <div class="card"><h3>🔎 test output</h3><pre id="apiTestOut" style="white-space:pre-wrap;display:block;max-height:320px;overflow:auto">${esc(tl('Press Run test.','اضغط تشغيل فحص.'))}</pre></div>
   <div class="card"><h3>🛠️ ${esc(tl('Quick repairs','إصلاحات سريعة'))}</h3><button class="btn ghost sm" onclick="APP.data=ensureShape(APP.data||{});saveState().then(()=>{toast(t('saved'));render();})">${esc(tl('Ensure data shape','تصحيح شكل البيانات'))}</button><button class="btn ghost sm" style="margin-inline-start:8px" onclick="APP._schedule=(Array.isArray(APP.data.scheduleMatches)&&APP.data.scheduleMatches.length)?APP.data.scheduleMatches:buildLocalSchedule();toast(t('saved'))">${esc(tl('Reload schedule fallback','إعادة تحميل جدول احتياطي'))}</button></div>`;
 }
 
@@ -8327,7 +8889,7 @@ async function loadToday(){
   render();
 }
 // Generated from GROUPS at runtime so it can never drift from the real draw.
-const API_GROUP_BY_TEAM=(()=>{
+const Data_GROUP_BY_TEAM=(()=>{
   const map={};
   for(const g of GROUP_KEYS){
     for(const tm of (GROUPS[g]||[])){
@@ -8342,9 +8904,9 @@ const API_GROUP_BY_TEAM=(()=>{
 })();
 function groupForTeamFromApiName(team){
   const k=teamCompareKey(team);
-  if(API_GROUP_BY_TEAM[k]) return API_GROUP_BY_TEAM[k];
+  if(Data_GROUP_BY_TEAM[k]) return Data_GROUP_BY_TEAM[k];
   const raw=norm(team);
-  if(API_GROUP_BY_TEAM[raw]) return API_GROUP_BY_TEAM[raw];
+  if(Data_GROUP_BY_TEAM[raw]) return Data_GROUP_BY_TEAM[raw];
   for(const g of GROUP_KEYS) if((GROUPS[g]||[]).some(tm=>sameTeam(tm,team))) return g;
   return '';
 }
@@ -8444,19 +9006,19 @@ async function doFetchSchedule(){
 
 async function testApis(){
   const out=$('apiTestOut');
-  if(out){ out.style.display='block'; out.textContent='Testing APIs…'; }
+  if(out){ out.style.display='block'; out.textContent='Testing Datas…'; }
   const lines=[];
   lines.push('Origin: '+(location.origin||'null'));
   lines.push('Protocol: '+location.protocol);
   lines.push('UAE today: '+uaeToday());
   lines.push('Sandbox/file origin: '+(isSandboxOrFile()?'YES':'NO'));
   try{
-    const r=await fetchWithTimeout(API+'?id=eq.main&select=data',{headers:H},10000);
+    const r=await fetchWithTimeout(Data+'?id=eq.main&select=data',{headers:H},10000);
     lines.push('Supabase: HTTP '+r.status+' '+r.statusText);
     const txt=await r.text();
     lines.push('Supabase body preview: '+txt.slice(0,160));
     try{
-      const rr=await fetchWithTimeout(RESULTS_API+'?select=match_key,status,source&limit=3',{headers:H},10000);
+      const rr=await fetchWithTimeout(RESULTS_Data+'?select=match_key,status,source&limit=3',{headers:H},10000);
       lines.push('Results table: HTTP '+rr.status+' '+rr.statusText);
       const rrt=await rr.text();
       lines.push('Results table preview: '+rrt.slice(0,160));
@@ -8888,7 +9450,7 @@ function matchUaeTimestamp(m){
   const h=tm ? tm.h : 0;
   const min=tm ? tm.min : 0;
 
-  // Legacy non-API rows were stored as UAE display rows.
+  // Legacy non-Data rows were stored as UAE display rows.
   return Date.UTC(
     Number(m.date.slice(0,4)),
     Number(m.date.slice(5,7))-1,
@@ -9460,7 +10022,7 @@ function matchUaeTimestamp(m){
   const h=tm ? tm.h : 0;
   const min=tm ? tm.min : 0;
 
-  // Legacy non-API rows were stored as UAE display rows.
+  // Legacy non-Data rows were stored as UAE display rows.
   return Date.UTC(
     Number(m.date.slice(0,4)),
     Number(m.date.slice(5,7))-1,

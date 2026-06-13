@@ -3390,6 +3390,302 @@ body.no-voice .micbtn{display:none!important}
   .points-gain{width:max-content}
 }
 
+
+/* ===== RTL Arabic flag alignment fix =====
+   Keeps emoji flags and CSS-rendered England/Scotland flags aligned correctly
+   inside Arabic text, tables, match rows, and inline team names. */
+.big-flag,
+.css-flag{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  flex:none;
+  line-height:1;
+  vertical-align:-0.16em;
+  margin-inline-start:0;
+  margin-inline-end:4px;
+  direction:ltr;
+  unicode-bidi:isolate;
+}
+.css-flag{
+  width:1.55em;
+  height:1.05em;
+  vertical-align:-0.14em;
+}
+[dir="rtl"] .big-flag,
+[dir="rtl"] .css-flag{
+  margin-inline-start:4px;
+  margin-inline-end:0;
+}
+.player-inline,
+.lb-row .nm,
+.gtable td.tn,
+.teams,
+.match-line,
+.pred-team,
+.diff-pick,
+.points-update-table .put-name,
+.points-update-table .put-detail,
+.hub-name,
+.road-title,
+.sync-row .title{
+  unicode-bidi:plaintext;
+}
+[dir="rtl"] .player-inline,
+[dir="rtl"] .lb-row .nm,
+[dir="rtl"] .gtable td.tn,
+[dir="rtl"] .teams,
+[dir="rtl"] .match-line,
+[dir="rtl"] .pred-team,
+[dir="rtl"] .diff-pick,
+[dir="rtl"] .points-update-table .put-name,
+[dir="rtl"] .points-update-table .put-detail,
+[dir="rtl"] .hub-name,
+[dir="rtl"] .road-title,
+[dir="rtl"] .sync-row .title{
+  direction:rtl;
+}
+[dir="rtl"] .teams .big-flag,
+[dir="rtl"] .teams .css-flag,
+[dir="rtl"] .match-line .big-flag,
+[dir="rtl"] .match-line .css-flag{
+  margin-inline-start:4px;
+  margin-inline-end:0;
+}
+/* Ensure table cells do not flip flag + team name into awkward visual order. */
+.points-update-table td,
+.gtable td{
+  unicode-bidi:plaintext;
+}
+
+
+.team-name-inline{
+  display:inline-flex;
+  align-items:center;
+  gap:0;
+  max-width:100%;
+  vertical-align:middle;
+  unicode-bidi:isolate;
+}
+.team-name-inline .team-label{
+  min-width:0;
+  unicode-bidi:plaintext;
+}
+[dir="rtl"] .team-name-inline{
+  direction:rtl;
+}
+
+
+/* ===== Home page responsive width/fitting fix =====
+   Normalizes dashboard panels so some cards do not become tiny while others stretch. */
+body[data-view="dashboard"] main#view{
+  width:100%;
+  min-width:0;
+}
+body[data-view="dashboard"] .card,
+body[data-view="dashboard"] .hub-panel,
+body[data-view="dashboard"] .hub-match-card,
+body[data-view="dashboard"] .hub-result-row,
+body[data-view="dashboard"] .hub-leader-row,
+body[data-view="dashboard"] .hub-player-row,
+body[data-view="dashboard"] .hub-lock-row,
+body[data-view="dashboard"] .wc-section,
+body[data-view="dashboard"] .wc-pred-widget,
+body[data-view="dashboard"] .wc-dashboard-widget,
+body[data-view="dashboard"] .wc-group-card{
+  min-width:0;
+  max-width:100%;
+}
+body[data-view="dashboard"] .hub-grid{
+  display:grid!important;
+  grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  gap:16px!important;
+  align-items:stretch!important;
+}
+body[data-view="dashboard"] .hub-grid > .hub-panel{
+  width:100%;
+  height:100%;
+}
+body[data-view="dashboard"] .hub-bottom-space{
+  margin-bottom:0;
+}
+body[data-view="dashboard"] .hub-brief-grid,
+body[data-view="dashboard"] .wc-dashboard-grid,
+body[data-view="dashboard"] .wc-groups-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr));
+  gap:12px;
+  align-items:stretch;
+}
+body[data-view="dashboard"] .hub-kpi-grid{
+  grid-template-columns:repeat(auto-fit,minmax(135px,1fr))!important;
+}
+body[data-view="dashboard"] .wc-mini-legend{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+}
+body[data-view="dashboard"] .wc-mini-legend span{
+  min-width:0;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+body[data-view="dashboard"] .hub-match-top,
+body[data-view="dashboard"] .ai-summary-top,
+body[data-view="dashboard"] .today-pred-head{
+  min-width:0;
+}
+body[data-view="dashboard"] .hub-match-title,
+body[data-view="dashboard"] .hub-brief-main,
+body[data-view="dashboard"] .wc-pred-title,
+body[data-view="dashboard"] .hub-name{
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+body[data-view="dashboard"] .points-update-table-wrap,
+body[data-view="dashboard"] .table-wrap,
+body[data-view="dashboard"] .gtable-wrap{
+  max-width:100%;
+  overflow-x:auto;
+}
+
+/* Medium desktop/tablet: avoid squeezed two-column cards. */
+@media(max-width:1120px){
+  body[data-view="dashboard"] .hub-grid{
+    grid-template-columns:1fr!important;
+  }
+  body[data-view="dashboard"] .hub-panel{
+    width:100%;
+  }
+}
+
+/* Small tablet: two KPI columns, readable card content. */
+@media(max-width:760px){
+  body[data-view="dashboard"] .hub-kpi-grid{
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  }
+  body[data-view="dashboard"] .hub-brief-grid,
+  body[data-view="dashboard"] .wc-dashboard-grid,
+  body[data-view="dashboard"] .wc-groups-grid{
+    grid-template-columns:1fr!important;
+  }
+  body[data-view="dashboard"] .hub-result-row,
+  body[data-view="dashboard"] .hub-leader-row,
+  body[data-view="dashboard"] .hub-player-row,
+  body[data-view="dashboard"] .hub-lock-row{
+    grid-template-columns:auto minmax(0,1fr) auto;
+  }
+}
+
+/* Phone: everything fits inside the viewport with no awkward narrow cards. */
+@media(max-width:520px){
+  body[data-view="dashboard"] .hub-kpi-grid{
+    grid-template-columns:1fr 1fr!important;
+    gap:8px!important;
+  }
+  body[data-view="dashboard"] .hub-kpi{
+    padding:10px!important;
+  }
+  body[data-view="dashboard"] .hub-kpi b{
+    font-size:20px!important;
+  }
+  body[data-view="dashboard"] .hub-panel{
+    padding:13px!important;
+    border-radius:20px!important;
+  }
+  body[data-view="dashboard"] .hub-panel h3{
+    align-items:flex-start;
+    flex-direction:column;
+    gap:3px;
+  }
+  body[data-view="dashboard"] .hub-match-top{
+    display:grid;
+    grid-template-columns:1fr;
+  }
+  body[data-view="dashboard"] .hub-status{
+    width:max-content;
+  }
+  body[data-view="dashboard"] .hub-result-row,
+  body[data-view="dashboard"] .hub-leader-row,
+  body[data-view="dashboard"] .hub-player-row,
+  body[data-view="dashboard"] .hub-lock-row{
+    grid-template-columns:34px minmax(0,1fr);
+  }
+  body[data-view="dashboard"] .hub-result-row .hub-pts,
+  body[data-view="dashboard"] .hub-leader-row .hub-pts,
+  body[data-view="dashboard"] .hub-player-row .hub-pts,
+  body[data-view="dashboard"] .hub-lock-row .hub-pts{
+    grid-column:2;
+    justify-self:start;
+  }
+}
+
+
+/* ===== Home cleanup: removed Match Center, Latest Final, Yesterday, Your Matchday ===== */
+body[data-view="dashboard"] .hub-grid.single{
+  grid-template-columns:minmax(0,1fr)!important;
+}
+body[data-view="dashboard"] .hub-brief-grid.clean{
+  grid-template-columns:minmax(0,1fr)!important;
+}
+body[data-view="dashboard"] .hub-brief-grid.clean .hub-brief-card.primary{
+  width:100%;
+}
+body[data-view="dashboard"] .hub-meta:empty,
+body[data-view="dashboard"] .mdh-meta:empty{
+  display:none;
+}
+
+
+/* Strictly remove old inner Matchday Hub mini boxes from Home */
+body[data-view="dashboard"] .hub-hero .hub-brief-stack,
+body[data-view="dashboard"] .hub-hero .hub-brief-mini{
+  display:none!important;
+}
+body[data-view="dashboard"] .hub-hero .hub-brief-grid{
+  grid-template-columns:minmax(0,1fr)!important;
+}
+
+
+/* ===== Centered Home Next Match hero cleanup ===== */
+body[data-view="dashboard"] .hub-hero{
+  text-align:center;
+}
+body[data-view="dashboard"] .hub-next-center{
+  width:min(760px,100%);
+  margin:18px auto 0;
+  padding:22px;
+  border:1px solid rgba(255,255,255,.16);
+  border-radius:26px;
+  background:rgba(255,255,255,.10);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.10), 0 14px 34px rgba(0,0,0,.08);
+}
+body[data-view="dashboard"] .hub-next-main{
+  margin-top:8px;
+  color:#fff;
+  font-size:clamp(24px,4.4vw,44px);
+  font-weight:1000;
+  line-height:1.12;
+  letter-spacing:-.035em;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+body[data-view="dashboard"] .hub-next-sub{
+  margin-top:10px;
+  color:#d8f5e6;
+  font-size:14px;
+  font-weight:850;
+}
+@media(max-width:560px){
+  body[data-view="dashboard"] .hub-next-center{
+    padding:16px;
+    border-radius:22px;
+  }
+  body[data-view="dashboard"] .hub-next-main{
+    font-size:24px;
+  }
+}
+
 </style>
 <!-- Analytics is initialized once in loadAnalytics() to avoid duplicate page_view hits. -->
 </head>
@@ -3532,7 +3828,7 @@ const I18N={
     todayMatches:"مباريات اليوم", nextMatch:"المباراة القادمة", latestResults:"أحدث النتائج",
     champConsensus:"إجماع توقع البطل", topWinners:"الأكثر توقعاً كمتصدر", pointsDist:"توزيع النقاط",
     quickLinks:"روابط سريعة", health:"صحة البيانات", noLeader:"لا يوجد متصدر بعد", none:"لا شيء", pts:"نقطة",
-    rank:"المركز", player:"اللاعب", points:"النقاط", paidStatus:"الحالة", markPaid:"تحديد كمدفوع", markUnpaid:"تحديد كغير مدفوع",
+    rank:"المركز", player:"اللاعب", points:"النقاط", paidStatus:"الحالة", markPaid:"تحديد كمدفوع", markUnpaid:"تحديد كمعلّق",
     projWinner:"الفائز المتوقع", winnerTakesAll:"الفائز يأخذ الكل", split2:"تقسيم بين الأول والثاني", split3:"تقسيم بين الثلاثة الأوائل",
     custom:"مخصص", distribution:"توزيع الجوائز",
     pos1:"الأول", pos2:"الثاني", pos3:"الثالث", pos4:"الرابع",
@@ -3948,7 +4244,7 @@ function teamHtml(team, empty='—'){
   if(team==null||team==='') return esc(empty);
   const c=canonTeam(team);
   const f=flagForTeam(c);
-  return (f?flagHtml(f)+' ':'')+esc(c);
+  return `<span class="team-name-inline">${f?flagHtml(f)+' ':''}<span class="team-label">${esc(c)}</span></span>`;
 }
 function playerInitials(name){ return String(name||'').trim().split(/\s+/).filter(Boolean).slice(0,2).map(x=>x[0]).join('').toUpperCase()||'WC'; }
 function hashCode(s){ s=String(s||''); let h=0; for(let i=0;i<s.length;i++) h=(h*31+s.charCodeAt(i))>>>0; return h>>>0; }
@@ -4957,11 +5253,7 @@ function normalizeScheduleRowsForGst(rows){
 function homeApiSchedule(){
   return Array.isArray(APP._homeApiSchedule)?normalizeScheduleRowsForGst(APP._homeApiSchedule):[];
 }
-function liveApiOnlyNotice(){
-  return APP._homeApiError
-    ? tl('Live API is unavailable. Home match data is not using saved schedule/results.','الـ API المباشر غير متاح. بيانات الصفحة الرئيسية لا تستخدم الجدول أو النتائج المحفوظة.')
-    : tl('Home match data is from the live API only. Predictions still use saved player picks.','بيانات مباريات الصفحة الرئيسية من الـ API المباشر فقط. التوقعات تستخدم اختيارات اللاعبين المحفوظة فقط.');
-}
+function liveApiOnlyNotice(){ return ''; }
 function yesterdayResultText(){
   const rows=apiYesterdayResults();
   if(!rows.length) return {main:tl('No live final yesterday','لا توجد نتيجة مباشرة أمس'),sub:tl('Live API only','من الـ API المباشر فقط')};
@@ -5811,7 +6103,7 @@ function renderLeaderboardPulseCard(){
     ${pointsBarChart(rows)}
     ${top.map(r=>`<div class="hub-leader-row ${r.name===name?'me':''}">
       <div class="hub-leader-rank">${r.rank}</div>
-      <div><div class="hub-name">${esc(r.name)}</div><div class="hub-meta">${esc(r.paid?tl('Paid','مدفوع'):tl('Unpaid','غير مدفوع'))}</div></div>
+      <div><div class="hub-name">${esc(r.name)}</div><div class="hub-meta">${r.paid?esc(tl('Paid','مدفوع')):''}</div></div>
       <div class="hub-pts">${r.total}</div>
     </div>`).join('')}
     ${me&&!top.some(r=>r.name===me.name)?`<div class="hub-leader-row me">
@@ -5832,48 +6124,19 @@ function latestScoreLabel(m){
 }
 
 function renderMatchdayHero(){
-  const today=todayApiMatches();
-  const yesterday=apiYesterdayResults();
-  const latest=latestLiveResultText();
-  const y= yesterdayResultText();
   const next=nextApiMatch();
   const nextStatus=next?hubMatchStatus(next):null;
-  const nextLine=next ? `${hubMatchName(next)}` : tl('No live upcoming match found','لا توجد مباراة قادمة من الـ API حالياً');
-  const nextSub=next ? `${esc(matchDateTime(next))} · ${esc(countdownText(next))} · ${esc(nextStatus.label)}` : tl('Waiting for live API schedule.','بانتظار جدول الـ API المباشر.');
-  const hubText=today.length
-    ? tl(`${today.length} live match${today.length>1?'es':''} in the hub`,`هناك ${today.length} مباراة مباشرة في المركز`)
-    : tl('No live match window','لا توجد نافذة مباريات مباشرة');
+  const nextLine=next ? `${hubMatchName(next)}` : tl('No upcoming match found','لا توجد مباراة قادمة حالياً');
+  const nextSub=next ? `${esc(matchDateTime(next))} · ${esc(countdownText(next))} · ${esc(nextStatus.label)}` : tl('Waiting for schedule.','بانتظار الجدول.');
 
   return `<div class="card hub-hero">
     <div class="hero-kicker">⚽ ${esc(tl('World Cup Pick’em Matchday Hub','مركز يوم مباريات كأس العالم للتوقعات'))}</div>
     <h2>${esc(tl('Today’s briefing','ملخص اليوم'))}</h2>
-    <p>${esc(liveApiOnlyNotice())}</p>
 
-    <div class="hub-brief-grid">
-      <div class="hub-brief-card primary">
-        <div class="hub-brief-label">${esc(tl('Next match','المباراة القادمة'))}</div>
-        <div class="hub-brief-main">${esc(nextLine)}</div>
-        <div class="hub-brief-sub">${nextSub}</div>
-        <div class="hub-live-note">${esc(tl('Schedule and results here use live API only.','الجدول والنتائج هنا من الـ API المباشر فقط.'))}</div>
-      </div>
-
-      <div class="hub-brief-stack">
-        <div class="hub-brief-mini">
-          <div class="hub-brief-label">${esc(tl('Latest final','آخر نتيجة'))}</div>
-          <b>${esc(latest.main)}</b>
-          <span>${esc(latest.sub)}</span>
-        </div>
-        <div class="hub-brief-mini">
-          <div class="hub-brief-label">${esc(tl('Match center','مركز المباريات'))}</div>
-          <b>${esc(hubText)}</b>
-          <span>${esc(tl('Live API schedule only','جدول API مباشر فقط'))}</span>
-        </div>
-        <div class="hub-brief-mini">
-          <div class="hub-brief-label">${esc(tl('Yesterday','أمس'))}</div>
-          <span class="hub-yesterday-result">${esc(y.main)}</span>
-          <span class="hub-yesterday-sub">${esc(y.sub)}</span>
-        </div>
-      </div>
+    <div class="hub-next-center">
+      <div class="hub-brief-label">${esc(tl('Next match','المباراة القادمة'))}</div>
+      <div class="hub-next-main">${esc(nextLine)}</div>
+      <div class="hub-next-sub">${nextSub}</div>
     </div>
   </div>`;
 }
@@ -5929,7 +6192,7 @@ function renderGroupPulseHub(){
   const relevant=[...new Set([...groupKeysFromMatches(todayApiMatches()),...groupKeysFromMatches(latestApiResults(8)),...homeApiSchedule().map(m=>m.group).filter(Boolean)])].slice(0,4);
   const body=relevant.length?`<div class="wc-groups-grid">${relevant.map(renderApiGroupPulseCard).join('')}</div>`:`<div class="hub-empty">${esc(tl('No live API group data yet.','لا توجد بيانات مجموعات مباشرة من API بعد.'))}</div>`;
   return `<div class="hub-panel">
-    <h3>📊 ${esc(tl('Group Pulse','نبض المجموعات'))}<span class="hint">${esc(tl('live API results only','نتائج API مباشرة فقط'))}</span></h3>
+    <h3>📊 ${esc(tl('Group Pulse','نبض المجموعات'))}</h3>
     ${body}
     <div class="hub-actions"><button class="btn ghost sm" onclick="go('groups')">${esc(t('v_groups'))}</button></div>
   </div>`;
@@ -6253,7 +6516,7 @@ function renderMdhLeaderboardRow(r){
   const mvTxt=mv>0?'▲'+mv:mv<0?'▼'+Math.abs(mv):'—';
   return `<div class="mdh-row ${cls}">
     <div class="mdh-rank">${r.rank}</div>
-    <div><div class="mdh-name">${esc(r.name)}</div><div class="mdh-meta">${esc(r.paid?tl('Paid','مدفوع'):tl('Unpaid','غير مدفوع'))}</div></div>
+    <div><div class="mdh-name">${esc(r.name)}</div><div class="mdh-meta">${r.paid?esc(tl('Paid','مدفوع')):''}</div></div>
     <div class="mdh-score">${r.total} <span class="mdh-move ${mvCls}">${esc(mvTxt)}</span></div>
   </div>`;
 }
@@ -6429,14 +6692,9 @@ function renderMdhGroupPulse(){
 function viewDashboard(){
   return `
     ${renderMatchdayHero()}
-    <div class="hub-grid">
-      ${renderMatchCenterHub()}
-      ${renderLatestResultsImpactHub()}
-    </div>
     ${renderPredictionDashboard()}
     ${renderGroupPulseHub()}
-    <div class="hub-grid hub-bottom-space">
-      ${renderYourMatchdayCard()}
+    <div class="hub-grid hub-bottom-space single">
       ${renderLeaderboardPulseCard()}
     </div>
   `;
@@ -6921,11 +7179,6 @@ function viewPlayer(){
   <div class="card">
     <h3>⚽ ${esc(tl('Recent points gained','النقاط الأخيرة'))}</h3>
     ${renderRecentPlayerPoints(name,c)}
-  </div>
-
-  <div class="card">
-    <h3>🚨 ${esc(tl('Smart alerts','تنبيهات ذكية'))}</h3>
-    ${renderPlayerAlerts(name,p,c)}
   </div>`;
 }
 function after_player(){}
@@ -9437,55 +9690,19 @@ function normalizeScheduleRowsForGst(rows){
 }
 
 function renderMatchdayHero(){
-  const today=todayApiMatches();
-  const yesterday=apiYesterdayResults();
-  const latest=latestApiResults(1)[0]||null;
   const next=nextApiMatch();
   const nextStatus=next?hubMatchStatus(next):null;
   const nextLine=next ? `${hubMatchName(next)}` : tl('No upcoming match found','لا توجد مباراة قادمة حالياً');
-  const nextSub=next
-    ? `${esc(matchDateTime(next))} · ${esc(countdownText(next))} · ${esc(nextStatus.label)}`
-    : tl('No live API fixture in the current window.','لا توجد مباراة من API المباشر ضمن النافذة الحالية.');
-  const latestLine=latest?latestScoreLabel(latest):tl('No final result yet','لا توجد نتيجة نهائية بعد');
-  const latestSub=latest ? `${esc(matchDateTime(latest))}` : '—';
-  const hubText=today.length
-    ? tl(`${today.length} match${today.length>1?'es':''}`,`${today.length} مباراة`)
-    : tl('No match window','لا توجد نافذة مباريات');
-  const yesterdayText=yesterday.length
-    ? tl(`${yesterday.length} final${yesterday.length>1?'s':''}`,`${yesterday.length} نتيجة نهائية`)
-    : tl('No finals found','لا توجد نتائج نهائية');
+  const nextSub=next ? `${esc(matchDateTime(next))} · ${esc(countdownText(next))} · ${esc(nextStatus.label)}` : tl('Waiting for schedule.','بانتظار الجدول.');
 
   return `<div class="card hub-hero">
-    <div class="hero-kicker">⚽ ${esc(tl('Matchday Hub','مركز يوم المباريات'))}</div>
-    <h2>${esc(tl('Today','اليوم'))}</h2>
+    <div class="hero-kicker">⚽ ${esc(tl('World Cup Pick’em Matchday Hub','مركز يوم مباريات كأس العالم للتوقعات'))}</div>
+    <h2>${esc(tl('Today’s briefing','ملخص اليوم'))}</h2>
 
-    <div class="hub-brief-grid">
-      <div class="hub-brief-card primary">
-        <div class="hub-brief-label">${esc(tl('Next match','المباراة القادمة'))}</div>
-        <div class="hub-brief-main">${esc(nextLine)}</div>
-        <div class="hub-brief-sub">${nextSub}</div>
-        <div class="hub-brief-nextline">
-          <span class="hub-pill">${esc(todayInZone(browserTimeZone()))}</span>
-        </div>
-      </div>
-
-      <div class="hub-brief-stack">
-        <div class="hub-brief-mini">
-          <div class="hub-brief-label">${esc(tl('Latest final','آخر نتيجة'))}</div>
-          <b>${esc(latestLine)}</b>
-          <span>${latestSub}</span>
-        </div>
-        <div class="hub-brief-mini">
-          <div class="hub-brief-label">${esc(tl('Match center','مركز المباريات'))}</div>
-          <b>${esc(hubText)}</b>
-          <span>${esc(tl('Status','الحالة'))}</span>
-        </div>
-        <div class="hub-brief-mini">
-          <div class="hub-brief-label">${esc(tl('Yesterday','أمس'))}</div>
-          <b>${esc(yesterdayText)}</b>
-          <span>${esc(tl('Final results','النتائج النهائية'))}</span>
-        </div>
-      </div>
+    <div class="hub-next-center">
+      <div class="hub-brief-label">${esc(tl('Next match','المباراة القادمة'))}</div>
+      <div class="hub-next-main">${esc(nextLine)}</div>
+      <div class="hub-next-sub">${nextSub}</div>
     </div>
   </div>`;
 }
@@ -9844,18 +10061,21 @@ function showTodayMatchesPopupOnce(){
   }catch(e){ console.warn('Today popup failed',e); }
 }
 function renderMatchdayHero(){
-  const today=todayApiMatches();
-  const yesterday=apiYesterdayResults();
-  const latest=latestApiResults(1)[0]||null;
   const next=nextApiMatch();
   const nextStatus=next?hubMatchStatus(next):null;
-  const nextLine=next?`${hubMatchName(next)}`:tl('No upcoming match found','لا توجد مباراة قادمة حالياً');
-  const nextSub=next?`${esc(matchDateTime(next))} · ${esc(countdownText(next))} · ${esc(nextStatus.label)}`:tl('No live API fixture in the current window.','لا توجد مباراة من API المباشر ضمن النافذة الحالية.');
-  const latestLine=latest?latestScoreLabel(latest):tl('No final result yet','لا توجد نتيجة نهائية بعد');
-  const latestSub=latest?`${esc(matchDateTime(latest))}`:'—';
-  const hubText=today.length?tl(`${today.length} match${today.length>1?'es':''}`,`${today.length} مباراة`):tl('No match window','لا توجد نافذة مباريات');
-  const yesterdayText=yesterday.length?tl(`${yesterday.length} final${yesterday.length>1?'s':''}`,`${yesterday.length} نتيجة نهائية`):tl('No finals found','لا توجد نتائج نهائية');
-  return `<div class="card hub-hero"><div class="hero-kicker">⚽ ${esc(tl('Matchday Hub','مركز يوم المباريات'))}</div><h2>${esc(tl('Today','اليوم'))}</h2><div class="hub-brief-grid"><div class="hub-brief-card primary"><div class="hub-brief-label">${esc(tl('Next match','المباراة القادمة'))}</div><div class="hub-brief-main">${esc(nextLine)}</div><div class="hub-brief-sub">${nextSub}</div><div class="hub-brief-nextline"><span class="hub-pill">${esc(todayInZone(browserTimeZone()))}</span></div></div><div class="hub-brief-stack"><div class="hub-brief-mini"><div class="hub-brief-label">${esc(tl('Latest final','آخر نتيجة'))}</div><b>${esc(latestLine)}</b><span>${latestSub}</span></div><div class="hub-brief-mini"><div class="hub-brief-label">${esc(tl('Match center','مركز المباريات'))}</div><b>${esc(hubText)}</b><span>${esc(tl('Status','الحالة'))}</span></div><div class="hub-brief-mini"><div class="hub-brief-label">${esc(tl('Yesterday','أمس'))}</div><b>${esc(yesterdayText)}</b><span>${esc(tl('Final results','النتائج النهائية'))}</span></div></div></div></div>`;
+  const nextLine=next ? `${hubMatchName(next)}` : tl('No upcoming match found','لا توجد مباراة قادمة حالياً');
+  const nextSub=next ? `${esc(matchDateTime(next))} · ${esc(countdownText(next))} · ${esc(nextStatus.label)}` : tl('Waiting for schedule.','بانتظار الجدول.');
+
+  return `<div class="card hub-hero">
+    <div class="hero-kicker">⚽ ${esc(tl('World Cup Pick’em Matchday Hub','مركز يوم مباريات كأس العالم للتوقعات'))}</div>
+    <h2>${esc(tl('Today’s briefing','ملخص اليوم'))}</h2>
+
+    <div class="hub-next-center">
+      <div class="hub-brief-label">${esc(tl('Next match','المباراة القادمة'))}</div>
+      <div class="hub-next-main">${esc(nextLine)}</div>
+      <div class="hub-next-sub">${nextSub}</div>
+    </div>
+  </div>`;
 }
 async function boot(){
   if(!APP.data) APP.data=ensureShape({});

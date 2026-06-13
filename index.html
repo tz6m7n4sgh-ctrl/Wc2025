@@ -3231,7 +3231,8 @@ body.no-voice .micbtn{display:none!important}
 .today-update-card.final{border-color:rgba(34,199,122,.30);background:linear-gradient(180deg,#f7fff9,#fff)}
 .today-update-card.live{border-color:rgba(247,201,72,.52);background:linear-gradient(180deg,#fffaf0,#fff)}
 .today-update-card.soon{border-color:rgba(34,199,122,.24)}
-.today-update-top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+.today-update-top{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.today-update-top .today-update-meta{margin-top:0}
 .today-update-main{min-width:0}.today-update-teams{font-weight:1000;font-size:15px;line-height:1.3}.today-update-teams .vs{color:var(--muted);font-size:11px;margin:0 5px}.today-update-meta{margin-top:5px;color:var(--muted);font-size:11.5px;font-weight:800;line-height:1.45}
 .today-update-score{font-family:var(--num);font-size:22px;font-weight:1000;color:var(--pitch);white-space:nowrap;text-align:end}.today-update-score.pending{font-size:16px;color:var(--muted)}
 .today-update-status{display:inline-flex;align-items:center;gap:5px;border-radius:999px;padding:5px 9px;font-size:11px;font-weight:1000;white-space:nowrap;background:var(--soft);color:var(--muted)}
@@ -3241,7 +3242,7 @@ body.no-voice .micbtn{display:none!important}
 .today-update-picks{margin-top:9px}.today-update-split{height:8px;display:flex;overflow:hidden;border-radius:999px;background:var(--soft);box-shadow:inset 0 0 0 1px #e8edea}.today-update-split .home{background:var(--grass-d)}.today-update-split .away{background:#e7b94e}.today-update-split .none{background:#cfd8d3}
 .today-update-pick-labels{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin-top:6px;font-size:10.5px;color:var(--muted);font-weight:900}.today-update-pick-labels span{white-space:normal;overflow-wrap:anywhere;line-height:1.3}
 .today-update-note{margin-top:8px;border-radius:12px;background:#f3f6f4;color:var(--muted);padding:8px;font-size:11px;font-weight:850;line-height:1.4}.today-update-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}.today-update-empty{border:1px solid var(--border);border-radius:16px;padding:14px;background:#fff;color:var(--muted);font-weight:850}
-@media(max-width:680px){.today-update-summary{grid-template-columns:repeat(2,minmax(0,1fr))}.today-update-time-grid,.today-update-actions{grid-template-columns:1fr}.today-update-top{flex-direction:column}.today-update-score{text-align:start;width:max-content}}
+@media(max-width:680px){.today-update-summary{grid-template-columns:repeat(2,minmax(0,1fr))}.today-update-time-grid,.today-update-actions{grid-template-columns:1fr}}
 /* ===== v45 design round: readability, hierarchy & points chart ===== */
 /* Brighten small text on the dark hero so every word is easy to read */
 .hub-hero .hub-brief-label{color:#d8ffec;font-size:11.5px;letter-spacing:.07em}
@@ -4402,147 +4403,37 @@ body[data-view="dashboard"] .hub-next-meta-pill b{
   }
 }
 
-
-/* ===== Today change box + score-in-middle result titles ===== */
-.score-mid{
-  display:inline-flex!important;
-  align-items:center;
-  justify-content:center;
-  min-width:62px;
-  padding:6px 10px;
-  border-radius:14px;
-  background:#fff;
-  color:var(--pitch)!important;
-  border:1px solid rgba(15,138,85,.18);
-  box-shadow:0 6px 16px rgba(8,40,24,.07);
-  font-size:18px!important;
-  font-weight:1000!important;
-  line-height:1!important;
-  direction:ltr;
-  unicode-bidi:isolate;
-}
-.today-change-box{
-  margin:12px 0 14px;
-  padding:14px;
-  border:1px solid rgba(154,106,0,.22);
-  border-radius:22px;
-  background:linear-gradient(135deg,#fffaf0,#ffffff);
-  box-shadow:0 10px 24px rgba(8,40,24,.055);
-}
-.today-change-head{
-  display:flex;
-  align-items:flex-start;
-  justify-content:space-between;
-  gap:10px;
-  margin-bottom:12px;
-}
-.today-change-head b{
-  color:var(--pitch);
-  font-size:15px;
-  font-weight:1000;
-}
-.today-change-head span{
-  color:var(--muted);
-  font-size:12px;
-  font-weight:850;
-  text-align:end;
-}
-.today-change-grid{
+/* ===== Shared, RTL-safe match result row: flag+name+score on ONE line, score bound to its team ===== */
+.mr-row{
   display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));
+  grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);
+  align-items:center;
   gap:10px;
+  margin:10px auto 0;
+  max-width:560px;
 }
-.today-change-card{
-  padding:12px;
-  border:1px solid var(--border);
-  border-radius:18px;
-  background:rgba(255,255,255,.92);
-  text-align:center;
+.mr-side{display:flex;align-items:center;gap:8px;min-width:0}
+.mr-home{justify-content:flex-end}
+.mr-away{justify-content:flex-start}
+.mr-side .team-name-inline{min-width:0;max-width:100%}
+.mr-side .team-label{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mr-mid{display:flex;align-items:center;justify-content:center;flex:0 0 auto}
+.mr-sep{font-weight:1000;color:#9fb1a8;font-size:15px}
+.mr-sep.vs{font-size:13px;font-weight:800;color:var(--muted)}
+.mr-score{
+  flex:0 0 auto;min-width:44px;height:40px;padding:0 8px;
+  display:inline-flex;align-items:center;justify-content:center;
+  background:#fff;border:1px solid var(--border);border-radius:12px;
+  font-family:var(--num);font-weight:900;font-size:20px;line-height:1;
+  color:var(--pitch);font-variant-numeric:tabular-nums;
+  box-shadow:0 6px 16px rgba(8,40,24,.06);
 }
-.today-change-title{
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  gap:6px;
-  flex-wrap:wrap;
-  color:var(--pitch);
-  font-weight:1000;
-  line-height:1.25;
+.mr-row.live .mr-score{color:var(--grass-d);border-color:rgba(15,157,99,.35)}
+@media(max-width:380px){
+  .mr-row{gap:6px}
+  .mr-side{gap:5px}
+  .mr-score{min-width:38px;height:36px;font-size:18px}
 }
-.today-change-title span{
-  color:var(--muted);
-  font-size:11px;
-  font-weight:1000;
-  text-transform:uppercase;
-}
-.today-change-sub{
-  margin-top:6px;
-  color:var(--muted);
-  font-size:11.5px;
-  font-weight:850;
-}
-.today-change-picks{
-  display:grid;
-  grid-template-columns:repeat(3,minmax(0,1fr));
-  gap:8px;
-  margin-top:10px;
-}
-.today-change-picks .pick{
-  min-width:0;
-  border-radius:15px;
-  padding:8px;
-  background:var(--soft);
-  border:1px solid var(--border);
-}
-.today-change-picks .pick span{
-  display:block;
-  color:var(--muted);
-  font-size:10.5px;
-  font-weight:900;
-  overflow:hidden;
-  text-overflow:ellipsis;
-  white-space:nowrap;
-}
-.today-change-picks .pick b{
-  display:block;
-  margin-top:4px;
-  color:var(--pitch);
-  font-size:18px;
-  font-weight:1000;
-}
-.today-change-picks .pick.home b{color:var(--good)}
-.today-change-picks .pick.away b{color:var(--gold-d)}
-@media(max-width:560px){
-  .today-change-head{
-    flex-direction:column;
-  }
-  .today-change-head span{
-    text-align:start;
-  }
-  .today-change-picks{
-    grid-template-columns:1fr;
-  }
-  .score-mid{
-    min-width:56px;
-    font-size:16px!important;
-  }
-}
-
-
-/* ===== Past-match score source fallback ===== */
-.match-center-readable .hub-match-past-note{
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-  margin:9px auto 0;
-  padding:7px 11px;
-  border-radius:999px;
-  background:#eee;
-  color:#777;
-  font-size:12px;
-  font-weight:1000;
-}
-
 </style>
 <!-- Analytics is initialized once in loadAnalytics() to avoid duplicate page_view hits. -->
 </head>
@@ -6754,9 +6645,10 @@ function dataFreshnessLabel(){
 }
 function hubMatchStatus(m){
   if(!m) return {key:'upcoming',label:tl('Upcoming','قادمة')};
-  const sc=scoreFromAnySource(m);
+  const r=m.group&&m.idx!=null?matchResult(m.group,m.idx):null;
+  const hasScore=Number.isFinite(Number(m.hs))&&Number.isFinite(Number(m.as));
   const rawStatus=String(m.status||'').toLowerCase();
-  if(sc||['final','complete','completed','finished','ft','aet','pen'].includes(rawStatus)){
+  if((r&&r.complete)||hasScore||['final','complete','completed','finished'].includes(rawStatus)){
     return {key:'final',label:tl('Completed','مكتملة')};
   }
   const ts=matchUaeTimestamp(m);
@@ -7069,65 +6961,13 @@ function matchReadableParts(m,status){
   const windowText=(key==='final'||key==='past')?'':(countdownText(m)||'');
   return {date,time,windowText,status:(status&&status.label)||'',statusKey:key};
 }
-
-function numericScoreValue(v){
-  if(v==null||v==='') return null;
-  if(typeof v==='string'){
-    const s=v.trim();
-    if(!s || ['null','undefined','-'].includes(s.toLowerCase())) return null;
-    const n=Number(s);
-    return Number.isFinite(n)?n:null;
-  }
-  const n=Number(v);
-  return Number.isFinite(n)?n:null;
-}
-function apiScoreFromMatch(m){
-  if(!m) return null;
-  const pairs=[
-    ['hs','as'],['homeScore','awayScore'],['intHomeScore','intAwayScore'],['scoreHome','scoreAway'],
-    ['home_score','away_score'],['homeGoals','awayGoals'],['goalsHome','goalsAway'],
-    ['home_goals','away_goals'],['homeTeamScore','awayTeamScore']
-  ];
-  for(const [hKey,aKey] of pairs){
-    const h=numericScoreValue(m[hKey]), a=numericScoreValue(m[aKey]);
-    if(h!==null&&a!==null) return {hs:h,as:a};
-  }
-  const raw=m.score||m.result||m.ftScore||m.finalScore||m.strScore;
-  if(typeof raw==='string'){
-    const mm=raw.match(/(\d+)\s*[-:–]\s*(\d+)/);
-    if(mm) return {hs:Number(mm[1]),as:Number(mm[2])};
-  }
-  return null;
-}
-function sameMatchTeams(a,b){
-  if(!a||!b) return false;
-  return sameTeam(a.home,b.home)&&sameTeam(a.away,b.away);
-}
-function scoreFromAnySource(m){
-  if(!m) return null;
-  const r=m.group&&m.idx!=null?matchResult(m.group,m.idx):null;
-  if(r&&r.complete) return {hs:r.hs,as:r.as,source:'saved'};
-  const own=apiScoreFromMatch(m);
-  if(own) return {...own,source:'row'};
-  const candidates=[...(Array.isArray(APP._homeApiResults)?APP._homeApiResults:[]),...(Array.isArray(APP._homeApiSchedule)?normalizeScheduleRowsForGst(APP._homeApiSchedule):[])];
-  const found=candidates.find(x=>{
-    if(!sameMatchTeams(m,x)) return false;
-    const sx=apiScoreFromMatch(x);
-    if(!sx) return false;
-    const d1=(m.date||m.uaeDate||''), d2=(x.date||x.uaeDate||'');
-    return !d1||!d2||d1===d2;
-  });
-  if(found){
-    const sx=apiScoreFromMatch(found);
-    if(sx) return {...sx,source:'api-match'};
-  }
-  return null;
-}
-
 function matchScoreLine(m){
   if(!m) return '';
-  const sc=scoreFromAnySource(m);
-  if(sc) return `${teamText(m.home)} ${sc.hs}-${sc.as} ${teamText(m.away)}`;
+  const r=m.group&&m.idx!=null?matchResult(m.group,m.idx):null;
+  const hasApiScore=Number.isFinite(Number(m.hs))&&Number.isFinite(Number(m.as));
+  const complete=(r&&r.complete)||hasApiScore||m.api;
+  if(r&&r.complete) return `${teamText(r.home)} ${r.hs}-${r.as} ${teamText(r.away)}`;
+  if(hasApiScore) return `${teamText(m.home)} ${Number(m.hs)}-${Number(m.as)} ${teamText(m.away)}`;
   return '';
 }
 function renderMatchCenterMeta(m,status){
@@ -7143,14 +6983,34 @@ function renderMatchCenterMeta(m,status){
 
 
 function matchScoreOnly(m){
-  const sc=scoreFromAnySource(m);
-  return sc?`${sc.hs} - ${sc.as}`:'';
+  if(!m) return '';
+  const r=m.group&&m.idx!=null?matchResult(m.group,m.idx):null;
+  const hasApiScore=Number.isFinite(Number(m.hs))&&Number.isFinite(Number(m.as));
+  if(r&&r.complete) return `${r.hs} - ${r.as}`;
+  if(hasApiScore) return `${Number(m.hs)} - ${Number(m.as)}`;
+  return '';
 }
-
-
-function matchMiddleBadge(m){
-  const s=matchScoreOnly(m);
-  return s?`<span class="score-mid num">${esc(s)}</span>`:`<span>vs</span>`;
+function matchScorePair(m){
+  const r=m.group&&m.idx!=null?matchResult(m.group,m.idx):null;
+  if(r&&r.complete) return {hs:r.hs,as:r.as};
+  if(Number.isFinite(Number(m.hs))&&Number.isFinite(Number(m.as))) return {hs:Number(m.hs),as:Number(m.as)};
+  return null;
+}
+/* Single shared, RTL-safe row used by Match Center, Today, Latest results and the Today popup.
+   Each score sits inside its own team's side, so home score always stays with the home team
+   in both LTR and RTL. Pass pair=null for fixtures that have not been played (shows "vs"). */
+function matchResultRow(m,pair,opts){
+  opts=opts||{};
+  const live=!!opts.live;
+  const hasPair=pair&&pair.hs!=null&&pair.as!=null;
+  const sep=hasPair?'<span class="mr-sep">–</span>':`<span class="mr-sep vs">${esc(opts.vsLabel||tl('vs','ضد'))}</span>`;
+  const hScore=hasPair?`<b class="mr-score num">${esc(pair.hs)}</b>`:'';
+  const aScore=hasPair?`<b class="mr-score num">${esc(pair.as)}</b>`:'';
+  return `<div class="mr-row${hasPair?' has-score':''}${live?' live':''}">`
+    +`<div class="mr-side mr-home">${teamHtml(m.home)}${hScore}</div>`
+    +`<div class="mr-mid">${sep}</div>`
+    +`<div class="mr-side mr-away">${aScore}${teamHtml(m.away)}</div>`
+    +`</div>`;
 }
 
 function renderMatchCenterHub(){
@@ -7166,9 +7026,8 @@ function renderMatchCenterHub(){
     return `<div class="hub-match-card readable ${completed?'completed':''}">
       <div class="hub-match-top readable">
         <div class="hub-match-main">
-          <div class="hub-match-title centered">${teamHtml(m.home)} ${matchMiddleBadge(m)} ${teamHtml(m.away)}</div>
-          ${completed?`<div class="hub-match-completed-label">✅ ${esc(tl('Completed','مكتملة'))}</div>`:(st.key==='past'?`<div class="hub-match-past-note">${esc(tl('Past — score not available yet','سابقة — النتيجة غير متاحة بعد'))}</div>`:'')}
-          ${!scoreOnly&&scoreLine?`<div class="hub-match-result">🏁 ${esc(scoreLine)}</div>`:''}
+          ${matchResultRow(m,matchScorePair(m),{live:st.key==='live'})}
+          ${completed?`<div class="hub-match-completed-label">✅ ${esc(tl('Completed','مكتملة'))}</div>`:''}
           ${renderMatchCenterMeta(m,st)}
           ${pick?`<div class="hub-your-edge">${esc(tl('Your edge','أفضليتك'))}: <b>${esc(pick.edge)}</b></div>`:''}
         </div>
@@ -7192,12 +7051,7 @@ function renderLatestResultsImpactHub(){
     const hs=Number.isFinite(Number(m.hs))?Number(m.hs):'—';
     const as=Number.isFinite(Number(m.as))?Number(m.as):'—';
     return `<div class="latest-readable-card">
-      <div class="latest-readable-title">${teamHtml(m.home)} <span>vs</span> ${teamHtml(m.away)}</div>
-      <div class="latest-score-box">
-        <span>${teamHtml(m.home)}</span>
-        <b class="num">${hs} - ${as}</b>
-        <span>${teamHtml(m.away)}</span>
-      </div>
+      ${matchResultRow(m,(Number.isFinite(Number(m.hs))&&Number.isFinite(Number(m.as)))?{hs:Number(m.hs),as:Number(m.as)}:null,{live:false})}
       ${renderMatchCenterMeta(m,st)}
       <div class="latest-impact-title">🎯 ${esc(tl('Prediction impact','تأثير التوقعات'))}</div>
       <div class="hub-impact-list latest-readable-impact">
@@ -7834,7 +7688,7 @@ function upcomingGroupMatches(limit){
 function renderWhatCanChange(matches){
   matches=matches||upcomingGroupMatches(3);
   if(!matches.length) return `<div class="sub">${esc(t('noData'))}</div>`;
-  return `<div class="today-change-grid">`+matches.map(m=>{
+  return matches.map(m=>{
     const a=auditMatch(m.group,m.idx);
     const home=[],away=[],none=[];
     a.rows.forEach(x=>{
@@ -7842,16 +7696,15 @@ function renderWhatCanChange(matches){
       else if(x.edge.status==='ok'&&sameTeam(x.edge.edge,m.away)) away.push(x.name);
       else none.push(x.name);
     });
-    return `<div class="today-change-card">
-      <div class="today-change-title">${teamHtml(m.home)} <span>vs</span> ${teamHtml(m.away)}</div>
-      <div class="today-change-sub">${esc(tl('Possible points from prediction edge','نقاط محتملة من أفضلية التوقع'))}</div>
-      <div class="today-change-picks">
-        <div class="pick home"><span>${teamHtml(m.home)}</span><b>${home.length}</b></div>
-        <div class="pick away"><span>${teamHtml(m.away)}</span><b>${away.length}</b></div>
-        <div class="pick none"><span>${esc(tl('No edge','بدون أفضلية'))}</span><b>${none.length}</b></div>
+    return `<div class="insight"><div class="title">⚡ ${teamHtml(m.home)} vs ${teamHtml(m.away)}</div>
+      <div class="impact-list">
+        <span class="impact-pill good">${teamHtml(m.home)}: ${home.length}</span>
+        <span class="impact-pill gold">${teamHtml(m.away)}: ${away.length}</span>
+        <span class="impact-pill">${esc(t('noPred'))}: ${none.length}</span>
       </div>
+      <div class="sub" style="margin-top:8px">${esc(tl('If this team wins, these players gain group-match points.','إذا فاز هذا الفريق، اللاعبون الذين اختاروا الأفضلية سيكسبون نقاط المباراة.'))}</div>
     </div>`;
-  }).join('')+`</div>`;
+  }).join('');
 }
 function renderRivalryCard(){
   const names=playerNames();
@@ -7961,7 +7814,7 @@ function viewToday(){
   const list=APP._today||[];
   const impactList=list.filter(m=>m.group&&m.idx!=null&&!matchResult(m.group,m.idx).complete);
   return `<div class="card today-readable-page"><div class="between"><h3>📅 ${esc(t('v_today'))} <span class="sub">(${esc(uaeToday())} UAE)</span></h3><button class="btn ghost sm" onclick="shareTodayImpact()">${esc(t('share'))}</button></div>
-    ${impactList.length?`<div class="today-change-box"><div class="today-change-head"><b>⚡ ${esc(tl('What can change today','ما الذي قد يتغير اليوم؟'))}</b><span>${esc(tl('Prediction edges that can add points today','الأفضليات التي يمكن أن تضيف نقاطاً اليوم'))}</span></div>${renderWhatCanChange(impactList)}</div>`:''}
+    ${impactList.length?`<div class="insight"><div class="title">⚡ ${esc(tl('What can change today','ما الذي قد يتغير اليوم؟'))}</div>${renderWhatCanChange(impactList)}</div>`:''}
     ${APP._todayLoading?stateLoading():(list.length?list.map(fullMatchCard).join(''):`<div class="state">${esc(t('noToday'))}</div>`)}
   </div>`;
 }
@@ -7990,7 +7843,7 @@ function fullMatchCard(m){
   }
   return `<div class="match today-readable-card ${complete?'completed':''}">
     <div class="today-readable-group">${esc(m.group?('Group '+m.group+' · '+m.key):'')}</div>
-    <div class="today-readable-title">${teamHtml(m.home)} ${matchMiddleBadge(m)} ${teamHtml(m.away)}</div>
+    ${matchResultRow(m,matchScorePair(m),{live:st.key==='live'})}
     ${complete?`<div class="today-readable-completed">✅ ${esc(tl('Completed','مكتملة'))}</div>`:''}
     ${renderMatchCenterMeta(m,st)}
     <div class="today-readable-source"><span class="tag ${srcTag}">${esc(t(srcTxt))}</span></div>
@@ -11081,7 +10934,7 @@ function renderTodayMatchesPopup(){
   if(!rows.length){
     return `<div class="today-update-shell"><div class="today-update-head"><span class="today-update-kicker">⚽ ${esc(tl('Today Update','تحديث اليوم'))}</span><h3>${esc(tl('No matches today','لا توجد مباريات اليوم'))}</h3><div class="today-update-sub">${esc(todayInZone(tz))} · ${esc(tz)}</div></div><div class="today-update-empty">${esc(tl('No source matches found for your local today.','لم يتم العثور على مباريات من المصدر ليومك المحلي.'))}</div><button class="btn" onclick="closeSheet()">${esc(t('close'))}</button></div>`;
   }
-  return `<div class="today-update-shell"><div class="today-update-head"><span class="today-update-kicker">⚽ ${esc(tl('Today Update','تحديث اليوم'))}</span><h3>${esc(tl('Matches, results and times','المباريات والنتائج والأوقات'))}</h3><div class="today-update-sub">${esc(todayInZone(tz))} · ${esc(tz)} · ${esc(tl('Source time plus your local time','وقت المصدر بالإضافة إلى وقتك المحلي'))}</div></div><div class="today-update-list">${rows.map(m=>{const status=popupMatchStatus(m);const group=m.group?`${esc(tl('Group','المجموعة'))} ${esc(m.group)}`:'—';return `<div class="today-update-card ${esc(status.key)}"><div class="today-update-top"><div class="today-update-main"><div class="today-update-teams">${teamHtml(m.home)} <span class="vs">vs</span> ${teamHtml(m.away)}</div><div class="today-update-meta">${group}</div></div><div>${popupMatchScoreHtml(m)}<div style="margin-top:5px"><span class="today-update-status ${esc(status.key)}">${esc(status.label)}</span></div></div></div><div class="today-update-time-grid"><div class="today-update-time"><span>${esc(tl('Original source time','وقت المصدر الأصلي'))}</span><b>${esc(shortSourceDateTime(m))}</b></div><div class="today-update-time"><span>${esc(tl('Your time','وقتك'))}</span><b>${esc(shortUserDateTime(m))}</b></div></div>${popupSplitHtml(m)}<div class="today-update-note">${esc(popupMatchNote(m))}</div></div>`;}).join('')}</div><div class="today-update-actions"><button class="btn ghost" onclick="go('matches');closeSheet()">${esc(t('v_matches'))}</button><button class="btn" onclick="closeSheet()">${esc(t('close'))}</button></div></div>`;
+  return `<div class="today-update-shell"><div class="today-update-head"><span class="today-update-kicker">⚽ ${esc(tl('Today Update','تحديث اليوم'))}</span><h3>${esc(tl('Matches, results and times','المباريات والنتائج والأوقات'))}</h3><div class="today-update-sub">${esc(todayInZone(tz))} · ${esc(tz)} · ${esc(tl('Source time plus your local time','وقت المصدر بالإضافة إلى وقتك المحلي'))}</div></div><div class="today-update-list">${rows.map(m=>{const status=popupMatchStatus(m);const group=m.group?`${esc(tl('Group','المجموعة'))} ${esc(m.group)}`:'—';const pres=popupResultForMatch(m);const ppair=pres?{hs:pres.hs,as:pres.as}:null;return `<div class="today-update-card ${esc(status.key)}"><div class="today-update-top"><div class="today-update-meta">${group}</div><span class="today-update-status ${esc(status.key)}">${esc(status.label)}</span></div>${matchResultRow(m,ppair,{live:status.key==='live'})}<div class="today-update-time-grid"><div class="today-update-time"><span>${esc(tl('Original source time','وقت المصدر الأصلي'))}</span><b>${esc(shortSourceDateTime(m))}</b></div><div class="today-update-time"><span>${esc(tl('Your time','وقتك'))}</span><b>${esc(shortUserDateTime(m))}</b></div></div>${popupSplitHtml(m)}<div class="today-update-note">${esc(popupMatchNote(m))}</div></div>`;}).join('')}</div><div class="today-update-actions"><button class="btn ghost" onclick="go('matches');closeSheet()">${esc(t('v_matches'))}</button><button class="btn" onclick="closeSheet()">${esc(t('close'))}</button></div></div>`;
 }
 function showTodayMatchesPopupOnce(){
   try{

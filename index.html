@@ -4419,16 +4419,16 @@ body[data-view="dashboard"] .hub-next-meta-pill b{
 .mr-away{justify-content:flex-start}
 .mr-side .team-name-inline{min-width:0;max-width:100%;font-size:14px}
 .mr-side .team-name-inline .big-flag,
-.mr-side .team-name-inline .css-flag{font-size:1.2em;margin-inline-start:0;margin-inline-end:3px}
-.mr-side .team-label{min-width:0;font-size:14px;font-weight:800;white-space:normal;overflow-wrap:break-word;word-break:normal;hyphens:none;line-height:1.2}
-.mr-mid{display:flex;align-items:center;justify-content:center;gap:4px;flex:0 0 auto}
-.mr-sep{font-weight:1000;color:#9fb1a8;font-size:14px}
+.mr-side .team-name-inline .css-flag{font-size:1.0em;margin-inline-start:0;margin-inline-end:3px}
+.mr-side .team-label{min-width:0;font-size:12px;font-weight:800;white-space:normal;overflow-wrap:break-word;word-break:normal;hyphens:none;line-height:1.2}
+.mr-mid{display:flex;align-items:center;justify-content:center;gap:3px;flex:0 0 auto}
+.mr-sep{font-weight:1000;color:#9fb1a8;font-size:13px}
 .mr-sep.vs{font-size:13px;font-weight:800;color:var(--muted)}
 .mr-score{
-  flex:0 0 auto;min-width:36px;height:38px;padding:0 6px;
+  flex:0 0 auto;min-width:32px;height:36px;padding:0 5px;
   display:inline-flex;align-items:center;justify-content:center;
-  background:#fff;border:1px solid var(--border);border-radius:12px;
-  font-family:var(--num);font-weight:900;font-size:19px;line-height:1;
+  background:#fff;border:1px solid var(--border);border-radius:11px;
+  font-family:var(--num);font-weight:900;font-size:18px;line-height:1;
   color:var(--pitch);font-variant-numeric:tabular-nums;
   box-shadow:0 6px 16px rgba(8,40,24,.06);
 }
@@ -4436,8 +4436,8 @@ body[data-view="dashboard"] .hub-next-meta-pill b{
 @media(max-width:380px){
   .mr-row{gap:6px}
   .mr-side{gap:5px}
-  .mr-side .team-label{font-size:13px}
-  .mr-score{min-width:34px;height:34px;font-size:17px;padding:0 5px}
+  .mr-side .team-label{font-size:11px}
+  .mr-score{min-width:28px;height:33px;font-size:16px;padding:0 4px}
 }
 /* Player-name chips under each prediction-split bucket */
 .split-players{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 2px}
@@ -4454,6 +4454,56 @@ body[data-view="dashboard"] .hub-next-meta-pill b{
 .std-meta .std-status.live{background:#fdecec;color:#c5392c}
 .std-meta .std-status.soon{background:#fff0d6;color:#9a6a00}
 .std-meta .std-status.past{background:#eef2f0;color:#5f7068}
+
+/* ===== Advanced standard match card (status-themed, winner emphasis, consensus, expand) ===== */
+.std-card{border:1px solid var(--border);border-radius:20px;margin:12px 0;overflow:hidden;box-shadow:0 10px 26px rgba(8,40,24,.06);background:var(--card)}
+.std-card.final{background:#fafdfb}
+.std-card.live{background:#fffafa}
+.std-card.up{background:#fafbfd}
+.std-top{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:11px 14px;border-bottom:1px solid #eef2f0}
+.std-grp{display:inline-flex;align-items:center;gap:7px;font-size:11px;font-weight:900;color:var(--muted)}
+.std-grp .gdot{width:6px;height:6px;border-radius:50%;background:#cfd8d3}
+.std-pill{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:900;padding:3px 10px;border-radius:999px;background:var(--soft);color:var(--muted)}
+.std-pill.final{background:#e2f7ec;color:var(--good)}
+.std-pill.live{background:#fdecec;color:var(--bad)}
+.std-pill.up{background:#eef1f6;color:#3b5a86}
+.std-livedot{width:7px;height:7px;border-radius:50%;background:var(--bad);animation:stdpulse 1.4s infinite}
+@keyframes stdpulse{0%{box-shadow:0 0 0 0 rgba(197,57,44,.45)}70%{box-shadow:0 0 0 7px rgba(197,57,44,0)}100%{box-shadow:0 0 0 0 rgba(197,57,44,0)}}
+@media(prefers-reduced-motion:reduce){.std-livedot{animation:none}}
+.std-band{margin:12px;border-radius:14px;padding:11px 10px}
+.std-band.final{background:#eaf7ef;border:1px solid #cfeadb}
+.std-band.live{background:#fdeeee;border:1px solid #f3d2d2}
+.std-band.up{background:#eef1f6;border:1px solid #dbe2ec}
+.std-band .mr-row{margin:0}
+.mr-team{display:inline-flex;align-items:center;gap:4px;min-width:0;max-width:100%}
+.mr-team.win .team-label{color:var(--pitch)}
+.mr-team.lose .team-label{color:#93a09a;font-weight:700}
+.mr-score.win{background:var(--pitch);color:#fff;border-color:var(--pitch)}
+.mc-pick{display:inline-flex;align-items:center;font-size:11px;font-weight:900;flex:0 0 auto}
+.mc-pick.ok{color:var(--good)}
+.mc-pick.no{color:var(--bad)}
+.mc-pick.wait{color:#9fb1a8}
+.std-consensus{padding:0 12px 4px}
+.std-cbar{height:9px;border-radius:999px;overflow:hidden;display:flex;background:#eef2f0}
+.std-cbar span{display:block;height:100%}
+.std-cbar .h{background:var(--grass)}.std-cbar .n{background:#d4ddd8}.std-cbar .a{background:var(--gold)}
+.std-cleg{display:flex;justify-content:space-between;gap:8px;margin-top:6px;font-size:11.5px;color:var(--muted);font-weight:700}
+.std-cleg b{color:var(--ink);font-weight:900}
+.std-who{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 12px 12px}
+.std-avs{display:flex;align-items:center}
+.std-av{width:24px;height:24px;border-radius:50%;background:#dfe7e2;border:2px solid #fff;color:#0a1f17;font-size:9px;font-weight:900;display:inline-flex;align-items:center;justify-content:center;margin-inline-start:-7px}
+.std-av:first-child{margin-inline-start:0}
+.std-toggle{display:inline-flex;align-items:center;gap:5px;font-size:12px;color:var(--muted);font-weight:800;background:none;border:none;padding:4px 2px;cursor:pointer}
+.std-toggle .av-extra{color:var(--muted);font-weight:800}
+.std-detail{display:none;border-top:1px solid #eef2f0;padding:11px 12px 13px;background:#fbfdfc}
+.std-card.open .std-detail{display:block}
+.std-card.open .std-toggle .chev{transform:rotate(180deg)}
+.std-toggle .chev{display:inline-block;transition:transform .15s}
+.std-dlabel{font-size:11px;font-weight:900;color:var(--muted);margin-bottom:7px}
+.std-foot{display:flex;align-items:center;justify-content:center;gap:12px;padding:9px 12px 12px;font-size:12px;color:var(--muted);flex-wrap:wrap}
+.std-foot .src-tag{font-size:11px}
+.std-detail .pts{display:inline-flex;align-items:center;gap:6px;background:#eafaf1;border:1px solid #bfe9d2;color:var(--good);border-radius:10px;padding:6px 11px;font-size:12.5px;font-weight:900}
+.std-detail .split-players{margin-top:2px}
 </style>
 <!-- Analytics is initialized once in loadAnalytics() to avoid duplicate page_view hits. -->
 </head>
@@ -7050,38 +7100,104 @@ function matchResultRow(m,pair,opts){
   opts=opts||{};
   const live=!!opts.live;
   const hasPair=pair&&pair.hs!=null&&pair.as!=null;
+  const hWin=hasPair&&Number(pair.hs)>Number(pair.as);
+  const aWin=hasPair&&Number(pair.as)>Number(pair.hs);
+  const hm=opts.homeMark||''; const am=opts.awayMark||'';
   const mid=hasPair
-    ? `<b class="mr-score num">${esc(pair.hs)}</b><span class="mr-sep">–</span><b class="mr-score num">${esc(pair.as)}</b>`
+    ? `<b class="mr-score num${hWin?' win':''}">${esc(pair.hs)}</b><span class="mr-sep">–</span><b class="mr-score num${aWin?' win':''}">${esc(pair.as)}</b>`
     : `<span class="mr-sep vs">${esc(opts.vsLabel||tl('vs','ضد'))}</span>`;
   return `<div class="mr-row${hasPair?' has-score':''}${live?' live':''}">`
-    +`<div class="mr-side mr-home">${teamHtml(m.home)}</div>`
+    +`<div class="mr-side mr-home"><span class="mr-team${hWin?' win':''}${aWin?' lose':''}">${teamHtml(m.home)}${hm}</span></div>`
     +`<div class="mr-mid">${mid}</div>`
-    +`<div class="mr-side mr-away">${teamHtml(m.away)}</div>`
+    +`<div class="mr-side mr-away"><span class="mr-team${aWin?' win':''}${hWin?' lose':''}">${am}${teamHtml(m.away)}</span></div>`
     +`</div>`;
+}
+/* ---- Advanced shared match card (used by Match Center, Today, Latest, Today popup) ---- */
+function matchThemeKey(statusKey){ return statusKey==='final'?'final':(statusKey==='live'?'live':'up'); }
+function myPickMarker(m,side){
+  try{
+    const me=currentPlayerName(); if(!me) return '';
+    const pk=playerPickForMatch(me,m); if(!pk) return '';
+    const sideTeam=side==='home'?teamText(m.home):teamText(m.away);
+    if(pk.edge!==sideTeam) return '';
+    const pair=matchScorePair(m);
+    if(!pair) return `<span class="mc-pick wait" title="${esc(tl('Your pick','توقّعك'))}">●</span>`;
+    if(Number(pair.hs)===Number(pair.as)) return `<span class="mc-pick wait">●</span>`;
+    const win=side==='home'?Number(pair.hs)>Number(pair.as):Number(pair.as)>Number(pair.hs);
+    return win?`<span class="mc-pick ok">✓</span>`:`<span class="mc-pick no">✗</span>`;
+  }catch(e){ return ''; }
+}
+function myPointsForMatch(m){
+  try{
+    if(m.group==null||m.idx==null) return null;
+    const me=currentPlayerName(); if(!me) return null;
+    const a=auditMatch(m.group,m.idx);
+    if(!a||!a.match||!a.match.complete) return null;
+    const row=a.rows.find(x=>x.name===me); if(!row) return null;
+    return row.got||0;
+  }catch(e){ return null; }
+}
+function stdAvatarsHtml(names){
+  const list=(names||[]).slice(0,4).map(n=>`<span class="std-av">${esc((String(n).trim()[0]||'?').toUpperCase())}</span>`).join('');
+  const extra=(names||[]).length>4?`<span class="av-extra">+${names.length-4}</span>`:'';
+  return `<div class="std-avs">${list}</div>${extra}`;
+}
+let _stdCardSeq=0;
+function renderMatchCard(m,opts){
+  opts=opts||{};
+  const status=(typeof popupMatchStatus==='function'?popupMatchStatus(m):hubMatchStatus(m));
+  const theme=matchThemeKey(status.key);
+  const pair=matchScorePair(m);
+  const sp=(function(){try{return playerPredictionSplit(m);}catch(e){return {home:[],away:[],none:[]};}})();
+  const total=Math.max(1,sp.home.length+sp.away.length+sp.none.length);
+  const hp=Math.round(sp.home.length/total*100), ap=Math.round(sp.away.length/total*100), np=Math.max(0,100-hp-ap);
+  const allNames=[...sp.home,...sp.away,...sp.none].map(x=>x&&x.name!=null?x.name:x);
+  const id='stdc'+(++_stdCardSeq);
+
+  const head=`<div class="std-top"><span class="std-grp"><span class="gdot"></span>${esc(opts.groupLabel||(m.group?tl('Group','المجموعة')+' '+m.group:tl('Match','مباراة')))}</span>`
+    +`<span class="std-pill ${theme}">${status.key==='live'?'<span class="std-livedot"></span>':''}${esc(status.label)}</span></div>`;
+
+  const row=matchResultRow(m,pair,{live:status.key==='live',homeMark:myPickMarker(m,'home'),awayMark:myPickMarker(m,'away')});
+  const band=`<div class="std-band ${theme}">${row}</div>`;
+
+  const consensus=`<div class="std-consensus"><div class="std-cbar" aria-label="${esc(tl('Prediction split','انقسام التوقعات'))}">`
+    +`<span class="h" style="width:${hp}%"></span><span class="n" style="width:${np}%"></span><span class="a" style="width:${ap}%"></span></div>`
+    +`<div class="std-cleg"><span>${teamHtml(m.home)} <b>${hp}%</b> (${sp.home.length})</span>`
+    +`<span>${sp.none.length} ${esc(tl('no edge','بدون أفضلية'))}</span>`
+    +`<span>${teamHtml(m.away)} <b>${ap}%</b> (${sp.away.length})</span></div></div>`;
+
+  const hasNames=allNames.length>0;
+  const who=`<div class="std-who">${stdAvatarsHtml(allNames)}`
+    +(hasNames?`<button type="button" class="std-toggle" onclick="toggleMatchCard(this)">${esc(tl('Players & points','اللاعبون والنقاط'))} <span class="chev">▾</span></button>`:`<span></span>`)
+    +`</div>`;
+
+  const pts=myPointsForMatch(m);
+  const chips=(arr)=>playerChipsHtml(arr,99);
+  const detail=hasNames?`<div class="std-detail">`
+    +`<div class="std-dlabel">${teamHtml(m.home)} · ${sp.home.length}</div>${sp.home.length?chips(sp.home):`<div class="sub">${esc(tl('No picks','لا توقعات'))}</div>`}`
+    +`<div class="std-dlabel" style="margin-top:10px">${teamHtml(m.away)} · ${sp.away.length}</div>${sp.away.length?chips(sp.away):`<div class="sub">${esc(tl('No picks','لا توقعات'))}</div>`}`
+    +(sp.none.length?`<div class="std-dlabel" style="margin-top:10px">${esc(tl('No edge','بدون أفضلية'))} · ${sp.none.length}</div>${chips(sp.none)}`:'')
+    +(pts!=null?`<div style="margin-top:10px"><span class="pts">⭐ ${esc(tl('Your points this match','نقاطك في هذه المباراة'))}: +${pts}</span></div>`:'')
+    +`</div>`:'';
+
+  const when=matchDateTime(m)||'';
+  const venue=m.venue?String(m.venue):'';
+  const footBits=[];
+  if(when) footBits.push(`<span>🕒 ${esc(when)}</span>`);
+  if(venue) footBits.push(`<span>📍 ${esc(venue)}</span>`);
+  if(opts.footerExtra) footBits.push(opts.footerExtra);
+  const foot=footBits.length?`<div class="std-foot">${footBits.join('')}</div>`:'';
+
+  return `<div class="std-card ${theme}" id="${id}">${head}${band}${consensus}${who}${detail}${foot}</div>`;
+}
+function toggleMatchCard(btn){
+  const card=btn.closest('.std-card');
+  if(card) card.classList.toggle('open');
 }
 
 function renderMatchCenterHub(){
   const rows=todayApiMatches();
-  const body=rows.length?rows.map(m=>{
-    const st=(typeof popupMatchStatus==='function'?popupMatchStatus(m):hubMatchStatus(m));
-    const pickRows=renderHubSplit(m);
-    const user=currentPlayerName();
-    const pick=user?playerPickForMatch(user,m):null;
-    const scorePair=matchScorePair(m);
-    const completed=!!scorePair || st.key==='final';
-    return `<div class="hub-match-card readable ${completed?'completed':''}">
-      <div class="hub-match-top readable">
-        <div class="hub-match-main">
-          ${matchResultRow(m,scorePair,{live:st.key==='live'})}
-          ${completed?`<div class="hub-match-completed-label">✅ ${esc(tl('Completed','مكتملة'))}</div>`:''}
-          ${renderMatchCenterMeta(m,st)}
-          ${pick?`<div class="hub-your-edge">${esc(tl('Your edge','أفضليتك'))}: <b>${esc(pick.edge)}</b></div>`:''}
-        </div>
-      </div>
-      <div class="hub-section-title centered">📊 ${esc(tl('Prediction split','انقسام التوقعات'))}</div>
-      ${pickRows}
-    </div>`;
-  }).join(''):`<div class="hub-empty">${esc(tl('No matches found for today.','لا توجد مباريات اليوم.'))}</div>`;
+  const body=rows.length?rows.map(m=>renderMatchCard(m)).join(''):`<div class="hub-empty">${esc(tl('No matches found for today.','لا توجد مباريات اليوم.'))}</div>`;
   return `<div class="hub-panel match-center-readable">
     <h3>📅 ${esc(tl('Match Center','مركز المباريات'))}<span class="hint">${esc(tl('today matches + prediction split','مباريات اليوم + انقسام التوقعات'))}</span></h3>
     ${body}
@@ -7091,21 +7207,7 @@ function renderMatchCenterHub(){
 function renderLatestResultsImpactHub(){
   const data=allCompletedResultsForHome();
   const rows=(data.matches||[]).slice(-4).reverse();
-  const body=rows.length?rows.map(m=>{
-    const imp=latestResultImpact(m);
-    const st={key:'final',label:tl('Completed','مكتملة')};
-    const hs=Number.isFinite(Number(m.hs))?Number(m.hs):'—';
-    const as=Number.isFinite(Number(m.as))?Number(m.as):'—';
-    return `<div class="latest-readable-card">
-      ${matchResultRow(m,(Number.isFinite(Number(m.hs))&&Number.isFinite(Number(m.as)))?{hs:Number(m.hs),as:Number(m.as)}:null,{live:false})}
-      ${renderMatchCenterMeta(m,st)}
-      <div class="latest-impact-title">🎯 ${esc(tl('Prediction impact','تأثير التوقعات'))}</div>
-      <div class="hub-impact-list latest-readable-impact">
-        ${imp.right&&imp.right.length?imp.right.slice(0,5).map(x=>`<span class="hub-impact">+${x.got||''} ${esc(x.name||x)}</span>`).join(''):`<span class="hub-impact miss">${esc(tl('No player edge points','لا نقاط أفضلية للاعبين'))}</span>`}
-        ${imp.missed&&imp.missed.length?`<span class="hub-impact miss">${esc(tl('Missed','أخطأوا'))}: ${imp.missed.length}</span>`:''}
-      </div>
-    </div>`;
-  }).join(''):`<div class="hub-empty">${esc(tl('No final results yet.','لا توجد نتائج نهائية بعد.'))}</div>`;
+  const body=rows.length?rows.map(m=>renderMatchCard(m)).join(''):`<div class="hub-empty">${esc(tl('No final results yet.','لا توجد نتائج نهائية بعد.'))}</div>`;
   return `<div class="hub-panel latest-readable-panel">
     <h3>🕘 ${esc(tl('Latest results','آخر النتائج'))}<span class="hint">${esc(tl('clear score + prediction impact','نتيجة واضحة + تأثير التوقعات'))}</span></h3>
     ${body}
@@ -7875,26 +7977,13 @@ function viewMatches(){
         <div class="body">${byGroup[g].map(fullMatchCard).join('')}</div></details>`).join('')}`;
 }
 function fullMatchCard(m){
-  const r=(m.group&&m.idx!=null)?matchResult(m.group,m.idx):null;
-  const scoreOnly=matchScoreOnly(m);
-  const complete=!!scoreOnly;
+  const complete=!!matchScorePair(m);
   const meta=(APP.data.resultMeta||{})[m.key]||(complete?'admin':'pending');
   const srcTag={api:'api',admin:'adm',corrected:'corr',pending:'pend'}[meta]||'pend';
   const srcTxt={api:'src_api',admin:'src_admin',corrected:'src_corr',pending:'src_pending'}[meta]||'src_pending';
-  const st=(typeof popupMatchStatus==='function'?popupMatchStatus(m):hubMatchStatus(m));
-  let impact='';
-  if(r&&r.complete){ const a=auditMatch(m.group,m.idx);
-    const right=a.rows.filter(x=>x.got>0).length, total=a.rows.length;
-    impact=`<div class="today-readable-impact">🎯 ${esc(t('gotRight'))}: <b>${right}</b>/${total} · ${esc(t(r.outcome==='draw'?'draw':'winner'))}: <b>${esc(r.outcome==='draw'?'—':canonTeam(r.winner))}</b></div>`;
-  }
-  return `<div class="match today-readable-card ${complete?'completed':''}">
-    <div class="today-readable-group">${esc(m.group?('Group '+m.group+' · '+m.key):'')}</div>
-    ${matchResultRow(m,matchScorePair(m),{live:st.key==='live'})}
-    ${complete?`<div class="today-readable-completed">✅ ${esc(tl('Completed','مكتملة'))}</div>`:''}
-    ${renderMatchCenterMeta(m,st)}
-    <div class="today-readable-source"><span class="tag ${srcTag}">${esc(t(srcTxt))}</span></div>
-    ${impact}
-  </div>`;
+  const groupLabel=m.group?('Group '+m.group+(m.key?(' · '+m.key):'')):'';
+  const footerExtra=`<span class="src-tag tag ${srcTag}">${esc(t(srcTxt))}</span>`;
+  return renderMatchCard(m,{groupLabel:groupLabel,footerExtra:footerExtra});
 }
 
 /* ================= GROUP TABLES ================= */
@@ -10975,7 +11064,7 @@ function renderTodayMatchesPopup(){
   if(!rows.length){
     return `<div class="today-update-shell"><div class="today-update-head"><span class="today-update-kicker">⚽ ${esc(tl('Today Update','تحديث اليوم'))}</span><h3>${esc(tl('No matches today','لا توجد مباريات اليوم'))}</h3><div class="today-update-sub">${esc(todayInZone(tz))} · ${esc(tz)}</div></div><div class="today-update-empty">${esc(tl('No source matches found for your local today.','لم يتم العثور على مباريات من المصدر ليومك المحلي.'))}</div><button class="btn" onclick="closeSheet()">${esc(t('close'))}</button></div>`;
   }
-  return `<div class="today-update-shell"><div class="today-update-head"><span class="today-update-kicker">⚽ ${esc(tl('Today Update','تحديث اليوم'))}</span><h3>${esc(tl('Matches, results and times','المباريات والنتائج والأوقات'))}</h3><div class="today-update-sub">${esc(todayInZone(tz))} · ${esc(tz)} · ${esc(tl('Source time plus your local time','وقت المصدر بالإضافة إلى وقتك المحلي'))}</div></div><div class="today-update-list">${rows.map(m=>{const status=popupMatchStatus(m);const group=m.group?`${esc(tl('Group','المجموعة'))} ${esc(m.group)}`:'—';const pres=popupResultForMatch(m);const ppair=pres?{hs:pres.hs,as:pres.as}:null;return `<div class="today-update-card ${esc(status.key)}"><div class="today-update-top"><div class="today-update-meta">${group}</div><span class="today-update-status ${esc(status.key)}">${esc(status.label)}</span></div>${matchResultRow(m,ppair,{live:status.key==='live'})}<div class="today-update-time-grid"><div class="today-update-time"><span>${esc(tl('Original source time','وقت المصدر الأصلي'))}</span><b>${esc(shortSourceDateTime(m))}</b></div><div class="today-update-time"><span>${esc(tl('Your time','وقتك'))}</span><b>${esc(shortUserDateTime(m))}</b></div></div>${popupSplitHtml(m)}<div class="today-update-note">${esc(popupMatchNote(m))}</div></div>`;}).join('')}</div><div class="today-update-actions"><button class="btn ghost" onclick="go('matches');closeSheet()">${esc(t('v_matches'))}</button><button class="btn" onclick="closeSheet()">${esc(t('close'))}</button></div></div>`;
+  return `<div class="today-update-shell"><div class="today-update-head"><span class="today-update-kicker">⚽ ${esc(tl('Today Update','تحديث اليوم'))}</span><h3>${esc(tl('Matches, results and times','المباريات والنتائج والأوقات'))}</h3><div class="today-update-sub">${esc(todayInZone(tz))} · ${esc(tz)} · ${esc(tl('Source time plus your local time','وقت المصدر بالإضافة إلى وقتك المحلي'))}</div></div><div class="today-update-list">${rows.map(m=>renderMatchCard(m,{footerExtra:`<span>${esc(tl('Source','المصدر'))}: ${esc(shortSourceDateTime(m))}</span>`})).join('')}</div><div class="today-update-actions"><button class="btn ghost" onclick="go('matches');closeSheet()">${esc(t('v_matches'))}</button><button class="btn" onclick="closeSheet()">${esc(t('close'))}</button></div></div>`;
 }
 function showTodayMatchesPopupOnce(){
   try{

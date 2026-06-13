@@ -3686,6 +3686,60 @@ body[data-view="dashboard"] .hub-next-sub{
   }
 }
 
+
+
+/* ===== Readable Next Match metadata chips ===== */
+body[data-view="dashboard"] .hub-next-meta-grid{
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:10px;
+  margin-top:16px;
+}
+body[data-view="dashboard"] .hub-next-meta-pill{
+  min-width:0;
+  border:1px solid rgba(255,255,255,.16);
+  border-radius:18px;
+  padding:10px 12px;
+  background:rgba(255,255,255,.10);
+  text-align:center;
+}
+body[data-view="dashboard"] .hub-next-meta-pill span{
+  display:block;
+  color:#b8f7d5;
+  font-size:11px;
+  font-weight:900;
+  text-transform:uppercase;
+  letter-spacing:.05em;
+  margin-bottom:4px;
+}
+body[data-view="dashboard"] .hub-next-meta-pill b{
+  display:block;
+  color:#fff;
+  font-size:14px;
+  font-weight:1000;
+  line-height:1.2;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+body[data-view="dashboard"] .hub-next-meta-pill.status b{
+  color:#f7c948;
+}
+body[data-view="dashboard"] .hub-next-meta-pill.wide{
+  grid-column:1/-1;
+  color:#fff;
+  font-weight:900;
+}
+@media(max-width:760px){
+  body[data-view="dashboard"] .hub-next-meta-grid{
+    grid-template-columns:repeat(2,minmax(0,1fr));
+  }
+}
+@media(max-width:420px){
+  body[data-view="dashboard"] .hub-next-meta-grid{
+    grid-template-columns:1fr;
+  }
+}
+
 </style>
 <!-- Analytics is initialized once in loadAnalytics() to avoid duplicate page_view hits. -->
 </head>
@@ -4228,7 +4282,11 @@ const TEAM_FLAGS={
   "Honduras":"🇭🇳","Nigeria":"🇳🇬","Denmark":"🇩🇰","Costa Rica":"🇨🇷"
 };
 const HERO_GLYPHS=['🦸','⚡','🛡️','🔥','🌟','💥','🚀','🕶️'];
-function flagForTeam(team){ const c=canonTeam(team||''); return TEAM_FLAGS[c]||TEAM_FLAGS[String(team||'').trim()]||''; }
+function flagForTeam(team){
+  const raw=String(team||'').trim();
+  const c=canonTeam(raw);
+  return TEAM_FLAGS[c]||TEAM_FLAGS[raw]||'🏴';
+}
 function flagHtml(flag){
   if(!flag) return '';
   if(String(flag).startsWith('css:')) return `<span class="css-flag ${esc(String(flag).slice(4))}" aria-hidden="true"></span>`;
@@ -4985,6 +5043,11 @@ function applyDir(){ document.documentElement.lang=LANG; document.documentElemen
     ab.textContent=APP.isAdmin ? (t('admin')+' ✓') : t('admin');
   }
 }
+
+
+
+
+
 
 function render(){
   invalidateLeaderboardCache();
@@ -5804,8 +5867,17 @@ function matchCenterMatches(){
   }
   return rows.slice(0,8);
 }
+function allTodayApiMatches(){
+  const today=uaeToday();
+  const rows=homeSchedule()
+    .filter(m=>m.group&&m.idx!=null)
+    .filter(m=>(m.date||'')===today)
+    .sort((a,b)=>matchUaeTimestamp(a)-matchUaeTimestamp(b));
+  return rows;
+}
 function todayApiMatches(){
-  return matchCenterMatches();
+  const rows=allTodayApiMatches();
+  return rows.length?rows:matchCenterMatches();
 }
 function nextApiMatch(){
   return homeSchedule().filter(m=>m.group&&m.idx!=null&&matchIsUpcoming(m))
@@ -6123,11 +6195,36 @@ function latestScoreLabel(m){
   return `⁦${teamText(m.home)} ${m.hs}-${m.as} ${teamText(m.away)}⁩`;
 }
 
+
+function nextMatchReadableParts(m,status){
+  if(!m) return null;
+  const dt=matchDateTime(m)||'';
+  let date='', time='';
+  if(dt.includes(' · ')){
+    const parts=dt.split(' · ');
+    date=parts[0]||'';
+    time=parts.slice(1).join(' · ')||'';
+  }else{
+    date=dt;
+  }
+  const starts=countdownText(m)||'';
+  return {date,time,starts,status:(status&&status.label)||''};
+}
+function renderNextMatchReadableMeta(m,status){
+  const p=nextMatchReadableParts(m,status);
+  if(!p) return `<div class="hub-next-meta-grid"><div class="hub-next-meta-pill wide">${esc(tl('Waiting for schedule.','بانتظار الجدول.'))}</div></div>`;
+  return `<div class="hub-next-meta-grid">
+    ${p.date?`<div class="hub-next-meta-pill"><span>${esc(tl('Date','التاريخ'))}</span><b>${esc(p.date)}</b></div>`:''}
+    ${p.time?`<div class="hub-next-meta-pill"><span>${esc(tl('Time','الوقت'))}</span><b>${esc(p.time)}</b></div>`:''}
+    ${p.starts?`<div class="hub-next-meta-pill"><span>${esc(tl('Starts','يبدأ'))}</span><b>${esc(p.starts)}</b></div>`:''}
+    ${p.status?`<div class="hub-next-meta-pill status"><span>${esc(tl('Status','الحالة'))}</span><b>${esc(p.status)}</b></div>`:''}
+  </div>`;
+}
+
 function renderMatchdayHero(){
   const next=nextApiMatch();
   const nextStatus=next?hubMatchStatus(next):null;
   const nextLine=next ? `${hubMatchName(next)}` : tl('No upcoming match found','لا توجد مباراة قادمة حالياً');
-  const nextSub=next ? `${esc(matchDateTime(next))} · ${esc(countdownText(next))} · ${esc(nextStatus.label)}` : tl('Waiting for schedule.','بانتظار الجدول.');
 
   return `<div class="card hub-hero">
     <div class="hero-kicker">⚽ ${esc(tl('World Cup Pick’em Matchday Hub','مركز يوم مباريات كأس العالم للتوقعات'))}</div>
@@ -6136,7 +6233,7 @@ function renderMatchdayHero(){
     <div class="hub-next-center">
       <div class="hub-brief-label">${esc(tl('Next match','المباراة القادمة'))}</div>
       <div class="hub-next-main">${esc(nextLine)}</div>
-      <div class="hub-next-sub">${nextSub}</div>
+      ${renderNextMatchReadableMeta(next,nextStatus)}
     </div>
   </div>`;
 }
@@ -6184,7 +6281,7 @@ function renderLatestResultsImpactHub(){
     </div>`;
   }).join(''):`<div class="hub-empty">${esc(tl('No live API final results yet. Saved/admin results are not used on Home.','لا توجد نتائج نهائية من الـ API المباشر بعد. لا يتم استخدام نتائج محفوظة/مدير في الصفحة الرئيسية.'))}</div>`;
   return `<div class="hub-panel">
-    <h3>🕘 ${esc(data.label||tl('Live results','النتائج المباشرة'))}<span class="hint">${esc(tl('live score + prediction impact','نتيجة مباشرة + تأثير التوقعات'))}</span></h3>
+    <h3>🕘 ${esc(tl('Latest live results','آخر النتائج المباشرة'))}<span class="hint">${esc(tl('score + prediction impact','النتيجة + تأثير التوقعات'))}</span></h3>
     ${body}
   </div>`;
 }
@@ -6692,6 +6789,10 @@ function renderMdhGroupPulse(){
 function viewDashboard(){
   return `
     ${renderMatchdayHero()}
+    <div class="hub-grid">
+      ${renderMatchCenterHub()}
+      ${renderLatestResultsImpactHub()}
+    </div>
     ${renderPredictionDashboard()}
     ${renderGroupPulseHub()}
     <div class="hub-grid hub-bottom-space single">
@@ -9693,7 +9794,6 @@ function renderMatchdayHero(){
   const next=nextApiMatch();
   const nextStatus=next?hubMatchStatus(next):null;
   const nextLine=next ? `${hubMatchName(next)}` : tl('No upcoming match found','لا توجد مباراة قادمة حالياً');
-  const nextSub=next ? `${esc(matchDateTime(next))} · ${esc(countdownText(next))} · ${esc(nextStatus.label)}` : tl('Waiting for schedule.','بانتظار الجدول.');
 
   return `<div class="card hub-hero">
     <div class="hero-kicker">⚽ ${esc(tl('World Cup Pick’em Matchday Hub','مركز يوم مباريات كأس العالم للتوقعات'))}</div>
@@ -9702,7 +9802,7 @@ function renderMatchdayHero(){
     <div class="hub-next-center">
       <div class="hub-brief-label">${esc(tl('Next match','المباراة القادمة'))}</div>
       <div class="hub-next-main">${esc(nextLine)}</div>
-      <div class="hub-next-sub">${nextSub}</div>
+      ${renderNextMatchReadableMeta(next,nextStatus)}
     </div>
   </div>`;
 }
@@ -10064,7 +10164,6 @@ function renderMatchdayHero(){
   const next=nextApiMatch();
   const nextStatus=next?hubMatchStatus(next):null;
   const nextLine=next ? `${hubMatchName(next)}` : tl('No upcoming match found','لا توجد مباراة قادمة حالياً');
-  const nextSub=next ? `${esc(matchDateTime(next))} · ${esc(countdownText(next))} · ${esc(nextStatus.label)}` : tl('Waiting for schedule.','بانتظار الجدول.');
 
   return `<div class="card hub-hero">
     <div class="hero-kicker">⚽ ${esc(tl('World Cup Pick’em Matchday Hub','مركز يوم مباريات كأس العالم للتوقعات'))}</div>
@@ -10073,7 +10172,7 @@ function renderMatchdayHero(){
     <div class="hub-next-center">
       <div class="hub-brief-label">${esc(tl('Next match','المباراة القادمة'))}</div>
       <div class="hub-next-main">${esc(nextLine)}</div>
-      <div class="hub-next-sub">${nextSub}</div>
+      ${renderNextMatchReadableMeta(next,nextStatus)}
     </div>
   </div>`;
 }

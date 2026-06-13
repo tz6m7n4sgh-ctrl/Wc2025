@@ -4227,6 +4227,322 @@ body[data-view="dashboard"] .hub-next-meta-grid.no-status{
   }
 }
 
+
+/* ===== Senior FE/QA consistency pass: match cards, landscape, score sizing ===== */
+:root{
+  --match-card-radius:20px;
+  --match-card-pad:14px;
+  --match-chip-radius:15px;
+}
+body[data-view="dashboard"] .hub-grid,
+body[data-view="dashboard"] .wc-dashboard-grid,
+body[data-view="dashboard"] .wc-pred-widget-grid,
+body[data-view="today"] .card,
+body[data-view="matches"] .card{
+  min-width:0;
+}
+.match-center-readable .hub-match-card.readable,
+.today-readable-page .today-readable-card,
+.latest-readable-panel .latest-readable-card,
+.wc-match-card.api-game-card{
+  width:100%;
+  max-width:100%;
+  min-width:0;
+  border-radius:var(--match-card-radius)!important;
+  padding:var(--match-card-pad)!important;
+  border:1px solid var(--border)!important;
+  box-shadow:0 10px 24px rgba(8,40,24,.055)!important;
+  background:rgba(255,255,255,.94)!important;
+}
+.match-center-readable .hub-match-title.centered,
+.today-readable-page .today-readable-title,
+.latest-readable-panel .latest-readable-title{
+  font-size:clamp(15px,2.2vw,18px)!important;
+  line-height:1.25!important;
+}
+.match-center-readable .hub-match-meta-grid,
+.today-readable-page .hub-match-meta-grid,
+.latest-readable-panel .hub-match-meta-grid,
+body[data-view="dashboard"] .hub-next-meta-grid{
+  width:100%;
+  max-width:760px;
+  margin-left:auto;
+  margin-right:auto;
+}
+.match-center-readable .hub-match-meta-pill,
+.today-readable-page .hub-match-meta-pill,
+.latest-readable-panel .hub-match-meta-pill,
+body[data-view="dashboard"] .hub-next-meta-pill{
+  border-radius:var(--match-chip-radius)!important;
+  padding:8px 9px!important;
+  min-width:0!important;
+}
+.match-center-readable .hub-match-meta-pill b,
+.today-readable-page .hub-match-meta-pill b,
+.latest-readable-panel .hub-match-meta-pill b,
+body[data-view="dashboard"] .hub-next-meta-pill b{
+  font-size:12px!important;
+  white-space:normal!important;
+  overflow-wrap:anywhere;
+}
+.match-center-readable .hub-match-score-clear,
+.today-readable-page .today-readable-score-clear,
+.latest-readable-panel .latest-score-box{
+  max-width:680px;
+  margin-left:auto;
+  margin-right:auto;
+  padding:10px!important;
+  border-radius:19px!important;
+  gap:8px!important;
+}
+.match-center-readable .hub-match-score-clear b,
+.today-readable-page .today-readable-score-clear b,
+.latest-readable-panel .latest-score-box b{
+  min-width:72px!important;
+  padding:7px 10px!important;
+  border-radius:14px!important;
+  font-size:clamp(20px,3.3vw,22px)!important;
+  line-height:1!important;
+}
+.match-center-readable .hub-match-score-clear span,
+.today-readable-page .today-readable-score-clear span,
+.latest-readable-panel .latest-score-box span{
+  font-size:12px!important;
+}
+.today-readable-page .today-readable-card.completed{
+  border-color:rgba(15,138,85,.28)!important;
+  background:linear-gradient(180deg,rgba(233,251,241,.95),rgba(255,255,255,.96))!important;
+}
+.today-readable-page .today-readable-completed{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  margin:9px auto 0;
+  padding:7px 11px;
+  border-radius:999px;
+  background:#e9fbf1;
+  color:var(--good);
+  font-size:12px;
+  font-weight:1000;
+}
+.today-readable-page .today-readable-score-clear{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);
+  align-items:center;
+  gap:10px;
+  margin:10px auto 0;
+  padding:12px;
+  border-radius:22px;
+  background:linear-gradient(135deg,#e9fbf1,#fff7df);
+  border:1px solid rgba(15,138,85,.16);
+}
+.today-readable-page .today-readable-score-clear span{
+  min-width:0;
+  font-size:12.5px;
+  font-weight:900;
+  color:var(--pitch);
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+.today-readable-page .today-readable-score-clear b{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-width:86px;
+  padding:8px 12px;
+  border-radius:16px;
+  background:#fff;
+  color:var(--pitch);
+  font-size:26px;
+  font-weight:1000;
+  box-shadow:0 8px 20px rgba(8,40,24,.08);
+}
+
+/* Phone landscape / narrow tablet: avoid cramped two-column boxes. */
+@media (orientation:landscape) and (max-width:980px),
+       (min-width:600px) and (max-width:980px){
+  body[data-view="dashboard"] .hub-grid,
+  body[data-view="dashboard"] .wc-dashboard-grid,
+  body[data-view="dashboard"] .wc-pred-widget-grid,
+  body[data-view="dashboard"] .wc-groups-grid,
+  body[data-view="dashboard"] .hub-brief-grid,
+  body[data-view="today"] .grid,
+  body[data-view="today"] .g2,
+  body[data-view="today"] .g3{
+    grid-template-columns:1fr!important;
+  }
+  body[data-view="dashboard"] .hub-panel,
+  body[data-view="dashboard"] .wc-home-card,
+  body[data-view="dashboard"] .wc-pred-widget,
+  body[data-view="today"] .today-readable-card{
+    width:100%!important;
+    max-width:100%!important;
+  }
+  .match-center-readable .hub-match-meta-grid,
+  .today-readable-page .hub-match-meta-grid,
+  .latest-readable-panel .hub-match-meta-grid{
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  }
+}
+
+/* Very narrow screens: stack score and chips cleanly. */
+@media(max-width:520px){
+  .match-center-readable .hub-match-score-clear,
+  .today-readable-page .today-readable-score-clear,
+  .latest-readable-panel .latest-score-box{
+    grid-template-columns:1fr!important;
+    gap:6px!important;
+  }
+  .match-center-readable .hub-match-score-clear b,
+  .today-readable-page .today-readable-score-clear b,
+  .latest-readable-panel .latest-score-box b{
+    justify-self:center;
+    width:max-content;
+  }
+}
+
+
+/* ===== Today change box + score-in-middle result titles ===== */
+.score-mid{
+  display:inline-flex!important;
+  align-items:center;
+  justify-content:center;
+  min-width:62px;
+  padding:6px 10px;
+  border-radius:14px;
+  background:#fff;
+  color:var(--pitch)!important;
+  border:1px solid rgba(15,138,85,.18);
+  box-shadow:0 6px 16px rgba(8,40,24,.07);
+  font-size:18px!important;
+  font-weight:1000!important;
+  line-height:1!important;
+  direction:ltr;
+  unicode-bidi:isolate;
+}
+.today-change-box{
+  margin:12px 0 14px;
+  padding:14px;
+  border:1px solid rgba(154,106,0,.22);
+  border-radius:22px;
+  background:linear-gradient(135deg,#fffaf0,#ffffff);
+  box-shadow:0 10px 24px rgba(8,40,24,.055);
+}
+.today-change-head{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:10px;
+  margin-bottom:12px;
+}
+.today-change-head b{
+  color:var(--pitch);
+  font-size:15px;
+  font-weight:1000;
+}
+.today-change-head span{
+  color:var(--muted);
+  font-size:12px;
+  font-weight:850;
+  text-align:end;
+}
+.today-change-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));
+  gap:10px;
+}
+.today-change-card{
+  padding:12px;
+  border:1px solid var(--border);
+  border-radius:18px;
+  background:rgba(255,255,255,.92);
+  text-align:center;
+}
+.today-change-title{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:6px;
+  flex-wrap:wrap;
+  color:var(--pitch);
+  font-weight:1000;
+  line-height:1.25;
+}
+.today-change-title span{
+  color:var(--muted);
+  font-size:11px;
+  font-weight:1000;
+  text-transform:uppercase;
+}
+.today-change-sub{
+  margin-top:6px;
+  color:var(--muted);
+  font-size:11.5px;
+  font-weight:850;
+}
+.today-change-picks{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:8px;
+  margin-top:10px;
+}
+.today-change-picks .pick{
+  min-width:0;
+  border-radius:15px;
+  padding:8px;
+  background:var(--soft);
+  border:1px solid var(--border);
+}
+.today-change-picks .pick span{
+  display:block;
+  color:var(--muted);
+  font-size:10.5px;
+  font-weight:900;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+.today-change-picks .pick b{
+  display:block;
+  margin-top:4px;
+  color:var(--pitch);
+  font-size:18px;
+  font-weight:1000;
+}
+.today-change-picks .pick.home b{color:var(--good)}
+.today-change-picks .pick.away b{color:var(--gold-d)}
+@media(max-width:560px){
+  .today-change-head{
+    flex-direction:column;
+  }
+  .today-change-head span{
+    text-align:start;
+  }
+  .today-change-picks{
+    grid-template-columns:1fr;
+  }
+  .score-mid{
+    min-width:56px;
+    font-size:16px!important;
+  }
+}
+
+
+/* ===== Past-match score source fallback ===== */
+.match-center-readable .hub-match-past-note{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  margin:9px auto 0;
+  padding:7px 11px;
+  border-radius:999px;
+  background:#eee;
+  color:#777;
+  font-size:12px;
+  font-weight:1000;
+}
+
 </style>
 <!-- Analytics is initialized once in loadAnalytics() to avoid duplicate page_view hits. -->
 </head>
@@ -6438,10 +6754,9 @@ function dataFreshnessLabel(){
 }
 function hubMatchStatus(m){
   if(!m) return {key:'upcoming',label:tl('Upcoming','قادمة')};
-  const r=m.group&&m.idx!=null?matchResult(m.group,m.idx):null;
-  const hasScore=Number.isFinite(Number(m.hs))&&Number.isFinite(Number(m.as));
+  const sc=scoreFromAnySource(m);
   const rawStatus=String(m.status||'').toLowerCase();
-  if((r&&r.complete)||hasScore||['final','complete','completed','finished'].includes(rawStatus)){
+  if(sc||['final','complete','completed','finished','ft','aet','pen'].includes(rawStatus)){
     return {key:'final',label:tl('Completed','مكتملة')};
   }
   const ts=matchUaeTimestamp(m);
@@ -6754,13 +7069,65 @@ function matchReadableParts(m,status){
   const windowText=(key==='final'||key==='past')?'':(countdownText(m)||'');
   return {date,time,windowText,status:(status&&status.label)||'',statusKey:key};
 }
+
+function numericScoreValue(v){
+  if(v==null||v==='') return null;
+  if(typeof v==='string'){
+    const s=v.trim();
+    if(!s || ['null','undefined','-'].includes(s.toLowerCase())) return null;
+    const n=Number(s);
+    return Number.isFinite(n)?n:null;
+  }
+  const n=Number(v);
+  return Number.isFinite(n)?n:null;
+}
+function apiScoreFromMatch(m){
+  if(!m) return null;
+  const pairs=[
+    ['hs','as'],['homeScore','awayScore'],['intHomeScore','intAwayScore'],['scoreHome','scoreAway'],
+    ['home_score','away_score'],['homeGoals','awayGoals'],['goalsHome','goalsAway'],
+    ['home_goals','away_goals'],['homeTeamScore','awayTeamScore']
+  ];
+  for(const [hKey,aKey] of pairs){
+    const h=numericScoreValue(m[hKey]), a=numericScoreValue(m[aKey]);
+    if(h!==null&&a!==null) return {hs:h,as:a};
+  }
+  const raw=m.score||m.result||m.ftScore||m.finalScore||m.strScore;
+  if(typeof raw==='string'){
+    const mm=raw.match(/(\d+)\s*[-:–]\s*(\d+)/);
+    if(mm) return {hs:Number(mm[1]),as:Number(mm[2])};
+  }
+  return null;
+}
+function sameMatchTeams(a,b){
+  if(!a||!b) return false;
+  return sameTeam(a.home,b.home)&&sameTeam(a.away,b.away);
+}
+function scoreFromAnySource(m){
+  if(!m) return null;
+  const r=m.group&&m.idx!=null?matchResult(m.group,m.idx):null;
+  if(r&&r.complete) return {hs:r.hs,as:r.as,source:'saved'};
+  const own=apiScoreFromMatch(m);
+  if(own) return {...own,source:'row'};
+  const candidates=[...(Array.isArray(APP._homeApiResults)?APP._homeApiResults:[]),...(Array.isArray(APP._homeApiSchedule)?normalizeScheduleRowsForGst(APP._homeApiSchedule):[])];
+  const found=candidates.find(x=>{
+    if(!sameMatchTeams(m,x)) return false;
+    const sx=apiScoreFromMatch(x);
+    if(!sx) return false;
+    const d1=(m.date||m.uaeDate||''), d2=(x.date||x.uaeDate||'');
+    return !d1||!d2||d1===d2;
+  });
+  if(found){
+    const sx=apiScoreFromMatch(found);
+    if(sx) return {...sx,source:'api-match'};
+  }
+  return null;
+}
+
 function matchScoreLine(m){
   if(!m) return '';
-  const r=m.group&&m.idx!=null?matchResult(m.group,m.idx):null;
-  const hasApiScore=Number.isFinite(Number(m.hs))&&Number.isFinite(Number(m.as));
-  const complete=(r&&r.complete)||hasApiScore||m.api;
-  if(r&&r.complete) return `${teamText(r.home)} ${r.hs}-${r.as} ${teamText(r.away)}`;
-  if(hasApiScore) return `${teamText(m.home)} ${Number(m.hs)}-${Number(m.as)} ${teamText(m.away)}`;
+  const sc=scoreFromAnySource(m);
+  if(sc) return `${teamText(m.home)} ${sc.hs}-${sc.as} ${teamText(m.away)}`;
   return '';
 }
 function renderMatchCenterMeta(m,status){
@@ -6776,12 +7143,14 @@ function renderMatchCenterMeta(m,status){
 
 
 function matchScoreOnly(m){
-  if(!m) return '';
-  const r=m.group&&m.idx!=null?matchResult(m.group,m.idx):null;
-  const hasApiScore=Number.isFinite(Number(m.hs))&&Number.isFinite(Number(m.as));
-  if(r&&r.complete) return `${r.hs} - ${r.as}`;
-  if(hasApiScore) return `${Number(m.hs)} - ${Number(m.as)}`;
-  return '';
+  const sc=scoreFromAnySource(m);
+  return sc?`${sc.hs} - ${sc.as}`:'';
+}
+
+
+function matchMiddleBadge(m){
+  const s=matchScoreOnly(m);
+  return s?`<span class="score-mid num">${esc(s)}</span>`:`<span>vs</span>`;
 }
 
 function renderMatchCenterHub(){
@@ -6797,9 +7166,9 @@ function renderMatchCenterHub(){
     return `<div class="hub-match-card readable ${completed?'completed':''}">
       <div class="hub-match-top readable">
         <div class="hub-match-main">
-          <div class="hub-match-title centered">${teamHtml(m.home)} <span>vs</span> ${teamHtml(m.away)}</div>
-          ${completed?`<div class="hub-match-completed-label">✅ ${esc(tl('Completed','مكتملة'))}</div>`:''}
-          ${scoreOnly?`<div class="hub-match-score-clear"><span>${teamHtml(m.home)}</span><b class="num">${esc(scoreOnly)}</b><span>${teamHtml(m.away)}</span></div>`:(scoreLine?`<div class="hub-match-result">🏁 ${esc(scoreLine)}</div>`:'')}
+          <div class="hub-match-title centered">${teamHtml(m.home)} ${matchMiddleBadge(m)} ${teamHtml(m.away)}</div>
+          ${completed?`<div class="hub-match-completed-label">✅ ${esc(tl('Completed','مكتملة'))}</div>`:(st.key==='past'?`<div class="hub-match-past-note">${esc(tl('Past — score not available yet','سابقة — النتيجة غير متاحة بعد'))}</div>`:'')}
+          ${!scoreOnly&&scoreLine?`<div class="hub-match-result">🏁 ${esc(scoreLine)}</div>`:''}
           ${renderMatchCenterMeta(m,st)}
           ${pick?`<div class="hub-your-edge">${esc(tl('Your edge','أفضليتك'))}: <b>${esc(pick.edge)}</b></div>`:''}
         </div>
@@ -6819,7 +7188,7 @@ function renderLatestResultsImpactHub(){
   const rows=(data.matches||[]).slice(-4).reverse();
   const body=rows.length?rows.map(m=>{
     const imp=latestResultImpact(m);
-    const st={key:'final',label:m.status||tl('Final','نهائية')};
+    const st={key:'final',label:tl('Completed','مكتملة')};
     const hs=Number.isFinite(Number(m.hs))?Number(m.hs):'—';
     const as=Number.isFinite(Number(m.as))?Number(m.as):'—';
     return `<div class="latest-readable-card">
@@ -7465,7 +7834,7 @@ function upcomingGroupMatches(limit){
 function renderWhatCanChange(matches){
   matches=matches||upcomingGroupMatches(3);
   if(!matches.length) return `<div class="sub">${esc(t('noData'))}</div>`;
-  return matches.map(m=>{
+  return `<div class="today-change-grid">`+matches.map(m=>{
     const a=auditMatch(m.group,m.idx);
     const home=[],away=[],none=[];
     a.rows.forEach(x=>{
@@ -7473,15 +7842,16 @@ function renderWhatCanChange(matches){
       else if(x.edge.status==='ok'&&sameTeam(x.edge.edge,m.away)) away.push(x.name);
       else none.push(x.name);
     });
-    return `<div class="insight"><div class="title">⚡ ${teamHtml(m.home)} vs ${teamHtml(m.away)}</div>
-      <div class="impact-list">
-        <span class="impact-pill good">${teamHtml(m.home)}: ${home.length}</span>
-        <span class="impact-pill gold">${teamHtml(m.away)}: ${away.length}</span>
-        <span class="impact-pill">${esc(t('noPred'))}: ${none.length}</span>
+    return `<div class="today-change-card">
+      <div class="today-change-title">${teamHtml(m.home)} <span>vs</span> ${teamHtml(m.away)}</div>
+      <div class="today-change-sub">${esc(tl('Possible points from prediction edge','نقاط محتملة من أفضلية التوقع'))}</div>
+      <div class="today-change-picks">
+        <div class="pick home"><span>${teamHtml(m.home)}</span><b>${home.length}</b></div>
+        <div class="pick away"><span>${teamHtml(m.away)}</span><b>${away.length}</b></div>
+        <div class="pick none"><span>${esc(tl('No edge','بدون أفضلية'))}</span><b>${none.length}</b></div>
       </div>
-      <div class="sub" style="margin-top:8px">${esc(tl('If this team wins, these players gain group-match points.','إذا فاز هذا الفريق، اللاعبون الذين اختاروا الأفضلية سيكسبون نقاط المباراة.'))}</div>
     </div>`;
-  }).join('');
+  }).join('')+`</div>`;
 }
 function renderRivalryCard(){
   const names=playerNames();
@@ -7591,7 +7961,7 @@ function viewToday(){
   const list=APP._today||[];
   const impactList=list.filter(m=>m.group&&m.idx!=null&&!matchResult(m.group,m.idx).complete);
   return `<div class="card today-readable-page"><div class="between"><h3>📅 ${esc(t('v_today'))} <span class="sub">(${esc(uaeToday())} UAE)</span></h3><button class="btn ghost sm" onclick="shareTodayImpact()">${esc(t('share'))}</button></div>
-    ${impactList.length?`<div class="insight"><div class="title">⚡ ${esc(tl('What can change today','ما الذي قد يتغير اليوم؟'))}</div>${renderWhatCanChange(impactList)}</div>`:''}
+    ${impactList.length?`<div class="today-change-box"><div class="today-change-head"><b>⚡ ${esc(tl('What can change today','ما الذي قد يتغير اليوم؟'))}</b><span>${esc(tl('Prediction edges that can add points today','الأفضليات التي يمكن أن تضيف نقاطاً اليوم'))}</span></div>${renderWhatCanChange(impactList)}</div>`:''}
     ${APP._todayLoading?stateLoading():(list.length?list.map(fullMatchCard).join(''):`<div class="state">${esc(t('noToday'))}</div>`)}
   </div>`;
 }
@@ -7607,21 +7977,21 @@ function viewMatches(){
 }
 function fullMatchCard(m){
   const r=(m.group&&m.idx!=null)?matchResult(m.group,m.idx):null;
-  const complete=r&&r.complete;
-  const scoreLine=matchScoreLine(m);
+  const scoreOnly=matchScoreOnly(m);
+  const complete=!!scoreOnly;
   const meta=(APP.data.resultMeta||{})[m.key]||(complete?'admin':'pending');
   const srcTag={api:'api',admin:'adm',corrected:'corr',pending:'pend'}[meta]||'pend';
   const srcTxt={api:'src_api',admin:'src_admin',corrected:'src_corr',pending:'src_pending'}[meta]||'src_pending';
   const st=hubMatchStatus(m);
   let impact='';
-  if(complete){ const a=auditMatch(m.group,m.idx);
+  if(r&&r.complete){ const a=auditMatch(m.group,m.idx);
     const right=a.rows.filter(x=>x.got>0).length, total=a.rows.length;
     impact=`<div class="today-readable-impact">🎯 ${esc(t('gotRight'))}: <b>${right}</b>/${total} · ${esc(t(r.outcome==='draw'?'draw':'winner'))}: <b>${esc(r.outcome==='draw'?'—':canonTeam(r.winner))}</b></div>`;
   }
-  return `<div class="match today-readable-card">
+  return `<div class="match today-readable-card ${complete?'completed':''}">
     <div class="today-readable-group">${esc(m.group?('Group '+m.group+' · '+m.key):'')}</div>
-    <div class="today-readable-title">${teamHtml(m.home)} <span>vs</span> ${teamHtml(m.away)}</div>
-    ${scoreLine?`<div class="today-readable-result">🏁 ${esc(scoreLine)}</div>`:''}
+    <div class="today-readable-title">${teamHtml(m.home)} ${matchMiddleBadge(m)} ${teamHtml(m.away)}</div>
+    ${complete?`<div class="today-readable-completed">✅ ${esc(tl('Completed','مكتملة'))}</div>`:''}
     ${renderMatchCenterMeta(m,st)}
     <div class="today-readable-source"><span class="tag ${srcTag}">${esc(t(srcTxt))}</span></div>
     ${impact}

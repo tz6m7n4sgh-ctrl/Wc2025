@@ -2378,9 +2378,11 @@ body.no-voice .micbtn{display:none!important}
 .hub-status.upcoming{background:#edf2ef;color:#66766f}
 .hub-split{display:grid;gap:7px;margin-top:10px}
 .hub-split-line{display:grid;grid-template-columns:minmax(88px,1fr) minmax(80px,2fr) auto;gap:8px;align-items:center;font-size:12px}
-.hub-split-label{font-weight:900;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hub-split-label{font-weight:900;min-width:0;white-space:normal;overflow-wrap:anywhere;line-height:1.2}
 .hub-split-track{height:10px;border-radius:999px;background:var(--soft);overflow:hidden}
 .hub-split-fill{height:100%;border-radius:999px;background:var(--grass)}
+.hub-split-fill.away{background:var(--gold)}
+.hub-split-fill.none{background:#cdd6d1}
 .hub-split-value{font-family:var(--num);font-weight:1000;color:var(--muted);white-space:nowrap}
 .hub-empty{border:1px dashed var(--border);background:#fff;border-radius:18px;padding:14px;color:var(--muted);font-weight:800}
 .hub-impact-list{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
@@ -4415,16 +4417,18 @@ body[data-view="dashboard"] .hub-next-meta-pill b{
 .mr-side{display:flex;align-items:center;gap:8px;min-width:0}
 .mr-home{justify-content:flex-end}
 .mr-away{justify-content:flex-start}
-.mr-side .team-name-inline{min-width:0;max-width:100%}
-.mr-side .team-label{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.mr-mid{display:flex;align-items:center;justify-content:center;flex:0 0 auto}
-.mr-sep{font-weight:1000;color:#9fb1a8;font-size:15px}
+.mr-side .team-name-inline{min-width:0;max-width:100%;font-size:14px}
+.mr-side .team-name-inline .big-flag,
+.mr-side .team-name-inline .css-flag{font-size:1.2em;margin-inline-start:0;margin-inline-end:3px}
+.mr-side .team-label{min-width:0;font-size:14px;font-weight:800;white-space:normal;overflow-wrap:break-word;word-break:normal;hyphens:none;line-height:1.2}
+.mr-mid{display:flex;align-items:center;justify-content:center;gap:4px;flex:0 0 auto}
+.mr-sep{font-weight:1000;color:#9fb1a8;font-size:14px}
 .mr-sep.vs{font-size:13px;font-weight:800;color:var(--muted)}
 .mr-score{
-  flex:0 0 auto;min-width:44px;height:40px;padding:0 8px;
+  flex:0 0 auto;min-width:36px;height:38px;padding:0 6px;
   display:inline-flex;align-items:center;justify-content:center;
   background:#fff;border:1px solid var(--border);border-radius:12px;
-  font-family:var(--num);font-weight:900;font-size:20px;line-height:1;
+  font-family:var(--num);font-weight:900;font-size:19px;line-height:1;
   color:var(--pitch);font-variant-numeric:tabular-nums;
   box-shadow:0 6px 16px rgba(8,40,24,.06);
 }
@@ -4432,8 +4436,24 @@ body[data-view="dashboard"] .hub-next-meta-pill b{
 @media(max-width:380px){
   .mr-row{gap:6px}
   .mr-side{gap:5px}
-  .mr-score{min-width:38px;height:36px;font-size:18px}
+  .mr-side .team-label{font-size:13px}
+  .mr-score{min-width:34px;height:34px;font-size:17px;padding:0 5px}
 }
+/* Player-name chips under each prediction-split bucket */
+.split-players{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 2px}
+.split-player{display:inline-flex;align-items:center;gap:5px;background:var(--soft);border:1px solid var(--border);border-radius:999px;padding:3px 9px;font-size:12px;font-weight:700;color:var(--ink)}
+.split-player .ini{width:16px;height:16px;border-radius:50%;background:#cfded6;color:#0a1f17;font-size:9px;font-weight:900;display:inline-flex;align-items:center;justify-content:center}
+.split-player.me{background:#eafaf1;border-color:#bfe9d2;color:#0f6e4a}
+.split-more{font-size:12px;color:var(--muted);align-self:center;font-weight:800}
+/* Compact, consistent kickoff + status line shared by all match cards */
+.std-meta{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:8px;margin:10px auto 0;max-width:560px;font-size:12.5px;color:var(--muted)}
+.std-meta .when{font-weight:800;color:var(--ink)}
+.std-meta .src{color:var(--muted)}
+.std-meta .std-status{font-size:11px;font-weight:900;padding:3px 9px;border-radius:999px;background:var(--soft);color:var(--muted)}
+.std-meta .std-status.final{background:#e2f7ec;color:#0f8a55}
+.std-meta .std-status.live{background:#fdecec;color:#c5392c}
+.std-meta .std-status.soon{background:#fff0d6;color:#9a6a00}
+.std-meta .std-status.past{background:#eef2f0;color:#5f7068}
 </style>
 <!-- Analytics is initialized once in loadAnalytics() to avoid duplicate page_view hits. -->
 </head>
@@ -6722,14 +6742,36 @@ function splitRowsForMatch(m){
     {label:tl('No edge','بدون أفضلية'),count:sp.none.length,pct:splitPercent(sp.none.length,total)}
   ];
 }
+function playerChipsHtml(arr,limit){
+  if(!arr||!arr.length) return '';
+  limit=limit||6;
+  let me='';
+  try{ me=currentPlayerName()||''; }catch(_){}
+  const shown=arr.slice(0,limit).map(x=>{
+    const n=(x&&x.name!=null)?String(x.name):String(x||'');
+    const ini=(n.trim()[0]||'?').toUpperCase();
+    const mine=me&&n===me?' me':'';
+    return `<span class="split-player${mine}"><span class="ini">${esc(ini)}</span>${esc(n)}</span>`;
+  }).join('');
+  const extra=arr.length>limit?`<span class="split-more">+${arr.length-limit} ${esc(tl('more','آخرين'))}</span>`:'';
+  return `<div class="split-players">${shown}${extra}</div>`;
+}
 function renderHubSplit(m){
-  const rows=splitRowsForMatch(m);
-  const total=Math.max(1,rows.reduce((a,x)=>a+x.count,0));
-  return `<div class="hub-split">${rows.map(x=>`<div class="hub-split-line">
-    <div class="hub-split-label">${esc(x.label)}</div>
-    <div class="hub-split-track"><div class="hub-split-fill" style="width:${Math.round((x.count/total)*100)}%"></div></div>
-    <div class="hub-split-value">${esc(x.pct)} · ${x.count}</div>
-  </div>`).join('')}</div>`;
+  const sp=(function(){try{return playerPredictionSplit(m);}catch(e){return {home:[],away:[],none:[]};}})();
+  const total=Math.max(1,sp.home.length+sp.away.length+sp.none.length);
+  const line=(label,arr,cls)=>{
+    const pct=Math.round(arr.length/total*100);
+    return `<div class="hub-split-line">
+      <div class="hub-split-label">${label}</div>
+      <div class="hub-split-track"><div class="hub-split-fill ${cls}" style="width:${pct}%"></div></div>
+      <div class="hub-split-value">${pct}% · ${arr.length}</div>
+    </div>${playerChipsHtml(arr)}`;
+  };
+  return `<div class="hub-split">
+    ${line(teamHtml(m.home),sp.home,'home')}
+    ${line(teamHtml(m.away),sp.away,'away')}
+    ${line(esc(tl('No edge','بدون أفضلية')),sp.none,'none')}
+  </div>`;
 }
 function latestResultImpact(m){
   if(!m) return {right:[],missed:[]};
@@ -6973,12 +7015,13 @@ function matchScoreLine(m){
 function renderMatchCenterMeta(m,status){
   const p=matchReadableParts(m,status);
   if(!p) return '';
-  return `<div class="hub-match-meta-grid">
-    ${p.date?`<div class="hub-match-meta-pill"><span>${esc(tl('Date','التاريخ'))}</span><b>${esc(p.date)}</b></div>`:''}
-    ${p.time?`<div class="hub-match-meta-pill"><span>${esc(tl('Time','الوقت'))}</span><b>${esc(p.time)}</b></div>`:''}
-    ${p.windowText?`<div class="hub-match-meta-pill window ${esc(p.statusKey||'')}"><span>${esc(tl('Starts','يبدأ'))}</span><b>${esc(p.windowText)}</b></div>`:''}
-    ${p.status?`<div class="hub-match-meta-pill status ${esc(p.statusKey||'')}"><span>${esc(tl('Status','الحالة'))}</span><b>${esc(p.status)}</b></div>`:''}
-  </div>`;
+  const when=[p.date,p.time].filter(Boolean).join(' · ');
+  const parts=[];
+  if(when) parts.push(`<span class="when">${esc(when)}</span>`);
+  if(p.windowText) parts.push(`<span class="src">${esc(p.windowText)}</span>`);
+  if(p.status) parts.push(`<span class="std-status ${esc(p.statusKey||'')}">${esc(p.status)}</span>`);
+  if(!parts.length) return '';
+  return `<div class="std-meta">${parts.join('')}</div>`;
 }
 
 
@@ -6991,6 +7034,10 @@ function matchScoreOnly(m){
   return '';
 }
 function matchScorePair(m){
+  try{
+    const res=popupResultForMatch(m);
+    if(res&&res.hs!=null&&res.as!=null&&res.hs!==''&&res.as!=='') return {hs:Number(res.hs),as:Number(res.as)};
+  }catch(e){}
   const r=m.group&&m.idx!=null?matchResult(m.group,m.idx):null;
   if(r&&r.complete) return {hs:r.hs,as:r.as};
   if(Number.isFinite(Number(m.hs))&&Number.isFinite(Number(m.as))) return {hs:Number(m.hs),as:Number(m.as)};
@@ -7003,30 +7050,29 @@ function matchResultRow(m,pair,opts){
   opts=opts||{};
   const live=!!opts.live;
   const hasPair=pair&&pair.hs!=null&&pair.as!=null;
-  const sep=hasPair?'<span class="mr-sep">–</span>':`<span class="mr-sep vs">${esc(opts.vsLabel||tl('vs','ضد'))}</span>`;
-  const hScore=hasPair?`<b class="mr-score num">${esc(pair.hs)}</b>`:'';
-  const aScore=hasPair?`<b class="mr-score num">${esc(pair.as)}</b>`:'';
+  const mid=hasPair
+    ? `<b class="mr-score num">${esc(pair.hs)}</b><span class="mr-sep">–</span><b class="mr-score num">${esc(pair.as)}</b>`
+    : `<span class="mr-sep vs">${esc(opts.vsLabel||tl('vs','ضد'))}</span>`;
   return `<div class="mr-row${hasPair?' has-score':''}${live?' live':''}">`
-    +`<div class="mr-side mr-home">${teamHtml(m.home)}${hScore}</div>`
-    +`<div class="mr-mid">${sep}</div>`
-    +`<div class="mr-side mr-away">${aScore}${teamHtml(m.away)}</div>`
+    +`<div class="mr-side mr-home">${teamHtml(m.home)}</div>`
+    +`<div class="mr-mid">${mid}</div>`
+    +`<div class="mr-side mr-away">${teamHtml(m.away)}</div>`
     +`</div>`;
 }
 
 function renderMatchCenterHub(){
   const rows=todayApiMatches();
   const body=rows.length?rows.map(m=>{
-    const st=hubMatchStatus(m);
+    const st=(typeof popupMatchStatus==='function'?popupMatchStatus(m):hubMatchStatus(m));
     const pickRows=renderHubSplit(m);
     const user=currentPlayerName();
     const pick=user?playerPickForMatch(user,m):null;
-    const scoreLine=matchScoreLine(m);
-    const scoreOnly=matchScoreOnly(m);
-    const completed=!!scoreOnly || st.key==='final';
+    const scorePair=matchScorePair(m);
+    const completed=!!scorePair || st.key==='final';
     return `<div class="hub-match-card readable ${completed?'completed':''}">
       <div class="hub-match-top readable">
         <div class="hub-match-main">
-          ${matchResultRow(m,matchScorePair(m),{live:st.key==='live'})}
+          ${matchResultRow(m,scorePair,{live:st.key==='live'})}
           ${completed?`<div class="hub-match-completed-label">✅ ${esc(tl('Completed','مكتملة'))}</div>`:''}
           ${renderMatchCenterMeta(m,st)}
           ${pick?`<div class="hub-your-edge">${esc(tl('Your edge','أفضليتك'))}: <b>${esc(pick.edge)}</b></div>`:''}
@@ -7835,7 +7881,7 @@ function fullMatchCard(m){
   const meta=(APP.data.resultMeta||{})[m.key]||(complete?'admin':'pending');
   const srcTag={api:'api',admin:'adm',corrected:'corr',pending:'pend'}[meta]||'pend';
   const srcTxt={api:'src_api',admin:'src_admin',corrected:'src_corr',pending:'src_pending'}[meta]||'src_pending';
-  const st=hubMatchStatus(m);
+  const st=(typeof popupMatchStatus==='function'?popupMatchStatus(m):hubMatchStatus(m));
   let impact='';
   if(r&&r.complete){ const a=auditMatch(m.group,m.idx);
     const right=a.rows.filter(x=>x.got>0).length, total=a.rows.length;
@@ -10893,12 +10939,7 @@ function popupSplitData(m){
   try{ return playerPredictionSplit(m); }catch(e){ return {home:[],away:[],none:[]}; }
 }
 function popupSplitHtml(m){
-  const sp=popupSplitData(m);
-  const total=Math.max(1,sp.home.length+sp.away.length+sp.none.length);
-  const hp=Math.round(sp.home.length/total*100);
-  const ap=Math.round(sp.away.length/total*100);
-  const np=Math.max(0,100-hp-ap);
-  return `<div class="today-update-picks"><div class="today-update-split" aria-label="${esc(tl('Prediction split','انقسام التوقعات'))}"><span class="home" style="width:${hp}%"></span><span class="away" style="width:${ap}%"></span><span class="none" style="width:${np}%"></span></div><div class="today-update-pick-labels"><span>${teamHtml(m.home)} · ${sp.home.length}</span><span>${teamHtml(m.away)} · ${sp.away.length}</span><span>${esc(tl('No edge','بدون أفضلية'))} · ${sp.none.length}</span></div></div>`;
+  return `<div class="today-update-picks">${renderHubSplit(m)}</div>`;
 }
 function popupSourceInfoHtml(m){
   const sourceName='TheSportsDB';

@@ -5068,7 +5068,11 @@ async function loadState(){
     APP.apiStatus={name:'supabase', ok:false, error:String(e&&e.message?e.message:e), sandbox:isSandboxOrFile()};
     let c=null; try{ c=localStorage.getItem(CACHE_KEY); }catch(_){ c=null; }
     let parsed=null; if(c){ try{ parsed=JSON.parse(c); }catch(_){ parsed=null; } }
-    if(parsed){ APP.data=ensureShape(parsed); APP.cached=true; APP.loaded=true; APP.error=navigator.onLine?'sync':'offline'; }
+    if(parsed){ APP.data=ensureShape(parsed); APP.cached=true; APP.loaded=true; APP.error=navigator.onLine?'sync':'offline';
+      // Even if the players doc failed/cached, the normalized results table may still be reachable.
+      // Overlay the latest results so Group tables don't show stale cached scores.
+      try{ if(navigator.onLine) await loadNormalizedResultsIntoApp(); }catch(_){}
+    }
     else { APP.data=ensureShape({}); APP.loaded=true; APP.error='load'; }
   }
 }
@@ -9216,6 +9220,7 @@ async function runResultSyncCompare(){
     APP._syncError=String(e&&e.message?e.message:e);
     toast(t('syncFail'));
     console.warn(e);
+    try{ alert(tl('Sync failed','فشلت المزامنة')+':\n\n'+APP._syncError+'\n\nSportsDB: '+SPORTSDB); }catch(_){}
   }
   APP._syncLoading=false; render();
 }
@@ -9294,11 +9299,51 @@ async function cleanAndSaveGroupResultsFromNormalized(){
   }
 }
 
+function dataSourcePanel(){
+  const live=!APP.cached;
+  const cls=live?'paid':'pend';
+  const label=live?tl('LIVE','مباشر'):tl('CACHED (offline copy)','مخزّن (نسخة محفوظة)');
+  const reason=(APP.apiStatus&&APP.apiStatus.error)?`<div class="sub" style="margin-top:6px">${esc(tl('Last load error','آخر خطأ تحميل'))}: ${esc(APP.apiStatus.error)}</div>`:'';
+  const rt=APP._resultsTableStatus||{};
+  const rtLine=`<div class="sub" style="margin-top:4px">${esc(tl('Results source','مصدر النتائج'))}: ${rt.ok?esc(tl('live table','الجدول المباشر'))+' ('+(rt.applied||0)+')':esc(tl('fallback / not loaded','احتياطي / غير محمّل'))}</div>`;
+  return `<div class="card"><div class="between"><h3>🔀 ${esc(tl('Data source','مصدر البيانات'))}</h3><span class="tag ${cls}">${esc(label)}</span></div>
+    ${rtLine}${reason}
+    <div class="sync-tools" style="margin-top:10px">
+      <button class="btn" onclick="refreshLiveData()">🔄 ${esc(tl('Refresh from live','تحديث من المباشر'))}</button>
+      <button class="btn gold" onclick="forceResultsRefresh()">📥 ${esc(tl('Reload results table','إعادة تحميل جدول النتائج'))}</button>
+      <button class="btn ghost" onclick="clearCacheAndReload()">🧹 ${esc(tl('Clear cache & reload','مسح المخزّن وإعادة التحميل'))}</button>
+    </div>
+    <div class="sub" style="margin-top:8px">${esc(tl('Use “Reload results table” if group tables look out of date.','استخدم «إعادة تحميل جدول النتائج» إذا بدت جداول المجموعات قديمة.'))}</div>
+  </div>`;
+}
+async function refreshLiveData(){
+  toast(tl('Refreshing…','جارٍ التحديث…'));
+  try{ await loadState(); }catch(_){}
+  invalidateLeaderboardCache();
+  render();
+  const live=!APP.cached;
+  alert((live?tl('Loaded LIVE data.','تم تحميل البيانات المباشرة.'):tl('Live failed — showing CACHED data.','فشل المباشر — يتم عرض النسخة المخزّنة.'))
+    +(APP.apiStatus&&APP.apiStatus.error?('\n\n'+APP.apiStatus.error):''));
+}
+async function clearCacheAndReload(){
+  if(!confirm(tl('Clear the offline cache and reload from live?','مسح النسخة المخزّنة وإعادة التحميل من المباشر؟'))) return;
+  try{ localStorage.removeItem(CACHE_KEY); }catch(_){}
+  await refreshLiveData();
+}
+async function forceResultsRefresh(){
+  toast(tl('Reloading results…','جارٍ إعادة تحميل النتائج…'));
+  let ok=false; try{ ok=await loadNormalizedResultsIntoApp(); }catch(e){ APP._resultsTableStatus={ok:false,error:String(e&&e.message?e.message:e)}; }
+  invalidateLeaderboardCache();
+  render();
+  const s=APP._resultsTableStatus||{};
+  if(ok) alert(tl('Results reloaded from the live table.','تمت إعادة تحميل النتائج من الجدول المباشر.')+'\n'+tl('Applied','طُبّقت')+': '+(s.applied||0)+' · '+tl('rows','صفوف')+': '+(s.rows||0));
+  else alert(tl('Results table reload failed','فشلت إعادة تحميل جدول النتائج')+':\n\n'+(s.error||'')+'\n\n'+RESULTS_Data);
+}
 function viewSyncResults(){
   const rows=APP._syncRows;
   const counts={match:0,missing:0,mismatch:0,unmapped:0};
   (rows||[]).forEach(r=>counts[r.status]=(counts[r.status]||0)+1);
-  return `<div class="card"><div class="between"><h3>🔄 ${esc(t('v_syncResults'))}</h3><span class="chip">${APP._lastSyncCheck?esc(APP._lastSyncCheck.slice(0,16).replace('T',' ')):esc(tl('Not checked','لم يتم الفحص'))}</span></div>
+  return dataSourcePanel()+`<div class="card"><div class="between"><h3>🔄 ${esc(t('v_syncResults'))}</h3><span class="chip">${APP._lastSyncCheck?esc(APP._lastSyncCheck.slice(0,16).replace('T',' ')):esc(tl('Not checked','لم يتم الفحص'))}</span></div>
     <div class="banner warn">⚠️ ${esc(tl('The app now reads/writes the normalized wc2026_match_results table, while keeping the old JSON as fallback.','التطبيق الآن يقرأ ويكتب من جدول wc2026_match_results مع إبقاء JSON القديم كاحتياطي.'))}</div>
     <div class="sync-tools">
       <button class="btn" onclick="runResultSyncCompare()">🔎 ${esc(tl('Compare vs App','مقارنة مع التطبيق'))}</button>

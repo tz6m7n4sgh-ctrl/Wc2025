@@ -4483,11 +4483,12 @@ body[data-view="dashboard"] .hub-next-meta-pill b{
 .mc-pick.ok{color:var(--good)}
 .mc-pick.no{color:var(--bad)}
 .mc-pick.wait{color:#9fb1a8}
-.std-consensus{padding:0 12px 4px}
+.std-consensus{padding:0 12px 14px}
 .std-cbar{height:9px;border-radius:999px;overflow:hidden;display:flex;background:#eef2f0}
 .std-cbar span{display:block;height:100%}
 .std-cbar .h{background:var(--grass)}.std-cbar .n{background:#d4ddd8}.std-cbar .a{background:var(--gold)}
-.std-cleg{display:flex;justify-content:space-between;gap:8px;margin-top:6px;font-size:11.5px;color:var(--muted);font-weight:700}
+.std-cleg{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;row-gap:4px;margin-top:6px;font-size:11.5px;color:var(--muted);font-weight:700}
+.std-cleg>span{min-width:0}
 .std-cleg b{color:var(--ink);font-weight:900}
 .std-who{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 12px 12px}
 .std-avs{display:flex;align-items:center}
@@ -4531,6 +4532,77 @@ body[data-view="dashboard"] .hub-next-meta-pill b{
 .live-ev .txt.goal{color:var(--grass-d);font-weight:900}
 .live-open{margin-top:10px;width:100%;height:38px;border:none;border-radius:10px;background:var(--grass);color:#04150d;font-weight:900;cursor:pointer}
 body.has-live{padding-bottom:52px}
+
+/* ===== Dashboards (Full / Summary) + Player bracket ===== */
+.dash-head{background:linear-gradient(135deg,var(--pitch),var(--pitch2));color:#fff;border-radius:20px;padding:15px 16px;display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}
+.dash-head h3{font-size:17px;margin:0 0 2px;font-weight:1000;color:#fff;border:none;padding:0}
+.dash-head p{margin:0;font-size:12px;color:#bfe9d2}
+.dash-pdf{display:inline-flex;align-items:center;gap:6px;background:var(--gold);color:#3a2a00;border:none;border-radius:10px;padding:9px 12px;font-weight:1000;font-size:12px;cursor:pointer;white-space:nowrap}
+.dash-card{background:var(--card);border:1px solid var(--border);border-radius:18px;padding:14px;margin-bottom:13px;box-shadow:0 8px 22px rgba(8,40,24,.05)}
+.dash-card>h4{font-size:13px;margin:0 0 12px;font-weight:1000;display:flex;align-items:center;gap:7px}
+.dash-card>h4 .sub{font-weight:700;color:var(--muted);font-size:11px;margin-inline-start:auto}
+.dash-tiles{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.dash-tile{background:var(--soft);border:1px solid var(--border);border-radius:13px;padding:11px}
+.dash-tile .v{font-size:22px;font-weight:1000;line-height:1}
+.dash-tile .l{font-size:11px;color:var(--muted);font-weight:700;margin-top:5px}
+.dash-tile.green .v{color:var(--grass-d)} .dash-tile.gold .v{color:var(--gold-d)}
+.dash-status{display:flex;align-items:center;gap:16px}
+.dash-status .meta{flex:1;display:grid;gap:8px}
+.dash-status .meta .r{display:flex;justify-content:space-between;font-size:12px}
+.dash-status .meta .r b{font-weight:1000} .dash-status .meta .r span{color:var(--muted);font-weight:700}
+.grp-row{display:grid;grid-template-columns:18px 1fr 64px 22px;gap:9px;align-items:center;padding:6px 0;border-top:1px solid #f3f6f4}
+.grp-row:first-of-type{border-top:none}
+.grp-row .pos{width:18px;height:18px;border-radius:6px;background:var(--soft);color:var(--muted);font-size:10px;font-weight:1000;display:flex;align-items:center;justify-content:center}
+.grp-row.q .pos{background:#e2f7ec;color:var(--grass-d)}
+.grp-row .tn{font-weight:800;font-size:12.5px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.grp-row .pb{height:7px;border-radius:999px;background:var(--soft);overflow:hidden}
+.grp-row .pb>span{display:block;height:100%;background:var(--grass)}
+.grp-row .pv{font-weight:1000;font-size:12px;text-align:end;font-variant-numeric:tabular-nums}
+.dash-bracket{display:flex;gap:12px;overflow-x:auto;padding-bottom:6px}
+.dash-bracket .round{flex:0 0 auto;display:flex;flex-direction:column;gap:9px;min-width:148px}
+.dash-bracket .rlbl{font-size:10px;font-weight:1000;color:var(--muted);text-align:center}
+.dash-bracket .tie{background:var(--soft);border:1px solid var(--border);border-radius:10px;overflow:hidden}
+.dash-bracket .tie .t{display:flex;align-items:center;gap:6px;padding:6px 8px;font-size:12px;font-weight:800}
+.dash-bracket .tie .t+.t{border-top:1px solid var(--border)}
+.dash-bracket .tie .t.ok{background:#eafaf1;color:var(--grass-d)}
+.dash-bracket .tie .t.no .nm{text-decoration:line-through;color:#9aa6a0}
+.dash-bracket .seed{font-size:9px;font-weight:1000;color:var(--muted);background:var(--card);border-radius:5px;padding:1px 5px}
+.exp-row{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;padding:7px 0;border-top:1px solid #f3f6f4}
+.exp-row:first-of-type{border-top:none}
+.exp-row .nm{font-weight:800;font-size:12.5px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.exp-row .bars{display:flex;align-items:center;gap:6px;font-size:11px;flex:0 0 auto}
+.exp-chip{border-radius:7px;padding:2px 7px;font-weight:1000;font-size:11px;white-space:nowrap}
+.exp-chip.pred{background:#fff4d6;color:var(--gold-d)} .exp-chip.act{background:#e2f7ec;color:var(--grass-d)}
+.exp-d{font-weight:1000;font-size:11px} .exp-d.up{color:var(--grass-d)} .exp-d.down{color:var(--bad)} .exp-d.same{color:var(--muted)}
+.score-rule{display:flex;align-items:center;gap:10px;padding:8px 0;border-top:1px solid #f3f6f4;font-size:12.5px}
+.score-rule:first-of-type{border-top:none}
+.score-rule .pts{background:var(--pitch);color:#fff;border-radius:8px;padding:3px 9px;font-weight:1000;font-size:12px;flex:0 0 auto;min-width:34px;text-align:center}
+.dash-podium{display:grid;grid-template-columns:1fr 1.2fr 1fr;gap:8px;align-items:end}
+.dash-pod{background:var(--soft);border:1px solid var(--border);border-radius:12px;padding:10px 6px;text-align:center}
+.dash-pod .av{width:34px;height:34px;border-radius:50%;background:#dfe7e2;margin:0 auto 6px;display:flex;align-items:center;justify-content:center;font-weight:1000}
+.dash-pod .nm{font-size:12px;font-weight:800;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dash-pod .pt{font-size:13px;font-weight:1000;color:var(--grass-d)}
+.dash-pod.first{background:linear-gradient(135deg,#fff7e2,#fffdf6);border-color:#f0dca0}
+.dash-pod.first .av{background:var(--gold)}
+.lb-card{display:grid;grid-template-columns:26px 1fr auto;gap:10px;align-items:center;background:var(--card);border:1px solid var(--border);border-radius:13px;padding:10px 12px;margin-bottom:8px}
+.lb-card.you{background:#eafaf1;border-color:#bfe9d2}
+.lb-card .rk{font-weight:1000;color:var(--muted);font-variant-numeric:tabular-nums;text-align:center}
+.lb-card .who{min-width:0}
+.lb-card .who .n{font-weight:900;font-size:13.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lb-card .who .br{font-size:11px;color:var(--muted);font-weight:700;margin-top:2px}
+.lb-card .tot{font-weight:1000;font-size:18px;font-variant-numeric:tabular-nums}
+.lb-card .tot small{font-size:10px;color:var(--muted);font-weight:800;display:block;text-align:end}
+.pbk-picker{display:flex;gap:8px;flex-wrap:wrap}
+.pbk-picker button{display:inline-flex;align-items:center;gap:6px;height:34px;padding:0 11px;border-radius:999px;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.08);color:#cfe9da;font-weight:800;font-size:12px;cursor:pointer}
+.pbk-picker button.on{background:var(--gold);color:#3a2a00;border-color:var(--gold)}
+.pk-row{display:flex;align-items:center;gap:7px;padding:3px 0;font-size:12.5px;font-weight:800}
+.pk-row .r{width:16px;height:16px;border-radius:5px;background:var(--soft);color:var(--muted);font-size:9px;font-weight:1000;display:flex;align-items:center;justify-content:center}
+.pk-row.ok .r{background:#e2f7ec;color:var(--grass-d)} .pk-row.no .r{background:#fdecec;color:var(--bad)}
+.pk-row .mk{margin-inline-start:auto;font-weight:1000} .pk-row.ok .mk{color:var(--grass-d)} .pk-row.no .mk{color:var(--bad)}
+.pk-row.no .nm{text-decoration:line-through;color:#93a09a}
+.pbk-grp{border:1px solid var(--soft);border-radius:12px;padding:9px 10px;margin-bottom:9px}
+.pbk-grp .gh{font-size:11px;font-weight:1000;color:var(--muted);margin-bottom:4px}
+@media print{.botnav,#liveDock,.dash-pdf,.topbar{display:none!important}}
 </style>
 <!-- Analytics is initialized once in loadAnalytics() to avoid duplicate page_view hits. -->
 </head>
@@ -5767,6 +5839,9 @@ const NAV=[
   {id:'more',ic:'menu',key:'nav_more'}
 ];
 const MORE_ITEMS=[
+  {id:'dashfull',ic:'chart',label:{en:'Full dashboard',ar:'لوحة المعلومات الكاملة'}},
+  {id:'dashsum',ic:'chart',label:{en:'Summary',ar:'الملخص'}},
+  {id:'playerbracket',ic:'bracket',label:{en:'Player brackets',ar:'توقعات اللاعبين'}},
   {id:'today',ic:'calendar',key:'nav_today'},
   {id:'matches',ic:'ball',key:'nav_matches'},
   {id:'predictions',ic:'prediction',key:'v_predictions'},
@@ -5791,6 +5866,7 @@ function svgIcon(name){
     profile:'<circle cx="12" cy="8" r="3.5"/><path d="M5 20a7 7 0 0 1 14 0"/>',
     groups:'<path d="M5 6h14"/><path d="M5 12h14"/><path d="M5 18h14"/><path d="M8 4v16"/><path d="M16 4v16"/>',
     menu:'<path d="M5 7h14"/><path d="M5 12h14"/><path d="M5 17h14"/>',
+    chart:'<path d="M4 19V5"/><path d="M4 19h16"/><rect x="7" y="11" width="3" height="5"/><rect x="12" y="8" width="3" height="8"/><rect x="17" y="13" width="3" height="3"/>',
     calendar:'<rect x="4" y="5" width="16" height="15" rx="3"/><path d="M8 3v4"/><path d="M16 3v4"/><path d="M4 10h16"/>',
     ball:'<circle cx="12" cy="12" r="8"/><path d="m12 8 3 2-1 4h-4l-1-4 3-2Z"/><path d="M12 8V4"/><path d="M15 10l4-1"/><path d="M14 14l2 4"/><path d="M10 14l-2 4"/><path d="M9 10 5 9"/>',
     prediction:'<path d="M5 19h14"/><path d="M7 16l3-3 3 2 4-6"/><path d="M17 9h-4"/><path d="M17 9v4"/>',
@@ -5826,7 +5902,7 @@ function openMore(){
   $('sheet').innerHTML=`<div class="grab"></div><button class="sheet-close" onclick="closeSheet()" aria-label="Close">×</button>
     <h3 style="padding:0 8px 8px">${esc(t('nav_more'))}</h3>
     ${allItems.map(i=>`<div class="menu-item ${i.adm?'adm':''}" onclick="${i.login?'openAdmin()':`go('${i.id}')`};closeSheet()">
-      <span class="ic">${svgIcon(i.ic)}</span><span>${esc(t(i.key))}</span>${i.adm?`<span class="spacer" style="flex:1"></span><span class="tag adm">${esc(i.login?t('admin'):t('adminOnly'))}</span>`:''}</div>`).join('')}
+      <span class="ic">${svgIcon(i.ic)}</span><span>${esc(i.label?(LANG==='ar'?i.label.ar:i.label.en):t(i.key))}</span>${i.adm?`<span class="spacer" style="flex:1"></span><span class="tag adm">${esc(i.login?t('admin'):t('adminOnly'))}</span>`:''}</div>`).join('')}
     ${APP.isAdmin?`<div class="menu-item" onclick="logoutAdmin();closeSheet()"><span class="ic">${svgIcon('logout')}</span><span>${esc(t('logout'))}</span></div>`:''}`;
   $('sheetBg').classList.add('open');
 }
@@ -5892,7 +5968,10 @@ function render(){
     backup:viewBackup,
     health:viewHealth,
     syncresults:viewSyncResults,
-    help:viewHelp
+    help:viewHelp,
+    dashfull:viewDashFull,
+    dashsum:viewDashSummary,
+    playerbracket:viewPlayerBracket
   };
 
   const fn=map[APP.view]||viewDashboard;
@@ -7314,6 +7393,158 @@ if(typeof window!=='undefined' && !window._liveTickerSet){
   window._liveTickerSet=true;
   window.addEventListener('load',()=>{ setTimeout(()=>{ try{ updateLiveFeed(); }catch(e){} },1500); });
   setInterval(()=>{ try{ updateLiveFeed(); }catch(e){} }, 30000);
+}
+
+/* ===== Dashboards, player bracket, scoring panel, PDF export ===== */
+function dashDonut(frac){
+  const p=Math.max(0,Math.min(1,frac||0));
+  const C=326.7, off=C*(1-p);
+  return `<svg width="92" height="92" viewBox="0 0 120 120" aria-hidden="true">
+    <circle cx="60" cy="60" r="52" fill="none" stroke="#eef2f0" stroke-width="13"/>
+    <circle cx="60" cy="60" r="52" fill="none" stroke="#19c37d" stroke-width="13" stroke-linecap="round" stroke-dasharray="${C}" stroke-dashoffset="${off}" transform="rotate(-90 60 60)"/>
+    <text x="60" y="58" text-anchor="middle" font-size="22" font-weight="800" fill="#0a1f17">${Math.round(p*100)}%</text>
+  </svg>`;
+}
+function scoringRulesHtml(){
+  const k=SCORING.knockout||{};
+  const rule=(pts,txt)=>`<div class="score-rule"><span class="pts">${esc(pts)}</span><span>${txt}</span></div>`;
+  return `<div class="dash-card"><h4>🧮 ${esc(tl('How points are calculated','طريقة حساب النقاط'))}</h4>
+    ${rule('+'+SCORING.exactPosition, tl('Team finishes in the exact position you ranked it in its group.','الفريق ينهي في نفس المركز الذي توقعته داخل مجموعته.'))}
+    ${rule('+'+SCORING.teamInGroupWrongPos, tl('Team you picked is in the group but in a different position.','الفريق الذي اخترته داخل المجموعة لكن بمركز مختلف.'))}
+    ${rule('+'+SCORING.edgeCorrect, tl('Per match: your higher-ranked team won.','لكل مباراة: الفريق الأعلى ترتيباً لديك فاز.'))}
+    ${rule('+'+SCORING.champion, tl('Correct champion (when knockouts are scored).','البطل الصحيح (عند احتساب الأدوار الإقصائية).'))}
+    ${rule(k.R32+'–'+k.F, tl('Knockout winners by round (R32 → Final).','الفائزون في الأدوار الإقصائية حسب الدور.'))}
+  </div>`;
+}
+function viewDashSummary(){
+  trackEvent&&trackEvent('dashboard_view',{which:'summary'});
+  let lb=[]; try{ lb=buildLeaderboard()||[]; }catch(e){}
+  const me=currentPlayerName&&currentPlayerName();
+  const meRow=me?lb.find(r=>r.name===me):null;
+  const played=completedMatchCount(), total=totalGroupMatchCount();
+  const leader=lb[0];
+  const tiles=`<div class="dash-tiles">
+    <div class="dash-tile green"><div class="v num">${meRow?meRow.total:'—'}</div><div class="l">${esc(tl('Your points','نقاطك'))}</div></div>
+    <div class="dash-tile gold"><div class="v num">${meRow?('#'+meRow.rank):'—'}</div><div class="l">${esc(tl('Your rank','ترتيبك'))}</div></div>
+    <div class="dash-tile"><div class="v num">${played}/${total}</div><div class="l">${esc(tl('Matches played','مباريات لعبت'))}</div></div>
+    <div class="dash-tile"><div class="v">${leader?esc(leader.name):'—'}</div><div class="l">${esc(tl('Current leader','المتصدر'))}</div></div>
+  </div>`;
+  const top3=lb.slice(0,3);
+  const podOrder=[top3[1],top3[0],top3[2]];
+  const podium=top3.length?`<div class="dash-card"><h4>🥇 ${esc(tl('Leaderboard top 3','أفضل 3'))}</h4><div class="dash-podium">${
+    podOrder.map((r,i)=>r?`<div class="dash-pod ${i===1?'first':''}"><div class="av">${esc((r.name[0]||'?').toUpperCase())}</div><div class="nm">${esc(r.name)}</div><div class="pt num">${r.total}</div></div>`:'<div></div>').join('')
+  }</div></div>`:'';
+  const barSet=lb.slice(0,5);
+  if(me&&!barSet.some(r=>r.name===me)&&meRow) barSet.push(meRow);
+  const max=Math.max(1,...barSet.map(r=>r.total));
+  const bars=barSet.map(r=>`<div class="grp-row" style="grid-template-columns:90px 1fr 30px"><div class="tn">${esc(r.name)}${r.name===me?' ('+tl('you','أنت')+')':''}</div><div class="pb"><span style="width:${Math.round(r.total/max*100)}%"></span></div><div class="pv num">${r.total}</div></div>`).join('');
+  const barsCard=barSet.length?`<div class="dash-card"><h4>📈 ${esc(tl('Points — top players','النقاط — أبرز اللاعبين'))}</h4>${bars}
+    ${meRow?`<div class="lb-card you" style="margin-top:10px"><div class="rk">★</div><div class="who"><div class="n">${esc(tl('Your points · full calculation','نقاطك · الحساب الكامل'))}</div></div><div class="tot num">${meRow.total}</div></div>`:''}
+  </div>`:`<div class="dash-card">${esc(tl('No players yet.','لا يوجد لاعبون بعد.'))}</div>`;
+  return `<div class="dash-head"><div><h3>${esc(tl('Your summary','ملخصك'))}</h3><p>${esc(t('brand'))}</p></div><button class="dash-pdf" onclick="exportDashPDF('worldcup-summary')">⬇ PDF</button></div>
+    <div class="dash-card">${tiles}</div>${podium}${barsCard}`;
+}
+function viewDashFull(){
+  trackEvent&&trackEvent('dashboard_view',{which:'full'});
+  const played=completedMatchCount(), total=totalGroupMatchCount();
+  let gdone=0; for(const g of GROUP_KEYS){ if(groupComplete(g)) gdone++; }
+  const status=`<div class="dash-card"><h4>🏆 ${esc(tl('Tournament status','حالة البطولة'))}</h4>
+    <div class="dash-status">${dashDonut(total?played/total:0)}
+      <div class="meta">
+        <div class="r"><span>${esc(tl('Matches played','مباريات لعبت'))}</span><b>${played} / ${total}</b></div>
+        <div class="r"><span>${esc(tl('Stage','المرحلة'))}</span><b>${esc(t(currentPhase()))}</b></div>
+        <div class="r"><span>${esc(tl('Groups completed','مجموعات مكتملة'))}</span><b>${gdone} / ${GROUP_KEYS.length}</b></div>
+      </div></div></div>`;
+  // group standings — all groups
+  const groups=GROUP_KEYS.map(g=>{
+    let tbl=[]; try{ tbl=computeGroupTable(g)||[]; }catch(e){}
+    const max=Math.max(1,...tbl.map(r=>r.Pts));
+    const rows=tbl.map((r,i)=>`<div class="grp-row ${i<2?'q':''}"><span class="pos">${i+1}</span><span class="tn">${teamHtml(r.team)}</span><span class="pb"><span style="width:${Math.round(r.Pts/max*100)}%"></span></span><span class="pv num">${r.Pts}</span></div>`).join('');
+    return `<div class="dash-card"><h4>📊 ${esc(tl('Group','المجموعة'))} ${g} <span class="sub">${esc(tl('top 2 advance','يتأهل أول 2'))}</span></h4>${rows||esc(tl('No data','لا بيانات'))}</div>`;
+  }).join('');
+  // expectations vs results (seed vs current)
+  const exp=[];
+  for(const g of GROUP_KEYS){ let tbl=[]; try{tbl=computeGroupTable(g)||[];}catch(e){}
+    if(!tbl.some(r=>r.P>0)) continue;
+    const seed=getGroupTeams(g);
+    tbl.forEach((r,ai)=>{ const si=seed.findIndex(tn=>sameTeam(tn,r.team)); if(si<0) return; exp.push({team:r.team,exp:si+1,act:ai+1,d:si-ai}); });
+  }
+  exp.sort((a,b)=>Math.abs(b.d)-Math.abs(a.d));
+  const expRows=exp.slice(0,6).map(x=>{
+    const cls=x.d>0?'up':(x.d<0?'down':'same'); const sym=x.d>0?('▲'+x.d):(x.d<0?('▼'+Math.abs(x.d)):'●');
+    return `<div class="exp-row"><span class="nm">${teamHtml(x.team)}</span><span class="bars"><span class="exp-chip pred">${tl('Seed','مرشح')} ${x.exp}</span><span class="exp-chip act">${tl('Now','الآن')} ${x.act}</span><span class="exp-d ${cls}">${sym}</span></span></div>`;
+  }).join('');
+  const expCard=expRows?`<div class="dash-card"><h4>🎯 ${esc(tl('Team expectations vs results','توقعات الفرق مقابل النتائج'))}</h4>${expRows}</div>`:'';
+  // knockout
+  const allDone=gdone===GROUP_KEYS.length;
+  const koCard=`<div class="dash-card"><h4>🗺️ ${esc(tl('Knockout bracket','جدول الأدوار الإقصائية'))}</h4>${
+    allDone?`<div class="dash-bracket"><div class="round"><div class="rlbl">${esc(tl('Round of 32','دور 32'))}</div>${esc(tl('Seeded from final standings.','مرتب حسب الترتيب النهائي.'))}</div></div>`
+    :`<div style="font-size:12.5px;color:var(--muted);font-weight:700;padding:6px 0">${esc(tl('Bracket begins after the group stage is complete.','يبدأ الجدول بعد اكتمال دور المجموعات.'))} (${gdone}/${GROUP_KEYS.length})</div>`
+  }</div>`;
+  return `<div class="dash-head"><div><h3>${esc(tl('World Cup 2026 — Full status','كأس العالم 2026 — الحالة الكاملة'))}</h3><p>${esc(t(currentPhase()))}</p></div><button class="dash-pdf" onclick="exportDashPDF('worldcup-full')">⬇ PDF</button></div>
+    ${status}${groups}${expCard}${koCard}${scoringRulesHtml()}
+    <div class="dash-card"><button class="btn ghost sm" onclick="go('playerbracket')">🗺️ ${esc(tl('Open player brackets','فتح توقعات اللاعبين'))}</button></div>`;
+}
+function pbkPick(name){ APP._pbkPlayer=name; render(); }
+function viewPlayerBracket(){
+  trackEvent&&trackEvent('dashboard_view',{which:'player_bracket'});
+  let lb=[]; try{ lb=buildLeaderboard()||[]; }catch(e){}
+  const names=lb.map(r=>r.name);
+  if(!names.length) return `<div class="dash-head"><div><h3>${esc(tl('Player bracket','توقعات اللاعب'))}</h3></div></div><div class="dash-card">${esc(tl('No players yet.','لا يوجد لاعبون بعد.'))}</div>`;
+  const sel=(APP._pbkPlayer&&names.includes(APP._pbkPlayer))?APP._pbkPlayer:(names.includes(currentPlayerName&&currentPlayerName())?currentPlayerName():names[0]);
+  const p=getPlayer(sel);
+  const picker=`<div class="pbk-picker">${names.slice(0,12).map(n=>`<button class="${n===sel?'on':''}" onclick="pbkPick('${(n+'').replace(/'/g,"\\'")}')"><span>${esc(n)}</span></button>`).join('')}</div>`;
+  // per-group predicted top2 vs actual top2
+  let winOK=0,winTot=0,qOK=0,qTot=0;
+  const grpHtml=GROUP_KEYS.map(g=>{
+    const pred=playerGroupPred(p,g); if(!pred.length) return '';
+    let tbl=[]; try{tbl=computeGroupTable(g)||[];}catch(e){}
+    const complete=groupComplete(g);
+    const actualTop2=tbl.slice(0,2).map(r=>r.team);
+    const rows=[0,1].map(i=>{
+      const tm=pred[i]; if(!tm) return '';
+      let cls='',mk='';
+      if(complete){ const inTop2=actualTop2.some(a=>sameTeam(a,tm)); cls=inTop2?'ok':'no'; mk=inTop2?'✓':'✗'; qTot++; if(inTop2)qOK++;
+        if(i===0){ winTot++; if(tbl[0]&&sameTeam(tbl[0].team,tm)) winOK++; } }
+      return `<div class="pk-row ${cls}"><span class="r">${i+1}</span><span class="nm">${teamHtml(tm)}</span><span class="mk">${mk}</span></div>`;
+    }).join('');
+    return `<div class="pbk-grp"><div class="gh">${esc(tl('Group','المجموعة'))} ${g}</div>${rows}</div>`;
+  }).join('');
+  const acc=qTot?Math.round(qOK/qTot*100):0;
+  const accCard=`<div class="dash-card"><h4>🎯 ${esc(tl('Bracket accuracy','دقة التوقعات'))} <span class="sub">${esc(sel)}</span></h4>
+    <div class="dash-tiles" style="grid-template-columns:repeat(3,1fr)">
+      <div class="dash-tile green"><div class="v num">${winOK}/${winTot||0}</div><div class="l">${esc(tl('Group winners','متصدرو المجموعات'))}</div></div>
+      <div class="dash-tile green"><div class="v num">${qOK}/${qTot||0}</div><div class="l">${esc(tl('Qualifiers','المتأهلون'))}</div></div>
+      <div class="dash-tile green"><div class="v num">${acc}%</div><div class="l">${esc(tl('Accuracy','الدقة'))}</div></div>
+    </div></div>`;
+  return `<div class="dash-head"><div><h3>🗺️ ${esc(tl('Player bracket','توقعات اللاعب'))}</h3><p>${esc(tl('Predicted qualifiers · scored vs results','المتأهلون المتوقعون · مقارنة بالنتائج'))}</p></div>${picker}</div>
+    ${accCard}
+    <div class="dash-card"><h4>1️⃣ ${esc(tl('Predicted to advance','المتوقع تأهلهم'))} <span class="sub">${esc(tl('top 2 per group','أفضل 2 بكل مجموعة'))}</span></h4>${grpHtml||esc(tl('No predictions for this player.','لا توقعات لهذا اللاعب.'))}</div>`;
+}
+function loadScriptOnce(src){return new Promise((res,rej)=>{ if(document.querySelector('script[data-dyn="'+src+'"]')) return res(); const s=document.createElement('script'); s.src=src; s.dataset.dyn=src; s.onload=()=>res(); s.onerror=()=>rej(new Error('failed '+src)); document.head.appendChild(s); });}
+async function exportDashPDF(name){
+  trackEvent&&trackEvent('pdf_export',{view:APP.view});
+  const el=document.getElementById('view'); if(!el) return;
+  try{
+    if(typeof toast==='function') toast(tl('Generating PDF…','جارٍ إنشاء PDF…'));
+    await loadScriptOnce('https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js');
+    await loadScriptOnce('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js');
+    const canvas=await html2canvas(el,{scale:2,backgroundColor:getComputedStyle(document.body).backgroundColor||'#f6f8f7',useCORS:true});
+    const jsPDFc=(window.jspdf&&window.jspdf.jsPDF)||window.jsPDF;
+    const pdf=new jsPDFc('p','mm','a4');
+    const pw=pdf.internal.pageSize.getWidth(), ph=pdf.internal.pageSize.getHeight();
+    const iw=pw-16; const pageCanvasH=Math.floor(canvas.width*(ph-16)/iw);
+    let sy=0,page=0;
+    while(sy<canvas.height){
+      const sliceH=Math.min(pageCanvasH,canvas.height-sy);
+      const c2=document.createElement('canvas'); c2.width=canvas.width; c2.height=sliceH;
+      c2.getContext('2d').drawImage(canvas,0,sy,canvas.width,sliceH,0,0,canvas.width,sliceH);
+      if(page>0) pdf.addPage();
+      pdf.addImage(c2.toDataURL('image/png'),'PNG',8,8,iw,sliceH*iw/canvas.width);
+      sy+=sliceH; page++;
+    }
+    pdf.save((name||'worldcup-dashboard')+'.pdf');
+  }catch(e){ alert((tl('PDF export failed','فشل تصدير PDF'))+': '+(e&&e.message?e.message:e)); }
 }
 
 function renderMatchCenterHub(){

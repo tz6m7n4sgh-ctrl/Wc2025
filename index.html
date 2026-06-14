@@ -4567,7 +4567,7 @@ const RESULTS_Data=SB_URL+'/rest/v1/wc2026_match_results';
 const GA_MEASUREMENT_ID='G-DEDV833VML';
 
 const H={apikey:SB_KEY,Authorization:'Bearer '+SB_KEY,'Content-Type':'application/json',Accept:'application/json'};
-const SPORTSDB='https://www.thesportsdb.com/api/v1/json/3/eventsday.php';
+const SPORTSDB='https://www.thesportsdb.com/api/v1/json/123/eventsday.php';
 const WC_LEAGUE='4429';
 const WC_START='2026-06-11', WC_END='2026-07-19';
 
@@ -9491,6 +9491,14 @@ async function testApis(){
   lines.push('Protocol: '+location.protocol);
   lines.push('UAE today: '+uaeToday());
   lines.push('Sandbox/file origin: '+(isSandboxOrFile()?'YES':'NO'));
+  const _sdbKey=(SPORTSDB.match(/\/json\/([^/]+)\//)||[])[1]||'?';
+  lines.push('');
+  lines.push('— Active API endpoints (this build) —');
+  lines.push('SportsDB : '+SPORTSDB+'  [key '+_sdbKey+' · league '+WC_LEAGUE+']');
+  lines.push('Supabase : '+SB_URL);
+  lines.push('Data tbl : '+Data);
+  lines.push('Results  : '+RESULTS_Data);
+  lines.push('');
   try{
     const r=await fetchWithTimeout(Data+'?id=eq.main&select=data',{headers:H},10000);
     lines.push('Supabase: HTTP '+r.status+' '+r.statusText);

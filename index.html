@@ -73,8 +73,9 @@ h1,h2,h3,h4{margin:0;line-height:1.2}
 
 /* Phase strip */
 .phase{
+  display:none !important;
   background:linear-gradient(180deg,var(--pitch2),var(--pitch));color:#cdeee0;
-  padding:8px 14px;font-size:12.5px;display:flex;gap:10px;align-items:center;justify-content:center;
+  padding:8px 14px;font-size:12.5px;gap:10px;align-items:center;justify-content:center;
   border-bottom:1px solid var(--line);
 }
 .phase b{color:#fff}
@@ -1663,6 +1664,8 @@ body{
   gap:10px;
   margin-top:12px;
 }
+.stage-tabs.slim{margin:2px 0 14px}
+.stage-tabs.slim button{min-height:42px;border-radius:13px}
 .stage-tabs button{
   min-height:46px;
   border-radius:16px;
@@ -4494,12 +4497,13 @@ body[data-view="dashboard"] .hub-next-meta-pill b{
 .std-avs{display:flex;align-items:center}
 .std-av{width:24px;height:24px;border-radius:50%;background:#dfe7e2;border:2px solid #fff;color:#0a1f17;font-size:9px;font-weight:900;display:inline-flex;align-items:center;justify-content:center;margin-inline-start:-7px}
 .std-av:first-child{margin-inline-start:0}
-.std-toggle{display:inline-flex;align-items:center;gap:5px;font-size:12px;color:var(--muted);font-weight:800;background:none;border:none;padding:4px 2px;cursor:pointer}
+.std-toggle{display:inline-flex;align-items:center;gap:7px;font-size:12.5px;color:var(--ink);font-weight:900;background:#eef6f1;border:1px solid var(--border);border-radius:999px;padding-block:6px;padding-inline:12px 6px;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.std-toggle:active{background:#e2f0e9}
 .std-toggle .av-extra{color:var(--muted);font-weight:800}
 .std-detail{display:none;border-top:1px solid #eef2f0;padding:11px 12px 13px;background:#fbfdfc}
 .std-card.open .std-detail{display:block}
 .std-card.open .std-toggle .chev{transform:rotate(180deg)}
-.std-toggle .chev{display:inline-block;transition:transform .15s}
+.std-toggle .chev{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;background:var(--grass);color:#fff;font-size:12px;line-height:1;transition:transform .18s}
 .std-dlabel{font-size:11px;font-weight:900;color:var(--muted);margin-bottom:7px}
 .std-foot{display:flex;align-items:center;justify-content:center;gap:12px;padding:9px 12px 12px;font-size:12px;color:var(--muted);flex-wrap:wrap}
 .std-foot .src-tag{font-size:11px}
@@ -4603,6 +4607,43 @@ body.has-live{padding-bottom:52px}
 .pbk-grp{border:1px solid var(--soft);border-radius:12px;padding:9px 10px;margin-bottom:9px}
 .pbk-grp .gh{font-size:11px;font-weight:1000;color:var(--muted);margin-bottom:4px}
 @media print{.botnav,#liveDock,.dash-pdf,.topbar{display:none!important}}
+
+/* ===== Group standings — Google-style table (rebuilt) ===== */
+.gtbl-card{padding:14px 14px 8px}
+.gtbl-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:6px}
+.gtbl-head h3{margin:0;font-size:16px;font-weight:900}
+.gtbl-note .sub{margin:0}
+.gtbl-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:0 -14px;padding:0 14px}
+.gtbl{width:100%;min-width:430px;border-collapse:collapse;font-size:13px}
+.gtbl thead th{font-size:10.5px;font-weight:800;color:var(--muted);text-align:center;padding:4px 6px 9px;white-space:nowrap;border-bottom:1px solid var(--border)}
+.gtbl thead th.c-team{text-align:start;padding-inline-start:10px}
+.gtbl thead th.c-pts{color:var(--ink)}
+.gtbl tbody td{padding:10px 6px;text-align:center;white-space:nowrap;font-variant-numeric:tabular-nums;color:var(--ink);border-bottom:1px solid #f1f4f2}
+.gtbl tbody tr:last-child td{border-bottom:none}
+.gtbl td.c-team{text-align:start;position:sticky;inset-inline-start:0;background:var(--card);z-index:1;border-inline-start:3px solid transparent;padding-inline-start:7px}
+.gtbl tbody tr.q1 td.c-team,.gtbl tbody tr.q2 td.c-team{border-inline-start-color:var(--grass)}
+.gtbl tbody tr.qline td{border-bottom:2px solid #dbe6e0}
+.gtbl .tcell{display:flex;align-items:center;gap:9px;min-width:0;max-width:175px}
+.gtbl .rk{width:16px;text-align:center;font-weight:900;color:var(--muted);flex:0 0 auto}
+.gtbl .tcell .team-name-inline{min-width:0}
+.gtbl .tcell .team-label{font-weight:800;font-size:12.5px;white-space:normal;overflow-wrap:break-word;word-break:normal;line-height:1.18}
+.gtbl thead th.c-team,.gtbl td.c-team{min-width:124px}
+.gtbl .tcell .big-flag{font-size:1.05em;flex:0 0 auto}
+.gtbl-legend{display:flex;flex-wrap:wrap;gap:6px 10px;padding:2px 2px 4px;margin-bottom:2px}
+.gtbl-legend span{font-size:11.5px;color:var(--muted);font-weight:700;white-space:nowrap}
+.gtbl-legend b{color:var(--ink);font-weight:900}
+.player-select{width:100%;margin-top:10px;min-height:48px;border-radius:12px;border:1px solid var(--border);background:var(--soft);padding:10px 14px;font-size:15px;font-weight:800;color:var(--ink);cursor:pointer}
+.player-select:focus{outline:none;border-color:var(--grass);box-shadow:0 0 0 3px rgba(25,195,125,.15)}
+.gd-grid{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.gd-cell{font-size:12px;font-weight:900;padding:5px 9px;border-radius:9px;border:1px solid var(--border);white-space:nowrap}
+.gd-cell.ok{background:#e2f7ec;color:var(--grass-d);border-color:#bfe9d2}
+.gd-cell.none{background:var(--soft);color:var(--muted)}
+.gd-cell.tbd{background:#fdf3e2;color:#b9831f;border-color:#f0d9b0}
+.gtbl .c-pts{font-weight:900}
+.gtbl .c-dim{color:var(--muted)}
+.form-dots{display:inline-flex;gap:3px;align-items:center;justify-content:center}
+.fd{width:15px;height:15px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:9px;font-weight:900;color:#fff;flex:0 0 auto;line-height:1}
+.fd.w{background:var(--good)} .fd.l{background:var(--bad)} .fd.d{background:#caa42a} .fd.e{background:transparent;border:1.5px solid #d4ddd8}
 </style>
 <!-- Analytics is initialized once in loadAnalytics() to avoid duplicate page_view hits. -->
 </head>
@@ -4953,6 +4994,19 @@ function normalizedResultToApp(row){
     storedKey:row.match_key
   };
 }
+function completedResultsCount(){ let n=0; for(const g of GROUP_KEYS) for(let i=0;i<6;i++){ try{ if(matchResult(g,i).complete) n++; }catch(_){} } return n; }
+function resultsFingerprint(){ const parts=[]; for(const g of GROUP_KEYS) for(let i=0;i<6;i++){ try{ const r=matchResult(g,i); if(r.complete) parts.push(g+i+':'+r.hs+'-'+r.as); }catch(_){} } return parts.join('|'); }
+function noteResultsState(){
+  const fp=resultsFingerprint();
+  let prev=null; try{ prev=localStorage.getItem('wc2026_results_fp'); }catch(_){}
+  const changed=(prev!==null)&&(fp!==prev);
+  if(prev===null || fp!==prev){
+    try{ localStorage.setItem('wc2026_results_fp',fp); if(fp!==prev){ localStorage.setItem('wc2026_results_changed_at',new Date().toISOString()); } }catch(_){}
+  }
+  if(fp!==prev) APP._lastResultsChange=new Date().toISOString();
+  else if(!APP._lastResultsChange){ try{ APP._lastResultsChange=localStorage.getItem('wc2026_results_changed_at')||null; }catch(_){} }
+  return {changed, count:completedResultsCount(), fp};
+}
 async function loadNormalizedResultsIntoApp(){
   APP._resultsTableStatus={ok:false, mode:'fallback-json'};
   try{
@@ -4983,6 +5037,7 @@ async function loadNormalizedResultsIntoApp(){
     APP.data.resultMeta={...(APP.data.resultMeta||{}),...rebuiltMeta};
 
     APP._resultsTableStatus={ok:true, mode:'normalized-table', rows:APP._matchResultRows.length, applied, remapped, skipped, merged:true};
+    try{ noteResultsState(); }catch(_){}
     return true;
   }catch(e){
     console.warn('Normalized results table unavailable. Falling back to wc2026.data.groupResults.',e);
@@ -5066,14 +5121,8 @@ async function loadState(){
   }catch(e){
     console.error('Supabase load failed. This may be network, CORS, RLS, wrong key, or sandbox/file origin.', e);
     APP.apiStatus={name:'supabase', ok:false, error:String(e&&e.message?e.message:e), sandbox:isSandboxOrFile()};
-    let c=null; try{ c=localStorage.getItem(CACHE_KEY); }catch(_){ c=null; }
-    let parsed=null; if(c){ try{ parsed=JSON.parse(c); }catch(_){ parsed=null; } }
-    if(parsed){ APP.data=ensureShape(parsed); APP.cached=true; APP.loaded=true; APP.error=navigator.onLine?'sync':'offline';
-      // Even if the players doc failed/cached, the normalized results table may still be reachable.
-      // Overlay the latest results so Group tables don't show stale cached scores.
-      try{ if(navigator.onLine) await loadNormalizedResultsIntoApp(); }catch(_){}
-    }
-    else { APP.data=ensureShape({}); APP.loaded=true; APP.error='load'; }
+    // Live-only: do NOT fall back to cached data (cached values were showing misleading/stale results).
+    APP.data=ensureShape({}); APP.loaded=true; APP.cached=false; APP.error='load';
   }
 }
 
@@ -5291,7 +5340,24 @@ function readScore(res){
 function matchResult(group,idx){
   const [home,away]=matchTeams(group,idx);
   const d=APP.data||defaultData();
-  const sc=readScore((d.groupResults||{})[matchKey(group,idx)]);
+  let sc=readScore((d.groupResults||{})[matchKey(group,idx)]);
+  if(!sc){
+    // Fallback: the live API feed (same source the Today/popup uses). Without this the
+    // standings only reflect admin/Supabase-table results, so groups whose results arrived
+    // via the API feed (e.g. Group E) showed empty. groupResults still takes priority.
+    const am=(typeof homeApiResultFor==='function')?homeApiResultFor(group,idx):null;
+    if(am && am.hs!=null && am.as!=null && am.hs!=='' && am.as!==''){
+      const ah=Number(am.hs), aa=Number(am.as);
+      if(Number.isFinite(ah)&&Number.isFinite(aa)){
+        // Orient the API home/away onto this fixture's home/away.
+        if(home&&away&&am.home&&am.away&&sameTeam(am.home,away)&&sameTeam(am.away,home)){
+          sc={hs:aa,as:ah};
+        } else {
+          sc={hs:ah,as:aa};
+        }
+      }
+    }
+  }
   if(!sc) return {home,away,complete:false};
   let winner=null,outcome='draw';
   if(sc.hs>sc.as){winner=home;outcome='home';} else if(sc.as>sc.hs){winner=away;outcome='away';}
@@ -6500,10 +6566,11 @@ function allCompletedResultsForHome(){
 function homeGroupCard(g){
   const table=computeGroupTableHome(g);
   const played=table.reduce((a,x)=>a+x.P,0)/2;
+  const hgStarted=table.some(x=>x.P>0);
   return `<div class="home-group-card">
     <div class="between"><b>${esc(tl('Group','المجموعة'))} ${esc(g)}</b><span class="chip">${played}/6</span></div>
     <div class="home-standings">
-      ${table.map((x,i)=>`<div class="home-stand-row ${i<2?'q':''}">
+      ${table.map((x,i)=>`<div class="home-stand-row ${hgStarted&&i<2&&x.P>0?'q':''}">
         <span>${i+1}. ${teamHtml(x.team)}</span>
         <span class="num">${x.Pts} ${esc(tl('pts','نقاط'))}</span>
         <span class="num">${x.GD>=0?'+':''}${x.GD}</span>
@@ -6729,11 +6796,17 @@ function latestApiResults(limit){
   const n=limit||4;
   return apiHomeMatches().slice(-n).reverse();
 }
+function baseTodaySchedule(){
+  // The SportsDB API feed (homeSchedule) is often empty (CORS-blocked). Fall back to the
+  // stored/local schedule (allSchedule) so Today + live detection still work from real UAE times.
+  const api=homeSchedule();
+  return (api&&api.length)?api:(typeof allSchedule==='function'?allSchedule().filter(m=>m&&m.group&&m.idx!=null):[]);
+}
 function matchCenterMatches(){
   const now=uaeNowMs();
   const lower=now-4*60*60*1000;      // keep matches that are currently live/recently kicked off
   const upper=now+30*60*60*1000;     // show tonight + early next day in UAE time
-  let rows=homeSchedule()
+  let rows=baseTodaySchedule()
     .filter(m=>m.group&&m.idx!=null)
     .filter(m=>{
       const ts=matchUaeTimestamp(m);
@@ -6744,7 +6817,7 @@ function matchCenterMatches(){
 
   // If the user's local day has no games in this window, still show the next upcoming games.
   if(!rows.length){
-    rows=homeSchedule()
+    rows=baseTodaySchedule()
       .filter(m=>m.group&&m.idx!=null&&matchIsUpcoming(m))
       .sort((a,b)=>matchUaeTimestamp(a)-matchUaeTimestamp(b))
       .slice(0,6);
@@ -6753,7 +6826,7 @@ function matchCenterMatches(){
 }
 function allTodayApiMatches(){
   const today=uaeToday();
-  const rows=homeSchedule()
+  const rows=baseTodaySchedule()
     .filter(m=>m.group&&m.idx!=null)
     .filter(m=>(m.date||'')===today)
     .sort((a,b)=>matchUaeTimestamp(a)-matchUaeTimestamp(b));
@@ -6818,10 +6891,10 @@ function homeAISummaryText(){
   return lines.join(' ');
 }
 function dataFreshnessLabel(){
-  const now=formatUaeDateTimeParts();
-  if(homeUsesApiResults()) return tl('Live data · updated now','بيانات مباشرة · محدثة الآن');
-  if(APP._homeApiError) return tl('Saved data · live unavailable','بيانات محفوظة · البيانات المباشرة غير متاحة');
-  return tl('Saved data','بيانات محفوظة');
+  const cnt=completedResultsCount();
+  if(cnt===0) return tl('No results yet','لا نتائج بعد');
+  const at=APP._lastResultsChange?(' · '+tl('updated','حُدّث')+' '+String(APP._lastResultsChange).slice(0,16).replace('T',' ')):'';
+  return tl('Saved results','نتائج محفوظة')+' ('+cnt+')'+at;
 }
 function hubMatchStatus(m){
   if(!m) return {key:'upcoming',label:tl('Upcoming','قادمة')};
@@ -7463,7 +7536,8 @@ function viewDashFull(){
   const groups=GROUP_KEYS.map(g=>{
     let tbl=[]; try{ tbl=computeGroupTable(g)||[]; }catch(e){}
     const max=Math.max(1,...tbl.map(r=>r.Pts));
-    const rows=tbl.map((r,i)=>`<div class="grp-row ${i<2?'q':''}"><span class="pos">${i+1}</span><span class="tn">${teamHtml(r.team)}</span><span class="pb"><span style="width:${Math.round(r.Pts/max*100)}%"></span></span><span class="pv num">${r.Pts}</span></div>`).join('');
+    const started=tbl.some(r=>r.P>0);
+    const rows=tbl.map((r,i)=>`<div class="grp-row ${started&&i<2&&r.P>0?'q':''}"><span class="pos">${i+1}</span><span class="tn">${teamHtml(r.team)}</span><span class="pb"><span style="width:${Math.round(r.Pts/max*100)}%"></span></span><span class="pv num">${r.Pts}</span></div>`).join('');
     return `<div class="dash-card"><h4>📊 ${esc(tl('Group','المجموعة'))} ${g} <span class="sub">${esc(tl('top 2 advance','يتأهل أول 2'))}</span></h4>${rows||esc(tl('No data','لا بيانات'))}</div>`;
   }).join('');
   // expectations vs results (seed vs current)
@@ -7720,9 +7794,10 @@ function renderGroupUpdatesSection(){
     <div class="between"><h3>📊 ${esc(tl('Group updates','تحديث المجموعات'))}</h3><button class="btn ghost sm" onclick="go('groups')">${esc(t('v_groups'))} →</button></div>
     ${groups.length?groups.map(g=>{
       const table=computeGroupTableHome(g);
+      const mrStarted=table.some(x=>x.P>0);
       return `<div class="mini-group">
         <b>${esc(tl('Group','المجموعة'))} ${esc(g)}</b>
-        ${table.map((x,i)=>`<div class="mini-row ${i<2?'q':''}"><span>${i+1}. ${teamHtml(x.team)}</span><span class="num">${x.Pts} pts · ${x.GD>=0?'+':''}${x.GD}</span></div>`).join('')}
+        ${table.map((x,i)=>`<div class="mini-row ${mrStarted&&i<2&&x.P>0?'q':''}"><span>${i+1}. ${teamHtml(x.team)}</span><span class="num">${x.Pts} pts · ${x.GD>=0?'+':''}${x.GD}</span></div>`).join('')}
       </div>`;
     }).join(''):`<div class="sub">${esc(tl('No group updates yet.','لا توجد تحديثات للمجموعات بعد.'))}</div>`}
   </section>`;
@@ -8362,17 +8437,54 @@ function setGroupsTab(tab){
   render();
   window.scrollTo(0,0);
 }
+function teamGroupForm(g,team){
+  const out=[];
+  for(let i=0;i<6;i++){ const r=matchResult(g,i); if(!r||!r.complete) continue;
+    let me,opp;
+    if(sameTeam(r.home,team)){me=r.hs;opp=r.as;} else if(sameTeam(r.away,team)){me=r.as;opp=r.hs;} else continue;
+    out.push(me>opp?'W':(me<opp?'L':'D'));
+  }
+  return out;
+}
+function formDotsHtml(form){
+  const slots=5, r=form.slice().reverse(); let h='';
+  for(let i=0;i<slots;i++){ const v=r[i];
+    if(v==='W') h+='<span class="fd w">✓</span>';
+    else if(v==='L') h+='<span class="fd l">✕</span>';
+    else if(v==='D') h+='<span class="fd d">–</span>';
+    else h+='<span class="fd e"></span>';
+  }
+  return `<span class="form-dots">${h}</span>`;
+}
+function gtblLegend(){
+  const items=[['MP',tl('Played','لعب')],['W',tl('Won','فوز')],['D',tl('Draw','تعادل')],['L',tl('Lost','خسارة')],['Pts',tl('Points','نقاط')],['GF',tl('Goals for','أهداف له')],['GA',tl('Goals against','أهداف عليه')],['GD',tl('Goal diff','الفارق')]];
+  return `<div class="gtbl-legend">${items.map(([k,v])=>`<span><b>${esc(k)}</b> ${esc(v)}</span>`).join('')}</div>`;
+}
 function groupsStageHtml(){
-  return groupsResultSourceBanner()+`<div class="card"><h3>📊 ${esc(tl('Group Stage','دور المجموعات'))}</h3><div class="sub">${esc(t('tiebreak'))}</div></div>`+
-    GROUP_KEYS.map(g=>{ const tb=computeGroupTable(g); const done=groupComplete(g);
-      return `<div class="card"><div class="between"><h3>Group ${g}</h3><span class="chip ${done?'on':''}">${done?esc(t('groupsDone')):esc(t('pending'))}</span></div>
-      <table class="gtable"><thead><tr><th style="text-align:start">${esc(t('player').slice(0,0))}Team</th>
-        <th>${esc(t('played'))}</th><th>${esc(t('win'))}</th><th>${esc(t('drawSh')).slice(0,1)}</th><th>${esc(t('loss'))}</th>
-        <th>${esc(t('gd'))}</th><th>${esc(t('pts'))}</th></tr></thead><tbody>
-        ${tb.map((r,i)=>`<tr class="${i===0?'q1':i===1?'q2':''}"><td class="tn"><span class="pos">${i+1}</span>${teamHtml(r.team)}</td>
-          <td class="num">${r.P}</td><td class="num">${r.W}</td><td class="num">${r.D}</td><td class="num">${r.L}</td>
-          <td class="num">${r.GD>0?'+':''}${r.GD}</td><td class="num"><b>${r.Pts}</b></td></tr>`).join('')}
-      </tbody></table></div>`;
+  return groupsResultSourceBanner()
+    +`<div class="card gtbl-note">${gtblLegend()}<div class="sub" style="margin-top:7px">${esc(t('tiebreak'))}</div></div>`
+    +GROUP_KEYS.map(g=>{
+      const tb=computeGroupTable(g); const done=groupComplete(g); const started=tb.some(r=>r.P>0);
+      const rows=tb.map((r,i)=>{
+        const q=started&&i<2&&r.P>0;
+        const form=teamGroupForm(g,r.team);
+        return `<tr class="${q?(i===0?'q1':'q2'):''}${i===1?' qline':''}">
+          <td class="c-team"><div class="tcell"><span class="rk">${i+1}</span>${teamHtml(r.team)}</div></td>
+          <td>${r.P}</td><td>${r.W}</td><td>${r.D}</td><td>${r.L}</td>
+          <td class="c-pts"><b>${r.Pts}</b></td>
+          <td class="c-dim">${r.GF}</td><td class="c-dim">${r.GA}</td><td>${r.GD>0?'+':''}${r.GD}</td>
+          <td class="c-form">${formDotsHtml(form)}</td>
+        </tr>`;
+      }).join('');
+      return `<div class="card gtbl-card"><div class="gtbl-head"><h3>${esc(tl('Group','المجموعة'))} ${g}</h3><span class="chip ${done?'on':''}">${done?esc(t('groupsDone')):esc(t('pending'))}</span></div>
+        <div class="gtbl-scroll"><table class="gtbl"><thead><tr>
+          <th class="c-team">${esc(tl('Team','الفريق'))}</th>
+          <th>${esc(tl('MP','لعب'))}</th><th>${esc(tl('W','ف'))}</th><th>${esc(tl('D','ت'))}</th><th>${esc(tl('L','خ'))}</th>
+          <th class="c-pts">${esc(tl('Pts','نقاط'))}</th>
+          <th class="c-dim">${esc(tl('GF','له'))}</th><th class="c-dim">${esc(tl('GA','عليه'))}</th><th>${esc(tl('GD','+/-'))}</th>
+          <th class="c-form">${esc(tl('Last 5','آخر 5'))}</th>
+        </tr></thead><tbody>${rows}</tbody></table></div>
+      </div>`;
     }).join('');
 }
 function knockoutStageHtml(){
@@ -8380,18 +8492,10 @@ function knockoutStageHtml(){
 }
 function viewGroups(){
   const tab=(APP.sel&&APP.sel.groupsTab)||'group';
-  return `<div class="card group-tabs-card">
-    <div class="between group-tabs-head">
-      <div>
-        <h3>📊 ${esc(t('v_groups'))}</h3>
-        <div class="sub">${esc(tl('Switch between group standings and knockout bracket.','بدّل بين ترتيب المجموعات وجدول خروج المغلوب.'))}</div>
-      </div>
-    </div>
-    <div class="stage-tabs">
+  return `<div class="stage-tabs slim">
       <button class="${tab==='group'?'on':''}" onclick="setGroupsTab('group')">📊 ${esc(tl('Group Stage','دور المجموعات'))}</button>
       <button class="${tab==='knockout'?'on':''}" onclick="setGroupsTab('knockout')">🎯 ${esc(tl('Knockout Stage','خروج المغلوب'))}</button>
-    </div>
-  </div>` + (tab==='knockout'?knockoutStageHtml():groupsStageHtml());
+    </div>` + (tab==='knockout'?knockoutStageHtml():groupsStageHtml());
 }
 
 
@@ -8516,11 +8620,16 @@ function profilePickerCards(selected){
   }).join('')}</div>`;
 }
 function renderProfilePicker(selected){
+  const names=playerNames();
+  if(!names.length) return `<div class="card"><div class="sub">${esc(t('noData'))}</div></div>`;
+  const lb=buildLeaderboard();
+  const opts=names.map(n=>{ const r=lb.find(x=>x.name===n); return `<option value="${esc(n)}" ${n===selected?'selected':''}>${esc(n)}${r?` — #${r.rank} · ${r.total} ${tl('pts','نقطة')}`:''}</option>`; }).join('');
   return `<div class="card">
-    <div class="between"><h3>👤 ${esc(tl('Choose profile','اختر الملف'))}</h3><span class="chip">${esc(playerNames().length)} ${esc(t('players'))}</span></div>
-    <div class="sub">${esc(tl('Tap any player to open their profile. The Profile tab remembers the last selected player.','اختر أي لاعب لفتح ملفه. تبويب الملف يتذكر آخر لاعب اخترته.'))}</div>
-    ${profilePickerCards(selected)}
-    ${selected?`<div class="profile-focus-note"><span>${esc(tl('Current profile','الملف الحالي'))}: <b>${esc(selected)}</b></span><button class="btn ghost sm" onclick="APP.sel.player='';localStorage.removeItem('wc2026_last_profile');render()">${esc(tl('Show picker first','عرض الاختيار أولاً'))}</button></div>`:''}
+    <div class="between"><h3>👤 ${esc(tl('Choose player','اختر اللاعب'))}</h3><span class="chip">${names.length} ${esc(t('players'))}</span></div>
+    <select class="player-select" onchange="if(this.value)chooseProfile(this.value)" aria-label="${esc(tl('Choose player','اختر اللاعب'))}">
+      <option value="" ${!selected?'selected':''} disabled>${esc(tl('Select a player…','اختر لاعباً…'))}</option>
+      ${opts}
+    </select>
   </div>`;
 }
 function viewPlayer(){
@@ -9299,6 +9408,21 @@ async function cleanAndSaveGroupResultsFromNormalized(){
   }
 }
 
+function groupsDiagnostic(){
+  const cells=GROUP_KEYS.map(g=>{
+    let played=0; for(let i=0;i<6;i++){ if(matchResult(g,i).complete) played++; }
+    const hasTBD=(GROUPS[g]||[]).some(t=>String(t).toUpperCase()==='TBD');
+    const cls=played>0?'ok':(hasTBD?'tbd':'none');
+    return `<span class="gd-cell ${cls}">${g} ${played}/6${hasTBD?' ⚠':''}</span>`;
+  }).join('');
+  const rt=APP._resultsTableStatus||{};
+  const unmapped=(rt.rows!=null&&rt.applied!=null&&rt.rows>rt.applied)?(rt.rows-rt.applied):0;
+  return `<div class="card"><div class="between"><h3>📊 ${esc(tl('Per-group results','نتائج كل مجموعة'))}</h3></div>
+    <div class="gd-grid">${cells}</div>
+    <div class="sub" style="margin-top:8px">${esc(tl('“x/6” = matches with a result. ⚠ = group has a TBD (playoff) slot whose real team is not set, so its results cannot map until the live schedule is available.','«x/6» = مباريات لها نتيجة. ⚠ = المجموعة فيها فريق TBD لم يُحدد، لذا لا يمكن ربط نتائجه حتى يتوفر الجدول المباشر.'))}</div>
+    ${unmapped>0?`<div class="banner warn" style="margin-top:8px">⚠ ${esc(tl('Results table rows not mapped to a fixture','صفوف في جدول النتائج لم تُربط بمباراة'))}: <b>${unmapped}</b> — ${esc(tl('likely a team-name mismatch.','غالباً اختلاف في اسم الفريق.'))}</div>`:''}
+  </div>`;
+}
 function dataSourcePanel(){
   const live=!APP.cached;
   const cls=live?'paid':'pend';
@@ -9306,23 +9430,34 @@ function dataSourcePanel(){
   const reason=(APP.apiStatus&&APP.apiStatus.error)?`<div class="sub" style="margin-top:6px">${esc(tl('Last load error','آخر خطأ تحميل'))}: ${esc(APP.apiStatus.error)}</div>`:'';
   const rt=APP._resultsTableStatus||{};
   const rtLine=`<div class="sub" style="margin-top:4px">${esc(tl('Results source','مصدر النتائج'))}: ${rt.ok?esc(tl('live table','الجدول المباشر'))+' ('+(rt.applied||0)+')':esc(tl('fallback / not loaded','احتياطي / غير محمّل'))}</div>`;
+  const cnt=completedResultsCount();
+  if(!APP._lastResultsChange){ try{ APP._lastResultsChange=localStorage.getItem('wc2026_results_changed_at')||null; }catch(_){} }
+  const lastChange=APP._lastResultsChange?String(APP._lastResultsChange).slice(0,16).replace('T',' '):tl('never','لا يوجد');
+  const honest=`<div class="sub" style="margin-top:8px">${esc(tl('Matches with a result','مباريات لها نتيجة'))}: <b>${cnt}</b> · ${esc(tl('database rows','صفوف قاعدة البيانات'))}: <b>${rt.rows!=null?rt.rows:'—'}</b></div>
+    <div class="sub">${esc(tl('Last actual data change','آخر تغيّر فعلي للبيانات'))}: <b>${esc(lastChange)}</b></div>
+    ${cnt===0?`<div class="banner warn" style="margin-top:8px">⚠ ${esc(tl('No results in the database yet — nothing to show until results are added. A “check” will not change this.','لا توجد نتائج في قاعدة البيانات بعد — لا شيء لعرضه حتى تُضاف نتائج. «الفحص» لن يغيّر ذلك.'))}</div>`:''}`;
   return `<div class="card"><div class="between"><h3>🔀 ${esc(tl('Data source','مصدر البيانات'))}</h3><span class="tag ${cls}">${esc(label)}</span></div>
-    ${rtLine}${reason}
+    ${rtLine}${honest}${reason}
     <div class="sync-tools" style="margin-top:10px">
       <button class="btn" onclick="refreshLiveData()">🔄 ${esc(tl('Refresh from live','تحديث من المباشر'))}</button>
       <button class="btn gold" onclick="forceResultsRefresh()">📥 ${esc(tl('Reload results table','إعادة تحميل جدول النتائج'))}</button>
       <button class="btn ghost" onclick="clearCacheAndReload()">🧹 ${esc(tl('Clear cache & reload','مسح المخزّن وإعادة التحميل'))}</button>
     </div>
     <div class="sub" style="margin-top:8px">${esc(tl('Use “Reload results table” if group tables look out of date.','استخدم «إعادة تحميل جدول النتائج» إذا بدت جداول المجموعات قديمة.'))}</div>
-  </div>`;
+  </div>`+groupsDiagnostic();
 }
 async function refreshLiveData(){
   toast(tl('Refreshing…','جارٍ التحديث…'));
+  const before=resultsFingerprint();
   try{ await loadState(); }catch(_){}
   invalidateLeaderboardCache();
+  const st=noteResultsState();
   render();
+  const after=resultsFingerprint();
+  const changedMsg=(after===before)?tl('No new results found.','لا توجد نتائج جديدة.'):tl('Results updated.','تم تحديث النتائج.');
   const live=!APP.cached;
-  alert((live?tl('Loaded LIVE data.','تم تحميل البيانات المباشرة.'):tl('Live failed — showing CACHED data.','فشل المباشر — يتم عرض النسخة المخزّنة.'))
+  alert((live?tl('Loaded live data.','تم تحميل البيانات المباشرة.'):tl('Live failed — no data loaded.','فشل المباشر — لم تُحمّل بيانات.'))
+    +'\n'+changedMsg+'\n'+tl('Matches with a result','مباريات لها نتيجة')+': '+st.count
     +(APP.apiStatus&&APP.apiStatus.error?('\n\n'+APP.apiStatus.error):''));
 }
 async function clearCacheAndReload(){
@@ -9332,18 +9467,25 @@ async function clearCacheAndReload(){
 }
 async function forceResultsRefresh(){
   toast(tl('Reloading results…','جارٍ إعادة تحميل النتائج…'));
+  const before=resultsFingerprint();
   let ok=false; try{ ok=await loadNormalizedResultsIntoApp(); }catch(e){ APP._resultsTableStatus={ok:false,error:String(e&&e.message?e.message:e)}; }
   invalidateLeaderboardCache();
+  const st=noteResultsState();
   render();
   const s=APP._resultsTableStatus||{};
-  if(ok) alert(tl('Results reloaded from the live table.','تمت إعادة تحميل النتائج من الجدول المباشر.')+'\n'+tl('Applied','طُبّقت')+': '+(s.applied||0)+' · '+tl('rows','صفوف')+': '+(s.rows||0));
-  else alert(tl('Results table reload failed','فشلت إعادة تحميل جدول النتائج')+':\n\n'+(s.error||'')+'\n\n'+RESULTS_Data);
+  if(!ok){ alert(tl('Results table reload failed','فشلت إعادة تحميل جدول النتائج')+':\n\n'+(s.error||'')+'\n\n'+RESULTS_Data); return; }
+  const after=resultsFingerprint();
+  if(after===before){
+    alert(tl('No new results found.','لا توجد نتائج جديدة.')+'\n\n'+tl('Matches with a result','مباريات لها نتيجة')+': '+st.count+' · '+tl('database rows','صفوف قاعدة البيانات')+': '+(s.rows!=null?s.rows:'—'));
+  } else {
+    alert(tl('Results updated.','تم تحديث النتائج.')+'\n\n'+tl('Matches with a result','مباريات لها نتيجة')+': '+st.count+' · '+tl('applied','مطبّقة')+': '+(s.applied||0));
+  }
 }
 function viewSyncResults(){
   const rows=APP._syncRows;
   const counts={match:0,missing:0,mismatch:0,unmapped:0};
   (rows||[]).forEach(r=>counts[r.status]=(counts[r.status]||0)+1);
-  return dataSourcePanel()+`<div class="card"><div class="between"><h3>🔄 ${esc(t('v_syncResults'))}</h3><span class="chip">${APP._lastSyncCheck?esc(APP._lastSyncCheck.slice(0,16).replace('T',' ')):esc(tl('Not checked','لم يتم الفحص'))}</span></div>
+  return dataSourcePanel()+`<div class="card"><div class="between"><h3>🔄 ${esc(t('v_syncResults'))}</h3><span class="chip">${completedResultsCount()} ${esc(tl('results','نتيجة'))}${APP._lastSyncCheck?' · '+esc(tl('checked','فُحص'))+' '+esc(APP._lastSyncCheck.slice(11,16)):''}</span></div>
     <div class="banner warn">⚠️ ${esc(tl('The app now reads/writes the normalized wc2026_match_results table, while keeping the old JSON as fallback.','التطبيق الآن يقرأ ويكتب من جدول wc2026_match_results مع إبقاء JSON القديم كاحتياطي.'))}</div>
     <div class="sync-tools">
       <button class="btn" onclick="runResultSyncCompare()">🔎 ${esc(tl('Compare vs App','مقارنة مع التطبيق'))}</button>

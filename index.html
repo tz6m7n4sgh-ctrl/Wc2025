@@ -5004,8 +5004,9 @@ async function loadNormalizedResultsIntoApp(){
 
     const rebuiltResults={};
     const rebuiltMeta={};
-    let applied=0, remapped=0, skipped=0;
+    let applied=0, remapped=0, skipped=0, finalRows=0;
     APP._matchResultRows.forEach(row=>{
+      if(row && row.status==='final' && row.home_score!=null && row.away_score!=null) finalRows++;
       const x=normalizedResultToApp(row);
       if(x){
         rebuiltResults[x.key]=x.result;
@@ -5020,7 +5021,7 @@ async function loadNormalizedResultsIntoApp(){
     APP.data.groupResults={...(APP.data.groupResults||{}),...rebuiltResults};
     APP.data.resultMeta={...(APP.data.resultMeta||{}),...rebuiltMeta};
 
-    APP._resultsTableStatus={ok:true, mode:'normalized-table', rows:APP._matchResultRows.length, applied, remapped, skipped, merged:true};
+    APP._resultsTableStatus={ok:true, mode:'normalized-table', rows:APP._matchResultRows.length, finalRows, applied, remapped, skipped, merged:true};
     try{ noteResultsState(); }catch(_){}
     return true;
   }catch(e){
@@ -5375,7 +5376,12 @@ function computeGroupTable(group){
   matches.forEach(m=>{
     const r=matchResult(group,m.idx);
     if(!r.complete) return;
-    const H=ensure(m.home||r.home), A=ensure(m.away||r.away);
+    // Credit goals/results to the SAME teams the score is oriented to.
+    // r.home/r.away come from matchTeams (canonical) and r.hs/r.as are oriented to them.
+    // Using m.home/m.away (schedule order) here mis-assigned the win whenever a stored
+    // schedule's order differed from the canonical pairing (e.g. Scotland 1-0 Haiti was
+    // credited to Haiti while the form icon correctly showed Scotland).
+    const H=ensure(r.home), A=ensure(r.away);
     if(!H||!A) return;
     const hs=Number(r.hs), as=Number(r.as);
     if(!Number.isFinite(hs)||!Number.isFinite(as)) return;
@@ -9254,7 +9260,7 @@ function groupsDiagnostic(){
     return `<span class="gd-cell ${cls}">${g} ${played}/6${hasTBD?' ⚠':''}</span>`;
   }).join('');
   const rt=APP._resultsTableStatus||{};
-  const unmapped=(rt.rows!=null&&rt.applied!=null&&rt.rows>rt.applied)?(rt.rows-rt.applied):0;
+  const unmapped=(rt.finalRows!=null&&rt.applied!=null&&rt.finalRows>rt.applied)?(rt.finalRows-rt.applied):0;
   return `<div class="card"><div class="between"><h3>📊 ${esc(tl('Per-group results','نتائج كل مجموعة'))}</h3></div>
     <div class="gd-grid">${cells}</div>
     <div class="sub" style="margin-top:8px">${esc(tl('“x/6” = matches with a result. ⚠ = group has a TBD (playoff) slot whose real team is not set, so its results cannot map until the live schedule is available.','«x/6» = مباريات لها نتيجة. ⚠ = المجموعة فيها فريق TBD لم يُحدد، لذا لا يمكن ربط نتائجه حتى يتوفر الجدول المباشر.'))}</div>

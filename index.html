@@ -4684,6 +4684,16 @@ const SPORTSDB='https://www.thesportsdb.com/api/v1/json/123/eventsday.php';
 const WC_LEAGUE='4429';
 const WC_START='2026-06-11', WC_END='2026-07-19';
 
+/* CORS-proxy fallback: when the browser can't reach TheSportsDB directly
+   ("Load failed"), retry the SAME url through a public proxy. Tried in order.
+   {U} is replaced with the encodeURIComponent'd target URL. These are public,
+   best-effort services — reliability is not guaranteed (see Edge Function for the robust path). */
+const CORS_PROXIES=[
+  'https://corsproxy.io/?url={U}',
+  'https://api.allorigins.win/raw?url={U}',
+  'https://thingproxy.freeboard.io/fetch/{RAW}'
+];
+
 /* --- Scoring constants (edit freely) --- */
 const SCORING={
   edgeCorrect:1,        // group match: better-ranked team won
@@ -4698,15 +4708,15 @@ const GROUPS={
   A:["Mexico","South Africa","South Korea","Czechia"],
   B:["Canada","Switzerland","Qatar","Bosnia-Herzegovina"],
   C:["Brazil","Morocco","Scotland","Haiti"],
-  D:["USA","Paraguay","Australia","TBD"],
+  D:["USA","Paraguay","Australia","Turkey"],
   E:["Germany","Curacao","Ivory Coast","Ecuador"],
-  F:["Netherlands","Japan","Tunisia","TBD"],
+  F:["Netherlands","Japan","Tunisia","Sweden"],
   G:["Belgium","Egypt","Iran","New Zealand"],
   H:["Spain","Cape Verde","Saudi Arabia","Uruguay"],
-  I:["France","Senegal","Norway","TBD"],
+  I:["France","Senegal","Norway","Iraq"],
   J:["Argentina","Algeria","Austria","Jordan"],
   K:["England","Croatia","Ghana","Panama"],
-  L:["Portugal","Colombia","Uzbekistan","TBD"]
+  L:["Portugal","Colombia","Uzbekistan","DR Congo"]
 };
 const GROUP_KEYS=Object.keys(GROUPS);
 
@@ -4722,7 +4732,9 @@ const TEAM_ALIASES={
   "Cabo Verde":["cape verde"],
   "Ivory Coast":["cote d'ivoire","côte d'ivoire","cote divoire"],
   "Curacao":["curaçao"],
-  "Saudi Arabia":["ksa","saudi"]
+  "Saudi Arabia":["ksa","saudi"],
+  "Turkey":["türkiye","turkiye","turkey"],
+  "DR Congo":["congo dr","dr congo","democratic republic of the congo","drc","congo"]
 };
 
 /* --- i18n --- */
@@ -4876,34 +4888,6 @@ function trackPageView(view){
     });
   }catch(_){}
 }
-
-function formatUaeDateTimeParts(){
-  const now=new Date();
-  const d=new Intl.DateTimeFormat(LANG==='ar'?'ar-AE':'en-GB',{
-    timeZone:'Asia/Dubai',
-    weekday:'short',
-    day:'2-digit',
-    month:'short',
-    year:'numeric'
-  }).format(now);
-  const t=new Intl.DateTimeFormat('en-US',{
-    timeZone:'Asia/Dubai',
-    hour:'numeric',
-    minute:'2-digit',
-    hour12:true
-  }).format(now);
-  return {date:d,time:t};
-}
-function updateHeaderDateTime(){
-  const el=$('clockPill');
-  if(!el) return;
-  const p=formatUaeDateTimeParts();
-  const dateEl=el.querySelector('.date'), timeEl=el.querySelector('.time');
-  if(dateEl) dateEl.textContent=p.date+' UAE';
-  if(timeEl) timeEl.textContent=p.time;
-}
-
-
 
 function fetchWithTimeout(url, opts={}, ms=8000){
   const ctrl=new AbortController();
@@ -5306,24 +5290,10 @@ function getPlayer(name){ const d=APP.data||defaultData(); return (d.players||{}
 
 /* ---- group match model ---- */
 function matchTeams(group,idx){
-  // Prefer saved/fetched schedule (real fixture order can differ from RR fallback).
-  // Memoized by schedule-array reference and length, so it rebuilds only when the schedule changes.
-  const sched=(APP&&APP.data&&Array.isArray(APP.data.scheduleMatches))?APP.data.scheduleMatches:null;
-  if(sched){
-    if(APP._mtSchedRef!==sched || APP._mtSchedLen!==sched.length){
-      const map={};
-      sched.forEach(x=>{
-        if(x&&x.group!=null&&x.idx!=null&&x.home&&x.away){
-          map[x.group+'_'+x.idx]=[canonTeam(x.home),canonTeam(x.away)];
-        }
-      });
-      APP._mtMap=map;
-      APP._mtSchedRef=sched;
-      APP._mtSchedLen=sched.length;
-    }
-    const hit=APP._mtMap&&APP._mtMap[group+'_'+idx];
-    if(hit) return hit;
-  }
+  // Authoritative pairing from the official groups + fixed round-robin order.
+  // (Previously this trusted APP.data.scheduleMatches, but a corrupt saved schedule
+  //  produced duplicate/wrong fixtures like B_0==B_4. The canonical pairing below is
+  //  the single source of truth and stays consistent with the results SQL.)
   const g=GROUPS[group]||[];
   const p=RR[idx];
   return p?[g[p[0]],g[p[1]]]:[null,null];
@@ -5555,44 +5525,6 @@ function uaeToday(){
   const get=t=>parts.find(p=>p.type===t)?.value||'';
   return `${get('year')}-${get('month')}-${get('day')}`;
 }
-function toAmPmFromHHMM(hhmm){
-  if(!hhmm) return '';
-  const m=String(hhmm).match(/^(\d{1,2}):(\d{2})/);
-  if(!m) return String(hhmm);
-  let h=Number(m[1]), min=m[2], ampm=h>=12?'PM':'AM';
-  h=h%12; if(h===0) h=12;
-  return h+':'+min+' '+ampm;
-}
-function parseTimeTo24(time){
-  if(!time) return null;
-  const s=String(time).trim().toUpperCase();
-  let m=s.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/);
-  if(m){
-    let h=Number(m[1]), min=Number(m[2]);
-    if(m[3]==='PM'&&h<12) h+=12;
-    if(m[3]==='AM'&&h===12) h=0;
-    return {h,min};
-  }
-  m=s.match(/^(\d{1,2}):(\d{2})/);
-  if(m) return {h:Number(m[1]),min:Number(m[2])};
-  return null;
-}
-function matchUaeTimestamp(m){
-  if(!m) return 0;
-  const apiLike=!!(m.api||m.eventId||m.source==='live'||m.source==='api'||m.sourceDate||m.sourceTime||m.sourceTimestamp||m.strTimestamp);
-  if(apiLike){
-    const d=apiTimeToInstant(m);
-    if(d) return d.getTime();
-  }
-  if(m.kickoffUtc){
-    const ts=Date.parse(m.kickoffUtc);
-    if(Number.isFinite(ts)) return ts;
-  }
-  if(!m.date) return 0;
-  const tm=parseTimeTo24(m.time||m.strTime||'00:00');
-  const h=tm?tm.h:0, min=tm?tm.min:0;
-  return Date.UTC(Number(m.date.slice(0,4)),Number(m.date.slice(5,7))-1,Number(m.date.slice(8,10)),h-4,min,0);
-}
 function liveStatusText(s){
   s=String(s||'').toLowerCase();
   if(['ft','aet','pen','complete','completed','finished','match finished','final'].includes(s)) return 'final';
@@ -5616,31 +5548,6 @@ function pastUncompletedMatches(limit){
     .sort((a,b)=>matchUaeTimestamp(a)-matchUaeTimestamp(b)).slice(0,limit||6);
 }
 
-function apiTimeToInstant(m){
-  if(!m) return null;
-
-  if(m.strTimestamp||m.sourceTimestamp){
-    const d=new Date(m.strTimestamp||m.sourceTimestamp);
-    if(Number.isFinite(d.getTime())) return d;
-  }
-
-  const sourceDate=m.dateEvent||m.sourceDate||m.apiDate||m.rawDate||'';
-  const sourceTime=m.strTime||m.sourceTime||m.strEventTime||m.apiTime||m.rawTime||'';
-  if(sourceDate&&sourceTime){
-    const tm=parseTimeTo24(sourceTime);
-    if(tm){
-      const d=new Date(sourceDate+'T'+String(tm.h).padStart(2,'0')+':'+String(tm.min).padStart(2,'0')+':00Z');
-      if(Number.isFinite(d.getTime())) return d;
-    }
-  }
-
-  if(m.kickoffUtc){
-    const d=new Date(m.kickoffUtc);
-    if(Number.isFinite(d.getTime())) return d;
-  }
-
-  return null;
-}
 function formatInstantAsUae(d){
   if(!d||!Number.isFinite(d.getTime())) return null;
   const parts=new Intl.DateTimeFormat('en-CA',{
@@ -5659,41 +5566,6 @@ function formatInstantAsUae(d){
   }).format(d);
   return {date,time,label:`${date} · ${time} UAE`};
 }
-function apiTimeToUaeLabel(m){
-  const fmt=formatInstantAsUae(apiTimeToInstant(m));
-  if(fmt) return cleanTimeZoneLabel(fmt.label);
-  const d=(m&&m.uaeDate)||'';
-  const t=(m&&m.uaeTime)||'';
-  if(d||t) return cleanTimeZoneLabel(`${d}${t?' · '+t:''} UAE`);
-  return tl('UAE conversion unavailable','تحويل الإمارات غير متوفر');
-}
-function apiTimeSourceLabel(m){
-  if(!m) return '—';
-  if(m.strTimestamp||m.sourceTimestamp) return `${m.strTimestamp||m.sourceTimestamp} (strTimestamp)`;
-  const sourceDate=m.dateEvent||m.sourceDate||m.apiDate||m.rawDate||'';
-  const sourceTime=m.strTime||m.sourceTime||m.strEventTime||m.apiTime||m.rawTime||'';
-  if(sourceDate||sourceTime) return `${sourceDate}${sourceTime?' '+sourceTime:''} (dateEvent + strTime UTC)`.trim();
-  if(m.kickoffUtc) return `${m.kickoffUtc} (normalized instant)`;
-  return tl('Not provided by Data','غير متوفر من Data');
-}
-function normalizeSportsDbRow(row){
-  if(!row||typeof row!=='object') return row;
-  const m={...row};
-  const d=apiTimeToInstant(m);
-  const fmt=formatInstantAsUae(d);
-  if(fmt){
-    m.kickoffUtc=d.toISOString();
-    m.uaeDate=fmt.date;
-    m.uaeTime=fmt.time;
-    m.date=fmt.date;
-    m.time=fmt.time;
-    m.tz='UAE';
-  }
-  return m;
-}
-function normalizeScheduleRowsForGst(rows){
-  return (Array.isArray(rows)?rows:[]).map(normalizeSportsDbRow);
-}
 function fetchWindowDates(){
   return [uaeDateOffset(-1),uaeToday(),uaeDateOffset(1)];
 }
@@ -5703,36 +5575,6 @@ async function fetchHomeWindowEvents(){
   return batches.flat();
 }
 
-function apiEventKickoffMeta(e){
-  if(!e) return {
-    kickoffUtc:null,uaeDate:'',uaeTime:'',date:'',time:'',
-    sourceDate:'',sourceTime:'',sourceTimeZone:'',sourceTimestamp:'',
-    sourceLocalDate:'',sourceLocalTime:'',sourceLabel:''
-  };
-
-  const sourceDate=e.dateEvent||'';
-  const sourceTime=e.strTime||e.strEventTime||'';
-  const sourceTimestamp=e.strTimestamp||'';
-  const sourceLocalDate=e.dateEventLocal||'';
-  const sourceLocalTime=e.strTimeLocal||'';
-  const d=apiTimeToInstant(e);
-  const fmt=formatInstantAsUae(d);
-
-  return {
-    kickoffUtc:d?d.toISOString():null,
-    uaeDate:fmt?fmt.date:'',
-    uaeTime:fmt?fmt.time:'',
-    date:fmt?fmt.date:'',
-    time:fmt?fmt.time:'',
-    sourceDate,
-    sourceTime,
-    sourceTimeZone:sourceTimestamp?'strTimestamp':'dateEvent + strTime UTC',
-    sourceTimestamp,
-    sourceLocalDate,
-    sourceLocalTime,
-    sourceLabel:apiTimeSourceLabel(e)
-  };
-}
 function eventInstantFromSportsEvent(e){
   const m=apiEventKickoffMeta(e);
   return m.kickoffUtc?new Date(m.kickoffUtc):null;
@@ -5749,15 +5591,6 @@ function cleanTimeZoneLabel(v){
     .replace(/UTC\+4/g,'UAE');
 }
 
-function matchDateTime(m){
-  if(!m) return '';
-  const apiLike=!!(m.api||m.eventId||m.source==='live'||m.source==='api'||m.sourceDate||m.sourceTime||m.sourceTimestamp||m.strTimestamp);
-  if(apiLike) return cleanTimeZoneLabel(apiTimeToUaeLabel(m));
-  const date=(m&&m.uaeDate)||m&&m.date?((m&&m.uaeDate)||m.date):'';
-  const time=(m&&m.uaeTime)||m&&m.time?((m&&m.uaeTime)||m.time):(m&&m.strTime?toAmPmFromHHMM(m.strTime):'');
-  if(date&&time) return cleanTimeZoneLabel(date+' · '+time+(m.tz?' '+m.tz:' UAE'));
-  return cleanTimeZoneLabel(date||time||'');
-}
 function addHoursToDisplayTime(time,hours){
   const tm=parseTimeTo24(time||'');
   if(!tm) return time||'';
@@ -5769,15 +5602,30 @@ function addHoursToDisplayTime(time,hours){
 
 async function fetchDay(date){
   const url=SPORTSDB+'?d='+encodeURIComponent(date)+'&l='+encodeURIComponent(WC_LEAGUE);
+  // 1) Direct
   try{
     const r=await fetchWithTimeout(url,{headers:{Accept:'application/json'}},6500);
     if(!r.ok) throw new Error('SportsDB HTTP '+r.status);
     const j=await r.json();
+    APP._feedMode='direct';
     return asArrayPayload(j);
   }catch(e){
-    console.warn('SportsDB fetch failed for '+date, e);
-    return [];
+    console.warn('SportsDB direct failed for '+date+' — trying proxies', e&&e.message);
   }
+  // 2) Proxy fallback (only if direct failed)
+  for(const tmpl of CORS_PROXIES){
+    try{
+      const purl=tmpl.replace('{U}',encodeURIComponent(url)).replace('{RAW}',url);
+      const r=await fetchWithTimeout(purl,{headers:{Accept:'application/json'}},9000);
+      if(!r.ok) throw new Error('proxy HTTP '+r.status);
+      const j=await r.json();
+      APP._feedMode='proxy:'+tmpl.split('/')[2];
+      return asArrayPayload(j);
+    }catch(e){ console.warn('proxy failed: '+tmpl, e&&e.message); }
+  }
+  APP._feedMode='unreachable';
+  console.warn('SportsDB unreachable for '+date+' (direct + all proxies failed)');
+  return [];
 }
 async function fetchFullSchedule(onProgress){
   const dates=dateRange(WC_START,WC_END); const all=[];
@@ -6260,9 +6108,6 @@ function normalizeScheduleRowForGst(row){
 
   return m;
 }
-function normalizeScheduleRowsForGst(rows){
-  return (Array.isArray(rows)?rows:[]).map(normalizeScheduleRowForGst);
-}
 function homeApiSchedule(){
   return Array.isArray(APP._homeApiSchedule)?normalizeScheduleRowsForGst(APP._homeApiSchedule):[];
 }
@@ -6543,6 +6388,19 @@ async function loadHomeApiUpdates(){
     });
     out.sort((a,b)=>matchUaeTimestamp(a)-matchUaeTimestamp(b));
     APP._homeApiResults=out;
+    // Collect in-progress (live) events that carry a real score, for DISPLAY ONLY.
+    // These never enter standings/scoring — matchResult stays final-only, so no fake results.
+    const liveMap={};
+    ev.forEach(e=>{
+      const st=String((e&&e.strStatus)||'').toLowerCase();
+      const isLive=['live','in play','in-play','1h','2h','ht','half','playing','et ','extra'].some(k=>st.includes(k));
+      if(!isLive) return;
+      const sc=(typeof sportsScore==='function')?sportsScore(e):null; if(!sc) return;
+      const mm=(typeof mapEventToGroupMatch==='function')?mapEventToGroupMatch(e):null; if(!mm) return;
+      const oriented=mm.reversed?{home:sc.away,away:sc.home}:sc;
+      liveMap[mm.key]={hs:Number(oriented.home),as:Number(oriented.away),status:e.strStatus||'Live',home:mm.home,away:mm.away,group:mm.group,idx:mm.idx,eventId:e.idEvent||null,live:true};
+    });
+    APP._homeApiLive=liveMap;
     APP._homeApiLoaded=true;
   }catch(e){
     APP._homeApiSchedule=[];
@@ -6899,29 +6757,21 @@ function dataFreshnessLabel(){
 function hubMatchStatus(m){
   if(!m) return {key:'upcoming',label:tl('Upcoming','قادمة')};
   const r=m.group&&m.idx!=null?matchResult(m.group,m.idx):null;
-  const hasScore=Number.isFinite(Number(m.hs))&&Number.isFinite(Number(m.as));
-  const rawStatus=String(m.status||'').toLowerCase();
-  if((r&&r.complete)||hasScore||['final','complete','completed','finished'].includes(rawStatus)){
+  const rawStatus=String(m.status||'').toLowerCase().trim();
+  const isFinalStatus=['ft','aet','pen','final','complete','completed','finished','match finished','full time','full-time','awarded'].some(k=>rawStatus.includes(k));
+  const isLiveStatus=['live','in play','in-play','1h','2h','ht','half','playing','et ','extra'].some(k=>rawStatus.includes(k));
+  // Authoritative final: a confirmed stored result, or the feed explicitly says finished.
+  if((r&&r.complete)||isFinalStatus){
     return {key:'final',label:tl('Completed','مكتملة')};
   }
+  // A real in-progress status from the feed beats the clock guess.
+  if(isLiveStatus) return {key:'live',label:tl('Live','مباشرة')};
   const ts=matchUaeTimestamp(m);
   const now=uaeNowMs();
   if(ts && now>ts+130*60*1000) return {key:'past',label:tl('Past','سابقة')};
   if(ts && now>=ts && now<=ts+130*60*1000) return {key:'live',label:tl('Live','مباشرة')};
   if(ts && ts-now<=2*60*60*1000 && ts>now) return {key:'soon',label:tl('Starts soon','تبدأ قريباً')};
   return {key:'upcoming',label:tl('Upcoming','قادمة')};
-}
-function countdownText(m){
-  const ts=matchUaeTimestamp(m);
-  if(!ts) return '';
-  const diff=ts-uaeNowMs();
-  if(diff<=-130*60*1000) return tl('Finished / past window','انتهت / خارج النافذة');
-  if(diff<=0) return tl('Kickoff window','نافذة الانطلاق');
-  const mins=Math.round(diff/60000);
-  const h=Math.floor(mins/60), mm=mins%60;
-  if(h>=24) return tl(`in ${Math.round(h/24)}d`,`بعد ${Math.round(h/24)} يوم`);
-  if(h>0) return tl(`in ${h}h ${mm}m`,`بعد ${h}س ${mm}د`);
-  return tl(`in ${mm}m`,`بعد ${mm}د`);
 }
 function currentPlayerName(){
   return APP.selectedPlayer || APP.profileName || localStorage.getItem('wc2026_profile') || playerNames()[0] || '';
@@ -7204,23 +7054,6 @@ function renderNextMatchReadableMeta(m,status){
   </div>`;
 }
 
-function renderMatchdayHero(){
-  const next=nextApiMatch();
-  const nextStatus=next?hubMatchStatus(next):null;
-  const nextLine=next ? `${hubMatchName(next)}` : tl('No upcoming match found','لا توجد مباراة قادمة حالياً');
-
-  return `<div class="card hub-hero">
-    <div class="hero-kicker">⚽ ${esc(tl('World Cup Pick’em Matchday Hub','مركز يوم مباريات كأس العالم للتوقعات'))}</div>
-    <h2>${esc(tl('Today’s briefing','ملخص اليوم'))}</h2>
-
-    <div class="hub-next-center">
-      <div class="hub-brief-label">${esc(tl('Next match','المباراة القادمة'))}</div>
-      <div class="hub-next-main">${esc(nextLine)}</div>
-      ${renderNextMatchReadableMeta(next,nextStatus)}
-    </div>
-  </div>`;
-}
-
 function matchReadableParts(m,status){
   if(!m) return null;
   const dt=matchDateTime(m)||'';
@@ -7404,25 +7237,26 @@ function updateLiveFeed(){
   live.forEach(m=>{
     const key=liveMatchKey(m); liveKeys[key]=1;
     const pair=matchScorePair(m);
+    const hasScore=!!pair;
     const hs=pair?Number(pair.hs):0, as=pair?Number(pair.as):0;
     const mn=liveElapsedMin(m);
     let f=feeds[key];
     if(!f){
-      f=feeds[key]={hs:hs,as:as,started:Date.now(),ended:false,home:teamText(m.home),away:teamText(m.away),
+      f=feeds[key]={hs:hs,as:as,hasScore:hasScore,started:Date.now(),ended:false,home:teamText(m.home),away:teamText(m.away),
         homeHtml:teamHtml(m.home),awayHtml:teamHtml(m.away),events:[]};
       f.events.push({min:0,ts:Date.now(),kind:'ko',text:tl('Kick-off','انطلاق المباراة')});
-      if(hs||as) f.events.push({min:liveMinLabel(mn),ts:Date.now(),kind:'',text:`${esc(f.home)} ${hs}–${as} ${esc(f.away)}`});
+      if(hasScore&&(hs||as)) f.events.push({min:liveMinLabel(mn),ts:Date.now(),kind:'',text:`${esc(f.home)} ${hs}–${as} ${esc(f.away)}`});
     } else {
-      if(hs>f.hs){ f.events.push({min:liveMinLabel(mn),ts:Date.now(),kind:'goal',text:`${tl('GOAL','هدف')}! ${esc(f.home)} — ${hs}–${as}`}); }
-      if(as>f.as){ f.events.push({min:liveMinLabel(mn),ts:Date.now(),kind:'goal',text:`${tl('GOAL','هدف')}! ${esc(f.away)} — ${hs}–${as}`}); }
-      f.hs=hs; f.as=as;
+      if(hasScore&&hs>f.hs){ f.events.push({min:liveMinLabel(mn),ts:Date.now(),kind:'goal',text:`${tl('GOAL','هدف')}! ${esc(f.home)} — ${hs}–${as}`}); }
+      if(hasScore&&as>f.as){ f.events.push({min:liveMinLabel(mn),ts:Date.now(),kind:'goal',text:`${tl('GOAL','هدف')}! ${esc(f.away)} — ${hs}–${as}`}); }
+      f.hs=hs; f.as=as; f.hasScore=hasScore;
     }
     f.curMin=mn;
   });
   // full-time for matches that just left the live set
   Object.keys(feeds).forEach(key=>{
     const f=feeds[key];
-    if(!liveKeys[key]&&!f.ended){ f.ended=true; f.events.push({min:"FT",ts:Date.now(),kind:'',text:`${tl('Full-time','انتهت المباراة')} — ${esc(f.home)} ${f.hs}–${f.as} ${esc(f.away)}`}); }
+    if(!liveKeys[key]&&!f.ended){ f.ended=true; const sc=f.hasScore?`${f.hs}–${f.as}`:'—'; f.events.push({min:"FT",ts:Date.now(),kind:'',text:`${tl('Full-time','انتهت المباراة')} — ${esc(f.home)} ${sc} ${esc(f.away)}`}); }
   });
   renderLiveDock(live);
 }
@@ -7449,7 +7283,8 @@ function renderLiveDock(live){
   // strip: leading match minute + marquee of latest events across live matches
   const lead=live[0]; const leadKey=liveMatchKey(lead); const leadMin=feeds[leadKey]?feeds[leadKey].curMin:liveElapsedMin(lead);
   const ticks=live.map(m=>{ const f=feeds[liveMatchKey(m)]; const last=f&&f.events.length?f.events[f.events.length-1]:null;
-    return `${f?f.hs:0}–${f?f.as:0} ${esc(teamText(m.home))} v ${esc(teamText(m.away))}${last?(' · '+last.text):''}`; });
+    const sc=(f&&f.hasScore)?`${f.hs}–${f.as}`:'·–·';
+    return `${sc} ${esc(teamText(m.home))} v ${esc(teamText(m.away))}${last?(' · '+last.text):''}`; });
   const marquee=ticks.join('   ·   ')+'   ·   ';
   const strip=document.getElementById('liveStrip');
   strip.innerHTML=`<span class="ld"></span><span class="live-lbl">${esc(tl('LIVE','مباشر'))} ${esc(liveMinLabel(leadMin))}</span>`
@@ -7458,7 +7293,8 @@ function renderLiveDock(live){
   const panel=document.getElementById('liveFeedPanel');
   const groups=live.map(m=>{ const f=feeds[liveMatchKey(m)]; if(!f) return '';
     const evs=[...f.events].reverse().map(e=>`<div class="live-ev"><span class="min">${esc(e.min)}</span><span class="txt ${e.kind==='goal'?'goal':''}">${e.text}</span></div>`).join('');
-    return `<div class="live-grp">${f.homeHtml} ${f.hs}–${f.as} ${f.awayHtml} · ${esc(liveMinLabel(f.curMin))}</div>${evs}`;
+    const sc=f.hasScore?`${f.hs}–${f.as}`:'·–·';
+    return `<div class="live-grp">${f.homeHtml} ${sc} ${f.awayHtml} · ${esc(liveMinLabel(f.curMin))}</div>${evs}`;
   }).join('');
   panel.innerHTML=`<div class="live-feed-h"><span class="t"><span class="ld"></span>${esc(tl('Live updates','تحديثات مباشرة'))}</span><button class="x" onclick="toggleLiveFeed()">${esc(tl('Hide','إخفاء'))} ⌄</button></div>${groups}<button class="live-open" onclick="openLiveMatch()">${esc(tl('Open match','فتح المباراة'))}</button>`;
   positionLiveDock();
@@ -7481,17 +7317,6 @@ function dashDonut(frac){
     <circle cx="60" cy="60" r="52" fill="none" stroke="#19c37d" stroke-width="13" stroke-linecap="round" stroke-dasharray="${C}" stroke-dashoffset="${off}" transform="rotate(-90 60 60)"/>
     <text x="60" y="58" text-anchor="middle" font-size="22" font-weight="800" fill="#0a1f17">${Math.round(p*100)}%</text>
   </svg>`;
-}
-function scoringRulesHtml(){
-  const k=SCORING.knockout||{};
-  const rule=(pts,txt)=>`<div class="score-rule"><span class="pts">${esc(pts)}</span><span>${txt}</span></div>`;
-  return `<div class="dash-card"><h4>🧮 ${esc(tl('How points are calculated','طريقة حساب النقاط'))}</h4>
-    ${rule('+'+SCORING.exactPosition, tl('Team finishes in the exact position you ranked it in its group.','الفريق ينهي في نفس المركز الذي توقعته داخل مجموعته.'))}
-    ${rule('+'+SCORING.teamInGroupWrongPos, tl('Team you picked is in the group but in a different position.','الفريق الذي اخترته داخل المجموعة لكن بمركز مختلف.'))}
-    ${rule('+'+SCORING.edgeCorrect, tl('Per match: your higher-ranked team won.','لكل مباراة: الفريق الأعلى ترتيباً لديك فاز.'))}
-    ${rule('+'+SCORING.champion, tl('Correct champion (when knockouts are scored).','البطل الصحيح (عند احتساب الأدوار الإقصائية).'))}
-    ${rule(k.R32+'–'+k.F, tl('Knockout winners by round (R32 → Final).','الفائزون في الأدوار الإقصائية حسب الدور.'))}
-  </div>`;
 }
 function viewDashSummary(){
   trackEvent&&trackEvent('dashboard_view',{which:'summary'});
@@ -8011,39 +7836,6 @@ function mdhApiTimeLabel(m){
 
   return tl('Not provided by Data','غير متوفر من Data');
 }
-function mdhUaeTimeLabel(m){
-  if(!m) return '—';
-
-  if(m.uaeDate||m.uaeTime||m.date||m.time){
-    const date=m.uaeDate||m.date||'';
-    const time=m.uaeTime||m.time||'';
-    if(date||time) return `${date}${time?' · '+time:''} UAE`;
-  }
-
-  if(m.kickoffUtc){
-    const d=new Date(m.kickoffUtc);
-    if(Number.isFinite(d.getTime())){
-      const dateParts=new Intl.DateTimeFormat('en-CA',{
-        timeZone:'Asia/Dubai',
-        year:'numeric',
-        month:'2-digit',
-        day:'2-digit'
-      }).formatToParts(d);
-      const get=t=>dateParts.find(p=>p.type===t)?.value||'';
-      const date=`${get('year')}-${get('month')}-${get('day')}`;
-      const time=new Intl.DateTimeFormat('en-US',{
-        timeZone:'Asia/Dubai',
-        hour:'numeric',
-        minute:'2-digit',
-        hour12:true
-      }).format(d);
-      return `${date} · ${time} UAE`;
-    }
-  }
-
-  return tl('UAE conversion unavailable','تحويل الإمارات غير متوفر');
-}
-
 function renderMdhStatusHero(){
   const parts=formatUaeDateTimeParts();
   const matches=matchCenterMatches();
@@ -8910,7 +8702,53 @@ function viewResults(){
   <div class="card"><h3>👑 ${esc(t('champion'))}</h3>
     <input id="champIn" value="${esc(APP.data.champion||'')}" placeholder="${esc(t('champion'))}"/>
     <button class="btn gold" style="margin-top:8px" onclick="saveChampion()">${esc(t('save'))}</button>
+  </div>
+  <div class="card"><h3>🗄️ ${esc(tl('SQL for database (copy &amp; paste)','SQL لقاعدة البيانات (انسخ والصق)'))}</h3>
+    <div class="sub" style="margin-bottom:8px">${esc(tl('Ready-to-run upsert for every group match. Keys and team names are generated from the app, so they map exactly. Edit the scores, then paste into Supabase → SQL editor and Run. Re-running is safe (upsert).','أوامر جاهزة لكل مباراة. المفاتيح وأسماء الفرق مولّدة من التطبيق لتطابق تماماً. عدّل النتائج ثم الصقها في Supabase ونفّذها. إعادة التنفيذ آمنة.'))}</div>
+    <textarea id="sqlBox" readonly style="width:100%;min-height:240px;font-family:var(--num,monospace);font-size:11px;line-height:1.4;white-space:pre;overflow:auto;border:1px solid var(--border);border-radius:10px;padding:10px;background:#0c1512;color:#cdeee0">${esc(buildResultsSQL())}</textarea>
+    <div class="row" style="margin-top:8px;gap:8px">
+      <button class="btn" onclick="copySqlBox()">📋 ${esc(tl('Copy SQL','نسخ SQL'))}</button>
+      <button class="btn ghost sm" onclick="render()">↻ ${esc(tl('Refresh from current results','تحديث من النتائج الحالية'))}</button>
+    </div>
   </div>`;
+}
+/* ---- SQL generator: accurate upsert rows for wc2026_match_results ---- */
+function sqlStr(s){ return "'"+String(s==null?'':s).replace(/'/g,"''")+"'"; }
+function buildResultsSQL(){
+  const L=[];
+  L.push('-- World Cup 2026 — group results upsert into wc2026_match_results');
+  L.push('-- match_key/group_key/match_idx/home_team/away_team are generated by the app and map 1:1 to how it reads results.');
+  L.push("-- For a played match set home_score, away_score and status='final'. NULL scores stay 'scheduled' and never affect standings.");
+  L.push('-- Requires match_key to be PRIMARY KEY or UNIQUE (the app upserts on match_key). Re-running is safe.');
+  L.push('');
+  let rows=0;
+  for(const g of GROUP_KEYS){
+    for(let i=0;i<6;i++){
+      const [h,a]=matchTeams(g,i);
+      if(!h||!a||h==='TBD'||a==='TBD') continue;
+      const key=matchKey(g,i);
+      const r=matchResult(g,i);
+      const hs=r.complete?Number(r.hs):'NULL';
+      const as=r.complete?Number(r.as):'NULL';
+      const status=r.complete?'final':'scheduled';
+      L.push(
+        'INSERT INTO wc2026_match_results (match_key, group_key, match_idx, home_team, away_team, home_score, away_score, status, source) VALUES ('
+        + sqlStr(key)+', '+sqlStr(g)+', '+i+', '+sqlStr(h)+', '+sqlStr(a)+', '+hs+', '+as+', '+sqlStr(status)+", 'manual')"
+        + ' ON CONFLICT (match_key) DO UPDATE SET home_team=EXCLUDED.home_team, away_team=EXCLUDED.away_team, home_score=EXCLUDED.home_score, away_score=EXCLUDED.away_score, status=EXCLUDED.status, source=EXCLUDED.source, updated_at=now();'
+      );
+      rows++;
+    }
+  }
+  L.push('');
+  L.push('-- '+rows+' rows. Generated '+new Date().toISOString());
+  return L.join('\n');
+}
+function copySqlBox(){
+  const el=document.getElementById('sqlBox'); if(!el) return;
+  const text=el.value;
+  const done=()=>toast(tl('SQL copied','تم نسخ SQL'));
+  if(navigator.clipboard&&navigator.clipboard.writeText){ navigator.clipboard.writeText(text).then(done).catch(()=>{ el.focus(); el.select(); try{document.execCommand('copy');done();}catch(_){toast(tl('Select and copy manually','حدّد وانسخ يدوياً'));} }); }
+  else { el.focus(); el.select(); try{document.execCommand('copy');done();}catch(_){toast(tl('Select and copy manually','حدّد وانسخ يدوياً'));} }
 }
 function resultEntryCard(g,i){
   const [h,a]=matchTeams(g,i), key=matchKey(g,i), res=(APP.data.groupResults||{})[key]||{};
@@ -9935,11 +9773,24 @@ async function testApis(){
   try{
     const d=WC_START;
     const r=await fetchWithTimeout(SPORTSDB+'?d='+d+'&l='+WC_LEAGUE,{headers:{Accept:'application/json'}},10000);
-    lines.push('SportsDB: HTTP '+r.status+' '+r.statusText);
+    lines.push('SportsDB (direct): HTTP '+r.status+' '+r.statusText);
     const txt=await r.text();
     lines.push('SportsDB body preview: '+txt.slice(0,160));
   }catch(e){
-    lines.push('SportsDB failed: '+String(e&&e.message?e.message:e));
+    lines.push('SportsDB (direct) failed: '+String(e&&e.message?e.message:e));
+    // Try the proxy fallbacks and report which (if any) works.
+    const target=SPORTSDB+'?d='+WC_START+'&l='+WC_LEAGUE;
+    let proxied=false;
+    for(const tmpl of CORS_PROXIES){
+      try{
+        const purl=tmpl.replace('{U}',encodeURIComponent(target)).replace('{RAW}',target);
+        const pr=await fetchWithTimeout(purl,{headers:{Accept:'application/json'}},10000);
+        const ptxt=await pr.text();
+        lines.push('SportsDB via proxy '+tmpl.split('/')[2]+': HTTP '+pr.status+' — preview: '+ptxt.slice(0,120));
+        proxied=true; break;
+      }catch(pe){ lines.push('  proxy '+tmpl.split('/')[2]+' failed: '+String(pe&&pe.message?pe.message:pe)); }
+    }
+    if(!proxied) lines.push('All proxies failed too. Use the SQL box (Results editor) or a Supabase Edge Function to populate results.');
     lines.push('The app will still use local generated schedule as fallback.');
   }
   if(out) out.textContent=lines.join('\n'); else alert(lines.join('\n'));
@@ -9964,560 +9815,7 @@ async function registerPWA(){
    - Countdown/sorting use a real absolute instant.
    - Admin auth/logic is untouched.
 */
-function toAmPmFromHHMM(hhmm){
-  if(!hhmm) return '';
-  const m=String(hhmm).match(/^(\d{1,2}):(\d{2})/);
-  if(!m) return String(hhmm);
-
-  let h=Number(m[1]);
-  const min=m[2];
-  const ampm=h>=12?'PM':'AM';
-
-  h=h%12;
-  if(h===0) h=12;
-
-  return h+':'+min+' '+ampm;
-}
-
-function parseTimeTo24(time){
-  if(!time) return null;
-
-  const s=String(time).trim().toUpperCase();
-
-  let m=s.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/);
-  if(m){
-    let h=Number(m[1]);
-    const min=Number(m[2]);
-
-    if(m[3]==='PM' && h<12) h+=12;
-    if(m[3]==='AM' && h===12) h=0;
-
-    return {h,min};
-  }
-
-  m=s.match(/^(\d{1,2}):(\d{2})/);
-  if(m){
-    return {h:Number(m[1]),min:Number(m[2])};
-  }
-
-  return null;
-}
-
-function browserTimeZone(){
-  try{
-    return Intl.DateTimeFormat().resolvedOptions().timeZone || 'Asia/Dubai';
-  }catch(e){
-    return 'Asia/Dubai';
-  }
-}
-
-function isValidIanaTimeZone(tz){
-  if(!tz || typeof tz!=='string') return false;
-  try{
-    new Intl.DateTimeFormat('en-US',{timeZone:tz}).format(new Date());
-    return true;
-  }catch(e){
-    return false;
-  }
-}
-
-function timeZoneShortName(tz,d){
-  try{
-    const safeTz=isValidIanaTimeZone(tz)?tz:'America/New_York';
-    const parts=new Intl.DateTimeFormat('en-US',{
-      timeZone:safeTz,
-      timeZoneName:'short'
-    }).formatToParts(d||new Date());
-
-    return parts.find(p=>p.type==='timeZoneName')?.value || safeTz;
-  }catch(e){
-    return tz || 'America/New_York';
-  }
-}
-
-function sportsDbFallbackSourceTimeZone(eOrRow){
-  const candidate =
-    (eOrRow&&eOrRow.sourceTimeZone) ||
-    (eOrRow&&eOrRow.sourceTimezone) ||
-    (eOrRow&&eOrRow.timeZone) ||
-    (eOrRow&&eOrRow.timezone) ||
-    '';
-
-  return isValidIanaTimeZone(candidate) ? candidate : 'America/New_York';
-}
-
-function parseAbsoluteTimestamp(stamp){
-  if(!stamp) return null;
-
-  const s=String(stamp).trim();
-
-  if(/[zZ]$|[+-]\d{2}:?\d{2}$/.test(s)){
-    const d=new Date(s);
-    return Number.isFinite(d.getTime()) ? d : null;
-  }
-
-  const m=s.match(/^(\d{4}-\d{2}-\d{2})[T\s](\d{2}:\d{2})(?::\d{2})?$/);
-  if(m){
-    const d=new Date(`${m[1]}T${m[2]}:00Z`);
-    return Number.isFinite(d.getTime()) ? d : null;
-  }
-
-  const d=new Date(s);
-  return Number.isFinite(d.getTime()) ? d : null;
-}
-
-function instantFromDateTimeInZone(date,time,tz){
-  if(!date || !time || !tz) return null;
-
-  const safeTz=isValidIanaTimeZone(tz)?tz:'America/New_York';
-  const tm=parseTimeTo24(time);
-  if(!tm) return null;
-
-  let guess=Date.UTC(
-    Number(date.slice(0,4)),
-    Number(date.slice(5,7))-1,
-    Number(date.slice(8,10)),
-    tm.h,
-    tm.min,
-    0
-  );
-
-  for(let i=0;i<4;i++){
-    const d=new Date(guess);
-
-    const parts=new Intl.DateTimeFormat('en-CA',{
-      timeZone:safeTz,
-      year:'numeric',
-      month:'2-digit',
-      day:'2-digit',
-      hour:'2-digit',
-      minute:'2-digit',
-      hourCycle:'h23'
-    }).formatToParts(d);
-
-    const get=t=>parts.find(p=>p.type===t)?.value || '';
-
-    const wallDate=`${get('year')}-${get('month')}-${get('day')}`;
-    const wallHour=Number(get('hour')==='24'?'0':get('hour'));
-    const wallMin=Number(get('minute')||0);
-
-    const wall=Date.UTC(
-      Number(wallDate.slice(0,4)),
-      Number(wallDate.slice(5,7))-1,
-      Number(wallDate.slice(8,10)),
-      wallHour,
-      wallMin,
-      0
-    );
-
-    const target=Date.UTC(
-      Number(date.slice(0,4)),
-      Number(date.slice(5,7))-1,
-      Number(date.slice(8,10)),
-      tm.h,
-      tm.min,
-      0
-    );
-
-    const diff=target-wall;
-
-    if(Math.abs(diff)<60000){
-      return new Date(guess);
-    }
-
-    guess+=diff;
-  }
-
-  const out=new Date(guess);
-  return Number.isFinite(out.getTime()) ? out : null;
-}
-
-function sportsDbTimeInstant(eOrRow){
-  if(!eOrRow) return null;
-
-  const stamp=(eOrRow.strTimestamp || eOrRow.sourceTimestamp || '');
-  if(stamp){
-    const parsed=parseAbsoluteTimestamp(stamp);
-    if(parsed) return parsed;
-  }
-
-  if(eOrRow.kickoffUtc){
-    const parsed=parseAbsoluteTimestamp(eOrRow.kickoffUtc);
-    if(parsed) return parsed;
-  }
-
-  const apiDate=
-    eOrRow.dateEvent ||
-    eOrRow.sourceDate ||
-    eOrRow.apiDate ||
-    eOrRow.rawDate ||
-    '';
-
-  const apiTime=
-    eOrRow.strTime ||
-    eOrRow.sourceTime ||
-    eOrRow.strEventTime ||
-    eOrRow.apiTime ||
-    eOrRow.rawTime ||
-    '';
-
-  if(apiDate && apiTime){
-    const tz=sportsDbFallbackSourceTimeZone(eOrRow);
-    const zoned=instantFromDateTimeInZone(apiDate,apiTime,tz);
-    if(zoned) return zoned;
-  }
-
-  return null;
-}
-
-function shortDateTimeInZone(d,tz){
-  if(!d || !Number.isFinite(d.getTime())) return '—';
-
-  const safeTz=isValidIanaTimeZone(tz)?tz:'America/New_York';
-
-  const date=new Intl.DateTimeFormat('en-GB',{
-    timeZone:safeTz,
-    day:'2-digit',
-    month:'short'
-  }).format(d);
-
-  const time=new Intl.DateTimeFormat('en-US',{
-    timeZone:safeTz,
-    hour:'numeric',
-    minute:'2-digit',
-    hour12:true
-  }).format(d);
-
-  return `${date}, ${time} ${timeZoneShortName(safeTz,d)}`;
-}
-
-function sourceDateTimeRawParts(eOrRow){
-  if(!eOrRow) return {date:'',time:''};
-
-  const date=
-    eOrRow.dateEvent ||
-    eOrRow.sourceDate ||
-    eOrRow.apiDate ||
-    eOrRow.rawDate ||
-    '';
-
-  const time=
-    eOrRow.strTime ||
-    eOrRow.sourceTime ||
-    eOrRow.strEventTime ||
-    eOrRow.apiTime ||
-    eOrRow.rawTime ||
-    '';
-
-  return {date,time};
-}
-
-function shortSourceDateTime(eOrRow){
-  if(!eOrRow) return '—';
-
-  const p=sourceDateTimeRawParts(eOrRow);
-  const sourceTz=sportsDbFallbackSourceTimeZone(eOrRow);
-
-  if(p.date || p.time){
-    let shortDate=p.date;
-
-    const m=String(p.date).match(/^(\d{4})-(\d{2})-(\d{2})$/);
-    if(m){
-      const fakeUtc=new Date(Date.UTC(
-        Number(m[1]),
-        Number(m[2])-1,
-        Number(m[3]),
-        12,
-        0,
-        0
-      ));
-
-      shortDate=new Intl.DateTimeFormat('en-GB',{
-        timeZone:'UTC',
-        day:'2-digit',
-        month:'short'
-      }).format(fakeUtc);
-    }
-
-    const instant=sportsDbTimeInstant(eOrRow);
-    const sourceTzName=timeZoneShortName(sourceTz,instant || new Date());
-
-    return `${shortDate}${p.time?', '+toAmPmFromHHMM(p.time):''} ${sourceTzName}`.trim();
-  }
-
-  const instant=sportsDbTimeInstant(eOrRow);
-  if(instant){
-    return shortDateTimeInZone(instant,sourceTz);
-  }
-
-  return '—';
-}
-
-function shortUserDateTime(eOrRow){
-  const d=sportsDbTimeInstant(eOrRow);
-  return shortDateTimeInZone(d,browserTimeZone());
-}
-
-function sportsDbSourceDisplayLabel(eOrRow){
-  return shortSourceDateTime(eOrRow);
-}
-
-function sportsDbUserLocalLabel(eOrRow){
-  return shortUserDateTime(eOrRow);
-}
-
-function sportsDbSourceLabel(eOrRow){
-  return shortSourceDateTime(eOrRow);
-}
-
-function sportsDbUaeLabel(eOrRow){
-  const d=sportsDbTimeInstant(eOrRow);
-  return shortDateTimeInZone(d,'Asia/Dubai');
-}
-
-function apiTimeToInstant(m){
-  return sportsDbTimeInstant(m);
-}
-
-function apiTimeToUaeLabel(m){
-  return sportsDbSourceDisplayLabel(m);
-}
-
-function apiTimeSourceLabel(m){
-  return sportsDbSourceDisplayLabel(m);
-}
-
-function hubApiTimeLabel(m){
-  return sportsDbSourceDisplayLabel(m);
-}
-
-function hubUaeTimeLabel(m){
-  return sportsDbSourceDisplayLabel(m);
-}
-
-function matchDateTime(m){
-  if(!m) return '';
-
-  const apiLike=!!(
-    m.api ||
-    m.eventId ||
-    m.source==='live' ||
-    m.source==='api' ||
-    m.sourceDate ||
-    m.sourceTime ||
-    m.sourceTimestamp ||
-    m.strTimestamp ||
-    m.kickoffUtc
-  );
-
-  if(apiLike){
-    return sportsDbSourceDisplayLabel(m);
-  }
-
-  const date=(m&&m.uaeDate) || (m&&m.date) || '';
-  const time=(m&&m.uaeTime) || (m&&m.time) || (m&&m.strTime ? toAmPmFromHHMM(m.strTime) : '');
-
-  if(date && time){
-    return date+' · '+time+(m.tz?' '+m.tz:'');
-  }
-
-  return date || time || '';
-}
-
-function matchUaeTimestamp(m){
-  if(!m) return 0;
-
-  const apiLike=!!(
-    m.api ||
-    m.eventId ||
-    m.source==='live' ||
-    m.source==='api' ||
-    m.sourceDate ||
-    m.sourceTime ||
-    m.sourceTimestamp ||
-    m.strTimestamp ||
-    m.kickoffUtc
-  );
-
-  if(apiLike){
-    const d=sportsDbTimeInstant(m);
-    if(d) return d.getTime();
-  }
-
-  if(m.kickoffUtc){
-    const d=parseAbsoluteTimestamp(m.kickoffUtc);
-    if(d) return d.getTime();
-  }
-
-  if(!m.date) return 0;
-
-  const tm=parseTimeTo24(m.time || m.strTime || '00:00');
-  const h=tm ? tm.h : 0;
-  const min=tm ? tm.min : 0;
-
-  // Legacy non-Data rows were stored as UAE display rows.
-  return Date.UTC(
-    Number(m.date.slice(0,4)),
-    Number(m.date.slice(5,7))-1,
-    Number(m.date.slice(8,10)),
-    h-4,
-    min,
-    0
-  );
-}
-
-function matchKickoffTimestamp(m){
-  return matchUaeTimestamp(m);
-}
-
-function countdownText(m){
-  const ts=matchUaeTimestamp(m);
-  if(!ts) return '';
-
-  const diff=ts-Date.now();
-
-  if(diff<=-130*60*1000){
-    return tl('Finished / past window','انتهت / خارج النافذة');
-  }
-
-  if(diff<=0){
-    return tl('Kickoff window','نافذة الانطلاق');
-  }
-
-  const mins=Math.ceil(diff/60000);
-  const h=Math.floor(mins/60);
-  const mm=mins%60;
-
-  if(h>=24){
-    return tl(`in ${Math.round(h/24)}d`,`بعد ${Math.round(h/24)} يوم`);
-  }
-
-  if(h>0){
-    return tl(`in ${h}h ${mm}m`,`بعد ${h}س ${mm}د`);
-  }
-
-  return tl(`in ${mm}m`,`بعد ${mm}د`);
-}
-
-function dateKeyInZone(d,tz){
-  if(!d || !Number.isFinite(d.getTime())) return '';
-
-  const safeTz=isValidIanaTimeZone(tz)?tz:'Asia/Dubai';
-  const parts=new Intl.DateTimeFormat('en-CA',{
-    timeZone:safeTz,
-    year:'numeric',
-    month:'2-digit',
-    day:'2-digit'
-  }).formatToParts(d);
-
-  const get=t=>parts.find(p=>p.type===t)?.value || '';
-
-  return `${get('year')}-${get('month')}-${get('day')}`;
-}
-
-function todayInZone(tz){
-  return dateKeyInZone(new Date(),tz);
-}
-
-function todayPopupShownKey(){
-  const tz=browserTimeZone();
-  return 'wc2026_today_popup_'+tz+'_'+todayInZone(tz);
-}
-
-function todayPopupRows(){
-  const tz=browserTimeZone();
-  const today=todayInZone(tz);
-
-  return homeSchedule()
-    .filter(m=>{
-      if(!m || !m.group || m.idx==null) return false;
-
-      const instant=sportsDbTimeInstant(m);
-      if(instant){
-        return dateKeyInZone(instant,tz)===today;
-      }
-
-      return m.date===today;
-    })
-    .sort((a,b)=>matchUaeTimestamp(a)-matchUaeTimestamp(b));
-}
-
-function apiEventKickoffMeta(e){
-  if(!e) return {
-    kickoffUtc:null,uaeDate:'',uaeTime:'',date:'',time:'',
-    sourceDate:'',sourceTime:'',sourceTimeZone:'',sourceTimestamp:'',
-    sourceLocalDate:'',sourceLocalTime:'',sourceLabel:''
-  };
-
-  const sourceDate=e.dateEvent||'';
-  const sourceTime=e.strTime||e.strEventTime||'';
-  const sourceTimestamp=e.strTimestamp||'';
-  const sourceLocalDate=e.dateEventLocal||'';
-  const sourceLocalTime=e.strTimeLocal||'';
-  const sourceTimeZone=sportsDbFallbackSourceTimeZone(e);
-  const d=sportsDbTimeInstant(e);
-
-  return {
-    kickoffUtc:d?d.toISOString():null,
-    uaeDate:'',
-    uaeTime:'',
-    date:sourceDate,
-    time:sourceTime?toAmPmFromHHMM(sourceTime):'',
-    sourceDate,
-    sourceTime,
-    sourceTimeZone,
-    sourceTimestamp,
-    sourceLocalDate,
-    sourceLocalTime,
-    sourceLabel:sportsDbSourceLabel(e)
-  };
-}
-
-function normalizeSportsDbRow(row){
-  if(!row||typeof row!=='object') return row;
-
-  const m={...row};
-  const d=sportsDbTimeInstant(m);
-  const source=sourceDateTimeRawParts(m);
-
-  if(d){
-    m.kickoffUtc=d.toISOString();
-  }
-
-  if(source.date) m.date=source.date;
-  if(source.time) m.time=toAmPmFromHHMM(source.time);
-
-  m.sourceDate=m.sourceDate||m.dateEvent||source.date||'';
-  m.sourceTime=m.sourceTime||m.strTime||m.strEventTime||source.time||'';
-  m.sourceTimeZone=sportsDbFallbackSourceTimeZone(m);
-  m.sourceLabel=sportsDbSourceLabel(m);
-
-  return m;
-}
-
-function normalizeScheduleRowsForGst(rows){
-  return (Array.isArray(rows)?rows:[]).map(normalizeSportsDbRow);
-}
-
 /* ================= boot ================= */
-async function boot(){
-  if(!APP.data) APP.data=ensureShape({});
-  APP.loaded=false; render();
-  try{ const r=localStorage.getItem('wc2026_ranks'); if(r) APP.prevRanks=JSON.parse(r); }catch(_){}
-  if(sessionStorage.getItem(ADMIN_FLAG)==='1') APP.isAdmin=true;
-  await loadState();
-  APP._schedule=(Array.isArray(APP.data.scheduleMatches)&&APP.data.scheduleMatches.length)?APP.data.scheduleMatches:buildLocalSchedule();
-  await loadHomeApiUpdates();
-  render();
-  loadAnalytics();
-  trackEvent('app_open',{view:APP.view||'dashboard'});
-  trackPageView(APP.view||'dashboard');
-  registerPWA();
-  document.body.classList.toggle('no-voice', !voiceSupported());
-  updateHeaderDateTime();
-  if(!APP._clockTimer) APP._clockTimer=setInterval(updateHeaderDateTime,30000);
-  loadToday();
-}
 /* ================= v71 final canonical time display / conversion logic =================
    Product rules:
    - Match cards and Home hero show original source time only.
@@ -10525,796 +9823,6 @@ async function boot(){
    - Countdown/sorting use absolute instants only.
    - Admin auth/logic is untouched.
 */
-function toAmPmFromHHMM(hhmm){
-  if(!hhmm) return '';
-  const m=String(hhmm).match(/^(\d{1,2}):(\d{2})/);
-  if(!m) return String(hhmm);
-
-  let h=Number(m[1]);
-  const min=m[2];
-  const ampm=h>=12?'PM':'AM';
-
-  h=h%12;
-  if(h===0) h=12;
-
-  return h+':'+min+' '+ampm;
-}
-
-function parseTimeTo24(time){
-  if(!time) return null;
-
-  const s=String(time).trim().toUpperCase();
-
-  let m=s.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/);
-  if(m){
-    let h=Number(m[1]);
-    const min=Number(m[2]);
-
-    if(m[3]==='PM' && h<12) h+=12;
-    if(m[3]==='AM' && h===12) h=0;
-
-    return {h,min};
-  }
-
-  m=s.match(/^(\d{1,2}):(\d{2})/);
-  if(m){
-    return {
-      h:Number(m[1]),
-      min:Number(m[2])
-    };
-  }
-
-  return null;
-}
-
-function browserTimeZone(){
-  try{
-    return Intl.DateTimeFormat().resolvedOptions().timeZone || 'Asia/Dubai';
-  }catch(e){
-    return 'Asia/Dubai';
-  }
-}
-
-function isValidIanaTimeZone(tz){
-  if(!tz || typeof tz!=='string') return false;
-  try{
-    new Intl.DateTimeFormat('en-US',{timeZone:tz}).format(new Date());
-    return true;
-  }catch(e){
-    return false;
-  }
-}
-
-function timeZoneShortName(tz,d){
-  try{
-    const safeTz=isValidIanaTimeZone(tz)?tz:'America/New_York';
-    const parts=new Intl.DateTimeFormat('en-US',{
-      timeZone:safeTz,
-      timeZoneName:'short'
-    }).formatToParts(d||new Date());
-
-    return parts.find(p=>p.type==='timeZoneName')?.value || safeTz;
-  }catch(e){
-    return tz || 'America/New_York';
-  }
-}
-
-function sportsDbFallbackSourceTimeZone(eOrRow){
-  const candidate =
-    (eOrRow&&eOrRow.sourceTimeZone) ||
-    (eOrRow&&eOrRow.sourceTimezone) ||
-    (eOrRow&&eOrRow.timeZone) ||
-    (eOrRow&&eOrRow.timezone) ||
-    '';
-
-  return isValidIanaTimeZone(candidate) ? candidate : 'America/New_York';
-}
-
-function parseAbsoluteTimestamp(stamp){
-  if(!stamp) return null;
-
-  const s=String(stamp).trim();
-
-  // Has explicit timezone: Z or ±HH:mm / ±HHmm.
-  if(/[zZ]$|[+-]\d{2}:?\d{2}$/.test(s)){
-    const d=new Date(s);
-    return Number.isFinite(d.getTime()) ? d : null;
-  }
-
-  // Naive timestamp fallback.
-  // Treat as UTC only for this feed contract.
-  const m=s.match(/^(\d{4}-\d{2}-\d{2})[T\s](\d{2}:\d{2})(?::\d{2})?$/);
-  if(m){
-    const d=new Date(`${m[1]}T${m[2]}:00Z`);
-    return Number.isFinite(d.getTime()) ? d : null;
-  }
-
-  const d=new Date(s);
-  return Number.isFinite(d.getTime()) ? d : null;
-}
-
-function instantFromDateTimeInZone(date,time,tz){
-  if(!date || !time || !tz) return null;
-
-  const safeTz=isValidIanaTimeZone(tz)?tz:'America/New_York';
-  const tm=parseTimeTo24(time);
-  if(!tm) return null;
-
-  let guess=Date.UTC(
-    Number(date.slice(0,4)),
-    Number(date.slice(5,7))-1,
-    Number(date.slice(8,10)),
-    tm.h,
-    tm.min,
-    0
-  );
-
-  for(let i=0;i<4;i++){
-    const d=new Date(guess);
-
-    const parts=new Intl.DateTimeFormat('en-CA',{
-      timeZone:safeTz,
-      year:'numeric',
-      month:'2-digit',
-      day:'2-digit',
-      hour:'2-digit',
-      minute:'2-digit',
-      hourCycle:'h23'
-    }).formatToParts(d);
-
-    const get=t=>parts.find(p=>p.type===t)?.value || '';
-
-    const wallDate=`${get('year')}-${get('month')}-${get('day')}`;
-    const wallHour=Number(get('hour')==='24'?'0':get('hour'));
-    const wallMin=Number(get('minute')||0);
-
-    const wall=Date.UTC(
-      Number(wallDate.slice(0,4)),
-      Number(wallDate.slice(5,7))-1,
-      Number(wallDate.slice(8,10)),
-      wallHour,
-      wallMin,
-      0
-    );
-
-    const target=Date.UTC(
-      Number(date.slice(0,4)),
-      Number(date.slice(5,7))-1,
-      Number(date.slice(8,10)),
-      tm.h,
-      tm.min,
-      0
-    );
-
-    const diff=target-wall;
-
-    if(Math.abs(diff)<60000){
-      return new Date(guess);
-    }
-
-    guess+=diff;
-  }
-
-  const out=new Date(guess);
-  return Number.isFinite(out.getTime()) ? out : null;
-}
-
-function sportsDbTimeInstant(eOrRow){
-  if(!eOrRow) return null;
-
-  const stamp=(eOrRow.strTimestamp || eOrRow.sourceTimestamp || '');
-  if(stamp){
-    const parsed=parseAbsoluteTimestamp(stamp);
-    if(parsed) return parsed;
-  }
-
-  if(eOrRow.kickoffUtc){
-    const parsed=parseAbsoluteTimestamp(eOrRow.kickoffUtc);
-    if(parsed) return parsed;
-  }
-
-  const apiDate=
-    eOrRow.dateEvent ||
-    eOrRow.sourceDate ||
-    eOrRow.apiDate ||
-    eOrRow.rawDate ||
-    '';
-
-  const apiTime=
-    eOrRow.strTime ||
-    eOrRow.sourceTime ||
-    eOrRow.strEventTime ||
-    eOrRow.apiTime ||
-    eOrRow.rawTime ||
-    '';
-
-  if(apiDate && apiTime){
-    const tz=sportsDbFallbackSourceTimeZone(eOrRow);
-    const zoned=instantFromDateTimeInZone(apiDate,apiTime,tz);
-    if(zoned) return zoned;
-  }
-
-  return null;
-}
-
-function shortDateTimeInZone(d,tz){
-  if(!d || !Number.isFinite(d.getTime())) return '—';
-
-  const safeTz=isValidIanaTimeZone(tz)?tz:'America/New_York';
-  const date=new Intl.DateTimeFormat('en-GB',{
-    timeZone:safeTz,
-    day:'2-digit',
-    month:'short'
-  }).format(d);
-
-  const time=new Intl.DateTimeFormat('en-US',{
-    timeZone:safeTz,
-    hour:'numeric',
-    minute:'2-digit',
-    hour12:true
-  }).format(d);
-
-  return `${date}, ${time} ${timeZoneShortName(safeTz,d)}`;
-}
-
-function sourceDateTimeRawParts(eOrRow){
-  if(!eOrRow) return {date:'',time:''};
-
-  const date=
-    eOrRow.dateEvent ||
-    eOrRow.sourceDate ||
-    eOrRow.apiDate ||
-    eOrRow.rawDate ||
-    '';
-
-  const time=
-    eOrRow.strTime ||
-    eOrRow.sourceTime ||
-    eOrRow.strEventTime ||
-    eOrRow.apiTime ||
-    eOrRow.rawTime ||
-    '';
-
-  return {date,time};
-}
-
-function shortSourceDateTime(eOrRow){
-  if(!eOrRow) return '—';
-
-  const p=sourceDateTimeRawParts(eOrRow);
-  const sourceTz=sportsDbFallbackSourceTimeZone(eOrRow);
-
-  // Case 1: Raw source date/time exists. Display without converting wall-clock time.
-  if(p.date || p.time){
-    let shortDate=p.date;
-
-    const m=String(p.date).match(/^(\d{4})-(\d{2})-(\d{2})$/);
-    if(m){
-      const fakeUtc=new Date(Date.UTC(
-        Number(m[1]),
-        Number(m[2])-1,
-        Number(m[3]),
-        12,
-        0,
-        0
-      ));
-
-      shortDate=new Intl.DateTimeFormat('en-GB',{
-        timeZone:'UTC',
-        day:'2-digit',
-        month:'short'
-      }).format(fakeUtc);
-    }
-
-    const instant=sportsDbTimeInstant(eOrRow);
-    const sourceTzName=timeZoneShortName(sourceTz,instant || new Date());
-
-    return `${shortDate}${p.time?', '+toAmPmFromHHMM(p.time):''} ${sourceTzName}`.trim();
-  }
-
-  // Case 2: Only absolute instant exists. Format that instant in source timezone.
-  const instant=sportsDbTimeInstant(eOrRow);
-  if(instant){
-    return shortDateTimeInZone(instant,sourceTz);
-  }
-
-  return '—';
-}
-
-function shortUserDateTime(eOrRow){
-  const d=sportsDbTimeInstant(eOrRow);
-  return shortDateTimeInZone(d,browserTimeZone());
-}
-
-function sportsDbSourceDisplayLabel(eOrRow){
-  return shortSourceDateTime(eOrRow);
-}
-
-function sportsDbUserLocalLabel(eOrRow){
-  return shortUserDateTime(eOrRow);
-}
-
-function sportsDbSourceLabel(eOrRow){
-  return shortSourceDateTime(eOrRow);
-}
-
-function sportsDbUaeLabel(eOrRow){
-  // Kept for backward compatibility. Do not use for source-time display.
-  const d=sportsDbTimeInstant(eOrRow);
-  return shortDateTimeInZone(d,'Asia/Dubai');
-}
-
-function apiTimeToInstant(m){
-  return sportsDbTimeInstant(m);
-}
-
-function apiTimeToUaeLabel(m){
-  // Kept for old callers, but source display must remain source-only.
-  return sportsDbSourceDisplayLabel(m);
-}
-
-function apiTimeSourceLabel(m){
-  return sportsDbSourceDisplayLabel(m);
-}
-
-function hubApiTimeLabel(m){
-  return sportsDbSourceDisplayLabel(m);
-}
-
-function hubUaeTimeLabel(m){
-  return sportsDbSourceDisplayLabel(m);
-}
-
-function matchDateTime(m){
-  if(!m) return '';
-
-  const apiLike=!!(
-    m.api ||
-    m.eventId ||
-    m.source==='live' ||
-    m.source==='api' ||
-    m.sourceDate ||
-    m.sourceTime ||
-    m.sourceTimestamp ||
-    m.strTimestamp ||
-    m.kickoffUtc
-  );
-
-  if(apiLike){
-    return sportsDbSourceDisplayLabel(m);
-  }
-
-  const date=(m&&m.uaeDate) || (m&&m.date) || '';
-  const time=(m&&m.uaeTime) || (m&&m.time) || (m&&m.strTime ? toAmPmFromHHMM(m.strTime) : '');
-
-  if(date && time){
-    return date+' · '+time+(m.tz?' '+m.tz:'');
-  }
-
-  return date || time || '';
-}
-
-function matchUaeTimestamp(m){
-  // Name kept for compatibility.
-  // This returns an absolute timestamp for countdown/sorting.
-  if(!m) return 0;
-
-  const apiLike=!!(
-    m.api ||
-    m.eventId ||
-    m.source==='live' ||
-    m.source==='api' ||
-    m.sourceDate ||
-    m.sourceTime ||
-    m.sourceTimestamp ||
-    m.strTimestamp ||
-    m.kickoffUtc
-  );
-
-  if(apiLike){
-    const d=sportsDbTimeInstant(m);
-    if(d) return d.getTime();
-  }
-
-  if(m.kickoffUtc){
-    const d=parseAbsoluteTimestamp(m.kickoffUtc);
-    if(d) return d.getTime();
-  }
-
-  if(!m.date) return 0;
-
-  const tm=parseTimeTo24(m.time || m.strTime || '00:00');
-  const h=tm ? tm.h : 0;
-  const min=tm ? tm.min : 0;
-
-  // Legacy non-Data rows were stored as UAE display rows.
-  return Date.UTC(
-    Number(m.date.slice(0,4)),
-    Number(m.date.slice(5,7))-1,
-    Number(m.date.slice(8,10)),
-    h-4,
-    min,
-    0
-  );
-}
-
-function matchKickoffTimestamp(m){
-  return matchUaeTimestamp(m);
-}
-
-function countdownText(m){
-  const ts=matchUaeTimestamp(m);
-  if(!ts) return '';
-
-  const diff=ts-Date.now();
-
-  if(diff<=-130*60*1000){
-    return tl('Finished / past window','انتهت / خارج النافذة');
-  }
-
-  if(diff<=0){
-    return tl('Kickoff window','نافذة الانطلاق');
-  }
-
-  const mins=Math.ceil(diff/60000);
-  const h=Math.floor(mins/60);
-  const mm=mins%60;
-
-  if(h>=24){
-    return tl(`in ${Math.round(h/24)}d`,`بعد ${Math.round(h/24)} يوم`);
-  }
-
-  if(h>0){
-    return tl(`in ${h}h ${mm}m`,`بعد ${h}س ${mm}د`);
-  }
-
-  return tl(`in ${mm}m`,`بعد ${mm}د`);
-}
-
-function dateKeyInZone(d,tz){
-  if(!d || !Number.isFinite(d.getTime())) return '';
-
-  const safeTz=isValidIanaTimeZone(tz)?tz:'Asia/Dubai';
-  const parts=new Intl.DateTimeFormat('en-CA',{
-    timeZone:safeTz,
-    year:'numeric',
-    month:'2-digit',
-    day:'2-digit'
-  }).formatToParts(d);
-
-  const get=t=>parts.find(p=>p.type===t)?.value || '';
-
-  return `${get('year')}-${get('month')}-${get('day')}`;
-}
-
-function todayInZone(tz){
-  return dateKeyInZone(new Date(),tz);
-}
-
-function todayPopupShownKey(){
-  const tz=browserTimeZone();
-  return 'wc2026_today_popup_'+tz+'_'+todayInZone(tz);
-}
-
-function todayPopupRows(){
-  const tz=browserTimeZone();
-  const today=todayInZone(tz);
-
-  return homeSchedule()
-    .filter(m=>{
-      if(!m || !m.group || m.idx==null) return false;
-
-      const instant=sportsDbTimeInstant(m);
-      if(instant){
-        return dateKeyInZone(instant,tz)===today;
-      }
-
-      // Legacy fallback only.
-      return m.date===today;
-    })
-    .sort((a,b)=>matchUaeTimestamp(a)-matchUaeTimestamp(b));
-}
-
-function popupResultForMatch(m){
-  if(!m) return null;
-
-  if(m.hs!==undefined && m.as!==undefined && m.hs!==null && m.as!==null && m.hs!=='' && m.as!==''){
-    return {
-      hs:Number(m.hs),
-      as:Number(m.as),
-      status:m.status||'Final',
-      api:!!m.api
-    };
-  }
-
-  const apiRows=typeof apiHomeMatches==='function'?apiHomeMatches():[];
-  const hit=apiRows.find(x=>{
-    if(!x) return false;
-    if(m.eventId && x.eventId && String(m.eventId)===String(x.eventId)) return true;
-    if(m.group && x.group && String(m.group)===String(x.group) && m.idx!=null && x.idx!=null && Number(m.idx)===Number(x.idx)) return true;
-    return sameTeam(m.home,x.home)&&sameTeam(m.away,x.away);
-  });
-
-  if(hit && hit.hs!==undefined && hit.as!==undefined && hit.hs!==null && hit.as!==null){
-    return {
-      hs:Number(hit.hs),
-      as:Number(hit.as),
-      status:hit.status||'Final',
-      api:!!hit.api
-    };
-  }
-
-  if(m.group && m.idx!=null){
-    const r=matchResult(m.group,m.idx);
-    if(r&&r.complete){
-      return {
-        hs:Number(r.hs),
-        as:Number(r.as),
-        status:'Final',
-        api:false
-      };
-    }
-  }
-
-  return null;
-}
-
-function popupMatchStatus(m){
-  const res=popupResultForMatch(m);
-  if(res){
-    const raw=String(res.status||'').toLowerCase();
-    if(raw.includes('live') || raw.includes('1h') || raw.includes('2h') || raw.includes('ht')) return {key:'live',label:tl('Live','مباشرة')};
-    return {key:'final',label:tl('Final','نهائية')};
-  }
-
-  const base=hubMatchStatus(m);
-  return base||{key:'upcoming',label:tl('Upcoming','قادمة')};
-}
-
-function popupMatchScoreHtml(m){
-  const res=popupResultForMatch(m);
-  if(!res) return `<span class="today-popup-score">vs</span>`;
-  return `<span class="today-popup-score">${esc(res.hs)}-${esc(res.as)}</span>`;
-}
-
-function popupSplitData(m){
-  if(!m || !m.group || m.idx==null) return {home:[],away:[],none:[]};
-  try{
-    return playerPredictionSplit(m);
-  }catch(e){
-    return {home:[],away:[],none:[]};
-  }
-}
-
-function popupSplitHtml(m){
-  const sp=popupSplitData(m);
-  const total=Math.max(1,sp.home.length+sp.away.length+sp.none.length);
-  const hp=Math.round(sp.home.length/total*100);
-  const ap=Math.round(sp.away.length/total*100);
-  const np=Math.max(0,100-hp-ap);
-
-  return `<div class="today-popup-picks">
-    <div class="today-popup-split" aria-label="${esc(tl('Prediction split','انقسام التوقعات'))}">
-      <span class="home" style="width:${hp}%"></span>
-      <span class="away" style="width:${ap}%"></span>
-      <span class="none" style="width:${np}%"></span>
-    </div>
-    <div class="today-popup-pick-labels">
-      <span>${teamHtml(m.home)} · ${sp.home.length}</span>
-      <span>${teamHtml(m.away)} · ${sp.away.length}</span>
-      <span>${esc(tl('No edge','بدون أفضلية'))} · ${sp.none.length}</span>
-    </div>
-  </div>`;
-}
-
-function popupMatchNote(m){
-  const res=popupResultForMatch(m);
-  if(res){
-    const homeWin=res.hs>res.as, awayWin=res.as>res.hs;
-    const winner=homeWin?teamText(m.home):(awayWin?teamText(m.away):tl('Draw','تعادل'));
-    return tl(`Result: ${winner}. Prediction impact is reflected in the Match Center.`,`النتيجة: ${winner}. تأثير التوقعات يظهر في مركز المباريات.`);
-  }
-
-  const status=popupMatchStatus(m);
-  const countdown=countdownText(m);
-  if(status.key==='soon' || status.key==='live') return countdown||status.label;
-
-  return tl('Tip: compare Original vs Your time before making picks.','نصيحة: قارن الوقت الأصلي مع وقتك قبل اختيار التوقع.');
-}
-
-function popupSummaryStats(rows){
-  const finals=rows.filter(m=>popupMatchStatus(m).key==='final').length;
-  const live=rows.filter(m=>popupMatchStatus(m).key==='live').length;
-  const upcoming=rows.length-finals-live;
-
-  return {finals,live,upcoming};
-}
-
-function renderTodayMatchesPopup(){
-  const rows=todayPopupRows();
-  const tz=browserTimeZone();
-  const stats=popupSummaryStats(rows);
-
-  if(!rows.length) return '';
-
-  return `<div class="today-popup-shell">
-    <div class="today-popup-head">
-      <span class="today-popup-kicker">⚽ ${esc(tl('Today Match Center','مركز مباريات اليوم'))}</span>
-      <h3>${esc(tl('Today matches','مباريات اليوم'))}</h3>
-      <div class="today-popup-sub">${esc(todayInZone(tz))} · ${esc(tz)} · ${esc(tl('Original time + your local time','الوقت الأصلي + وقتك المحلي'))}</div>
-    </div>
-
-    <div class="today-popup-summary">
-      <div class="today-popup-stat"><b class="num">${rows.length}</b><span>${esc(tl('Matches','مباريات'))}</span></div>
-      <div class="today-popup-stat"><b class="num">${stats.finals}</b><span>${esc(tl('Final results','نتائج نهائية'))}</span></div>
-      <div class="today-popup-stat"><b class="num">${stats.upcoming+stats.live}</b><span>${esc(tl('Live / upcoming','مباشرة / قادمة'))}</span></div>
-    </div>
-
-    <div class="today-popup-list">
-      ${rows.map(m=>{
-        const status=popupMatchStatus(m);
-        const venue=m.venue?` · ${esc(m.venue)}`:'';
-        return `<div class="today-popup-card ${esc(status.key)}">
-          <div class="today-popup-top">
-            <div class="today-popup-main">
-              <div class="today-popup-teams">${teamHtml(m.home)} <span class="vs">vs</span> ${teamHtml(m.away)}</div>
-              <div class="today-popup-meta">${esc(tl('Group','المجموعة'))} ${esc(m.group||'—')}${venue}</div>
-            </div>
-            <div>
-              ${popupMatchScoreHtml(m)}
-              <div style="margin-top:5px"><span class="today-popup-status ${esc(status.key)}">${esc(status.label)}</span></div>
-            </div>
-          </div>
-
-          <div class="today-popup-time-grid">
-            <div class="today-popup-time">
-              <span>${esc(tl('Original','الأصلي'))}</span>
-              <b>${esc(shortSourceDateTime(m))}</b>
-            </div>
-            <div class="today-popup-time">
-              <span>${esc(tl('Your time','وقتك'))}</span>
-              <b>${esc(shortUserDateTime(m))}</b>
-            </div>
-          </div>
-
-          ${popupSplitHtml(m)}
-          <div class="today-popup-note">${esc(popupMatchNote(m))}</div>
-        </div>`;
-      }).join('')}
-    </div>
-
-    <div class="today-popup-actions">
-      <button class="btn ghost" onclick="go('matches');closeSheet()">${esc(t('v_matches'))}</button>
-      <button class="btn" onclick="closeSheet()">${esc(t('close'))}</button>
-    </div>
-  </div>`;
-}
-
-function showTodayMatchesPopupOnce(){
-  try{
-    const key=todayPopupShownKey();
-
-    if(sessionStorage.getItem(key)==='1') return;
-    if(!todayPopupRows().length) return;
-
-    sessionStorage.setItem(key,'1');
-    openSheet(renderTodayMatchesPopup());
-  }catch(e){
-    console.warn('Today popup failed',e);
-  }
-}
-
-function apiEventKickoffMeta(e){
-  if(!e) return {
-    kickoffUtc:null,uaeDate:'',uaeTime:'',date:'',time:'',
-    sourceDate:'',sourceTime:'',sourceTimeZone:'',sourceTimestamp:'',
-    sourceLocalDate:'',sourceLocalTime:'',sourceLabel:''
-  };
-
-  const sourceDate=e.dateEvent||'';
-  const sourceTime=e.strTime||e.strEventTime||'';
-  const sourceTimestamp=e.strTimestamp||'';
-  const sourceLocalDate=e.dateEventLocal||'';
-  const sourceLocalTime=e.strTimeLocal||'';
-  const sourceTimeZone=sportsDbFallbackSourceTimeZone(e);
-  const d=sportsDbTimeInstant(e);
-  const uaeFmt=(typeof formatInstantForTimeZone==='function')?formatInstantForTimeZone(d,'Asia/Dubai'):null;
-
-  return {
-    kickoffUtc:d?d.toISOString():null,
-    uaeDate:uaeFmt?uaeFmt.date:'',
-    uaeTime:uaeFmt?uaeFmt.time:'',
-    date:sourceDate,
-    time:sourceTime?toAmPmFromHHMM(sourceTime):'',
-    sourceDate,
-    sourceTime,
-    sourceTimeZone,
-    sourceTimestamp,
-    sourceLocalDate,
-    sourceLocalTime,
-    sourceLabel:sportsDbSourceLabel(e)
-  };
-}
-
-function normalizeSportsDbRow(row){
-  if(!row||typeof row!=='object') return row;
-  const m={...row};
-  const d=sportsDbTimeInstant(m);
-  const source=sourceDateTimeRawParts(m);
-  if(d){
-    m.kickoffUtc=d.toISOString();
-  }
-  if(source.date) m.date=source.date;
-  if(source.time) m.time=toAmPmFromHHMM(source.time);
-  m.sourceDate=m.sourceDate||m.dateEvent||source.date||'';
-  m.sourceTime=m.sourceTime||m.strTime||m.strEventTime||source.time||'';
-  m.sourceTimeZone=sportsDbFallbackSourceTimeZone(m);
-  m.sourceLabel=sportsDbSourceLabel(m);
-  return m;
-}
-
-function normalizeScheduleRowsForGst(rows){
-  return (Array.isArray(rows)?rows:[]).map(normalizeSportsDbRow);
-}
-
-function renderMatchdayHero(){
-  const next=nextApiMatch();
-  const nextStatus=next?hubMatchStatus(next):null;
-  const nextLine=next ? `${hubMatchName(next)}` : tl('No upcoming match found','لا توجد مباراة قادمة حالياً');
-
-  return `<div class="card hub-hero">
-    <div class="hero-kicker">⚽ ${esc(tl('World Cup Pick’em Matchday Hub','مركز يوم مباريات كأس العالم للتوقعات'))}</div>
-    <h2>${esc(tl('Today’s briefing','ملخص اليوم'))}</h2>
-
-    <div class="hub-next-center">
-      <div class="hub-brief-label">${esc(tl('Next match','المباراة القادمة'))}</div>
-      <div class="hub-next-main">${esc(nextLine)}</div>
-      ${renderNextMatchReadableMeta(next,nextStatus)}
-    </div>
-  </div>`;
-}
-
-async function boot(){
-  if(!APP.data) APP.data=ensureShape({});
-  APP.loaded=false;
-  render();
-
-  try{
-    const r=localStorage.getItem('wc2026_ranks');
-    if(r) APP.prevRanks=JSON.parse(r);
-  }catch(_){}
-
-  if(sessionStorage.getItem(ADMIN_FLAG)==='1') APP.isAdmin=true;
-
-  await loadState();
-
-  if(Array.isArray(APP.data.scheduleMatches)&&APP.data.scheduleMatches.length){
-    APP.data.scheduleMatches=normalizeScheduleRowsForGst(APP.data.scheduleMatches);
-  }
-
-  APP._schedule=(Array.isArray(APP.data.scheduleMatches)&&APP.data.scheduleMatches.length)?APP.data.scheduleMatches:buildLocalSchedule();
-
-  render();
-
-  loadAnalytics();
-  trackEvent('app_open',{view:APP.view||'dashboard'});
-  trackPageView(APP.view||'dashboard');
-  registerPWA();
-  document.body.classList.toggle('no-voice', !voiceSupported());
-  updateHeaderDateTime();
-  if(!APP._clockTimer) APP._clockTimer=setInterval(updateHeaderDateTime,30000);
-
-  loadHomeApiUpdates()
-    .then(()=>{
-      render();
-      showTodayMatchesPopupOnce();
-      return loadToday();
-    })
-    .catch(e=>{
-      APP._homeApiError=String(e&&e.message?e.message:e);
-      render();
-    });
-}
 window.addEventListener('online',()=>{ if(APP.cached) boot(); });
 window.addEventListener('keydown',(e)=>{ if(e.key==='Escape'){ const bg=$('sheetBg'); if(bg&&bg.classList.contains('open')) closeSheet(); } });
 boot();
@@ -11457,16 +9965,6 @@ function apiTimeToInstant(m){ return sportsDbTimeInstant(m); }
 function apiTimeToUaeLabel(m){ return sportsDbSourceDisplayLabel(m); }
 function apiTimeSourceLabel(m){ return sportsDbSourceDisplayLabel(m); }
 function hubApiTimeLabel(m){ return sportsDbSourceDisplayLabel(m); }
-function hubUaeTimeLabel(m){ return sportsDbSourceDisplayLabel(m); }
-function matchDateTime(m){
-  if(!m) return '';
-  const apiLike=!!(m.api||m.eventId||m.source==='live'||m.source==='api'||m.sourceDate||m.sourceTime||m.sourceTimestamp||m.strTimestamp||m.kickoffUtc);
-  if(apiLike) return sportsDbSourceDisplayLabel(m);
-  const date=(m&&m.uaeDate)||(m&&m.date)||'';
-  const time=(m&&m.uaeTime)||(m&&m.time)||(m&&m.strTime?toAmPmFromHHMM(m.strTime):'');
-  if(date&&time) return date+' · '+time+(m.tz?' '+m.tz:'');
-  return date||time||'';
-}
 function matchUaeTimestamp(m){
   if(!m) return 0;
   const apiLike=!!(m.api||m.eventId||m.source==='live'||m.source==='api'||m.sourceDate||m.sourceTime||m.sourceTimestamp||m.strTimestamp||m.kickoffUtc);
@@ -11541,6 +10039,13 @@ function normalizeScheduleRowsForGst(rows){ return (Array.isArray(rows)?rows:[])
 function popupResultForMatch(m){
   if(!m) return null;
   if(m.hs!==undefined&&m.as!==undefined&&m.hs!==null&&m.as!==null&&m.hs!==''&&m.as!=='') return {hs:Number(m.hs),as:Number(m.as),status:m.status||'Final',api:!!m.api};
+  // Authoritative first: matchResult encodes DB-override-then-API-final, so a saved/corrected
+  // score is always what shows — no fake/stale result survives a DB update.
+  if(m.group&&m.idx!=null){
+    const r=matchResult(m.group,m.idx);
+    if(r&&r.complete) return {hs:Number(r.hs),as:Number(r.as),status:'Final',api:r.src==='api'};
+  }
+  // Otherwise look up the completed-feed rows (covers matches without a group/idx mapping).
   const apiRows=typeof apiHomeMatches==='function'?apiHomeMatches():[];
   const hit=apiRows.find(x=>{
     if(!x) return false;
@@ -11549,9 +10054,10 @@ function popupResultForMatch(m){
     return sameTeam(m.home,x.home)&&sameTeam(m.away,x.away);
   });
   if(hit&&hit.hs!==undefined&&hit.as!==undefined&&hit.hs!==null&&hit.as!==null) return {hs:Number(hit.hs),as:Number(hit.as),status:hit.status||'Final',api:!!hit.api};
-  if(m.group&&m.idx!=null){
-    const r=matchResult(m.group,m.idx);
-    if(r&&r.complete) return {hs:Number(r.hs),as:Number(r.as),status:'Final',api:false};
+  // Live in-progress score (DISPLAY ONLY) — only reached when no final result exists.
+  if(m.group&&m.idx!=null&&APP._homeApiLive){
+    const lv=APP._homeApiLive[matchKey(m.group,m.idx)];
+    if(lv&&Number.isFinite(Number(lv.hs))&&Number.isFinite(Number(lv.as))) return {hs:Number(lv.hs),as:Number(lv.as),status:lv.status||'Live',api:true,live:true};
   }
   return null;
 }
@@ -11656,6 +10162,35 @@ async function boot(){
   updateHeaderDateTime();
   if(!APP._clockTimer) APP._clockTimer=setInterval(updateHeaderDateTime,30000);
   loadHomeApiUpdates().then(()=>{ render(); showTodayMatchesPopupOnce(); return loadToday(); }).catch(e=>{ APP._homeApiError=String(e&&e.message?e.message:e); render(); });
+  startLiveAutoRefresh();
+}
+
+/* ===== Live auto-refresh: re-fetch the feed so live data is never frozen =====
+   Adaptive cadence: fast while a match is in its live window, slower otherwise.
+   Also refreshes the moment the user returns to the tab or regains connectivity. */
+function liveWindowActive(){
+  try{ return (typeof liveMatchesNow==='function') && liveMatchesNow().length>0; }catch(_){ return false; }
+}
+async function autoRefreshLiveData(){
+  if(APP._liveRefreshing) return;
+  APP._liveRefreshing=true;
+  try{
+    await loadState();            // re-pull authoritative DB results (no fake results: DB wins)
+    await loadHomeApiUpdates();   // re-pull the SportsDB feed (schedule + finals + in-progress)
+    await loadToday();
+  }catch(e){ APP._homeApiError=String(e&&e.message?e.message:e); }
+  finally{ APP._liveRefreshing=false; render(); }
+}
+function startLiveAutoRefresh(){
+  if(APP._liveTimerSet) return; APP._liveTimerSet=true;
+  const tick=async()=>{
+    if(document.visibilityState!=='hidden'){ await autoRefreshLiveData(); }
+    const ms=liveWindowActive()?60000:300000;   // 60s when live, else 5 min
+    APP._liveTimer=setTimeout(tick, ms);
+  };
+  APP._liveTimer=setTimeout(tick, liveWindowActive()?60000:300000);
+  document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='visible') autoRefreshLiveData(); });
+  window.addEventListener('online',()=>{ autoRefreshLiveData(); });
 }
 
 /* ===== v53 user-timezone display (authoritative overrides; display-only) ===== */

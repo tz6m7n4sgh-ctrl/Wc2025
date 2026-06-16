@@ -4646,6 +4646,72 @@ body.has-live{padding-bottom:52px}
 .fd.w{background:var(--good)} .fd.l{background:var(--bad)} .fd.d{background:#caa42a} .fd.e{background:transparent;border:1.5px solid #d4ddd8}
 </style>
 <!-- Analytics is initialized once in loadAnalytics() to avoid duplicate page_view hits. -->
+<style id="wcsp-style">
+.wcsp-overlay{position:fixed;inset:0;z-index:9999;display:grid;place-items:center;padding:18px;
+  background:radial-gradient(120% 90% at 50% -10%, rgba(16,74,46,.55), rgba(3,12,8,.86) 60%, rgba(2,8,5,.94));
+  -webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);opacity:0;transition:opacity .35s ease}
+.wcsp-overlay.is-in{opacity:1}
+.wcsp-overlay *{box-sizing:border-box}
+.wcsp-flood{position:absolute;inset:0;overflow:hidden;pointer-events:none}
+.wcsp-flood::before,.wcsp-flood::after{content:"";position:absolute;top:-40%;width:60%;height:180%;
+  background:linear-gradient(180deg, rgba(232,192,97,.16), rgba(232,192,97,0) 70%);filter:blur(14px);
+  transform-origin:top center;animation:wcsp-sweep 9s ease-in-out infinite alternate}
+.wcsp-flood::before{left:6%;transform:rotate(14deg)}
+.wcsp-flood::after{right:6%;transform:rotate(-14deg);animation-delay:-4.5s}
+.wcsp-pitch{position:absolute;left:50%;bottom:-220px;width:520px;height:520px;transform:translateX(-50%);
+  border:2px solid rgba(43,176,103,.18);border-radius:50%;pointer-events:none}
+.wcsp-pitch::after{content:"";position:absolute;inset:38%;border:2px solid rgba(43,176,103,.16);border-radius:50%}
+.wcsp-card{position:relative;width:min(440px,100%);border-radius:22px;overflow:hidden;
+  background:linear-gradient(180deg, rgba(10,32,21,.92), rgba(6,20,13,.96));
+  border:1px solid rgba(232,192,97,.28);
+  box-shadow:0 30px 80px rgba(0,0,0,.55), inset 0 1px 0 rgba(255,255,255,.05);
+  transform:translateY(22px) scale(.96);opacity:0;transition:transform .5s cubic-bezier(.2,.9,.25,1.2), opacity .4s ease}
+.wcsp-overlay.is-in .wcsp-card{transform:none;opacity:1}
+.wcsp-card::before{content:"";position:absolute;top:0;left:0;right:0;height:4px;
+  background:linear-gradient(90deg,#1f9d57,#e8c061 50%,#d23b3b)}
+.wcsp-perf{position:absolute;top:118px;left:-9px;right:-9px;display:flex;justify-content:space-between;pointer-events:none}
+.wcsp-perf span{width:18px;height:18px;border-radius:50%;background:#06140d;box-shadow:inset 0 0 0 1px rgba(232,192,97,.18)}
+.wcsp-top{padding:18px 22px 14px;text-align:center}
+.wcsp-eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:#e8c061;font-weight:700}
+.wcsp-hosts{font-size:14px;letter-spacing:.05em}
+.wcsp-title{margin:8px 0 2px;color:#f3f7f4;font-size:25px;font-weight:800;line-height:1.05;letter-spacing:-.01em}
+.wcsp-sub{color:#9fb4a6;font-size:13px;margin:0}
+.wcsp-x{position:absolute;top:12px;inset-inline-end:14px;width:32px;height:32px;border-radius:50%;border:none;cursor:pointer;background:rgba(255,255,255,.06);color:#cfe;font-size:17px;line-height:1;display:grid;place-items:center;z-index:2}
+.wcsp-x:hover{background:rgba(255,255,255,.12)}
+.wcsp-lang{position:absolute;top:14px;inset-inline-start:14px;z-index:2;border:1px solid rgba(232,192,97,.3);background:transparent;color:#e8c061;font-weight:700;font-size:11px;border-radius:999px;padding:5px 10px;cursor:pointer}
+.wcsp-next{margin:4px 18px 0;padding:16px;border-radius:16px;text-align:center;background:radial-gradient(90% 120% at 50% 0%, rgba(31,157,87,.16), rgba(255,255,255,.02));border:1px solid rgba(43,176,103,.22)}
+.wcsp-next-label{display:inline-flex;align-items:center;gap:7px;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#7fcf9f;font-weight:700}
+.wcsp-dot{width:7px;height:7px;border-radius:50%;background:#36d27a;box-shadow:0 0 0 0 rgba(54,210,122,.6);animation:wcsp-pulse 1.8s infinite}
+.wcsp-fix{display:flex;align-items:center;justify-content:center;gap:12px;margin:10px 0 4px}
+.wcsp-team{display:flex;align-items:center;gap:7px;font-weight:700;color:#eef5f0;font-size:15px;max-width:38%}
+.wcsp-team .fl{font-size:20px}
+.wcsp-vs{color:#8aa79a;font-weight:700;font-size:12px}
+.wcsp-when{color:#9fb4a6;font-size:12px;margin-top:2px}
+.wcsp-clock{display:flex;justify-content:center;gap:8px;margin-top:12px}
+.wcsp-unit{min-width:58px;padding:9px 4px;border-radius:11px;background:rgba(2,10,6,.6);border:1px solid rgba(232,192,97,.14)}
+.wcsp-num{font-variant-numeric:tabular-nums;font-feature-settings:"tnum";font-family:ui-monospace,"SF Mono",Menlo,monospace;font-size:26px;font-weight:800;color:#fff;line-height:1}
+.wcsp-num.tick{animation:wcsp-tick .5s ease}
+.wcsp-ulab{display:block;margin-top:4px;font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:#86a193}
+.wcsp-new{margin:14px 18px 4px}
+.wcsp-new-h{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.wcsp-new-h b{color:#e8c061;font-size:12px;letter-spacing:.12em;text-transform:uppercase}
+.wcsp-new-h .ft{font-size:10px;color:#7fcf9f;border:1px solid rgba(127,207,159,.4);border-radius:6px;padding:1px 6px;font-weight:700}
+.wcsp-res{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 12px;border-radius:11px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);margin-bottom:6px}
+.wcsp-res .side{display:flex;align-items:center;gap:7px;flex:1;color:#dfeae2;font-size:13px;min-width:0}
+.wcsp-res .side.away{justify-content:flex-end;text-align:end}
+.wcsp-res .side .nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.wcsp-res .side.win{color:#fff;font-weight:800}
+.wcsp-res .sc{font-variant-numeric:tabular-nums;font-family:ui-monospace,Menlo,monospace;font-weight:800;color:#fff;background:rgba(31,157,87,.18);border:1px solid rgba(43,176,103,.3);border-radius:8px;padding:3px 9px;font-size:14px}
+.wcsp-cta{display:block;width:calc(100% - 36px);margin:14px 18px 20px;padding:15px;border:none;border-radius:14px;cursor:pointer;font-size:16px;font-weight:800;letter-spacing:.02em;color:#06140d;background:linear-gradient(180deg,#f0cf78,#d4af37);box-shadow:0 10px 26px rgba(212,175,55,.32);transition:transform .15s ease, box-shadow .15s ease}
+.wcsp-cta:hover{transform:translateY(-1px);box-shadow:0 14px 32px rgba(212,175,55,.42)}
+.wcsp-cta:active{transform:translateY(0)}
+.wcsp-empty{color:#9fb4a6;font-size:13px;text-align:center;padding:6px 0}
+@keyframes wcsp-sweep{from{transform:rotate(10deg) translateX(-6%)}to{transform:rotate(18deg) translateX(6%)}}
+@keyframes wcsp-pulse{0%{box-shadow:0 0 0 0 rgba(54,210,122,.55)}70%{box-shadow:0 0 0 8px rgba(54,210,122,0)}100%{box-shadow:0 0 0 0 rgba(54,210,122,0)}}
+@keyframes wcsp-tick{0%{transform:translateY(-3px);opacity:.5}100%{transform:none;opacity:1}}
+[dir="rtl"] .wcsp-card{direction:rtl}
+@media (prefers-reduced-motion: reduce){.wcsp-overlay,.wcsp-card{transition:none}.wcsp-flood::before,.wcsp-flood::after,.wcsp-dot,.wcsp-num.tick{animation:none}}
+</style>
 </head>
 <body>
 <div class="topbar">
@@ -5335,10 +5401,6 @@ function matchResult(group,idx){
   return {home,away,hs:sc.hs,as:sc.as,winner,outcome,complete:true};
 }
 function groupComplete(group){
-  const matches=allSchedule().filter(m=>m&&m.group===group&&m.idx!==undefined&&m.idx!==null);
-  if(matches.length>=6){
-    return matches.every(m=>matchResult(group,m.idx).complete);
-  }
   for(let i=0;i<6;i++) if(!matchResult(group,i).complete) return false;
   return true;
 }
@@ -5346,13 +5408,15 @@ function completedMatchCount(){ if(!APP.data) return 0; let n=0; for(const g of 
 
 
 function getGroupTeams(group){
-  const teams=[];
+  // Canonical teams come from GROUPS. Deriving them from the stored schedule let a
+  // corrupt blob inject wrong teams into the standings, so GROUPS is authoritative.
+  const canon=(GROUPS[group]||[]).filter(t=>t&&t!=='TBD');
+  if(canon.length>=4) return canon.slice(0,4);
+  const teams=canon.map(canonTeam);
   allSchedule().filter(m=>m&&m.group===group).forEach(m=>{
-    if(m.home&&!teams.some(t=>sameTeam(t,m.home))) teams.push(canonTeam(m.home));
-    if(m.away&&!teams.some(t=>sameTeam(t,m.away))) teams.push(canonTeam(m.away));
+    [m.home,m.away].forEach(t=>{ if(t&&!teams.some(x=>sameTeam(x,t))) teams.push(canonTeam(t)); });
   });
-  if(teams.length>=4) return teams.slice(0,4);
-  return (GROUPS[group]||[]).filter(t=>t&&t!=='TBD');
+  return teams.slice(0,4);
 }
 
 /* ---- actual standings for a group ---- */
@@ -5368,10 +5432,12 @@ function computeGroupTable(group){
 
   getGroupTeams(group).forEach(ensure);
 
-  let matches=allSchedule().filter(m=>m&&m.group===group&&m.idx!==undefined&&m.idx!==null);
-  if(!matches.length){
-    matches=RR.map((_,i)=>{ const [home,away]=matchTeams(group,i); return {group,idx:i,home,away}; });
-  }
+  // Always evaluate the canonical 6 round-robin fixtures (idx 0..5). Building this
+  // list from allSchedule() caused groups to miss played matches whenever the stored
+  // schedule was incomplete or duplicated — e.g. Group B's B_4/B_5 (the only two
+  // played matches) were absent from the corrupt schedule, so the group showed no
+  // results. matchResult()/matchTeams() are canonical, so iterating idx 0..5 is safe.
+  const matches=RR.map((_,i)=>{ const [home,away]=matchTeams(group,i); return {group,idx:i,home,away}; });
 
   matches.forEach(m=>{
     const r=matchResult(group,m.idx);
@@ -5738,10 +5804,7 @@ function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;',
 const $=id=>document.getElementById(id);
 
 
-function totalGroupMatchCount(){
-  const scheduled=allSchedule().filter(m=>m&&m.group&&m.idx!==undefined&&m.idx!==null).length;
-  return scheduled>=72?scheduled:GROUP_KEYS.length*6;
-}
+function totalGroupMatchCount(){ return GROUP_KEYS.length*6; }
 
 function currentPhase(){
   const d=APP.data||defaultData();
@@ -6018,7 +6081,25 @@ function renderBiggestMovers(latest){
 }
 
 function allSchedule(){
-  return (Array.isArray(APP.data.scheduleMatches)&&APP.data.scheduleMatches.length)?APP.data.scheduleMatches:buildLocalSchedule();
+  const stored=(Array.isArray(APP.data.scheduleMatches)&&APP.data.scheduleMatches.length)?APP.data.scheduleMatches:buildLocalSchedule();
+  const list=Array.isArray(stored)?stored:[];
+  const isGroupRow=m=>m&&GROUP_KEYS.includes(m.group)&&m.idx!=null;
+  // Build the canonical 72 group fixtures: team identity always comes from matchTeams
+  // (groups + round-robin), while date/time/api metadata is merged from the matching
+  // stored or local row. This guarantees no duplicate fixtures and no missing matches
+  // even when APP.data.scheduleMatches is corrupt — the root cause of the earlier
+  // duplicate-fixture, wrong-orientation, and missing-group-results bugs.
+  const out=[];
+  for(const g of GROUP_KEYS){
+    for(let i=0;i<6;i++){
+      const [home,away]=matchTeams(g,i);
+      const meta=list.find(m=>isGroupRow(m)&&m.group===g&&Number(m.idx)===i);
+      out.push({...(meta||{}), group:g, idx:i, home, away});
+    }
+  }
+  // Preserve any non-group rows (e.g. knockout fixtures) exactly as stored.
+  list.forEach(m=>{ if(!isGroupRow(m)) out.push(m); });
+  return out;
 }
 function parseDisplayTimeToUtcInstant(date,time){
   if(!date||!time) return null;
@@ -10126,13 +10207,9 @@ function renderTodayMatchesPopup(){
   return `<div class="today-update-shell"><div class="today-update-head"><span class="today-update-kicker">⚽ ${esc(tl('Today Update','تحديث اليوم'))}</span><h3>${esc(tl('Matches, results and times','المباريات والنتائج والأوقات'))}</h3><div class="today-update-sub">${esc(todayInZone(tz))} · ${esc(tz)} · ${esc(tl('Source time plus your local time','وقت المصدر بالإضافة إلى وقتك المحلي'))}</div></div><div class="today-update-list">${rows.map(m=>renderMatchCard(m,{footerExtra:`<span>${esc(tl('Source','المصدر'))}: ${esc(shortSourceDateTime(m))}</span>`})).join('')}</div><div class="today-update-actions"><button class="btn ghost" onclick="go('matches');closeSheet()">${esc(t('v_matches'))}</button><button class="btn" onclick="closeSheet()">${esc(t('close'))}</button></div></div>`;
 }
 function showTodayMatchesPopupOnce(){
-  try{
-    const key=todayPopupShownKey();
-    if(sessionStorage.getItem(key)==='1') return;
-    sessionStorage.setItem(key,'1');
-    const html=renderTodayMatchesPopup();
-    if(html) openSheet(html);
-  }catch(e){ console.warn('Today popup failed',e); }
+  // Start popup disabled per request — nothing shows on launch.
+  // (WCStartPopup.open() is still available if you ever want to trigger it manually.)
+  return;
 }
 function renderMatchdayHero(){
   const next=nextApiMatch();
@@ -10238,6 +10315,110 @@ function updateHeaderDateTime(){
 function mdhUaeTimeLabel(m){ const ts=matchUaeTimestamp(m); return ts?formatInstantUserTz(ts):''; }
 function hubUaeTimeLabel(m){ const ts=matchUaeTimestamp(m); return ts?formatInstantUserTz(ts):sportsDbSourceDisplayLabel(m); }
 
+</script>
+<script id="wcsp-module">
+(function(){
+  var H={
+    tl:function(en,ar){ return (typeof tl==='function')?tl(en,ar):en; },
+    flag:function(t){ return (typeof flagForTeam==='function')?flagForTeam(t):'\uD83C\uDFF3\uFE0F'; },
+    now:function(){ return (typeof uaeNowMs==='function')?uaeNowMs():Date.now(); },
+    ts:function(m){ return (typeof matchUaeTimestamp==='function')?matchUaeTimestamp(m):(m&&m._ts)||0; },
+    upcoming:function(n){ return (typeof upcomingGroupMatches==='function')?upcomingGroupMatches(n):[]; },
+    completed:function(){ return (typeof completedMatchesList==='function')?completedMatchesList():[]; },
+    rtl:function(){ return (typeof LANG!=='undefined')?LANG==='ar':false; }
+  };
+  var esc=function(s){ return String(s==null?'':s).replace(/[&<>"]/g,function(c){return({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]);}); };
+  var timer=null, overlay=null;
+  function two(n){ return (n<10?'0':'')+n; }
+  function parts(ms){ var s=Math.max(0,Math.floor(ms/1000)); return {d:Math.floor(s/86400),h:Math.floor(s%86400/3600),m:Math.floor(s%3600/60),s:s%60}; }
+  function teamSide(name,cls){ return '<span class="side '+cls+'"><span class="fl">'+H.flag(name)+'</span><span class="nm">'+esc(name)+'</span></span>'; }
+  function resultRow(r){
+    var homeWin=Number(r.hs)>Number(r.as), awayWin=Number(r.as)>Number(r.hs);
+    return '<div class="wcsp-res">'
+      + '<span class="side '+(homeWin?'win':'')+'"><span class="fl">'+H.flag(r.home)+'</span><span class="nm">'+esc(r.home)+'</span></span>'
+      + '<span class="sc">'+esc(r.hs)+'\u2013'+esc(r.as)+'</span>'
+      + '<span class="side away '+(awayWin?'win':'')+'"><span class="nm">'+esc(r.away)+'</span><span class="fl">'+H.flag(r.away)+'</span></span>'
+      + '</div>';
+  }
+  function unit(k,label){ return '<div class="wcsp-unit"><span class="wcsp-num" data-u="'+k+'">00</span><span class="wcsp-ulab">'+esc(label)+'</span></div>'; }
+  function build(){
+    var next=(H.upcoming(1)||[])[0]||null;
+    var done=(H.completed()||[]).slice().reverse().slice(0,2);
+    var nextHtml;
+    if(next){
+      var whenTxt='';
+      if(next.date){ try{ whenTxt=new Date(H.ts(next)).toLocaleString(H.rtl()?'ar':'en-US',{weekday:'short',hour:'2-digit',minute:'2-digit'});}catch(e){ whenTxt=(next.date||'')+' '+(next.time||''); } }
+      nextHtml='<div class="wcsp-next">'
+        + '<span class="wcsp-next-label"><span class="wcsp-dot"></span>'+esc(H.tl('Next match','\u0627\u0644\u0645\u0628\u0627\u0631\u0627\u0629 \u0627\u0644\u0642\u0627\u062F\u0645\u0629'))+'</span>'
+        + '<div class="wcsp-fix">'+teamSide(next.home,'')+'<span class="wcsp-vs">'+esc(H.tl('vs','\u0636\u062F'))+'</span>'+teamSide(next.away,'away')+'</div>'
+        + (whenTxt?'<div class="wcsp-when">'+esc(whenTxt)+'</div>':'')
+        + '<div class="wcsp-clock">'+unit('d',H.tl('days','\u064A\u0648\u0645'))+unit('h',H.tl('hrs','\u0633\u0627\u0639\u0629'))+unit('m',H.tl('min','\u062F\u0642\u064A\u0642\u0629'))+unit('s',H.tl('sec','\u062B\u0627\u0646\u064A\u0629'))+'</div>'
+        + '</div>';
+    } else {
+      nextHtml='<div class="wcsp-next"><div class="wcsp-empty">'+esc(H.tl('Group stage complete \u2014 knockouts ahead.','\u0627\u0646\u062A\u0647\u0649 \u062F\u0648\u0631 \u0627\u0644\u0645\u062C\u0645\u0648\u0639\u0627\u062A \u2014 \u062A\u0628\u062F\u0623 \u0627\u0644\u0623\u062F\u0648\u0627\u0631 \u0627\u0644\u0625\u0642\u0635\u0627\u0626\u064A\u0629.'))+'</div></div>';
+    }
+    var newHtml='';
+    if(done.length){
+      newHtml='<div class="wcsp-new"><div class="wcsp-new-h"><b>'+esc(H.tl("What's new","\u0622\u062E\u0631 \u0627\u0644\u0646\u062A\u0627\u0626\u062C"))+'</b><span class="ft">'+esc(H.tl('FINAL','\u0627\u0646\u062A\u0647\u062A'))+'</span></div>'+done.map(resultRow).join('')+'</div>';
+    }
+    return '<div class="wcsp-flood"></div><div class="wcsp-pitch"></div>'
+      + '<div class="wcsp-card" role="dialog" aria-modal="true" aria-label="'+esc(H.tl('Welcome','\u0623\u0647\u0644\u0627\u064B'))+'">'
+      + '<button class="wcsp-lang" data-wcsp-lang>'+(H.rtl()?'EN':'\u0639')+'</button>'
+      + '<button class="wcsp-x" data-wcsp-close aria-label="'+esc(H.tl('Close','\u0625\u063A\u0644\u0627\u0642'))+'">\u2715</button>'
+      + '<div class="wcsp-top">'
+        + '<span class="wcsp-eyebrow">FIFA World Cup 2026 <span class="wcsp-hosts">\uD83C\uDDE8\uD83C\uDDE6 \uD83C\uDDFA\uD83C\uDDF8 \uD83C\uDDF2\uD83C\uDDFD</span></span>'
+        + '<h2 class="wcsp-title">'+esc(H.tl('Welcome back','\u0623\u0647\u0644\u0627\u064B \u0628\u0639\u0648\u062F\u062A\u0643'))+'</h2>'
+        + '<p class="wcsp-sub">'+esc(H.tl('Your predictions are live. Here is what just happened \u2014 and what is next.','\u062A\u0648\u0642\u0639\u0627\u062A\u0643 \u062C\u0627\u0647\u0632\u0629. \u0625\u0644\u064A\u0643 \u0645\u0627 \u062D\u062F\u062B \u0644\u0644\u062A\u0648 \u0648\u0645\u0627 \u0647\u0648 \u0642\u0627\u062F\u0645.'))+'</p>'
+      + '</div>'
+      + '<div class="wcsp-perf"><span></span><span></span><span></span><span></span><span></span><span></span></div>'
+      + nextHtml + newHtml
+      + '<button class="wcsp-cta" data-wcsp-close>'+esc(H.tl('Close','\u0625\u063A\u0644\u0627\u0642'))+'</button>'
+      + '</div>';
+  }
+  function startClock(){
+    var next=(H.upcoming(1)||[])[0]||null; if(!next) return;
+    var target=H.ts(next);
+    function frame(){
+      if(!overlay) return;
+      var p=parts(target-H.now());
+      [['d',p.d],['h',p.h],['m',p.m],['s',p.s]].forEach(function(pair){
+        var el=overlay.querySelector('.wcsp-num[data-u="'+pair[0]+'"]'); if(!el) return;
+        var v=two(pair[1]); if(el.textContent!==v){ el.textContent=v; el.classList.remove('tick'); void el.offsetWidth; el.classList.add('tick'); }
+      });
+    }
+    frame(); timer=setInterval(frame,1000);
+  }
+  function close(){
+    if(!overlay) return;
+    if(timer){ clearInterval(timer); timer=null; }
+    overlay.classList.remove('is-in');
+    var o=overlay; overlay=null;
+    setTimeout(function(){ if(o&&o.parentNode) o.parentNode.removeChild(o); },350);
+    document.removeEventListener('keydown',onKey);
+  }
+  function onKey(e){ if(e.key==='Escape') close(); }
+  function open(){
+    if(overlay) return;
+    overlay=document.createElement('div');
+    overlay.className='wcsp-overlay';
+    if(H.rtl()) overlay.setAttribute('dir','rtl');
+    overlay.innerHTML=build();
+    overlay.addEventListener('click',function(e){ if(e.target===overlay) close(); });
+    overlay.querySelectorAll('[data-wcsp-close]').forEach(function(b){ b.addEventListener('click',close); });
+    var lng=overlay.querySelector('[data-wcsp-lang]');
+    if(lng) lng.addEventListener('click',function(){
+      if(typeof setLang==='function'){ setLang(H.rtl()?'en':'ar'); }
+      else if(typeof LANG!=='undefined'){ try{ LANG=H.rtl()?'en':'ar'; }catch(e){} }
+      close(); setTimeout(open,360);
+    });
+    document.body.appendChild(overlay);
+    document.addEventListener('keydown',onKey);
+    requestAnimationFrame(function(){ overlay.classList.add('is-in'); });
+    var cta=overlay.querySelector('.wcsp-cta'); if(cta) cta.focus();
+    startClock();
+  }
+  window.WCStartPopup={ open:open, close:close, openOnce:open };
+})();
 </script>
 </body>
 </html>

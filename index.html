@@ -4781,8 +4781,8 @@ const GROUPS={
   H:["Spain","Cape Verde","Saudi Arabia","Uruguay"],
   I:["France","Senegal","Norway","Iraq"],
   J:["Argentina","Algeria","Austria","Jordan"],
-  K:["England","Croatia","Ghana","Panama"],
-  L:["Portugal","Colombia","Uzbekistan","DR Congo"]
+  K:["Portugal","Colombia","Uzbekistan","DR Congo"],
+  L:["England","Croatia","Ghana","Panama"]
 };
 const GROUP_KEYS=Object.keys(GROUPS);
 
@@ -10227,6 +10227,28 @@ function renderMatchdayHero(){
     </div>
   </div>`;
 }
+/* One-time alignment to FIFA lettering: the app historically had K and L swapped
+   (app K = England's group, app L = Portugal's group). Now GROUPS matches FIFA
+   (K = Portugal's group, L = England's group). Each player's predictions must follow
+   their teams, so any prediction labelled K that actually holds England-group teams is
+   moved to L (and vice-versa). Content-based, so it's idempotent and self-correcting. */
+function ensureFifaKL(){
+  try{
+    const d=APP.data; if(!d||!d.players) return false;
+    const inEnglandGroup=t=>sameTeam(t,'England')||sameTeam(t,'Croatia')||sameTeam(t,'Ghana')||sameTeam(t,'Panama');
+    const looksEngland=v=>{ try{ const a=normalizePrediction(v); return Array.isArray(a)&&a.some(inEnglandGroup); }catch(_){ return false; } };
+    let changed=false;
+    Object.keys(d.players).forEach(name=>{
+      const p=d.players[name]; if(!p||typeof p!=='object') return;
+      [p.groupPreds,p.groups,p.predictions,p.groupPredictions,p].forEach(b=>{
+        if(!b||typeof b!=='object') return;
+        if(!('K' in b)&&!('L' in b)) return;
+        if(looksEngland(b.K)&&!looksEngland(b.L)){ const t=b.K; b.K=b.L; b.L=t; changed=true; }
+      });
+    });
+    return changed;
+  }catch(e){ console.warn('FIFA K/L align failed',e); return false; }
+}
 async function boot(){
   if(!APP.data) APP.data=ensureShape({});
   APP.loaded=false;
@@ -10236,6 +10258,7 @@ async function boot(){
   await loadState();
   if(Array.isArray(APP.data.scheduleMatches)&&APP.data.scheduleMatches.length){ APP.data.scheduleMatches=normalizeScheduleRowsForGst(APP.data.scheduleMatches); }
   APP._schedule=(Array.isArray(APP.data.scheduleMatches)&&APP.data.scheduleMatches.length)?APP.data.scheduleMatches:buildLocalSchedule();
+  try{ if(ensureFifaKL()){ await saveState('fifa_kl_align'); } }catch(_){}
   render();
   loadAnalytics();
   trackEvent('app_open',{view:APP.view||'dashboard'});

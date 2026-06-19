@@ -4843,8 +4843,35 @@ h3{font-size:18px;line-height:1.25}
 .sec-title{font-size:18px;line-height:1.2}
 .sec-sub{font-size:13px}
 .sec-ic{border-radius:13px}
-/* a little more breathing room between stacked sections */
-#view>.card+.card{margin-top:14px}
+/* breathing room between stacked sections — mobile stack only (desktop uses grid gap) */
+@media(max-width:899px){#view>.card+.card{margin-top:14px}}
+/* ===== wide-screen fit ===== */
+@media(min-width:900px){
+  /* all-teams group panels tile across the width */
+  .kog{grid-template-columns:repeat(3,1fr)}
+  /* the knockout bracket + all-teams group panel take the full content width inside grid views */
+  #view>.card:has(.kbr){grid-column:1/-1}
+  #view>.card:has(.kog){grid-column:1/-1}
+  /* single-flow screens read best as a clean centered column, not a stretched/half-empty grid */
+  body[data-view="leaderboard"] main#view,
+  body[data-view="player"] main#view,
+  body[data-view="scorers"] main#view,
+  body[data-view="trends"] main#view,
+  body[data-view="playerpicks"] main#view,
+  body[data-view="playerbracket"] main#view,
+  body[data-view="knockout"] main#view,
+  body[data-view="today"] main#view{display:block;max-width:880px;margin-left:auto;margin-right:auto}
+  body[data-view="leaderboard"] main#view>.card,
+  body[data-view="player"] main#view>.card,
+  body[data-view="scorers"] main#view>.card,
+  body[data-view="trends"] main#view>.card,
+  body[data-view="playerpicks"] main#view>.card,
+  body[data-view="playerbracket"] main#view>.card,
+  body[data-view="knockout"] main#view>.card,
+  body[data-view="today"] main#view>.card,
+  body[data-view="player"] main#view>details.acc{grid-column:auto;margin:14px 0}
+}
+@media(min-width:1180px){ .kog{grid-template-columns:repeat(4,1fr)} }
 /* ===== knockout stage redesign ===== */
 .koq{display:flex;flex-direction:column;gap:8px;margin-top:2px}
 .koq-row{display:grid;grid-template-columns:34px 1fr;gap:11px;align-items:center;padding:9px 10px;border-radius:13px;background:var(--soft)}
@@ -9131,7 +9158,7 @@ function koQualifiers(){
   thirds.sort((a,b)=>b.Pts-a.Pts||b.GD-a.GD||b.GF-a.GF||a.group.localeCompare(b.group));
   return {winners,runners,thirds};
 }
-function koFlag(t){ try{ return (typeof flagForTeam==='function')?flagForTeam(t):''; }catch(e){ return ''; } }
+function koFlag(t){ try{ if(typeof flagForTeam!=='function') return ''; const f=flagForTeam(t); return String(f).startsWith('css:')?(typeof flagHtml==='function'?flagHtml(f):''):f; }catch(e){ return ''; } }
 function koGroupsHtml(){
   const blocks=GROUP_KEYS.map(g=>{
     const tb=computeGroupTable(g); const started=tb.some(r=>r.P>0);

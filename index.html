@@ -4747,6 +4747,63 @@ const GA_MEASUREMENT_ID='G-DEDV833VML';
 
 const H={apikey:SB_KEY,Authorization:'Bearer '+SB_KEY,'Content-Type':'application/json',Accept:'application/json'};
 const SPORTSDB='https://www.thesportsdb.com/api/v1/json/123/eventsday.php';
+const SDB_HOST='https://www.thesportsdb.com/api/v1/json';
+const SDB_V2='https://www.thesportsdb.com/api/v2/json';
+/* Premium API key (entered once in Admin → Sync, saved to the synced blob).
+   Falls back to the free '123' key so the app keeps working without premium. */
+function sdbKey(){ try{ return (APP.data&&APP.data.settings&&APP.data.settings.sportsdbKey||'').trim()||'123'; }catch(e){ return '123'; } }
+function sdbIsPremium(){ const k=sdbKey(); return !!k && k!=='123' && k!=='3'; }
+function sdbV1(ep){ return SDB_HOST+'/'+encodeURIComponent(sdbKey())+'/'+ep; }
+/* V2 client (premium only): key goes in the X-API-KEY header. Tries a direct call,
+   then header-forwarding CORS proxies. Records APP._v2Status for the Admin panel. */
+async function sdbV2(path){
+  const key=sdbKey();
+  if(!sdbIsPremium()){ APP._v2Status={ok:false,reason:'no-key'}; return null; }
+  const url=SDB_V2+path;
+  try{
+    const r=await fetchWithTimeout(url,{headers:{'X-API-KEY':key,Accept:'application/json'}},8000);
+    if(r.ok){ const j=await r.json(); APP._v2Status={ok:true,mode:'direct',at:Date.now()}; return j; }
+    if(r.status===401||r.status===403){ APP._v2Status={ok:false,reason:'auth',code:r.status,at:Date.now()}; return null; }
+    throw new Error('HTTP '+r.status);
+  }catch(e){ /* try proxies */ }
+  for(const tmpl of CORS_PROXIES){
+    try{
+      const purl=tmpl.replace('{U}',encodeURIComponent(url)).replace('{RAW}',url);
+      const r=await fetchWithTimeout(purl,{headers:{'X-API-KEY':key,Accept:'application/json'}},10000);
+      if(!r.ok) throw new Error('proxy HTTP '+r.status);
+      const j=await r.json(); APP._v2Status={ok:true,mode:'proxy:'+tmpl.split('/')[2],at:Date.now()}; return j;
+    }catch(e){}
+  }
+  APP._v2Status={ok:false,reason:'unreachable',at:Date.now()};
+  return null;
+}
+/* Premium real-time livescores (V2 /livescore/soccer). Keeps World Cup matches,
+   maps to canonical fixtures, stores oriented in-progress scores for DISPLAY only. */
+async function fetchLiveScores(){
+  try{
+    if(!sdbIsPremium()) return;
+    if(APP.data&&APP.data.settings&&APP.data.settings.liveEnabled===false) return;
+    const j=await sdbV2('/livescore/soccer');
+    const arr=(j&&(j.livescore||j.events||j.Events||j.results))||[];
+    if(!Array.isArray(arr)||!arr.length) return;
+    const map=Object.assign({},APP._homeApiLive||{});
+    arr.forEach(e=>{
+      const lg=String(e.idLeague||e.idleague||'');
+      if(WC_LEAGUE && lg && lg!==String(WC_LEAGUE)) return;
+      const home=e.strHomeTeam||e.strHome, away=e.strAwayTeam||e.strAway;
+      if(!home||!away) return;
+      const mm=(typeof mapEventToGroupMatch==='function')?mapEventToGroupMatch({strHomeTeam:home,strAwayTeam:away}):null;
+      if(!mm) return;
+      const hsR=e.intHomeScore, asR=e.intAwayScore;
+      const sc=(hsR!=null&&hsR!==''&&asR!=null&&asR!=='')?{home:String(hsR),away:String(asR)}:null;
+      const oriented=(sc&&mm.reversed)?{home:sc.away,away:sc.home}:sc;
+      map[mm.key]={ hs:oriented?Number(oriented.home):null, as:oriented?Number(oriented.away):null,
+        status:e.strStatus||'Live', progress:e.strProgress||'', minute:e.strProgress||e.intMinute||null,
+        home:mm.home, away:mm.away, group:mm.group, idx:mm.idx, live:true, v2:true };
+    });
+    APP._homeApiLive=map; APP._liveAt=Date.now();
+  }catch(e){ console.warn('fetchLiveScores failed',e&&e.message); }
+}
 const WC_LEAGUE='4429';
 const WC_START='2026-06-11', WC_END='2026-07-19';
 
@@ -4976,7 +5033,8 @@ function asArrayPayload(json){
 /* ---- default skeleton merged over loaded data (non-destructive) ---- */
 function defaultData(){
   return { players:{}, groupResults:{}, knockoutResults:{}, knockoutMatches:{}, champion:null,
-    settings:{ entryFeeAED:200, currency:"AED", distribution:"winnerTakesAll", deadline:null, locked:false },
+    settings:{ entryFeeAED:200, currency:"AED", distribution:"winnerTakesAll", deadline:null, locked:false,
+      sportsdbKey:"", liveEnabled:true, theme:"light", notifyGoals:false, notifyKickoff:false, notifyResults:false },
     auditLog:[], resultMeta:{}, scheduleMatches:[] };
 }
 function ensureShape(d){
@@ -5673,7 +5731,7 @@ function addHoursToDisplayTime(time,hours){
 }
 
 async function fetchDay(date){
-  const url=SPORTSDB+'?d='+encodeURIComponent(date)+'&l='+encodeURIComponent(WC_LEAGUE);
+  const url=sdbV1('eventsday.php')+'?d='+encodeURIComponent(date)+'&l='+encodeURIComponent(WC_LEAGUE);
   // 1) Direct
   try{
     const r=await fetchWithTimeout(url,{headers:{Accept:'application/json'}},6500);
@@ -9363,6 +9421,44 @@ function groupsDiagnostic(){
     ${unmapped>0?`<div class="banner warn" style="margin-top:8px">⚠ ${esc(tl('Results table rows not mapped to a fixture','صفوف في جدول النتائج لم تُربط بمباراة'))}: <b>${unmapped}</b> — ${esc(tl('likely a team-name mismatch.','غالباً اختلاف في اسم الفريق.'))}</div>`:''}
   </div>`;
 }
+function livePremiumPanel(){
+  const s=(APP.data&&APP.data.settings)||{};
+  const key=s.sportsdbKey||'';
+  const prem=sdbIsPremium();
+  const st=APP._v2Status||{};
+  let statusTxt, dot;
+  if(!key){ statusTxt=tl('No key — using free feed (123)','بدون مفتاح — يستخدم المجاني (123)'); dot='#9aa0a6'; }
+  else if(st.ok){ statusTxt=tl('Connected','متصل')+(st.mode?' · '+st.mode:''); dot='#1f9d57'; }
+  else if(st.reason==='auth'){ statusTxt=tl('Key rejected — check it','المفتاح مرفوض'); dot='#d9534f'; }
+  else if(st.reason==='unreachable'){ statusTxt=tl('Blocked by browser (CORS)','محظور من المتصفح (CORS)'); dot='#e08a00'; }
+  else { statusTxt=tl('Saved — tap Test','محفوظ — اضغط اختبار'); dot='#e08a00'; }
+  return `<div class="card">
+    <div class="between"><h3>📡 ${esc(tl('Live data (Premium)','البيانات المباشرة (مميز)'))}</h3>
+      <span class="chip" style="display:inline-flex;align-items:center;gap:6px"><span style="width:9px;height:9px;border-radius:50%;background:${dot};display:inline-block"></span>${esc(statusTxt)}</span></div>
+    <p class="sub" style="margin:6px 0 10px">${esc(tl('Paste your TheSportsDB premium key once. It is saved to your database (synced to all devices) and powers real-time livescores and richer match data.','الصق مفتاح TheSportsDB المميز مرة واحدة. يُحفظ في قاعدة بياناتك ويشغّل النتائج المباشرة.'))}</p>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+      <input id="sdbKeyInput" type="text" value="${esc(key)}" placeholder="${esc(tl('Premium API key','مفتاح API المميز'))}" style="flex:1;min-width:170px;padding:10px 12px;border:1px solid var(--border);border-radius:10px;font-size:14px" autocomplete="off" spellcheck="false">
+      <button class="btn sm" onclick="saveSportsdbKey()">${esc(tl('Save','حفظ'))}</button>
+      <button class="btn ghost sm" onclick="testV2Connection()">${esc(tl('Test','اختبار'))}</button>
+    </div>
+    <label style="display:flex;align-items:center;gap:8px;margin-top:10px"><input type="checkbox" ${s.liveEnabled!==false?'checked':''} onchange="toggleLiveEnabled(this.checked)"> <span class="sub">${esc(tl('Show real-time live scores','عرض النتائج المباشرة الحيّة'))}</span></label>
+    ${prem&&st.reason==='unreachable'?`<div class="banner warn" style="margin-top:10px">⚠ ${esc(tl('Your browser blocked the premium endpoint (CORS). Finished results still sync fine; for true in-browser live we may need a small relay.','حظر متصفحك نقطة V2 (CORS). النتائج النهائية تُزامن، أما المباشر داخل المتصفح فقد يحتاج وسيطاً.'))}</div>`:''}
+  </div>`;
+}
+function saveSportsdbKey(){
+  const el=document.getElementById('sdbKeyInput'); if(!el) return;
+  APP.data.settings=APP.data.settings||{};
+  APP.data.settings.sportsdbKey=(el.value||'').trim();
+  saveState('set_sportsdb_key').then(()=>{ toast(t('saved')); testV2Connection(); });
+}
+function toggleLiveEnabled(on){ APP.data.settings=APP.data.settings||{}; APP.data.settings.liveEnabled=!!on; saveState('toggle_live').then(()=>{ if(on) fetchLiveScores().then(()=>render()); }); }
+async function testV2Connection(){
+  if(!sdbIsPremium()){ toast(tl('Enter a premium key first','أدخل مفتاحاً مميزاً أولاً')); render(); return; }
+  toast(tl('Testing…','جارٍ الاختبار…'));
+  await sdbV2('/livescore/soccer');
+  await fetchLiveScores();
+  render();
+}
 function dataSourcePanel(){
   const live=!APP.cached;
   const cls=live?'paid':'pend';
@@ -9376,7 +9472,7 @@ function dataSourcePanel(){
   const honest=`<div class="sub" style="margin-top:8px">${esc(tl('Matches with a result','مباريات لها نتيجة'))}: <b>${cnt}</b> · ${esc(tl('database rows','صفوف قاعدة البيانات'))}: <b>${rt.rows!=null?rt.rows:'—'}</b></div>
     <div class="sub">${esc(tl('Last actual data change','آخر تغيّر فعلي للبيانات'))}: <b>${esc(lastChange)}</b></div>
     ${cnt===0?`<div class="banner warn" style="margin-top:8px">⚠ ${esc(tl('No results in the database yet — nothing to show until results are added. A “check” will not change this.','لا توجد نتائج في قاعدة البيانات بعد — لا شيء لعرضه حتى تُضاف نتائج. «الفحص» لن يغيّر ذلك.'))}</div>`:''}`;
-  return `<div class="card"><div class="between"><h3>🔀 ${esc(tl('Data source','مصدر البيانات'))}</h3><span class="tag ${cls}">${esc(label)}</span></div>
+  return livePremiumPanel()+`<div class="card"><div class="between"><h3>🔀 ${esc(tl('Data source','مصدر البيانات'))}</h3><span class="tag ${cls}">${esc(label)}</span></div>
     ${rtLine}${honest}${reason}
     <div class="sync-tools" style="margin-top:10px">
       <button class="btn" onclick="refreshLiveData()">🔄 ${esc(tl('Refresh from live','تحديث من المباشر'))}</button>
@@ -10332,6 +10428,7 @@ async function autoRefreshLiveData(){
     await loadState();            // re-pull authoritative DB results (no fake results: DB wins)
     await loadHomeApiUpdates();   // re-pull the SportsDB feed (schedule + finals + in-progress)
     await persistFeedFinals();    // admin-only: save new finals so they persist beyond the feed window
+    await fetchLiveScores();      // premium V2: real-time in-play scores (display only)
     await loadToday();
   }catch(e){ APP._homeApiError=String(e&&e.message?e.message:e); }
   finally{ APP._liveRefreshing=false; render(); }

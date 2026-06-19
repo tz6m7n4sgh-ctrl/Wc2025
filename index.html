@@ -4805,6 +4805,96 @@ body.has-live{padding-bottom:52px}
 [dir="rtl"] .wcsp-card{direction:rtl}
 @media (prefers-reduced-motion: reduce){.wcsp-overlay,.wcsp-card{transition:none}.wcsp-flood::before,.wcsp-flood::after,.wcsp-dot,.wcsp-num.tick{animation:none}}
 </style>
+<style id="design-system">
+/* ============================================================
+   DESIGN SYSTEM — single authoritative layer (loads last so it
+   wins the cascade). Unifies tokens, type scale, spacing and the
+   core components across every screen. Dark mode still overrides
+   via its higher-specificity body[data-theme] selector.
+   ============================================================ */
+:root{
+  --grass:#17b274; --grass-d:#0e9159;
+  --gold:#e7b13a; --gold-d:#a87d16;
+  --ink:#101c15; --paper:#f4f7f5; --card:#ffffff; --muted:#5d6e66;
+  --soft:#eef3f0; --border:#e4ece7; --bad:#df544a; --good:#15a86a; --warn:#e09a32;
+  --r:18px; --r-sm:12px;
+  --shadow:0 1px 2px rgba(12,34,24,.05), 0 6px 18px rgba(12,34,24,.055);
+  --shadow-lg:0 14px 44px rgba(12,34,24,.15);
+  --sp1:4px; --sp2:8px; --sp3:12px; --sp4:16px; --sp5:24px;
+}
+/* readability: larger base text + comfortable line-height */
+body{font-size:16px;line-height:1.5;-webkit-text-size-adjust:100%}
+h1{font-size:23px;line-height:1.2}
+h2{font-size:20px;line-height:1.22}
+h3{font-size:18px;line-height:1.25}
+/* one card style everywhere: soft shadow + hairline border, consistent radius + roomier padding */
+.card{border:1px solid var(--border);box-shadow:var(--shadow);border-radius:var(--r);padding:18px;margin:14px 0}
+.card h3{font-size:17px;margin-bottom:12px}
+.sub{font-size:13.5px;line-height:1.5;color:var(--muted)}
+/* consistent controls */
+.btn{border-radius:13px;font-size:15px;font-weight:800}
+.btn.sm{font-size:13px;border-radius:11px;min-height:38px}
+.btn.ghost{box-shadow:none;border:1px solid var(--border)}
+.chip{font-size:12.5px;border-radius:999px}
+.tag{font-size:11px;border-radius:999px}
+.banner{border-radius:14px}
+/* section headers (used app-wide) tuned to the scale */
+.sec-head{margin-bottom:14px}
+.sec-title{font-size:18px;line-height:1.2}
+.sec-sub{font-size:13px}
+.sec-ic{border-radius:13px}
+/* a little more breathing room between stacked sections */
+#view>.card+.card{margin-top:14px}
+/* ===== knockout stage redesign ===== */
+.koq{display:flex;flex-direction:column;gap:8px;margin-top:2px}
+.koq-row{display:grid;grid-template-columns:34px 1fr;gap:11px;align-items:center;padding:9px 10px;border-radius:13px;background:var(--soft)}
+.koq-g{width:30px;height:30px;border-radius:9px;background:var(--ink);color:#fff;font-weight:800;display:flex;align-items:center;justify-content:center;font-size:14px}
+.koq-slots{display:flex;flex-direction:column;gap:5px;min-width:0}
+.koq-slot{display:flex;align-items:center;gap:7px;min-width:0;font-size:14px;font-weight:600}
+.koq-slot .pos{font-size:11px;font-weight:800;color:var(--muted);background:var(--card);border-radius:6px;padding:1px 7px;flex-shrink:0}
+.koq-slot.first .pos{color:var(--gold-d);background:#fff4d6}
+.koq-team{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.koq-live{font-size:10px;color:var(--warn);font-weight:800;flex-shrink:0}
+.ko3{margin-top:2px}
+.ko3-row{display:grid;grid-template-columns:26px 1fr auto;align-items:center;gap:10px;padding:9px 4px;border-bottom:1px solid var(--soft)}
+.ko3-row.out{opacity:.45}
+.ko3-rk{font-weight:800;text-align:center;color:var(--muted)}
+.ko3-row.in .ko3-rk{color:var(--grass-d)}
+.ko3-team{min-width:0;display:flex;align-items:center;gap:7px;font-weight:600}
+.ko3-team .nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ko3-pts{font-weight:800;font-size:12.5px;white-space:nowrap}
+.ko3-cut{display:flex;align-items:center;gap:10px;margin:9px 2px;color:var(--grass-d);font-weight:800;font-size:11px;text-transform:uppercase;letter-spacing:.04em}
+.ko3-cut::before,.ko3-cut::after{content:"";flex:1;border-top:2px dashed var(--grass-d)}
+.kbr{width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:4px}
+.kbr-inner{display:flex;gap:16px;min-width:max-content;padding:4px 2px}
+.kbr-col{display:flex;flex-direction:column;justify-content:space-around;gap:12px;min-width:176px}
+.kbr-rh{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);text-align:center;margin-bottom:2px}
+.kbr-m{background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden;box-shadow:var(--shadow)}
+.kbr-t{display:flex;align-items:center;gap:8px;padding:9px 11px;font-size:13.5px;font-weight:600}
+.kbr-t+.kbr-t{border-top:1px solid var(--soft)}
+.kbr-t.win{background:linear-gradient(90deg,#fff6da,transparent);font-weight:800}
+.kbr-t .nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1}
+.kbr-tick{color:var(--gold-d);font-weight:800}
+.kbr-champ{display:flex;align-items:center;justify-content:center;gap:8px;padding:16px 12px;border-radius:14px;background:linear-gradient(135deg,#fff2c8,#f4d77a);font-weight:800;font-size:15px;text-align:center}
+.kbr-rsub{display:block;font-weight:600;font-size:9.5px;color:var(--muted);margin-top:2px;text-transform:none;letter-spacing:0}
+/* groups — all four teams per group */
+.kog{display:grid;grid-template-columns:1fr;gap:11px;margin-top:2px}
+@media(min-width:560px){.kog{grid-template-columns:1fr 1fr}}
+.kog-card{border:1px solid var(--border);border-radius:14px;overflow:hidden}
+.kog-h{display:flex;align-items:center;gap:9px;padding:9px 11px;background:var(--soft);font-weight:800;font-size:14px}
+.kog-h .g{width:26px;height:26px;border-radius:8px;background:var(--ink);color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px}
+.kog-row{display:grid;grid-template-columns:20px 1fr auto 44px;align-items:center;gap:9px;padding:8px 11px;border-top:1px solid var(--soft)}
+.kog-row.q{background:linear-gradient(90deg,rgba(23,178,116,.08),transparent)}
+.kog-row.out{opacity:.5}
+.kog-rk{font-weight:800;color:var(--muted);text-align:center;font-size:13px}
+.kog-row.q .kog-rk{color:var(--grass-d)}
+.kog-team{min-width:0;display:flex;align-items:center;gap:7px;font-weight:600;font-size:13.5px}
+.kog-team .nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.kog-pts{font-weight:800;text-align:end;min-width:18px}
+.kog-badge{font-size:10.5px;font-weight:800;padding:2px 7px;border-radius:999px;white-space:nowrap}
+.kog-badge.q{background:rgba(23,178,116,.16);color:var(--grass-d)}
+.kog-badge.t{background:rgba(224,154,50,.2);color:#9a6a14}
+</style>
 </head>
 <body>
 <div class="topbar">
@@ -5992,6 +6082,7 @@ const MORE_ITEMS=[
 ];
 const ADMIN_ITEMS=[
   {id:'results',ic:'edit',key:'v_results'},
+  {id:'playerpicks',ic:'bracket',label:{en:'Player picks',ar:'توقعات اللاعب'}},
   {id:'audit',ic:'search',key:'v_audit'},
   {id:'backup',ic:'backup',key:'v_backup'},
   {id:'health',ic:'health',key:'v_health'},
@@ -6213,11 +6304,12 @@ function render(){
     dashsum:viewDashSummary,
     scorers:viewScorers,
     trends:viewTrends,
-    playerbracket:viewPlayerBracket
+    playerbracket:viewPlayerBracket,
+    playerpicks:viewPlayerPicks
   };
 
   const fn=map[APP.view]||viewDashboard;
-  const adminViews=['audit','results','repair','settings','backup','health','syncresults'];
+  const adminViews=['audit','results','repair','settings','backup','health','syncresults','playerpicks'];
 
   if(adminViews.includes(APP.view)&&!APP.isAdmin){
     $('view').innerHTML=banner+adminGate();
@@ -6495,8 +6587,8 @@ function renderApiGroupPulseCard(g){
   const table=apiGroupTableHome(g);
   const played=table.some(x=>x.P>0);
   return `<div class="mini-group">
-    <div class="between"><b>${esc(tl('Group','المجموعة'))} ${esc(g)}</b><span class="tag">${played?esc(tl('Live','مباشر')):esc(tl('Not started','لم تبدأ'))}</span></div>
-    ${played?table.slice(0,2).map((x,i)=>`<div class="mini-row"><span>${i+1}. ${teamHtml(x.team)}</span><b class="num">${x.Pts}</b></div>`).join(''):`<div class="hub-empty">${esc(tl('No live final result yet.','لا توجد نتيجة مباشرة نهائية بعد.'))}</div>`}
+    <div class="between"><b>${esc(tl('Group','المجموعة'))} ${esc(g)}</b><span class="tag">${played?esc(tl('Started','بدأت')):esc(tl('Not started','لم تبدأ'))}</span></div>
+    ${played?table.slice(0,2).map((x,i)=>`<div class="mini-row"><span>${i+1}. ${teamHtml(x.team)}</span><b class="num">${x.Pts}</b></div>`).join(''):`<div class="hub-empty">${esc(tl('No result yet.','لا توجد نتيجة بعد.'))}</div>`}
   </div>`;
 }
 
@@ -7747,6 +7839,50 @@ function viewDashFull(){
     ${status}${groups}${expCard}${koCard}${scoringRulesHtml()}
     <div class="dash-card"><button class="btn ghost sm" onclick="go('playerbracket')">🗺️ ${esc(tl('Open player brackets','فتح توقعات اللاعبين'))}</button></div>`;
 }
+function playerPicksGroupsHtml(p){
+  const blocks=GROUP_KEYS.map(g=>{
+    const pred=playerGroupPred(p,g);
+    const complete=groupComplete(g);
+    let actualTop2=[]; if(complete){ try{ actualTop2=computeGroupTable(g).slice(0,2).map(r=>r.team);}catch(e){} }
+    const rows=(pred.length?pred:[null,null,null,null]).slice(0,4).map((tm,i)=>{
+      const qual=i<2; let mk='';
+      if(complete && tm){ const inTop2=actualTop2.some(a=>sameTeam(a,tm)); mk=qual?(inTop2?'<span class="kog-badge q">✓</span>':'<span class="kog-badge" style="background:rgba(223,84,74,.16);color:#b23b30">✗</span>'):''; }
+      else { mk=qual?`<span class="kog-badge q">${esc(tl('Q','تأهل'))}</span>`:(i===2?`<span class="kog-badge t">${esc(tl('3rd','الثالث'))}</span>`:''); }
+      return `<div class="kog-row ${qual?'q':''}${i===3?' out':''}"><span class="kog-rk">${i+1}</span><span class="kog-team">${tm?koFlag(tm):''} <span class="nm">${esc(tm?canonTeam(tm):'—')}</span></span><span class="kog-pts num"></span><span style="text-align:end">${mk}</span></div>`;
+    }).join('');
+    return `<div class="kog-card"><div class="kog-h"><span class="g">${g}</span><span>${esc(tl('Group','المجموعة'))} ${g}</span></div>${rows}</div>`;
+  }).join('');
+  return `<div class="kog">${blocks}</div>`;
+}
+function playerPicksBracketHtml(p){
+  const winners=[],runners=[];
+  GROUP_KEYS.forEach(g=>{ const pred=playerGroupPred(p,g); if(pred[0]) winners.push(pred[0]); if(pred[1]) runners.push(pred[1]); });
+  const seeds=[...winners,...runners]; while(seeds.length<32) seeds.push(null);
+  const r32=[]; for(let i=0;i<32;i+=2) r32.push({home:seeds[i]||null,away:seeds[i+1]||null});
+  const STRUCT=[['R32',16],['R16',8],['QF',4],['SF',2],['F',1]];
+  const RTIES={R32:16,R16:8,QF:4,SF:2,F:1};
+  const rounds=STRUCT.map(([rk,n])=> rk==='R32'?['R32',r32]:[rk,Array.from({length:n},()=>({home:null,away:null}))]);
+  const rsub=(rk)=>{ const n=RTIES[rk]; const pre=rk==='QF'?(tl('Round of 8','دور الـ8')+' · '):''; return pre+n+' '+(n>1?tl('ties','مواجهات'):tl('tie','مواجهة')); };
+  const teamLine=(name)=>`<div class="kbr-t"><span>${name?koFlag(name):''}</span><span class="nm">${esc(name?canonTeam(name):'—')}</span></div>`;
+  const cols=rounds.map(([rk,ms])=>`<div class="kbr-col"><div class="kbr-rh">${esc(t('round_'+rk))}<span class="kbr-rsub">${esc(rsub(rk))}</span></div>${ms.map(m=>`<div class="kbr-m">${teamLine(m.home)}${teamLine(m.away)}</div>`).join('')}</div>`).join('');
+  const champ=`<div class="kbr-col"><div class="kbr-rh">${esc(t('champion'))}<span class="kbr-rsub">${esc(tl('their pick','اختياره'))}</span></div><div class="kbr-champ">👑 ${esc(p&&p.champion?canonTeam(p.champion):'—')}</div></div>`;
+  return `<div class="kbr"><div class="kbr-inner">${cols}${champ}</div></div>`;
+}
+function viewPlayerPicks(){
+  let lb=[]; try{ lb=buildLeaderboard()||[]; }catch(e){}
+  const names=lb.map(r=>r.name);
+  if(!names.length) return `<div class="card">${sectionHead('🧩',tl('Player picks','توقعات اللاعب'),'')}<div class="state">${esc(tl('No players yet.','لا يوجد لاعبون بعد.'))}</div></div>`;
+  const sel=(APP._pbkPlayer&&names.includes(APP._pbkPlayer))?APP._pbkPlayer:names[0];
+  const p=getPlayer(sel);
+  const picker=`<div class="pbk-picker">${names.map(n=>`<button class="${n===sel?'on':''}" onclick="pbkPick('${(n+'').replace(/'/g,"\\'")}')">${esc(n)}</button>`).join('')}</div>`;
+  return `<div class="card">${sectionHead('🧩',tl('Player picks — table & bracket','توقعات اللاعب — جدول وشبكة'),tl('Admin view of one player’s predictions','عرض المشرف لتوقعات لاعب'),`<span class="tag adm">${esc(t('adminOnly'))}</span>`)}
+      ${picker}</div>
+    <div class="card">${sectionHead('👥',tl('Predicted groups','المجموعات المتوقعة'),tl('Their 1–4 order; top 2 marked Q (✓/✗ once a group finishes)','ترتيبه 1–4؛ أول اثنين Q (✓/✗ بعد انتهاء المجموعة)'))}
+      ${playerPicksGroupsHtml(p)}</div>
+    <div class="card">${sectionHead('🗺️',tl('Predicted bracket','الشبكة المتوقعة'),tl('Seeded from their predicted winners & runners-up · champion = their pick','مرتبة حسب متصدريه ووصفائه · البطل اختياره'))}
+      ${playerPicksBracketHtml(p)}
+      <div class="sub" style="margin-top:10px">${esc(tl('R32 pairings are illustrative (sequential), since players pick group order, not exact matchups.','مواجهات الـ32 توضيحية (تسلسلية) لأن اللاعب يتوقع ترتيب المجموعات لا المواجهات.'))}</div></div>`;
+}
 function pbkPick(name){ APP._pbkPlayer=name; render(); }
 function viewPlayerBracket(){
   trackEvent&&trackEvent('dashboard_view',{which:'player_bracket'});
@@ -8575,7 +8711,7 @@ function fullMatchCard(m){
   const srcTag={api:'api',admin:'adm',corrected:'corr',pending:'pend'}[meta]||'pend';
   const srcTxt={api:'src_api',admin:'src_admin',corrected:'src_corr',pending:'src_pending'}[meta]||'src_pending';
   const groupLabel=m.group?('Group '+m.group+(m.key?(' · '+m.key):'')):'';
-  const footerExtra=`<span class="src-tag tag ${srcTag}">${esc(t(srcTxt))}</span>`;
+  const footerExtra='';
   return renderMatchCard(m,{groupLabel:groupLabel,footerExtra:footerExtra});
 }
 
@@ -8996,44 +9132,62 @@ function koQualifiers(){
   return {winners,runners,thirds};
 }
 function koFlag(t){ try{ return (typeof flagForTeam==='function')?flagForTeam(t):''; }catch(e){ return ''; } }
+function koGroupsHtml(){
+  const blocks=GROUP_KEYS.map(g=>{
+    const tb=computeGroupTable(g); const started=tb.some(r=>r.P>0);
+    const rows=tb.map((r,i)=>{
+      const qual=started&&i<2&&r.P>0;
+      const badge=qual?`<span class="kog-badge q">${esc(tl('Q','تأهل'))}</span>`:(i===2?`<span class="kog-badge t">${esc(tl('3rd','الثالث'))}</span>`:'');
+      return `<div class="kog-row ${qual?'q':''}${i===3?' out':''}">
+        <span class="kog-rk">${i+1}</span>
+        <span class="kog-team">${koFlag(r.team)} <span class="nm">${esc(canonTeam(r.team))}</span></span>
+        <span class="kog-pts num">${r.Pts}</span>
+        <span style="text-align:end">${badge}</span></div>`;
+    }).join('');
+    return `<div class="kog-card"><div class="kog-h"><span class="g">${g}</span><span>${esc(tl('Group','المجموعة'))} ${g}</span></div>${rows}</div>`;
+  }).join('');
+  return `<div class="card">${sectionHead('👥',tl('Groups — all teams','المجموعات — كل الفرق'),tl('Top 2 of each group qualify (Q); 3rd enters the best-third race','يتأهل أول اثنين (Q)؛ الثالث يدخل سباق أفضل ثالث'))}<div class="kog">${blocks}</div></div>`;
+}
 function koQualifiersHtml(q){
-  const cell=(x)=> x?`${koFlag(x.team)} ${esc(canonTeam(x.team))}${x.done?'':` <span class="sub">${esc(tl('live','مباشر'))}</span>`}`:'<span class="sub">—</span>';
+  const slot=(x,pos,first)=> x
+    ? `<div class="koq-slot ${first?'first':''}"><span class="pos">${pos}</span><span>${koFlag(x.team)}</span><span class="koq-team">${esc(canonTeam(x.team))}</span></div>`
+    : `<div class="koq-slot ${first?'first':''}"><span class="pos">${pos}</span><span class="koq-team sub">—</span></div>`;
   const rows=GROUP_KEYS.map(g=>{ const w=q.winners.find(x=>x.group===g), r=q.runners.find(x=>x.group===g);
-    return `<div class="md-row"><span class="sub" style="min-width:20px"><b>${g}</b></span><span style="flex:1;padding-inline-start:8px">1 · ${cell(w)}</span><span style="flex:1">2 · ${cell(r)}</span></div>`; }).join('');
-  return `<div class="card"><h3>✅ ${esc(tl('Qualified — 1st & 2nd','المتأهلون — الأول والثاني'))}</h3><div style="margin-top:8px">${rows}</div></div>`;
+    return `<div class="koq-row"><div class="koq-g">${g}</div><div class="koq-slots">${slot(w,1,true)}${slot(r,2,false)}</div></div>`; }).join('');
+  return `<div class="card">${sectionHead('✅',tl('Qualified — 1st & 2nd','المتأهلون — الأول والثاني'),tl('Group winners and runners-up','متصدرو المجموعات والوصيفون'))}<div class="koq">${rows}</div></div>`;
 }
 function koThirdRaceHtml(q){
   if(!q.thirds.length) return '';
-  const rows=q.thirds.map((x,i)=>{ const top8=i<8;
-    return `<div class="md-row" style="${top8?'':'opacity:.5'}"><span style="display:flex;gap:8px;align-items:center"><b style="min-width:16px;text-align:center">${i+1}</b> ${koFlag(x.team)} ${esc(canonTeam(x.team))} <span class="sub">${esc(tl('Grp','مج'))} ${x.group}</span></span><span class="num">${x.Pts} · ${x.GD>0?'+':''}${x.GD}</span></div>`
-      +(i===7?`<div style="border-top:2px dashed var(--grass-d);margin:3px 0;font-size:0">cut</div>`:''); }).join('');
-  return `<div class="card"><h3>🥉 ${esc(tl('Best third-place race','سباق أفضل ثالث'))}</h3>`
-    +`<div class="sub">${esc(tl('The 8 teams above the dashed line advance to the Round of 32. Updates live as group matches finish.','الفرق الثمانية فوق الخط المتقطّع تتأهل إلى دور الـ32. يتحدث مباشرة.'))}</div>`
-    +`<div style="margin-top:8px">${rows}</div></div>`;
+  const rows=q.thirds.map((x,i)=>{ const inq=i<8;
+    const row=`<div class="ko3-row ${inq?'in':'out'}"><span class="ko3-rk">${i+1}</span>
+      <span class="ko3-team">${koFlag(x.team)} <span class="nm">${esc(canonTeam(x.team))}</span> <span class="sub">${esc(tl('Grp','مج'))} ${x.group}</span></span>
+      <span class="ko3-pts num">${x.Pts} ${esc(t('pts'))} · ${x.GD>0?'+':''}${x.GD}</span></div>`;
+    return row+(i===7?`<div class="ko3-cut">${esc(tl('Qualify ▲   ·   Out ▼','يتأهل ▲   ·   يخرج ▼'))}</div>`:'');
+  }).join('');
+  return `<div class="card">${sectionHead('🥉',tl('Best third-place race','سباق أفضل ثالث'),tl('Top 8 third-placed teams reach the Round of 32','أفضل 8 من أصحاب المركز الثالث يبلغون الـ32'))}<div class="ko3">${rows}</div></div>`;
 }
 function viewKnockout(){
   const q=koQualifiers();
-  const QUAL=koQualifiersHtml(q)+koThirdRaceHtml(q);
   const seeded=koSeed();
   const km=APP.data.knockoutMatches||{};
-  const r32=(km.R32&&km.R32.length)?km.R32:(seeded||[]);
-  if(!r32.length) return QUAL+`<div class="card"><h3>🗺️ ${esc(tl('Bracket','الشبكة'))}</h3><div class="state">${esc(tl('The bracket fills in once all groups finish (June 27). The qualifier picture above updates live.','تكتمل الشبكة بعد انتهاء كل المجموعات (27 يونيو). صورة المتأهلين أعلاه تتحدث مباشرة.'))}</div></div>`;
-  const rounds=[['R32',r32]];
-  ['R16','QF','SF','F'].forEach(rk=>{ if(km[rk]&&km[rk].length) rounds.push([rk,km[rk]]); });
-  return QUAL+`<div class="card"><div class="between"><h3>🗺️ ${esc(tl('Bracket (projected)','الشبكة (متوقعة)'))}</h3>
-      ${APP.isAdmin?`<button class="btn ghost sm" onclick="go('results')">✏️</button>`:''}</div>
-    <div class="diagram"><div class="bracket">
-    ${rounds.map(([rk,ms])=>`<div class="bcol"><h4>${esc(t('round_'+rk))}</h4>
-      ${ms.map((m,i)=>{ const mid=rk+'_'+i; const w=(APP.data.knockoutResults||{})[mid];
-        const a=Array.isArray(m)?m[0]:m.home, b=Array.isArray(m)?m[1]:m.away;
-        return `<div class="bmatch">
-          <div class="bt ${w&&sameTeam(w,a)?'win':''}">${esc(canonTeam(a)||'—')}</div>
-          <div class="bt ${w&&sameTeam(w,b)?'win':''}">${esc(canonTeam(b)||'—')}</div></div>`; }).join('')}
-    </div>`).join('')}
-    <div class="bcol"><h4>${esc(t('champion'))}</h4>
-      <div class="bmatch"><div class="bt win">${esc(APP.data.champion?canonTeam(APP.data.champion):'—')}</div></div></div>
-    </div></div>
-    <div class="sub" style="margin-top:8px">${esc(tl('R32 third-place pairings follow FIFA’s official allocation, confirmed after the group stage. Admin can set exact pairings in Results.','تتبع مواجهات أصحاب المركز الثالث التوزيع الرسمي لفيفا، ويُؤكَّد بعد دور المجموعات. يمكن للمشرف ضبط المواجهات في النتائج.'))}</div></div>`;
+  const STRUCT=[['R32',16],['R16',8],['QF',4],['SF',2],['F',1]];
+  const RTIES={R32:16,R16:8,QF:4,SF:2,F:1};
+  const rounds=STRUCT.map(([rk,n])=>{
+    let ms=(rk==='R32')?((km.R32&&km.R32.length)?km.R32:(seeded&&seeded.length?seeded:[])):(km[rk]||[]);
+    if(!ms.length) ms=Array.from({length:n},()=>({home:null,away:null}));
+    return [rk,ms];
+  });
+  const rsub=(rk)=>{ const n=RTIES[rk]; const pre=rk==='QF'?(tl('Round of 8','دور الـ8')+' · '):''; return pre+n+' '+(n>1?tl('ties','مواجهات'):tl('tie','مواجهة')); };
+  const teamLine=(name,winner)=>{ const win=!!(winner&&name&&sameTeam(winner,name));
+    return `<div class="kbr-t ${win?'win':''}"><span>${name?koFlag(name):''}</span><span class="nm">${esc(name?canonTeam(name):'—')}</span>${win?'<span class="kbr-tick">✓</span>':''}</div>`; };
+  const cols=rounds.map(([rk,ms])=>`<div class="kbr-col"><div class="kbr-rh">${esc(t('round_'+rk))}<span class="kbr-rsub">${esc(rsub(rk))}</span></div>
+    ${ms.map((m,i)=>{ const mid=rk+'_'+i; const w=(APP.data.knockoutResults||{})[mid];
+      const a=Array.isArray(m)?m[0]:m.home, b=Array.isArray(m)?m[1]:m.away;
+      return `<div class="kbr-m">${teamLine(a,w)}${teamLine(b,w)}</div>`; }).join('')}</div>`).join('');
+  const champ=`<div class="kbr-col"><div class="kbr-rh">${esc(t('champion'))}<span class="kbr-rsub">${esc(tl('1 winner','فائز واحد'))}</span></div><div class="kbr-champ">👑 ${esc(APP.data.champion?canonTeam(APP.data.champion):'—')}</div></div>`;
+  return koGroupsHtml()+koThirdRaceHtml(q)+`<div class="card">${sectionHead('🗺️',tl('Knockout bracket','شبكة الأدوار الإقصائية'),tl('Round of 32 → 16 → 8 → Semis → Final · swipe to explore','دور الـ32 ← 16 ← 8 ← نصف ← نهائي · اسحب'),APP.isAdmin?`<button class="btn ghost sm" onclick="go('results')">✏️</button>`:'')}
+    <div class="kbr"><div class="kbr-inner">${cols}${champ}</div></div>
+    <div class="sub" style="margin-top:10px">${esc(tl('The full bracket structure is shown; teams fill in as groups finish. R32 third-place pairings follow FIFA’s official allocation (confirmed after the group stage); admin can set exact pairings in Results.','تظهر بنية الشبكة كاملة، وتُملأ الفرق بعد انتهاء المجموعات. تتبع مواجهات الثالث التوزيع الرسمي لفيفا، ويمكن للمشرف ضبطها في النتائج.'))}</div></div>`;
 }
 
 /* ================= MATCH IMPACT MODAL ================= */

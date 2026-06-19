@@ -5906,6 +5906,8 @@ const MORE_ITEMS=[
   {id:'predictions',ic:'prediction',key:'v_predictions'},
   {id:'consensus',ic:'users',key:'v_consensus'},
   {id:'knockout',ic:'bracket',key:'v_knockout'},
+  {id:'scorers',ic:'ball',label:{en:'Top scorers',ar:'الهدّافون'}},
+  {id:'trends',ic:'chart',label:{en:'Player trends',ar:'تطوّر اللاعبين'}},
   {id:'help',ic:'help',key:'v_help'}
 ];
 const ADMIN_ITEMS=[
@@ -6080,6 +6082,8 @@ function render(){
     help:viewHelp,
     dashfull:viewDashFull,
     dashsum:viewDashSummary,
+    scorers:viewScorers,
+    trends:viewTrends,
     playerbracket:viewPlayerBracket
   };
 
@@ -8728,14 +8732,127 @@ function koSeed(){ // fill R32 from standings when all groups complete
   const pairs=[]; for(let i=0;i<seeds.length;i+=2) pairs.push([seeds[i],seeds[i+1]]);
   return pairs.slice(0,16);
 }
+/* ================= TOP SCORERS / GOLDEN BOOT (premium V2 timelines) ================= */
+async function buildTopScorers(){
+  const matches=completedMatchesList();
+  APP._tlCache=APP._tlCache||{};
+  const tally={};
+  for(const m of matches){
+    const evId=eventIdForMatch(m.group,m.idx);
+    if(!evId) continue;
+    let tlJ=APP._tlCache[evId];
+    if(tlJ===undefined){ tlJ=await sdbV2('/lookup/event_timeline/'+evId); APP._tlCache[evId]=(tlJ||null); await new Promise(r=>setTimeout(r,120)); }
+    const tlArr=v2FirstArray(tlJ,['timeline','event_timeline','events','results']);
+    tlArr.forEach(ev=>{
+      const detail=String(ev.strTimelineDetail||ev.strTimelineType||ev.strTimeline||ev.strDescription||'');
+      const isGoal=/goal|scored/i.test(detail)&&!/own goal|disallow|missed|saved|no goal|cancel/i.test(detail);
+      if(!isGoal) return;
+      const player=String(ev.strPlayer||'').trim(); const team=String(ev.strTeam||'').trim();
+      if(!player) return;
+      const k=player+'|'+team; (tally[k]=tally[k]||{player,team,goals:0,assists:0}).goals++;
+      const ass=String(ev.strAssist||'').trim(); if(ass){ const ak=ass+'|'+team; (tally[ak]=tally[ak]||{player:ass,team,goals:0,assists:0}).assists++; }
+    });
+  }
+  APP._topScorers=Object.values(tally).sort((a,b)=>b.goals-a.goals||b.assists-a.assists||a.player.localeCompare(b.player));
+  APP._topScorersAt=Date.now();
+}
+async function refreshTopScorers(){
+  if(!sdbIsPremium()){ toast(tl('Add your premium key in Admin → Sync','أضف مفتاحك المميز في الإدارة ← المزامنة')); return; }
+  APP._scorersLoading=true; render();
+  try{ await buildTopScorers(); }catch(e){ console.warn('topscorers',e&&e.message); }
+  APP._scorersLoading=false; render();
+}
+function viewScorers(){
+  const head=`<div class="card"><div class="between"><h3>⚽ ${esc(tl('Top scorers','الهدّافون'))}</h3>`
+    +`<button class="btn sm" onclick="refreshTopScorers()">↻ ${esc(tl('Refresh','تحديث'))}</button></div>`
+    +`<div class="sub">${esc(tl('Golden Boot race — compiled from match timelines.','سباق الحذاء الذهبي — مجمّع من أحداث المباريات.'))}</div>`;
+  if(!sdbIsPremium()) return head+`<div class="banner warn" style="margin-top:10px">⚠ ${esc(tl('Premium key needed for scorer data. Add it in Admin → Sync.','يلزم مفتاح مميز لبيانات الهدّافين. أضفه في الإدارة ← المزامنة.'))}</div></div>`;
+  if(APP._scorersLoading) return head+`<div class="state" style="margin-top:10px">${esc(tl('Loading match timelines…','جارٍ تحميل أحداث المباريات…'))}</div></div>`;
+  const list=APP._topScorers||[];
+  if(!list.length) return head+`<div class="state" style="margin-top:10px">${esc(tl('No scorer data yet — tap Refresh to pull match timelines.','لا توجد بيانات بعد — اضغط تحديث لجلب أحداث المباريات.'))}</div></div>`;
+  const flag=(t)=>{ try{ return (typeof flagForTeam==='function')?flagForTeam(t):''; }catch(e){ return ''; } };
+  const maxG=list[0].goals||1;
+  const rows=list.slice(0,40).map((s,i)=>`<div class="md-row"><span style="display:flex;align-items:center;gap:8px"><b style="min-width:18px;text-align:center">${i+1}</b> <span>${flag(s.team)} ${esc(s.player)}</span> <span class="sub">${esc(s.team)}</span></span>`
+    +`<span style="display:flex;align-items:center;gap:8px"><span style="display:inline-block;height:7px;width:${Math.round((s.goals/maxG)*70)+8}px;background:var(--grass-d);border-radius:4px"></span><b class="num">${s.goals}</b>${s.assists?`<span class="sub num">${s.assists}🅰</span>`:''}</span></div>`).join('');
+  const at=APP._topScorersAt?(' · '+esc(tl('updated','حُدّث'))+' '+new Date(APP._topScorersAt).toLocaleTimeString()):'';
+  return head+`<div style="margin-top:10px">${rows}</div><div class="sub" style="margin-top:10px">${esc(tl('Builds up as TheSportsDB adds match detail; tap Refresh after new matches.','يتراكم مع إضافة تفاصيل المباريات؛ اضغط تحديث بعد المباريات الجديدة.'))}${at}</div></div>`;
+}
+
+/* ================= PLAYER TRENDS (cumulative correct-pick points) ================= */
+function playerEdgeTrend(){
+  const matches=completedMatchesList();
+  const names=(typeof playerNames==='function')?playerNames():[];
+  const series=names.map(n=>({name:n,values:[],total:0}));
+  matches.forEach(m=>{
+    let byName={};
+    try{ const a=auditMatch(m.group,m.idx); a.rows.forEach(r=>byName[r.name]=r.got); }catch(e){}
+    series.forEach(s=>{ s.total+=(byName[s.name]||0); s.values.push(s.total); });
+  });
+  return {labels:matches.map((m,i)=>String(i+1)), series, matches};
+}
+function lineChartSVG(labels, series){
+  const W=700, H=270, pad=30, padL=34;
+  const n=labels.length; if(!n) return `<div class="sub">${esc(tl('No data','لا بيانات'))}</div>`;
+  let max=1; series.forEach(s=>s.values.forEach(v=>{ if(v>max) max=v; }));
+  const X=i=> padL + (n<=1? (W-padL-pad)/2 : i*(W-padL-pad)/(n-1));
+  const Y=v=> (H-pad) - (v/max)*(H-pad*1.4);
+  const grid=[0,0.5,1].map(f=>{ const yy=Y(max*f); return `<line x1="${padL}" y1="${yy}" x2="${W-pad}" y2="${yy}" stroke="var(--soft)" stroke-width="1"/><text x="4" y="${yy+3}" font-size="9" fill="var(--muted)">${Math.round(max*f)}</text>`; }).join('');
+  const lines=series.map(s=>{ const pts=s.values.map((v,i)=>X(i).toFixed(1)+','+Y(v).toFixed(1)).join(' ');
+    const last=s.values.length-1;
+    return `<polyline fill="none" stroke="${s.color}" stroke-width="2.4" points="${pts}"/><circle cx="${X(last).toFixed(1)}" cy="${Y(s.values[last]||0).toFixed(1)}" r="3" fill="${s.color}"/>`; }).join('');
+  return `<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto" preserveAspectRatio="xMidYMid meet">${grid}${lines}</svg>`;
+}
+function viewTrends(){
+  const {labels,series}=playerEdgeTrend();
+  const head=`<div class="card"><h3>📈 ${esc(tl('Player trends','تطوّر اللاعبين'))}</h3>`
+    +`<div class="sub">${esc(tl('Cumulative correct match-winner points across completed matches.','نقاط التوقّع الصحيح للفائز تراكمياً عبر المباريات المكتملة.'))}</div>`;
+  if(!labels.length) return head+`<div class="state" style="margin-top:10px">${esc(tl('No completed matches yet.','لا توجد مباريات مكتملة بعد.'))}</div></div>`;
+  const palette=['#0f9d63','#f5c451','#e2574c','#3b82f6','#a855f7','#14b8a6','#f97316','#64748b'];
+  const ranked=series.slice().sort((a,b)=>b.total-a.total).slice(0,8);
+  ranked.forEach((s,i)=>s.color=palette[i%palette.length]);
+  const legend=ranked.map(s=>`<span style="display:inline-flex;align-items:center;gap:5px;margin:3px 10px 3px 0;font-size:12px"><span style="width:10px;height:10px;border-radius:50%;background:${s.color};display:inline-block"></span>${esc(s.name)} <b>${s.total}</b></span>`).join('');
+  return head+`<div style="margin-top:10px">${lineChartSVG(labels, ranked)}</div>`
+    +`<div style="margin-top:8px">${legend}</div>`
+    +`<div class="sub" style="margin-top:8px">${esc(tl('Showing top 8 by points. X-axis = completed matches in order.','أعلى 8 بالنقاط. المحور الأفقي = المباريات المكتملة بالترتيب.'))}</div></div>`;
+}
+/* ===== Knockout qualifiers + live best-third-place race ===== */
+function koQualifiers(){
+  const winners=[],runners=[],thirds=[];
+  GROUP_KEYS.forEach(g=>{
+    const tb=computeGroupTable(g); const done=groupComplete(g);
+    if(tb[0]&&tb[0].team) winners.push({group:g,team:tb[0].team,done});
+    if(tb[1]&&tb[1].team) runners.push({group:g,team:tb[1].team,done});
+    if(tb[2]&&tb[2].team) thirds.push({group:g,team:tb[2].team,Pts:tb[2].Pts||0,GD:tb[2].GD||0,GF:tb[2].GF||0,done});
+  });
+  thirds.sort((a,b)=>b.Pts-a.Pts||b.GD-a.GD||b.GF-a.GF||a.group.localeCompare(b.group));
+  return {winners,runners,thirds};
+}
+function koFlag(t){ try{ return (typeof flagForTeam==='function')?flagForTeam(t):''; }catch(e){ return ''; } }
+function koQualifiersHtml(q){
+  const cell=(x)=> x?`${koFlag(x.team)} ${esc(canonTeam(x.team))}${x.done?'':` <span class="sub">${esc(tl('live','مباشر'))}</span>`}`:'<span class="sub">—</span>';
+  const rows=GROUP_KEYS.map(g=>{ const w=q.winners.find(x=>x.group===g), r=q.runners.find(x=>x.group===g);
+    return `<div class="md-row"><span class="sub" style="min-width:20px"><b>${g}</b></span><span style="flex:1;padding-inline-start:8px">1 · ${cell(w)}</span><span style="flex:1">2 · ${cell(r)}</span></div>`; }).join('');
+  return `<div class="card"><h3>✅ ${esc(tl('Qualified — 1st & 2nd','المتأهلون — الأول والثاني'))}</h3><div style="margin-top:8px">${rows}</div></div>`;
+}
+function koThirdRaceHtml(q){
+  if(!q.thirds.length) return '';
+  const rows=q.thirds.map((x,i)=>{ const top8=i<8;
+    return `<div class="md-row" style="${top8?'':'opacity:.5'}"><span style="display:flex;gap:8px;align-items:center"><b style="min-width:16px;text-align:center">${i+1}</b> ${koFlag(x.team)} ${esc(canonTeam(x.team))} <span class="sub">${esc(tl('Grp','مج'))} ${x.group}</span></span><span class="num">${x.Pts} · ${x.GD>0?'+':''}${x.GD}</span></div>`
+      +(i===7?`<div style="border-top:2px dashed var(--grass-d);margin:3px 0;font-size:0">cut</div>`:''); }).join('');
+  return `<div class="card"><h3>🥉 ${esc(tl('Best third-place race','سباق أفضل ثالث'))}</h3>`
+    +`<div class="sub">${esc(tl('The 8 teams above the dashed line advance to the Round of 32. Updates live as group matches finish.','الفرق الثمانية فوق الخط المتقطّع تتأهل إلى دور الـ32. يتحدث مباشرة.'))}</div>`
+    +`<div style="margin-top:8px">${rows}</div></div>`;
+}
 function viewKnockout(){
+  const q=koQualifiers();
+  const QUAL=koQualifiersHtml(q)+koThirdRaceHtml(q);
   const seeded=koSeed();
   const km=APP.data.knockoutMatches||{};
   const r32=(km.R32&&km.R32.length)?km.R32:(seeded||[]);
-  if(!r32.length) return `<div class="card"><h3>🎯 ${esc(t('v_knockout'))}</h3><div class="state">${esc(t('bracketPending'))}</div></div>`;
+  if(!r32.length) return QUAL+`<div class="card"><h3>🗺️ ${esc(tl('Bracket','الشبكة'))}</h3><div class="state">${esc(tl('The bracket fills in once all groups finish (June 27). The qualifier picture above updates live.','تكتمل الشبكة بعد انتهاء كل المجموعات (27 يونيو). صورة المتأهلين أعلاه تتحدث مباشرة.'))}</div></div>`;
   const rounds=[['R32',r32]];
   ['R16','QF','SF','F'].forEach(rk=>{ if(km[rk]&&km[rk].length) rounds.push([rk,km[rk]]); });
-  return `<div class="card"><div class="between"><h3>🎯 ${esc(t('v_knockout'))}</h3>
+  return QUAL+`<div class="card"><div class="between"><h3>🗺️ ${esc(tl('Bracket (projected)','الشبكة (متوقعة)'))}</h3>
       ${APP.isAdmin?`<button class="btn ghost sm" onclick="go('results')">✏️</button>`:''}</div>
     <div class="diagram"><div class="bracket">
     ${rounds.map(([rk,ms])=>`<div class="bcol"><h4>${esc(t('round_'+rk))}</h4>
@@ -8747,7 +8864,8 @@ function viewKnockout(){
     </div>`).join('')}
     <div class="bcol"><h4>${esc(t('champion'))}</h4>
       <div class="bmatch"><div class="bt win">${esc(APP.data.champion?canonTeam(APP.data.champion):'—')}</div></div></div>
-    </div></div></div>`;
+    </div></div>
+    <div class="sub" style="margin-top:8px">${esc(tl('R32 third-place pairings follow FIFA’s official allocation, confirmed after the group stage. Admin can set exact pairings in Results.','تتبع مواجهات أصحاب المركز الثالث التوزيع الرسمي لفيفا، ويُؤكَّد بعد دور المجموعات. يمكن للمشرف ضبط المواجهات في النتائج.'))}</div></div>`;
 }
 
 /* ================= MATCH IMPACT MODAL ================= */

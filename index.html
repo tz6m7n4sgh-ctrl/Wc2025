@@ -4240,6 +4240,20 @@ body[data-view="dashboard"] .hub-next-meta-grid.no-status{
   --match-card-pad:14px;
   --match-chip-radius:15px;
 }
+body[data-theme="dark"]{
+  --ink:#e9f1ec; --paper:#0b1310; --card:#15211b; --muted:#9cb0a7;
+  --soft:#1a2620; --border:#283a31; --pitch:#050f0b; --pitch2:#0a1f18; --line:#1f5f48;
+  --shadow:0 8px 24px rgba(0,0,0,.45); --shadow-lg:0 18px 55px rgba(0,0,0,.6);
+  color-scheme:dark; background:var(--paper); color:var(--ink);
+}
+body[data-theme="dark"] .card,
+body[data-theme="dark"] .std-card{background:var(--card)}
+body[data-theme="dark"] input,
+body[data-theme="dark"] select,
+body[data-theme="dark"] textarea{background:#0f1a15;color:var(--ink);border-color:var(--border)}
+.std-detbtn{background:transparent;border:1px solid var(--border);border-radius:9px;padding:2px 9px;font-size:11.5px;font-weight:700;color:var(--grass-d);cursor:pointer}
+.std-detbtn:hover{background:var(--soft)}
+.md-row{padding:5px 4px;border-bottom:1px solid var(--soft);display:flex;justify-content:space-between;gap:8px;align-items:center}
 body[data-view="dashboard"] .hub-grid,
 body[data-view="dashboard"] .wc-dashboard-grid,
 body[data-view="dashboard"] .wc-pred-widget-grid,
@@ -5951,6 +5965,52 @@ function openMore(){
     ${APP.isAdmin?`<div class="menu-item" onclick="logoutAdmin();closeSheet()"><span class="ic">${svgIcon('logout')}</span><span>${esc(t('logout'))}</span></div>`:''}`;
   $('sheetBg').classList.add('open');
 }
+/* ===== Theming (dark mode) ===== */
+function applyTheme(){ try{ const th=(APP.data&&APP.data.settings&&APP.data.settings.theme)||'light'; document.body.setAttribute('data-theme', th==='dark'?'dark':'light'); }catch(e){} }
+function setTheme(th){ APP.data.settings=APP.data.settings||{}; APP.data.settings.theme=(th==='dark'?'dark':'light'); applyTheme(); if(typeof saveState==='function') saveState('set_theme'); }
+function toggleTheme(){ const cur=(APP.data&&APP.data.settings&&APP.data.settings.theme)||'light'; setTheme(cur==='dark'?'light':'dark'); render(); }
+
+/* ===== Match details (premium V2: timeline / lineups / stats) ===== */
+function eventIdForMatch(group,idx){
+  try{
+    const key=matchKey(group,idx);
+    const pools=[APP._homeApiResults, (APP._homeApiLive?Object.values(APP._homeApiLive):null), APP._homeApiSchedule];
+    for(const pool of pools){ if(!Array.isArray(pool)) continue;
+      const hit=pool.find(m=>m&&m.eventId&&(m.key===key||(m.group===group&&Number(m.idx)===Number(idx))));
+      if(hit) return hit.eventId; }
+  }catch(e){}
+  return null;
+}
+async function openMatchDetails(eventId,title){
+  if(!eventId){ toast(tl('No match data yet','لا توجد بيانات بعد')); return; }
+  openSheet(`<h3 style="padding:0 8px">📋 ${esc(title||tl('Match details','تفاصيل المباراة'))}</h3><div id="mdBody" style="padding:10px 8px">${esc(tl('Loading…','جارٍ التحميل…'))}</div>`);
+  const setB=(h)=>{ const b=document.getElementById('mdBody'); if(b) b.innerHTML=h; };
+  if(!sdbIsPremium()){ setB(`<div class="sub">${esc(tl('Add your premium key in Admin → Sync to see lineups, timeline and stats.','أضف مفتاحك المميز في الإدارة ← المزامنة لعرض التشكيلات والأحداث والإحصاءات.'))}</div>`); return; }
+  try{
+    const [tlJ,lnJ,stJ]=await Promise.all([ sdbV2('/lookup/event_timeline/'+eventId), sdbV2('/lookup/event_lineup/'+eventId), sdbV2('/lookup/event_stats/'+eventId) ]);
+    setB(renderMatchDetails(tlJ,lnJ,stJ));
+  }catch(e){ setB(`<div class="sub">${esc(tl('Could not load match details.','تعذّر تحميل التفاصيل.'))}</div>`); }
+}
+function renderMatchDetails(tlJ,lnJ,stJ){
+  const timeline=(tlJ&&(tlJ.timeline||tlJ.events||tlJ.results))||[];
+  const lineup=(lnJ&&(lnJ.lineup||lnJ.lineups||lnJ.results))||[];
+  const stats=(stJ&&(stJ.eventstats||stJ.stats||stJ.results))||[];
+  let out='';
+  if(Array.isArray(timeline)&&timeline.length){
+    out+=`<div class="std-dlabel" style="margin:6px 0 4px">⏱️ ${esc(tl('Timeline','الأحداث'))}</div>`;
+    out+=timeline.map(ev=>{ const mn=ev.strTimeline||ev.intTime||ev.strTime||ev.strMinute||''; const typ=String(ev.strTimelineDetail||ev.strTimelineType||ev.strDescription||ev.strComment||''); const team=ev.strTeam||''; const who=ev.strPlayer||ev.strHome||ev.strAssist||''; const icon=/own goal/i.test(typ)?'⚽🔴':/goal|penalty scored/i.test(typ)?'⚽':/yellow/i.test(typ)?'🟨':/red/i.test(typ)?'🟥':/subst/i.test(typ)?'🔁':'•'; return `<div class="md-row"><span>${icon} <b>${esc(String(mn))}'</b> ${esc(who)} <span class="sub">${esc(typ)}</span></span><span class="sub">${esc(team)}</span></div>`; }).join('');
+  }
+  if(Array.isArray(stats)&&stats.length){
+    out+=`<div class="std-dlabel" style="margin:12px 0 4px">📊 ${esc(tl('Stats','الإحصاءات'))}</div>`;
+    out+=stats.map(s=>{ const name=s.strStat||s.strStatistic||s.strType||''; const h=s.intHome!=null?s.intHome:(s.strHome!=null?s.strHome:''); const a=s.intAway!=null?s.intAway:(s.strAway!=null?s.strAway:''); if(!name) return ''; return `<div class="md-row"><span class="num">${esc(String(h))}</span><span class="sub">${esc(name)}</span><span class="num">${esc(String(a))}</span></div>`; }).join('');
+  }
+  if(Array.isArray(lineup)&&lineup.length){
+    out+=`<div class="std-dlabel" style="margin:12px 0 4px">👥 ${esc(tl('Lineups','التشكيلات'))}</div>`;
+    out+=lineup.map(p=>{ const nm=p.strPlayer||''; const team=p.strTeam||''; const pos=p.strPosition||p.strFormation||(/sub/i.test(p.strSubstitute||'')?tl('sub','بديل'):''); if(!nm) return ''; return `<div class="md-row"><span>${esc(nm)} <span class="sub">${esc(pos)}</span></span><span class="sub">${esc(team)}</span></div>`; }).join('');
+  }
+  if(!out) out=`<div class="sub">${esc(tl('No detailed data available for this match yet — it usually appears once the match is underway or finished.','لا تتوفر بيانات تفصيلية بعد — تظهر عادة عند بدء المباراة أو انتهائها.'))}</div>`;
+  return out;
+}
 function openSheet(html){ $('sheet').innerHTML='<div class="grab"></div><button class="sheet-close" onclick="closeSheet()" aria-label="Close">×</button>'+html; $('sheetBg').classList.add('open'); }
 function closeSheet(){ $('sheetBg').classList.remove('open'); }
 
@@ -5975,6 +6035,7 @@ function render(){
   invalidateLeaderboardCache();
   applyDir();
   document.body.dataset.view=APP.view||'dashboard';
+  applyTheme();
   renderNav();
 
   // First render happens before Supabase finishes loading.
@@ -7361,6 +7422,8 @@ function renderMatchCard(m,opts){
   const footBits=[];
   if(when) footBits.push(`<span>🕒 ${esc(when)}</span>`);
   if(venue) footBits.push(`<span>📍 ${esc(venue)}</span>`);
+  const evId=(m&&m.eventId)||((m&&m.group!=null&&m.idx!=null)?eventIdForMatch(m.group,m.idx):null);
+  if(evId) footBits.push(`<button type="button" class="std-detbtn" onclick="openMatchDetails('${esc(String(evId))}')">📋 ${esc(tl('Details','تفاصيل'))}</button>`);
   if(opts.footerExtra) footBits.push(opts.footerExtra);
   const foot=footBits.length?`<div class="std-foot">${footBits.join('')}</div>`:'';
 
@@ -9087,6 +9150,11 @@ function viewSettings(){
     <div class="between"><span>${esc(s.locked?t('locked'):t('unlocked'))}</span>
       <button class="btn sm ${s.locked?'gold':'ghost'}" onclick="toggleLock()">${esc(s.locked?t('unlock'):t('locked'))}</button></div>
     <button class="btn" style="margin-top:10px" onclick="saveSettings()">${esc(t('save'))}</button>
+  </div>
+  <div class="card"><h3>🎨 ${esc(tl('Appearance','المظهر'))}</h3>
+    <div class="between"><span>${esc(tl('Dark mode','الوضع الداكن'))}</span>
+      <button class="btn sm ${(s.theme==='dark')?'gold':'ghost'}" onclick="toggleTheme()">${s.theme==='dark'?('🌙 '+esc(tl('On','مفعل'))):('☀️ '+esc(tl('Off','معطّل')))}</button></div>
+    <div class="sub" style="margin-top:6px">${esc(tl('Switches the whole app between light and dark. Saved to your profile.','يبدّل التطبيق بين الفاتح والداكن. يُحفظ في ملفك.'))}</div>
   </div>
   <div class="card"><h3>📈 Google Analytics</h3>
     <div class="sub">${esc(tl('Analytics is anonymous. No login, player names, predictions, or personal data are sent. Replace GA_MEASUREMENT_ID in the HTML to enable.','التحليلات مجهولة. لا يتم إرسال أسماء اللاعبين أو التوقعات أو بيانات شخصية. استبدل GA_MEASUREMENT_ID في ملف HTML للتفعيل.'))}</div>

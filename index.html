@@ -6419,6 +6419,16 @@ function matchImpactDataForHome(m){
     rows
   };
 }
+/* Canonical kickoff time (ms, UAE clock) for a fixture, from the merged schedule.
+   Used to reject phantom "finals" the free feed sometimes returns for unplayed games. */
+function fixtureKickoffMs(g,i){
+  try{
+    const arr=(typeof allSchedule==='function')?allSchedule():[];
+    const m=arr.find(x=>x&&x.group===g&&Number(x.idx)===Number(i));
+    if(m){ const t=matchUaeTimestamp(m); if(Number.isFinite(t)) return t; }
+  }catch(e){}
+  return null;
+}
 async function loadHomeApiUpdates(){
   APP._homeApiLoaded=false;
   APP._homeApiError=null;
@@ -6440,6 +6450,11 @@ async function loadHomeApiUpdates(){
       const m=(row&&row.match)?row.match:sched;
       const api=row&&row.api?row.api:sportsScore(e);
       if(m&&api){
+        // Guard: never treat a fixture whose kickoff is still in the future as Final.
+        // The free feed occasionally returns a bogus score for an unplayed match.
+        const _ko=fixtureKickoffMs(m.group,m.idx);
+        const _now=(typeof uaeNowMs==='function')?uaeNowMs():Date.now();
+        if(_ko!=null && _ko > _now){ APP._homeApiDebug.futureSkipped=(APP._homeApiDebug.futureSkipped||0)+1; return; }
         APP._homeApiDebug.mapped++;
         const hs=Number(api.home), as=Number(api.away);
         let winner=null,outcome='draw';
@@ -10267,7 +10282,7 @@ async function boot(){
   document.body.classList.toggle('no-voice', !voiceSupported());
   updateHeaderDateTime();
   if(!APP._clockTimer) APP._clockTimer=setInterval(updateHeaderDateTime,30000);
-  loadHomeApiUpdates().then(()=>{ render(); showTodayMatchesPopupOnce(); return loadToday(); }).catch(e=>{ APP._homeApiError=String(e&&e.message?e.message:e); render(); });
+  loadHomeApiUpdates().then(()=>persistFeedFinals()).then(()=>{ render(); showTodayMatchesPopupOnce(); return loadToday(); }).catch(e=>{ APP._homeApiError=String(e&&e.message?e.message:e); render(); });
   startLiveAutoRefresh();
 }
 
@@ -10277,12 +10292,46 @@ async function boot(){
 function liveWindowActive(){
   try{ return (typeof liveMatchesNow==='function') && liveMatchesNow().length>0; }catch(_){ return false; }
 }
+/* Relying on the in-app sync: the admin's session saves finished feed results into the
+   Supabase table so they persist beyond the 3-day feed window — no manual SQL needed.
+   Gap-fill only: never overwrites an admin/corrected result; orients onto canonical home/away. */
+async function persistFeedFinals(){
+  try{
+    if(!APP.isAdmin) return;                 // single writer = the admin session
+    const live=APP._homeApiResults;
+    if(!Array.isArray(live)||!live.length) return;
+    const d=APP.data||{}; const gr=d.groupResults||{}; const meta=d.resultMeta||{};
+    const rows=[];
+    live.forEach(r=>{
+      if(!r||r.hs==null||r.as==null) return;
+      const st=String(r.status||'').toLowerCase();
+      if(!['ft','aet','pen','finish','full','final'].some(k=>st.includes(k))) return;
+      const g=r.group, i=r.idx;
+      if(!g||g==='TBD'||i==null) return;
+      const _ko=fixtureKickoffMs(g,i);
+      const _now=(typeof uaeNowMs==='function')?uaeNowMs():Date.now();
+      if(_ko!=null && _ko > _now) return; // future kickoff -> never persist as final
+      const key=matchKey(g,i);
+      const m=meta[key]||{};
+      if(gr[key]!=null && (m.source==='admin'||m.source==='corrected')) return; // respect manual edits
+      const [home,away]=matchTeams(g,i);
+      let hs=Number(r.hs), as=Number(r.as);
+      if(r.home&&r.away&&sameTeam(r.home,away)&&sameTeam(r.away,home)){ const t=hs; hs=as; as=t; }
+      if(!Number.isFinite(hs)||!Number.isFinite(as)) return;
+      const cur=readScore(gr[key]);
+      if(cur && Number(cur.hs)===hs && Number(cur.as)===as) return; // already stored, skip redundant write
+      rows.push(normalizedResultRow(g,i,hs,as,'api','final'));
+    });
+    if(rows.length){ await upsertNormalizedResults(rows); console.log('Persisted',rows.length,'feed final(s) to DB'); }
+  }catch(e){ console.warn('persistFeedFinals failed',e); }
+}
 async function autoRefreshLiveData(){
   if(APP._liveRefreshing) return;
   APP._liveRefreshing=true;
   try{
     await loadState();            // re-pull authoritative DB results (no fake results: DB wins)
     await loadHomeApiUpdates();   // re-pull the SportsDB feed (schedule + finals + in-progress)
+    await persistFeedFinals();    // admin-only: save new finals so they persist beyond the feed window
     await loadToday();
   }catch(e){ APP._homeApiError=String(e&&e.message?e.message:e); }
   finally{ APP._liveRefreshing=false; render(); }

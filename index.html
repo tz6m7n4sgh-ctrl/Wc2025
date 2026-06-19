@@ -4273,6 +4273,66 @@ body[data-theme="dark"] textarea{background:#0f1a15;color:var(--ink);border-colo
 .md-lteam{font-weight:800;font-size:12px;margin-bottom:6px;padding-bottom:4px;border-bottom:1px solid var(--soft)}
 .md-lp{display:flex;justify-content:space-between;gap:6px;padding:3px 0;font-size:12.5px;min-width:0}
 .md-lp>span:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* scroll lock so popups don't scroll the page behind them */
+body.sheet-open{overflow:hidden;position:fixed;width:100%}
+.sheet{overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
+.sheet-bg{overscroll-behavior:contain}
+/* cleaner More menu: scannable icon grid */
+.menu-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:0 4px}
+.menu-tile{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;padding:14px 6px;border:1px solid var(--border);border-radius:14px;background:var(--card);color:var(--ink);font-weight:600;font-size:11.5px;line-height:1.15;cursor:pointer;text-align:center;min-height:76px}
+.menu-tile:active{background:var(--soft);transform:scale(.97)}
+.menu-tile .ic{font-size:20px;color:var(--grass-d)}
+.menu-tile .ic svg{width:1.4em;height:1.4em;stroke:currentColor;fill:none;stroke-width:2.1;stroke-linecap:round;stroke-linejoin:round}
+.menu-tile.adm{border-color:var(--gold)}
+.menu-tile.adm .ic{color:var(--gold-d)}
+.menu-sec{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin:16px 6px 8px}
+/* group standings as a points-bar diagram */
+.gstand{margin:2px 0 4px}
+.gstand-row{display:grid;grid-template-columns:24px 1fr 72px 30px;align-items:center;gap:9px;padding:9px 6px;border-radius:10px;border-bottom:1px solid var(--soft)}
+.gstand-row:last-child{border-bottom:none}
+.gstand-row.q1,.gstand-row.q2{background:linear-gradient(90deg,rgba(46,125,50,.12),transparent)}
+.gstand-row.qline{border-bottom:2px dashed var(--border)}
+.gstand-rk{font-weight:800;color:var(--muted);text-align:center;font-size:13px}
+.gstand-row.q1 .gstand-rk,.gstand-row.q2 .gstand-rk{color:var(--grass-d)}
+.gstand-team{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600;font-size:14px}
+.gstand-bar{height:9px;border-radius:6px;background:var(--soft);overflow:hidden}
+.gstand-bar>span{display:block;height:100%;background:var(--grass-d);border-radius:6px}
+.gstand-pts{font-weight:800;text-align:end;font-size:15px}
+.gtbl-details summary{font-weight:700;font-size:13px;color:var(--muted);padding:8px 4px;cursor:pointer}
+/* points-breakdown donut */
+.donut-wrap{display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin-top:6px}
+.donut{width:148px;height:148px;flex-shrink:0}
+.donut-total{font-size:27px;font-weight:800;fill:var(--ink)}
+.donut-cap{font-size:11px;fill:var(--muted)}
+.donut-legend{flex:1;min-width:150px}
+.donut-leg{display:flex;align-items:center;gap:9px;padding:5px 0;font-size:13.5px;border-bottom:1px solid var(--soft)}
+.donut-leg:last-child{border-bottom:none}
+.donut-leg .dot{width:13px;height:13px;border-radius:4px;flex-shrink:0}
+.donut-leg b{margin-inline-start:auto;font-size:14px}
+/* reusable section header (clearer titles + icons) */
+.sec-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px}
+.sec-head-l{display:flex;align-items:center;gap:11px;min-width:0}
+.sec-ic{font-size:19px;width:38px;height:38px;border-radius:11px;background:var(--soft);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.sec-title{font-weight:800;font-size:17px;line-height:1.15}
+.sec-sub{font-size:12px;color:var(--muted);margin-top:2px;line-height:1.2}
+/* leaderboard redesign */
+.lb2-podium{display:grid;grid-template-columns:1fr 1.18fr 1fr;gap:8px;align-items:end;margin:4px 0 16px}
+.lb2-pod{background:var(--soft);border-radius:14px;padding:12px 6px 14px;text-align:center;cursor:pointer;min-width:0}
+.lb2-pod .medal{font-size:24px;line-height:1}
+.lb2-pod .nm{font-weight:800;font-size:12.5px;margin-top:5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lb2-pod .pt{font-weight:800;font-size:18px;color:var(--grass-d);margin-top:2px}
+.lb2-pod.first{background:linear-gradient(180deg,#fff7d9,#f9e6a0);padding-top:18px}
+.lb2-pod.first .medal{font-size:30px}
+.lb2-pod.first .pt{font-size:21px;color:var(--gold-d)}
+.lb2-row{display:grid;grid-template-columns:32px 1fr auto;align-items:center;gap:10px;padding:11px 6px;cursor:pointer}
+.lb2-row:active{background:var(--soft)}
+.lb2-row+.lb2-row{border-top:1px solid var(--soft)}
+.lb2-rank{font-weight:800;text-align:center;font-size:14px}
+.lb2-main{min-width:0}
+.lb2-name{font-weight:700;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:flex;align-items:center;gap:6px}
+.lb2-bar{height:6px;border-radius:4px;background:var(--soft);margin-top:6px;overflow:hidden}
+.lb2-bar>span{display:block;height:100%;background:var(--grass-d);border-radius:4px}
+.lb2-pts{font-weight:800;font-size:17px;color:var(--ink)}
 body[data-view="dashboard"] .hub-grid,
 body[data-view="dashboard"] .wc-dashboard-grid,
 body[data-view="dashboard"] .wc-pred-widget-grid,
@@ -5976,16 +6036,18 @@ function renderNav(){
   }).join('');
 }
 function openMore(){
-  let items=MORE_ITEMS.slice();
-  let adminLogin = APP.isAdmin ? [] : [{id:'_adminLogin',ic:'lock',key:'admin',adm:true,login:true}];
-  let adm = APP.isAdmin ? ADMIN_ITEMS.map(i=>({...i,adm:true})) : [];
-  const allItems=items.concat(adminLogin,adm);
+  const nav=MORE_ITEMS.slice();
+  const adm = APP.isAdmin ? ADMIN_ITEMS.slice() : [];
+  const label=(i)=>esc(i.label?(LANG==='ar'?i.label.ar:i.label.en):t(i.key));
+  const tile=(i,isAdm)=>`<button class="menu-tile ${isAdm?'adm':''}" onclick="${i.login?'openAdmin()':`go('${i.id}')`};closeSheet()"><span class="ic">${svgIcon(i.ic)}</span><span>${label(i)}</span></button>`;
   $('sheet').innerHTML=`<div class="grab"></div><button class="sheet-close" onclick="closeSheet()" aria-label="Close">×</button>
-    <h3 style="padding:0 8px 8px">${esc(t('nav_more'))}</h3>
-    ${allItems.map(i=>`<div class="menu-item ${i.adm?'adm':''}" onclick="${i.login?'openAdmin()':`go('${i.id}')`};closeSheet()">
-      <span class="ic">${svgIcon(i.ic)}</span><span>${esc(i.label?(LANG==='ar'?i.label.ar:i.label.en):t(i.key))}</span>${i.adm?`<span class="spacer" style="flex:1"></span><span class="tag adm">${esc(i.login?t('admin'):t('adminOnly'))}</span>`:''}</div>`).join('')}
-    ${APP.isAdmin?`<div class="menu-item" onclick="logoutAdmin();closeSheet()"><span class="ic">${svgIcon('logout')}</span><span>${esc(t('logout'))}</span></div>`:''}`;
-  $('sheetBg').classList.add('open');
+    <h3 style="padding:0 8px 10px">${esc(t('nav_more'))}</h3>
+    <div class="menu-grid">${nav.map(i=>tile(i,false)).join('')}</div>
+    ${APP.isAdmin
+      ? `<div class="menu-sec">${esc(t('adminOnly'))}</div><div class="menu-grid">${adm.map(i=>tile(i,true)).join('')}</div>
+         <button class="menu-tile" style="width:100%;flex-direction:row;gap:10px;margin-top:10px;min-height:0;padding:12px" onclick="logoutAdmin();closeSheet()"><span class="ic">${svgIcon('logout')}</span><span>${esc(t('logout'))}</span></button>`
+      : `<button class="menu-tile adm" style="width:100%;flex-direction:row;gap:10px;margin-top:12px;min-height:0;padding:13px" onclick="openAdmin();closeSheet()"><span class="ic">${svgIcon('lock')}</span><span>${esc(t('admin'))}</span></button>`}`;
+  $('sheet').scrollTop=0; $('sheetBg').classList.add('open'); lockScroll();
 }
 /* ===== Theming (dark mode) ===== */
 function applyTheme(){ try{ const th=(APP.data&&APP.data.settings&&APP.data.settings.theme)||'light'; document.body.setAttribute('data-theme', th==='dark'?'dark':'light'); }catch(e){} }
@@ -6081,8 +6143,10 @@ function renderMatchDetails(tlJ,lnJ,stJ,eventId){
   if(APP.isAdmin){ const st=APP._v2Status||{}; out+=`<details style="margin-top:12px"><summary class="sub">${esc(tl('Diagnostics (admin)','تشخيص (مشرف)'))}</summary><div class="sub" style="white-space:pre-wrap;font-family:var(--num);font-size:11px;margin-top:6px">`+esc('event '+(eventId||'?')+' · V2 '+(st.ok?('OK '+(st.mode||'')):('FAIL '+(st.reason||'?')))+'\n'+v2DebugLine('timeline',tlJ)+'\n'+v2DebugLine('lineup',lnJ)+'\n'+v2DebugLine('stats',stJ))+`</div></details>`; }
   return out;
 }
-function openSheet(html){ $('sheet').innerHTML='<div class="grab"></div><button class="sheet-close" onclick="closeSheet()" aria-label="Close">×</button>'+html; $('sheetBg').classList.add('open'); }
-function closeSheet(){ $('sheetBg').classList.remove('open'); }
+function lockScroll(){ if(APP._scrollLocked) return; try{ const y=window.scrollY||window.pageYOffset||0; APP._scrollY=y; APP._lockView=APP.view; APP._scrollLocked=true; const b=document.body; b.style.top=(-y)+'px'; b.classList.add('sheet-open'); }catch(e){} }
+function unlockScroll(){ if(!APP._scrollLocked) return; try{ const b=document.body; b.classList.remove('sheet-open'); b.style.top=''; APP._scrollLocked=false; const y=(APP.view!==APP._lockView)?0:(APP._scrollY||0); window.scrollTo(0,y); }catch(e){} }
+function openSheet(html){ $('sheet').innerHTML='<div class="grab"></div><button class="sheet-close" onclick="closeSheet()" aria-label="Close">×</button>'+html; $('sheet').scrollTop=0; $('sheetBg').classList.add('open'); lockScroll(); }
+function closeSheet(){ $('sheetBg').classList.remove('open'); unlockScroll(); }
 
 function go(view){ APP.view=view; closeSheet(); render(); window.scrollTo(0,0); trackPageView(view); trackEvent('nav_click',{view}); }
 
@@ -8452,25 +8516,36 @@ function impactSummaryCard(item){
 
 
 /* ================= LEADERBOARD ================= */
+function sectionHead(icon,title,sub,right){
+  return `<div class="sec-head"><div class="sec-head-l"><span class="sec-ic">${icon}</span><div style="min-width:0"><div class="sec-title">${esc(title)}</div>${sub?`<div class="sec-sub">${esc(sub)}</div>`:''}</div></div>${right||''}</div>`;
+}
 function viewLeaderboard(){
   const lb=buildLeaderboard();
-  return `<div class="card"><div class="between"><h3>🏆 ${esc(t('v_leaderboard'))}</h3>
-    <button class="btn ghost sm" onclick="shareLeaderboard()">${esc(t('share'))}</button></div>
-    ${lb.map(r=>{ const m=rankMovement(r.name);
-      return `<div class="lb-row ${r.rank===1?'r1':''}" onclick="openPlayer('${esc(r.name).replace(/'/g,'')}')">
-        <span class="rank num">${r.rank}</span>${mvArrow(m)}
-        <span class="nm">${playerNameHtml(r.name,'sm')}</span>
-        <span class="pts num">${r.total}</span></div>`; }).join('')||`<div class="sub">${esc(t('noData'))}</div>`}
-    <div class="points-update-box" style="margin-top:12px">
-      <div class="points-update-head">
-        <div class="points-player">
-          <div class="points-player-name">⚡ ${esc(tl('Top points update','أعلى تحديث نقاط'))}</div>
-          <div class="points-player-meta">${esc(tl('Latest earned points by player','آخر النقاط المكتسبة حسب اللاعب'))}</div>
-        </div>
-      </div>
+  const share=`<button class="btn ghost sm" onclick="shareLeaderboard()">${esc(t('share'))}</button>`;
+  if(!lb.length) return `<div class="card">${sectionHead('🏆',t('v_leaderboard'),'',share)}<div class="state">${esc(t('noData'))}</div></div>`;
+  const max=Math.max(1,lb[0].total);
+  const medals=['🥇','🥈','🥉'];
+  const safe=(n)=>esc(n).replace(/'/g,'');
+  const podium=lb.slice(0,3);
+  const podOrder=[podium[1],podium[0],podium[2]];
+  const podHtml=`<div class="lb2-podium">`+podOrder.map(r=>{ if(!r) return `<div></div>`;
+    return `<div class="lb2-pod ${r.rank===1?'first':''}" onclick="openPlayer('${safe(r.name)}')"><div class="medal">${medals[r.rank-1]||''}</div><div class="nm">${esc(r.name)}</div><div class="pt num">${r.total}</div></div>`; }).join('')+`</div>`;
+  const rows=lb.map(r=>{ const m=rankMovement(r.name); const w=Math.round((r.total/max)*100);
+    const badge=r.rank<=3?medals[r.rank-1]:('<span class="num">'+r.rank+'</span>');
+    return `<div class="lb2-row" onclick="openPlayer('${safe(r.name)}')">
+      <span class="lb2-rank">${badge}</span>
+      <div class="lb2-main"><div class="lb2-name">${playerNameHtml(r.name,'sm')} ${mvArrow(m)}</div><div class="lb2-bar"><span style="width:${w}%"></span></div></div>
+      <span class="lb2-pts num">${r.total}</span></div>`; }).join('');
+  return `<div class="card">${sectionHead('🏆',t('v_leaderboard'),tl('Standings by total points','الترتيب حسب مجموع النقاط'),share)}
+    ${podHtml}
+    ${rows}
+    <div class="points-update-box" style="margin-top:16px">
+      <div class="points-update-head"><div class="points-player">
+        <div class="points-player-name">⚡ ${esc(tl('Top points update','أعلى تحديث نقاط'))}</div>
+        <div class="points-player-meta">${esc(tl('Latest earned points by player','آخر النقاط المكتسبة حسب اللاعب'))}</div></div></div>
       ${renderPointsUpdateList(lb,5)}
     </div>
-    <div class="sub" style="margin-top:8px">${esc(t('breakdown'))}: ${esc(t('groupMatchPts'))} · ${esc(t('groupRankPts'))} · ${esc(t('koPts'))} · ${esc(t('champPts'))}</div>
+    <div class="sub" style="margin-top:10px">${esc(t('breakdown'))}: ${esc(t('groupMatchPts'))} · ${esc(t('groupRankPts'))} · ${esc(t('koPts'))} · ${esc(t('champPts'))}</div>
   </div>`;
 }
 function openPlayer(name){ chooseProfile(name); }
@@ -8547,11 +8622,25 @@ function gtblLegend(){
   const items=[['MP',tl('Played','لعب')],['W',tl('Won','فوز')],['D',tl('Draw','تعادل')],['L',tl('Lost','خسارة')],['Pts',tl('Points','نقاط')],['GF',tl('Goals for','أهداف له')],['GA',tl('Goals against','أهداف عليه')],['GD',tl('Goal diff','الفارق')]];
   return `<div class="gtbl-legend">${items.map(([k,v])=>`<span><b>${esc(k)}</b> ${esc(v)}</span>`).join('')}</div>`;
 }
+function groupStandBars(g,tb,started){
+  const max=Math.max(1,...tb.map(r=>r.Pts));
+  return `<div class="gstand">`+tb.map((r,i)=>{
+    const q=started&&i<2&&r.P>0;
+    const w=r.P>0?Math.round((r.Pts/max)*100):0;
+    return `<div class="gstand-row ${q?(i===0?'q1':'q2'):''}${i===1?' qline':''}">
+      <span class="gstand-rk">${i+1}</span>
+      <span class="gstand-team">${teamHtml(r.team)}</span>
+      <span class="gstand-bar"><span style="width:${w}%"></span></span>
+      <span class="gstand-pts num">${r.Pts}</span></div>`;
+  }).join('')+`</div>`;
+}
 function groupsStageHtml(){
   return groupsResultSourceBanner()
-    +`<div class="card gtbl-note">${gtblLegend()}<div class="sub" style="margin-top:7px">${esc(t('tiebreak'))}</div></div>`
+    +`<div class="card">${sectionHead('📊',tl('Group Stage','دور المجموعات'),tl('Standings, points and form for every group','الترتيب والنقاط لكل مجموعة'))}
+        <div class="sub">${esc(t('tiebreak'))}</div></div>`
     +GROUP_KEYS.map(g=>{
       const tb=computeGroupTable(g); const done=groupComplete(g); const started=tb.some(r=>r.P>0);
+      const status=`<span class="chip ${done?'on':''}">${done?esc(t('groupsDone')):esc(t('pending'))}</span>`;
       const rows=tb.map((r,i)=>{
         const q=started&&i<2&&r.P>0;
         const form=teamGroupForm(g,r.team);
@@ -8563,14 +8652,19 @@ function groupsStageHtml(){
           <td class="c-form">${formDotsHtml(form)}</td>
         </tr>`;
       }).join('');
-      return `<div class="card gtbl-card"><div class="gtbl-head"><h3>${esc(tl('Group','المجموعة'))} ${g}</h3><span class="chip ${done?'on':''}">${done?esc(t('groupsDone')):esc(t('pending'))}</span></div>
-        <div class="gtbl-scroll"><table class="gtbl"><thead><tr>
-          <th class="c-team">${esc(tl('Team','الفريق'))}</th>
-          <th>${esc(tl('MP','لعب'))}</th><th>${esc(tl('W','ف'))}</th><th>${esc(tl('D','ت'))}</th><th>${esc(tl('L','خ'))}</th>
-          <th class="c-pts">${esc(tl('Pts','نقاط'))}</th>
-          <th class="c-dim">${esc(tl('GF','له'))}</th><th class="c-dim">${esc(tl('GA','عليه'))}</th><th>${esc(tl('GD','+/-'))}</th>
-          <th class="c-form">${esc(tl('Last 5','آخر 5'))}</th>
-        </tr></thead><tbody>${rows}</tbody></table></div>
+      return `<div class="card gtbl-card">
+        ${sectionHead(g,tl('Group','المجموعة')+' '+g, started?tl('Top 2 advance','يتأهل أول اثنين'):tl('Not started yet','لم تبدأ بعد'), status)}
+        ${groupStandBars(g,tb,started)}
+        <details class="acc gtbl-details"><summary>📋 ${esc(tl('Full stats table','جدول الإحصاءات الكامل'))}</summary>
+          <div class="gtbl-scroll"><table class="gtbl"><thead><tr>
+            <th class="c-team">${esc(tl('Team','الفريق'))}</th>
+            <th>${esc(tl('MP','لعب'))}</th><th>${esc(tl('W','ف'))}</th><th>${esc(tl('D','ت'))}</th><th>${esc(tl('L','خ'))}</th>
+            <th class="c-pts">${esc(tl('Pts','نقاط'))}</th>
+            <th class="c-dim">${esc(tl('GF','له'))}</th><th class="c-dim">${esc(tl('GA','عليه'))}</th><th>${esc(tl('GD','+/-'))}</th>
+            <th class="c-form">${esc(tl('Last 5','آخر 5'))}</th>
+          </tr></thead><tbody>${rows}</tbody></table></div>
+          <div style="margin-top:8px">${gtblLegend()}</div>
+        </details>
       </div>`;
     }).join('');
 }
@@ -8719,6 +8813,14 @@ function renderProfilePicker(selected){
     </select>
   </div>`;
 }
+function donutChart(segments){
+  const segs=segments.filter(s=>Number(s.value)>0);
+  const total=segments.reduce((s,x)=>s+Math.max(0,Number(x.value)||0),0);
+  const cx=70,cy=70,r=54,circ=2*Math.PI*r; let off=0;
+  const arcs=segs.map(s=>{ const len=(s.value/total)*circ; const el=`<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${s.color}" stroke-width="17" stroke-dasharray="${len} ${circ-len}" stroke-dashoffset="${-off}" transform="rotate(-90 ${cx} ${cy})"/>`; off+=len; return el; }).join('');
+  const legend=segments.map(s=>`<div class="donut-leg"><span class="dot" style="background:${s.color}"></span><span>${esc(s.label)}</span><b class="num">${Number(s.value)||0}</b></div>`).join('');
+  return `<div class="donut-wrap"><svg viewBox="0 0 140 140" class="donut" role="img"><circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="var(--soft)" stroke-width="17"/>${total>0?arcs:''}<text x="${cx}" y="${cy-1}" text-anchor="middle" class="donut-total num">${total}</text><text x="${cx}" y="${cy+17}" text-anchor="middle" class="donut-cap">${esc(t('pts'))}</text></svg><div class="donut-legend">${legend}</div></div>`;
+}
 function viewPlayer(){
   const last=localStorage.getItem('wc2026_last_profile')||'';
   const name=APP.sel.player||last||'';
@@ -8731,26 +8833,27 @@ function viewPlayer(){
   ${renderPlayerHero(name,p,c,me)}
 
   <div class="card">
-    <h3>📊 ${esc(t('breakdown'))}</h3>${barChart(bd)}
-    ${c.gRankPending?`<div class="banner warn">⏳ ${esc(t('groupRankPts'))}: ${esc(t('pending'))}</div>`:''}
+    ${sectionHead('📊',t('breakdown'),tl('Where your points come from','مصدر نقاطك'))}
+    ${donutChart([{label:t('groupMatchPts'),value:c.groupMatch,color:'#2e7d32'},{label:t('groupRankPts'),value:c.groupRank,color:'#1565c0'},{label:t('koPts'),value:c.knockout,color:'#ef6c00'},{label:t('champPts'),value:c.champ,color:'#c9a227'}])}
+    ${c.gRankPending?`<div class="banner warn" style="margin-top:10px">⏳ ${esc(t('groupRankPts'))}: ${esc(t('pending'))}</div>`:''}
   </div>
 
-  <div class="card"><h3>📝 ${esc(t('v_predictions'))}</h3>
+  <div class="card">${sectionHead('📝',t('v_predictions'),tl('Your group picks and champion','اختياراتك والبطل'))}
     ${GROUP_KEYS.map(g=>{ const pred=playerGroupPred(p,g); if(!pred.length) return '';
       return `<details class="acc"><summary><span>Group ${g}</span><span class="sub">${esc(rawGroupPredictionPath(p,g))}</span></summary><div class="body">
         ${predictionBoxes(pred)}
       </div></details>`; }).join('')||`<div class="sub">${esc(t('noData'))}</div>`}
-    <div class="between" style="margin-top:10px;padding:8px;background:var(--soft);border-radius:10px">
+    <div class="between" style="margin-top:10px;padding:10px;background:var(--soft);border-radius:10px">
       <span>👑 ${esc(t('champion'))}</span><b>${teamHtml(p&&p.champion?p.champion:null,'—')}</b></div>
   </div>
 
   <div class="card">
-    <h3>⚡ ${esc(tl('Top points update','أعلى تحديث نقاط'))}</h3>
+    ${sectionHead('⚡',tl('Top points update','أعلى تحديث نقاط'),tl('Your latest earned points','آخر نقاطك المكتسبة'))}
     ${renderPlayerPointsUpdateBox(me||{name,...c},4,false)}
   </div>
 
   <div class="card">
-    <h3>⚽ ${esc(tl('Recent points gained','النقاط الأخيرة'))}</h3>
+    ${sectionHead('⚽',tl('Recent points gained','النقاط الأخيرة'),'')}
     ${renderRecentPlayerPoints(name,c)}
   </div>`;
 }

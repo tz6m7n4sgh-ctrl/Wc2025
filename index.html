@@ -5988,13 +5988,15 @@ async function openMatchDetails(eventId,title){
   if(!sdbIsPremium()){ setB(`<div class="sub">${esc(tl('Add your premium key in Admin → Sync to see lineups, timeline and stats.','أضف مفتاحك المميز في الإدارة ← المزامنة لعرض التشكيلات والأحداث والإحصاءات.'))}</div>`); return; }
   try{
     const [tlJ,lnJ,stJ]=await Promise.all([ sdbV2('/lookup/event_timeline/'+eventId), sdbV2('/lookup/event_lineup/'+eventId), sdbV2('/lookup/event_stats/'+eventId) ]);
-    setB(renderMatchDetails(tlJ,lnJ,stJ));
+    setB(renderMatchDetails(tlJ,lnJ,stJ,eventId));
   }catch(e){ setB(`<div class="sub">${esc(tl('Could not load match details.','تعذّر تحميل التفاصيل.'))}</div>`); }
 }
-function renderMatchDetails(tlJ,lnJ,stJ){
-  const timeline=(tlJ&&(tlJ.timeline||tlJ.events||tlJ.results))||[];
-  const lineup=(lnJ&&(lnJ.lineup||lnJ.lineups||lnJ.results))||[];
-  const stats=(stJ&&(stJ.eventstats||stJ.stats||stJ.results))||[];
+function v2FirstArray(j,keys){ if(!j) return []; for(const k of keys){ if(Array.isArray(j[k])) return j[k]; } for(const k in j){ if(Array.isArray(j[k])) return j[k]; } return Array.isArray(j)?j:[]; }
+function v2DebugLine(label,j){ if(j==null) return label+': null (blocked / no response)'; const keys=Object.keys(j); const arrs=keys.filter(k=>Array.isArray(j[k])).map(k=>k+'['+j[k].length+']'); return label+': '+(arrs.length?arrs.join(', '):'keys '+JSON.stringify(keys).slice(0,140)); }
+function renderMatchDetails(tlJ,lnJ,stJ,eventId){
+  const timeline=v2FirstArray(tlJ,['timeline','event_timeline','events','results']);
+  const lineup=v2FirstArray(lnJ,['lineup','lineups','event_lineup','results']);
+  const stats=v2FirstArray(stJ,['eventstats','stats','statistics','event_stats','results']);
   let out='';
   if(Array.isArray(timeline)&&timeline.length){
     out+=`<div class="std-dlabel" style="margin:6px 0 4px">⏱️ ${esc(tl('Timeline','الأحداث'))}</div>`;
@@ -6008,7 +6010,8 @@ function renderMatchDetails(tlJ,lnJ,stJ){
     out+=`<div class="std-dlabel" style="margin:12px 0 4px">👥 ${esc(tl('Lineups','التشكيلات'))}</div>`;
     out+=lineup.map(p=>{ const nm=p.strPlayer||''; const team=p.strTeam||''; const pos=p.strPosition||p.strFormation||(/sub/i.test(p.strSubstitute||'')?tl('sub','بديل'):''); if(!nm) return ''; return `<div class="md-row"><span>${esc(nm)} <span class="sub">${esc(pos)}</span></span><span class="sub">${esc(team)}</span></div>`; }).join('');
   }
-  if(!out) out=`<div class="sub">${esc(tl('No detailed data available for this match yet — it usually appears once the match is underway or finished.','لا تتوفر بيانات تفصيلية بعد — تظهر عادة عند بدء المباراة أو انتهائها.'))}</div>`;
+  if(!out) out=`<div class="sub">${esc(tl('No detailed data available for this match yet — TheSportsDB is crowd-sourced, so timelines and lineups can be missing or delayed for some matches.','لا تتوفر بيانات تفصيلية بعد — المصدر يعتمد على المساهمين وقد تتأخر التشكيلات والأحداث لبعض المباريات.'))}</div>`;
+  if(APP.isAdmin){ const st=APP._v2Status||{}; out+=`<details style="margin-top:12px"><summary class="sub">${esc(tl('Diagnostics (admin)','تشخيص (مشرف)'))}</summary><div class="sub" style="white-space:pre-wrap;font-family:var(--num);font-size:11px;margin-top:6px">`+esc('event '+(eventId||'?')+' · V2 '+(st.ok?('OK '+(st.mode||'')):('FAIL '+(st.reason||'?')))+'\n'+v2DebugLine('timeline',tlJ)+'\n'+v2DebugLine('lineup',lnJ)+'\n'+v2DebugLine('stats',stJ))+`</div></details>`; }
   return out;
 }
 function openSheet(html){ $('sheet').innerHTML='<div class="grab"></div><button class="sheet-close" onclick="closeSheet()" aria-label="Close">×</button>'+html; $('sheetBg').classList.add('open'); }

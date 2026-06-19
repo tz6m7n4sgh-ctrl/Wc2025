@@ -4861,6 +4861,8 @@ h3{font-size:18px;line-height:1.25}
   body[data-view="playerbracket"] main#view,
   body[data-view="knockout"] main#view,
   body[data-view="today"] main#view{display:block;max-width:880px;margin-left:auto;margin-right:auto}
+  body[data-view="playerreport"] main#view{display:block;max-width:1040px;margin-left:auto;margin-right:auto}
+  body[data-view="playerreport"] main#view>.card{grid-column:auto;margin:14px 0}
   body[data-view="leaderboard"] main#view>.card,
   body[data-view="player"] main#view>.card,
   body[data-view="scorers"] main#view>.card,
@@ -4921,6 +4923,27 @@ h3{font-size:18px;line-height:1.25}
 .kog-badge{font-size:10.5px;font-weight:800;padding:2px 7px;border-radius:999px;white-space:nowrap}
 .kog-badge.q{background:rgba(23,178,116,.16);color:var(--grass-d)}
 .kog-badge.t{background:rgba(224,154,50,.2);color:#9a6a14}
+/* ===== player position report ===== */
+.rpt-cover{padding:6px 4px 10px}
+.rpt-cover>b{font-size:18px;font-weight:800}
+.rpt-player{padding:16px}
+.rpt-head{display:flex;align-items:center;gap:12px;margin-bottom:10px}
+.rpt-rank{min-width:42px;height:42px;padding:0 10px;border-radius:11px;background:var(--ink);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:15px}
+.rpt-name{font-weight:800;font-size:18px}
+.rpt-sum{display:flex;flex-wrap:wrap;gap:8px 16px;padding:9px 12px;background:var(--soft);border-radius:11px;font-size:13px;margin-bottom:12px}
+.rpt-groups{display:grid;grid-template-columns:1fr;gap:10px}
+@media(min-width:520px){.rpt-groups{grid-template-columns:1fr 1fr}}
+@media(min-width:900px){.rpt-groups{grid-template-columns:1fr 1fr 1fr}}
+.rpt-grp{border:1px solid var(--border);border-radius:12px;overflow:hidden}
+.rpt-grp-h{display:flex;justify-content:space-between;align-items:center;padding:7px 11px;background:var(--soft);font-size:13px}
+.rpt-tbl{width:100%;border-collapse:collapse;font-size:13px}
+.rpt-tbl td{padding:7px 11px;border-top:1px solid var(--soft)}
+.rpt-pos{width:22px;color:var(--muted);font-weight:800;text-align:center}
+.rpt-team{font-weight:600}
+.rpt-stat{text-align:end;white-space:nowrap}
+.rpt-st{font-size:11.5px;font-weight:800;padding:2px 8px;border-radius:999px}
+.rpt-st.ok{background:rgba(23,178,116,.16);color:var(--grass-d)}
+.rpt-st.off,.rpt-st.pend{background:var(--soft);color:var(--muted)}
 </style>
 </head>
 <body>
@@ -6110,6 +6133,7 @@ const MORE_ITEMS=[
 const ADMIN_ITEMS=[
   {id:'results',ic:'edit',key:'v_results'},
   {id:'playerpicks',ic:'bracket',label:{en:'Player picks',ar:'توقعات اللاعب'}},
+  {id:'playerreport',ic:'chart',label:{en:'Position report (PDF)',ar:'تقرير المراكز (PDF)'}},
   {id:'audit',ic:'search',key:'v_audit'},
   {id:'backup',ic:'backup',key:'v_backup'},
   {id:'health',ic:'health',key:'v_health'},
@@ -6332,11 +6356,12 @@ function render(){
     scorers:viewScorers,
     trends:viewTrends,
     playerbracket:viewPlayerBracket,
-    playerpicks:viewPlayerPicks
+    playerpicks:viewPlayerPicks,
+    playerreport:viewPlayerReport
   };
 
   const fn=map[APP.view]||viewDashboard;
-  const adminViews=['audit','results','repair','settings','backup','health','syncresults','playerpicks'];
+  const adminViews=['audit','results','repair','settings','backup','health','syncresults','playerpicks','playerreport'];
 
   if(adminViews.includes(APP.view)&&!APP.isAdmin){
     $('view').innerHTML=banner+adminGate();
@@ -7865,6 +7890,77 @@ function viewDashFull(){
   return `<div class="dash-head"><div><h3>${esc(tl('World Cup 2026 — Full status','كأس العالم 2026 — الحالة الكاملة'))}</h3><p>${esc(t(currentPhase()))}</p></div><button class="dash-pdf" onclick="exportDashPDF('worldcup-full')">⬇ PDF</button></div>
     ${status}${groups}${expCard}${koCard}${scoringRulesHtml()}
     <div class="dash-card"><button class="btn ghost sm" onclick="go('playerbracket')">🗺️ ${esc(tl('Open player brackets','فتح توقعات اللاعبين'))}</button></div>`;
+}
+function playerPositionReportHtml(){
+  let lb=[]; try{ lb=buildLeaderboard()||[]; }catch(e){}
+  if(!lb.length) return `<div class="card"><div class="state">${esc(t('noData'))}</div></div>`;
+  return lb.map(r=>{
+    const name=r.name; const p=getPlayer(name);
+    let exactNow=0, slots=0;
+    const groupCards=GROUP_KEYS.map(g=>{
+      const pred=playerGroupPred(p,g); if(!pred.length) return '';
+      let table=[]; try{ table=computeGroupTable(g)||[]; }catch(e){}
+      const complete=groupComplete(g); const started=table.some(x=>x.P>0);
+      const rows=[0,1,2,3].map(pos=>{
+        const picked=pred[pos]||null;
+        const curPos=picked?table.findIndex(rw=>sameTeam(rw.team,picked)):-1;
+        const exact=!!(picked&&curPos===pos);
+        if(picked){ slots++; if(exact&&started) exactNow++; }
+        let stat;
+        if(!started) stat=`<span class="rpt-st pend">${esc(tl('not started','لم تبدأ'))}</span>`;
+        else if(exact) stat=`<span class="rpt-st ok">✓ ${esc(complete?tl('correct','صحيح'):tl('on track','على المسار'))}</span>`;
+        else if(curPos>=0) stat=`<span class="rpt-st off">${esc(tl('now','الآن'))} ${curPos+1}</span>`;
+        else stat=`<span class="rpt-st off">—</span>`;
+        return `<tr><td class="rpt-pos">${pos+1}</td><td class="rpt-team">${teamText(picked)}</td><td class="rpt-stat">${stat}</td></tr>`;
+      }).join('');
+      const gstate=complete?tl('final','نهائي'):(started?tl('in progress','جارية'):tl('not started','لم تبدأ'));
+      return `<div class="rpt-grp"><div class="rpt-grp-h"><b>${esc(tl('Group','المجموعة'))} ${g}</b><span class="sub">${esc(gstate)}</span></div><table class="rpt-tbl"><tbody>${rows}</tbody></table></div>`;
+    }).join('');
+    let calc={}; try{ calc=calcPlayerPoints(p,APP.data.groupResults,APP.data.knockoutResults,APP.data.champion)||{}; }catch(e){}
+    const summary=`<div class="rpt-sum"><span>${esc(tl('Exact positions now','مراكز صحيحة الآن'))}: <b class="num">${exactNow}/${slots||0}</b></span><span>${esc(tl('Group-rank points','نقاط الترتيب'))}: <b class="num">${calc.groupRank||0}</b>${calc.gRankPending?` <span class="sub">(${esc(tl('updating','قيد التحديث'))})</span>`:''}</span><span>${esc(tl('Total','المجموع'))}: <b class="num">${calc.total||0}</b></span></div>`;
+    return `<div class="card rpt-player"><div class="rpt-head"><div class="rpt-rank">#${r.rank}</div><div class="rpt-name">${esc(name)}</div></div>${summary}<div class="rpt-groups">${groupCards||`<div class="sub">${esc(tl('No predictions.','لا توجد توقعات.'))}</div>`}</div></div>`;
+  }).join('');
+}
+function viewPlayerReport(){
+  const stamp=new Date().toLocaleString();
+  return `<div class="card">${sectionHead('📄',tl('Player position report','تقرير مراكز اللاعبين'),tl('How each player’s 1–4 group picks are doing vs current standings','كيف تسير توقعات كل لاعب مقارنة بالترتيب الحالي'),`<span class="tag adm">${esc(t('adminOnly'))}</span>`)}
+      <div class="between" style="gap:8px;flex-wrap:wrap"><span class="sub">${esc(tl('As of','حتى'))} ${esc(stamp)}</span>
+      <span style="display:flex;gap:8px"><button class="btn ghost sm" onclick="refreshReportData()">↻ ${esc(tl('Refresh','تحديث'))}</button>
+      <button class="btn sm" onclick="exportPlayerReportPDF()">⬇ ${esc(tl('Download PDF','تنزيل PDF'))}</button></span></div></div>
+    <div id="playerReportBody">
+      <div class="rpt-cover"><b>${esc(tl('World Cup 2026 — Player position report','كأس العالم 2026 — تقرير مراكز اللاعبين'))}</b><div class="sub">${esc(tl('Predicted group positions vs current standings · As of','المراكز المتوقعة مقابل الترتيب الحالي · حتى'))} ${esc(stamp)}</div></div>
+      ${playerPositionReportHtml()}
+    </div>`;
+}
+async function refreshReportData(){
+  try{ if(typeof toast==='function') toast(tl('Refreshing latest data…','جارٍ تحديث أحدث البيانات…'));
+    if(typeof loadState==='function') await loadState();
+    if(typeof loadHomeApiUpdates==='function') await loadHomeApiUpdates();
+  }catch(e){}
+  if(typeof render==='function') render();
+}
+async function exportPlayerReportPDF(){
+  const el=document.getElementById('playerReportBody'); if(!el){ if(typeof toast==='function') toast(tl('Open the report first','افتح التقرير أولاً')); return; }
+  try{
+    if(typeof toast==='function') toast(tl('Generating PDF…','جارٍ إنشاء PDF…'));
+    await loadScriptOnce('https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js');
+    await loadScriptOnce('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js');
+    const canvas=await html2canvas(el,{scale:2,backgroundColor:'#ffffff',useCORS:true});
+    const jsPDFc=(window.jspdf&&window.jspdf.jsPDF)||window.jsPDF;
+    const pdf=new jsPDFc('p','mm','a4');
+    const pw=pdf.internal.pageSize.getWidth(), ph=pdf.internal.pageSize.getHeight();
+    const iw=pw-16; const pageCanvasH=Math.floor(canvas.width*(ph-16)/iw);
+    let sy=0,page=0;
+    while(sy<canvas.height){
+      const sliceH=Math.min(pageCanvasH,canvas.height-sy);
+      const c2=document.createElement('canvas'); c2.width=canvas.width; c2.height=sliceH;
+      c2.getContext('2d').drawImage(canvas,0,sy,canvas.width,sliceH,0,0,canvas.width,sliceH);
+      if(page>0) pdf.addPage();
+      pdf.addImage(c2.toDataURL('image/png'),'PNG',8,8,iw,sliceH*iw/canvas.width);
+      sy+=sliceH; page++;
+    }
+    pdf.save('player-position-report.pdf');
+  }catch(e){ alert((tl('PDF export failed','فشل تصدير PDF'))+': '+(e&&e.message?e.message:e)); }
 }
 function playerPicksGroupsHtml(p){
   const blocks=GROUP_KEYS.map(g=>{

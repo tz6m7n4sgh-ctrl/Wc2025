@@ -346,14 +346,16 @@ const LINE_COLORS = ["#19c37d", "#f5c451", "#5b8def", "#e2574c", "#9b7ede", "#2b
 
 // --- match-center helpers ---
 const DAY = 864e5;
-const dayKey = (ms) => Math.floor(ms / DAY) * DAY;
-const fmtTime = (ms, lang) => new Intl.DateTimeFormat(lang === "ar" ? "ar" : "en-GB", { hour: "2-digit", minute: "2-digit", timeZone: "UTC", hour12: false }).format(new Date(ms));
+// Local-timezone day key (midnight in the device's timezone), so fixtures group
+// under the day the user actually sees — not the UTC day.
+const dayKey = (ms) => { const d = new Date(ms); d.setHours(0, 0, 0, 0); return d.getTime(); };
+const fmtTime = (ms, lang) => new Intl.DateTimeFormat(lang === "ar" ? "ar" : "en-GB", { hour: "2-digit", minute: "2-digit", hour12: false }).format(new Date(ms));
 function fmtDay(ms, lang) {
   const today = dayKey(nowMs()), d = dayKey(ms);
   if (d === today) return lang === "ar" ? "اليوم" : "Today";
   if (d === today + DAY) return lang === "ar" ? "غداً" : "Tomorrow";
   if (d === today - DAY) return lang === "ar" ? "أمس" : "Yesterday";
-  return new Intl.DateTimeFormat(lang === "ar" ? "ar" : "en-GB", { weekday: "short", day: "numeric", month: "short", timeZone: "UTC" }).format(new Date(ms));
+  return new Intl.DateTimeFormat(lang === "ar" ? "ar" : "en-GB", { weekday: "short", day: "numeric", month: "short" }).format(new Date(ms));
 }
 const matchesOnDay = (data, d) => (data.matches || []).filter((m) => dayKey(m.ko) === d).sort((a, b) => a.ko - b.ko);
 const matchDays = (data) => [...new Set((data.matches || []).map((m) => dayKey(m.ko)))].sort((a, b) => a - b);
@@ -920,7 +922,7 @@ function Dashboard({ data, lb, lang, onOpen, t, go }) {
   const heroLive = live[0] || liveMatches(data)[0] || null;
   const hero = heroLive || next;
   const recent = useMemo(() => recentResults(data, 4), [data]);
-  const dt = new Intl.DateTimeFormat(lang === "ar" ? "ar" : "en-GB", { weekday: "long", day: "numeric", month: "long", timeZone: "UTC" }).format(new Date(nowMs()));
+  const dt = new Intl.DateTimeFormat(lang === "ar" ? "ar" : "en-GB", { weekday: "long", day: "numeric", month: "long" }).format(new Date(nowMs()));
   const leader = lb[0];
   return (
     <div className="view">

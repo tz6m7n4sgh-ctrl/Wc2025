@@ -67,25 +67,44 @@ const sportsEventComplete = (e) => {
   if (!st) return true;
   return st.includes("match finished") || st === "ft" || st === "aet" || st.includes("full") || st.includes("finished") || st.includes("after") || st.includes("complete");
 };
+// Diagnostic: how the last feed fetch went (for the admin Sync view).
+let FEED_STATUS = { mode: "idle", events: 0, completed: 0, at: 0 };
+export function getFeedStatus() { return FEED_STATUS; }
 async function fetchDayV1(date, key) {
   const url = SDB_V1 + "/" + encodeURIComponent(v1Key(key)) + "/eventsday.php?d=" + encodeURIComponent(date) + "&l=" + WC_LEAGUE;
-  try { const r = await fetch(url, { headers: { Accept: "application/json" } }); if (r.ok) return asArray(await r.json()); } catch (e) { /* try proxies */ }
+  try { const r = await fetch(url, { headers: { Accept: "application/json" } }); if (r.ok) { FEED_STATUS.mode = "direct"; return asArray(await r.json()); } } catch (e) { /* try proxies */ }
   for (const tmpl of CORS_PROXIES) {
-    try { const purl = tmpl.replace("{U}", encodeURIComponent(url)).replace("{RAW}", url); const r = await fetch(purl, { headers: { Accept: "application/json" } }); if (r.ok) return asArray(await r.json()); } catch (e) { /* next */ }
+    try { const purl = tmpl.replace("{U}", encodeURIComponent(url)).replace("{RAW}", url); const r = await fetch(purl, { headers: { Accept: "application/json" } }); if (r.ok) { FEED_STATUS.mode = "proxy:" + tmpl.split("/")[2]; return asArray(await r.json()); } } catch (e) { /* next */ }
   }
+  FEED_STATUS.mode = "unreachable";
   return [];
 }
-// Returns completed results in [yesterday, today, tomorrow]:
-// [{home, away, homeScore, awayScore}]
-export async function fetchCompletedResults(key) {
-  const dates = [utcOffsetDate(-1), utcOffsetDate(0), utcOffsetDate(1)];
-  const batches = await Promise.all(dates.map((d) => fetchDayV1(d, key).catch(() => [])));
+function eventsToResults(events) {
   const out = [];
-  batches.flat().forEach((e) => {
+  events.forEach((e) => {
     if (!sportsEventComplete(e)) return;
     const sc = sportsScore(e);
     const home = e.strHomeTeam || e.strHome, away = e.strAwayTeam || e.strAway;
     if (home && away) out.push({ home, away, homeScore: sc.home, awayScore: sc.away });
   });
   return out;
+}
+// Fetch completed results across a set of dates (UTC yyyy-mm-dd strings).
+async function fetchResultsForDates(key, dates) {
+  FEED_STATUS = { mode: "unreachable", events: 0, completed: 0, at: Date.now() };
+  const batches = await Promise.all(dates.map((d) => fetchDayV1(d, key).catch(() => [])));
+  const events = batches.flat();
+  const results = eventsToResults(events);
+  FEED_STATUS = { ...FEED_STATUS, events: events.length, completed: results.length, at: Date.now() };
+  return results;
+}
+// Passive fill: [yesterday, today, tomorrow].
+export async function fetchCompletedResults(key) {
+  return fetchResultsForDates(key, [utcOffsetDate(-1), utcOffsetDate(0), utcOffsetDate(1)]);
+}
+// Admin sync: a wider window (tournament start → tomorrow), capped at 40 days.
+export async function fetchResultsRange(key, fromISO, toISO) {
+  const dates = []; let d = new Date(fromISO + "T00:00:00Z"); const end = new Date(toISO + "T00:00:00Z");
+  while (d <= end && dates.length < 40) { dates.push(d.toISOString().slice(0, 10)); d = new Date(d.getTime() + 864e5); }
+  return fetchResultsForDates(key, dates);
 }

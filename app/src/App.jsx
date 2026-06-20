@@ -1002,13 +1002,16 @@ function Dashboard({ data, lb, lang, onOpen, t, go }) {
     </div>
   );
 }
-function Leaderboard({ lb, prevRanks, t, go }) {
+function Leaderboard({ data, lb, prevRanks, name, setName, t, go }) {
   const top3 = lb.slice(0, 3), order = [top3[1], top3[0], top3[2]];
+  const sel = lb.find((r) => r.name === name) || lb[0];
+  const detRef = useRef();
+  const pick = (n) => { setName(n); setTimeout(() => detRef.current && detRef.current.scrollIntoView({ behavior: "smooth", block: "start" }), 70); };
   return (
     <div className="view">
       <div className="podium">
         {order.map((r, i) => r && (
-          <div className={"pod" + (r.rank === 1 ? " p1" : "")} key={r.name} onClick={() => go("profile", r.name)} style={{ animationDelay: `${i * 90}ms` }}>
+          <div className={"pod" + (r.rank === 1 ? " p1" : "") + (sel && r.name === sel.name ? " sel" : "")} key={r.name} onClick={() => pick(r.name)} style={{ animationDelay: `${i * 90}ms` }}>
             <div className="podmedal">{["🥈", "🥇", "🥉"][i]}</div>
             <Avatar name={r.name} />
             <div className="podname">{r.name}</div>
@@ -1019,8 +1022,20 @@ function Leaderboard({ lb, prevRanks, t, go }) {
       </div>
       <div className="card">
         <h3 className="cardh">🏆 {t("standings")} <span className="hint">{t("tapPlayer")}</span></h3>
-        <LeaderboardBars lb={lb} prevRanks={prevRanks} t={t} onPick={(n) => go("profile", n)} />
+        <LeaderboardBars lb={lb} prevRanks={prevRanks} t={t} onPick={pick} />
       </div>
+      {sel && (
+        <>
+          <div className="card slim selhead" ref={detRef}>
+            <Avatar name={sel.name} />
+            <div className="selhead-tx"><b>{sel.name}</b><span className="hint">{t("rank")} #{sel.rank} · {sel.total} {t("pts")}</span></div>
+            <button className="seeall" onClick={() => go("profile", sel.name)}>{t("nav_profile")} ›</button>
+          </div>
+          <PointsHow row={sel} t={t} />
+          <div className="card slim"><h3 className="cardh">📂 {t("groupBreakdown")}</h3><p className="hint block">{t("gcHint")}</p></div>
+          {GROUP_KEYS.map((g) => <GroupCompare key={g} g={g} p={data.players[sel.name]} data={data} t={t} />)}
+        </>
+      )}
     </div>
   );
 }
@@ -2246,7 +2261,7 @@ export default function App() {
         {view === "home" && <Dashboard data={data} lb={lb} lang={lang} onOpen={openMatch} t={t} go={go} />}
         {view === "today" && <MatchCenter data={data} lang={lang} onOpen={openMatch} t={t} />}
         {view === "match" && match && <MatchDetail m={(data.matches || []).find((x) => x.id === match.id) || match} data={data} lang={lang} t={t} onBack={() => go("today")} />}
-        {view === "table" && <Leaderboard lb={lb} prevRanks={prevRanks} t={t} go={go} />}
+        {view === "table" && <Leaderboard data={data} lb={lb} prevRanks={prevRanks} name={profileName} setName={setProfileName} t={t} go={go} />}
         {view === "groups" && <Groups data={data} t={t} />}
         {view === "bracket" && <BracketView data={data} t={t} />}
         {view === "predictions" && <Predictions data={data} lb={lb} t={t} go={go} />}
@@ -2397,7 +2412,11 @@ border:1px solid var(--border);width:100%;cursor:pointer;text-align:start;animat
 
 /* podium */
 .podium{display:grid;grid-template-columns:1fr 1fr 1fr;align-items:end;gap:10px;padding:8px 4px 0}
-.pod{display:flex;flex-direction:column;align-items:center;gap:5px;cursor:pointer;animation:podIn .5s ease both}
+.pod{display:flex;flex-direction:column;align-items:center;gap:5px;cursor:pointer;animation:podIn .5s ease both;border-radius:12px;padding:4px 2px}
+.pod.sel{background:rgba(245,196,81,.14);box-shadow:0 0 0 1px var(--gold)}
+.selhead{display:flex;align-items:center;gap:10px}
+.selhead-tx{display:flex;flex-direction:column;min-width:0}.selhead-tx b{font-size:15px;font-weight:800}
+.selhead .seeall{margin-inline-start:auto}
 @keyframes podIn{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
 .podmedal{font-size:22px}.podname{font-size:12px;font-weight:700}.podpts{font-size:18px;font-weight:800;color:var(--gold-d)}
 .podstand{width:72px;border-radius:10px 10px 0 0;background:linear-gradient(180deg,var(--pitch2),var(--pitch));margin-top:2px}
@@ -2838,7 +2857,7 @@ border-radius:18px;padding:16px 14px;margin:10px 0;color:#fff;background:linear-
   .view:not(.md){display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 18px;align-items:start}
   .view:not(.md)>.card,.view:not(.md)>.nextcard{margin:14px 0}
   /* full-width: heroes, strips, and any card with wide single content */
-  .view>.topstrip,.view>.datestrip,.view>.podium,.view>.gwrap,
+  .view>.topstrip,.view>.datestrip,.view>.podium,.view>.gwrap,.view>.selhead,
   .view>.nextcard,.view>.livecard,.brk-scroll,
   .view:not(.md)>.card:has(.lb),.view:not(.md)>.card:has(.ptboard),
   .view:not(.md)>.card:has(.pgrid-scroll),.view:not(.md)>.card:has(.recharts-responsive-container),

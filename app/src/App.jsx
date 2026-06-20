@@ -2,6 +2,7 @@ import React, { useState, useMemo, useEffect, useRef } from "react";
 import { BarChart, Bar, LineChart, Line, CartesianGrid, Legend, XAxis, YAxis, Cell, ResponsiveContainer, Tooltip } from "recharts";
 import { loadFromSupabase, saveBlob, upsertResult, upsertResults } from "./supabase.js";
 import { fetchLivescore, fetchCompletedResults, fetchResultsRange, getFeedStatus, fetchMatchDetail } from "./thesportsdb.js";
+import { trackEvent, trackPageView, setAnalyticsContext } from "./analytics.js";
 
 /* =====================================================================
    WORLD CUP 2026 — Prediction League (React rebuild, foundation)
@@ -2239,9 +2240,14 @@ export default function App() {
   const dir = I18N[lang].dir;
   // Keep the document root in sync for correct RTL / language behaviour.
   useEffect(() => { document.documentElement.dir = dir; document.documentElement.lang = lang; }, [dir, lang]);
+  // Analytics: keep shared context current, then fire app_open + first page view once.
+  useEffect(() => { setAnalyticsContext({ app_language: lang, app_view: view, is_admin: isAdmin }); }, [lang, view, isAdmin]);
+  useEffect(() => { trackEvent("app_open", { view: "home" }); trackPageView("home"); }, []);
   useEffect(() => { if (!profileName && lb[0]) setProfileName(lb[0].name); }, [lb, profileName]);
-  const go = (v, name) => { if (v === "more") { setSheet(true); return; } if (name) setProfileName(name); setSheet(false); setMatch(null); setView(v); window.scrollTo({ top: 0, behavior: "smooth" }); };
-  const openMatch = (m) => { setMatch(m); setView("match"); window.scrollTo({ top: 0, behavior: "smooth" }); };
+  const go = (v, name) => { if (v === "more") { setSheet(true); trackEvent("nav_click", { view: "more" }); return; } if (name) setProfileName(name); setSheet(false); setMatch(null); setView(v); window.scrollTo({ top: 0, behavior: "smooth" }); trackPageView(v); trackEvent("nav_click", { view: v }); };
+  const openMatch = (m) => { setMatch(m); setView("match"); window.scrollTo({ top: 0, behavior: "smooth" }); trackPageView("match"); trackEvent("match_open", {}); };
+  // Profile picker wrapper: same as setProfileName but reports the selection.
+  const selectProfile = (n) => { setProfileName(n); trackEvent("profile_select", { has_profile: !!n }); };
 
   if (!data) {
     return (
@@ -2260,26 +2266,26 @@ export default function App() {
         <span className="grow" />
         <span className={"badge" + (source === "live" ? " live" : "")}>{source === "live" ? t("liveData") : t("sample")}</span>
         <button className="tbtn" onClick={() => setDark((d) => !d)}>{dark ? "☀" : "☾"}</button>
-        <button className="tbtn" onClick={() => setLang((l) => (l === "en" ? "ar" : "en"))}>{lang === "en" ? "ع" : "EN"}</button>
+        <button className="tbtn" onClick={() => setLang((l) => { const n = l === "en" ? "ar" : "en"; trackEvent("language_change", { language: n }); return n; })}>{lang === "en" ? "ع" : "EN"}</button>
       </header>
 
       <main className="main">
         {view === "home" && <Dashboard data={data} lb={lb} lang={lang} onOpen={openMatch} t={t} go={go} />}
         {view === "today" && <MatchCenter data={data} lang={lang} onOpen={openMatch} t={t} />}
         {view === "match" && match && <MatchDetail m={(data.matches || []).find((x) => x.id === match.id) || match} data={data} lang={lang} t={t} onBack={() => go("today")} />}
-        {view === "table" && <Leaderboard data={data} lb={lb} prevRanks={prevRanks} name={profileName} setName={setProfileName} t={t} go={go} />}
+        {view === "table" && <Leaderboard data={data} lb={lb} prevRanks={prevRanks} name={profileName} setName={selectProfile} t={t} go={go} />}
         {view === "groups" && <Groups data={data} t={t} />}
         {view === "bracket" && <BracketView data={data} t={t} />}
         {view === "predictions" && <Predictions data={data} lb={lb} t={t} go={go} />}
-        {view === "points" && <Points data={data} lb={lb} t={t} name={profileName} setName={setProfileName} />}
+        {view === "points" && <Points data={data} lb={lb} t={t} name={profileName} setName={selectProfile} />}
         {view === "consensus" && <Consensus data={data} t={t} />}
         {view === "trends" && <Trends data={data} lb={lb} t={t} />}
         {view === "scorers" && <Scorers data={data} t={t} />}
-        {view === "profile" && <Profile data={data} lb={lb} name={profileName} setName={setProfileName} t={t} />}
+        {view === "profile" && <Profile data={data} lb={lb} name={profileName} setName={selectProfile} t={t} />}
         {view === "help" && <Help t={t} />}
         {/* admin */}
-        {view === "adminlogin" && <AdminLogin onAuth={() => { setIsAdmin(true); go("results"); }} t={t} />}
-        {view === "results" && (isAdmin ? <Results data={data} setData={setData} t={t} lang={lang} /> : <AdminLogin onAuth={() => { setIsAdmin(true); go("results"); }} t={t} />)}
+        {view === "adminlogin" && <AdminLogin onAuth={() => { setIsAdmin(true); trackEvent("admin_login_success", {}); go("results"); }} t={t} />}
+        {view === "results" && (isAdmin ? <Results data={data} setData={setData} t={t} lang={lang} /> : <AdminLogin onAuth={() => { setIsAdmin(true); trackEvent("admin_login_success", {}); go("results"); }} t={t} />)}
         {view === "settings" && isAdmin && <AdminSettings data={data} setData={setData} t={t} />}
         {view === "backup" && isAdmin && <Backup data={data} setData={setData} t={t} />}
         {view === "health" && isAdmin && <Health data={data} lb={lb} t={t} />}
@@ -2302,7 +2308,7 @@ export default function App() {
                 </button>
               ))}
             </div>
-            <div className="sheeth admin">{t("admin")} {isAdmin && <button className="logoutbtn" onClick={() => { setIsAdmin(false); go("home"); }}><Ico name="logout" size={15} /> {t("logout")}</button>}</div>
+            <div className="sheeth admin">{t("admin")} {isAdmin && <button className="logoutbtn" onClick={() => { setIsAdmin(false); trackEvent("admin_logout", {}); go("home"); }}><Ico name="logout" size={15} /> {t("logout")}</button>}</div>
             {!isAdmin ? (
               <div className="sheetgrid">
                 <button className="tile" onClick={() => go("adminlogin")}><span className="tilei"><Ico name="lock" size={22} /></span><span className="tilel">{t("adminLogin")}</span></button>

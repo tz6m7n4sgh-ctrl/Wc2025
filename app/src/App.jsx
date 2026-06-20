@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect, useRef } from "react";
 import { BarChart, Bar, LineChart, Line, CartesianGrid, Legend, XAxis, YAxis, Cell, ResponsiveContainer, Tooltip } from "recharts";
 import { loadFromSupabase, saveBlob, upsertResult } from "./supabase.js";
-import { fetchLivescore } from "./thesportsdb.js";
+import { fetchLivescore, fetchCompletedResults } from "./thesportsdb.js";
 
 /* =====================================================================
    WORLD CUP 2026 — Prediction League (React rebuild, foundation)
@@ -468,7 +468,7 @@ function resolveRRByTeams(group, home, away) {
   }
   return null;
 }
-function mapBlobToData(blob, resultRows) {
+function mapBlobToData(blob, resultRows, apiResults) {
   blob = blob || {};
   // groupResults keyed by canonical RR matchKey. Start from the blob fallback,
   // then overlay the normalized table re-resolved BY TEAMS and oriented to the
@@ -482,6 +482,15 @@ function mapBlobToData(blob, resultRows) {
     else key = r.match_key || `${r.group_key}_${r.match_idx}`;
     if (key) groupResults[key] = { home: String(hs), away: String(as) };
   });
+  // TheSportsDB completed-results fallback (team-resolved + oriented), applied
+  // only where the DB has no result and the fixture has already kicked off.
+  const apiMap = {};
+  (apiResults || []).forEach((r) => {
+    if (r.homeScore == null || r.awayScore == null) return;
+    const m = resolveRRByTeams(null, r.home, r.away); if (!m) return;
+    let hs = r.homeScore, as = r.awayScore; if (m.reversed) { const t = hs; hs = as; as = t; }
+    apiMap[m.key] = { home: String(hs), away: String(as) };
+  });
   const players = {};
   Object.entries(blob.players || {}).forEach(([name, p]) => {
     players[name] = { groupPreds: p.groupPreds || p.predictions || p.groups || {}, champion: p.champion == null ? null : p.champion, knockout: p.knockoutPreds || p.knockout || {}, meta: p.meta };
@@ -489,14 +498,19 @@ function mapBlobToData(blob, resultRows) {
   const sched = blob.scheduleMatches || [];
   const findSched = (home, away) => sched.find((s) => s && ((sameTeam(s.home, home) && sameTeam(s.away, away)) || (sameTeam(s.home, away) && sameTeam(s.away, home))));
   const matches = [];
+  const now = Date.now();
   for (const g of GROUP_KEYS) {
     for (let i = 0; i < 6; i++) {
       const [home, away] = matchTeams(g, i);
       const key = matchKey(g, i);
-      const res = groupResults[key];
-      const hasRes = res && res.home != null && res.home !== "" && res.away != null && res.away !== "";
       const s = findSched(home, away);
-      matches.push({ id: key, stage: "group", group: g, idx: i, mid: null, home, away, venue: s ? s.venue || "" : "", ko: s ? Date.parse(s.kickoffUtc || s.date) || 0 : 0, real: true, finalH: hasRes ? Number(res.home) : null, finalA: hasRes ? Number(res.away) : null, allEvents: [], allStats: null, lineups: null });
+      const ko = s ? Date.parse(s.kickoffUtc || s.date) || 0 : 0;
+      let res = groupResults[key];
+      let hasRes = res && res.home != null && res.home !== "" && res.away != null && res.away !== "";
+      // DB has no result yet → fall back to the API feed, but only once the
+      // fixture has actually kicked off (guards bogus finals for future games).
+      if (!hasRes && apiMap[key] && ko && ko <= now) { res = apiMap[key]; groupResults[key] = res; hasRes = true; }
+      matches.push({ id: key, stage: "group", group: g, idx: i, mid: null, home, away, venue: s ? s.venue || "" : "", ko, real: true, finalH: hasRes ? Number(res.home) : null, finalA: hasRes ? Number(res.away) : null, allEvents: [], allStats: null, lineups: null });
     }
   }
   const km = blob.knockoutMatches;
@@ -1809,8 +1823,10 @@ export default function App() {
         const { blob, resultRows } = await loadFromSupabase();
         if (!alive) return;
         setLiveMode(true);
-        const real = mapBlobToData(blob, resultRows);
-        try { real._live = mapLiveEvents(await fetchLivescore(real.settings && real.settings.sportsdbKey)); } catch (e) { real._live = {}; }
+        const key = blob.settings && blob.settings.sportsdbKey;
+        let apiResults = []; try { apiResults = await fetchCompletedResults(key); } catch (e) { apiResults = []; }
+        const real = mapBlobToData(blob, resultRows, apiResults);
+        try { real._live = mapLiveEvents(await fetchLivescore(key)); } catch (e) { real._live = {}; }
         if (!alive) return;
         setData(recomputeLive(real, nowMs())); setSource("live");
       } catch (e) {
@@ -1830,8 +1846,10 @@ export default function App() {
       if (live) {
         try {
           const { blob, resultRows } = await loadFromSupabase();
-          const real = mapBlobToData(blob, resultRows);
-          try { real._live = mapLiveEvents(await fetchLivescore(real.settings && real.settings.sportsdbKey)); } catch (e) { real._live = {}; }
+          const key = blob.settings && blob.settings.sportsdbKey;
+          let apiResults = []; try { apiResults = await fetchCompletedResults(key); } catch (e) { apiResults = []; }
+          const real = mapBlobToData(blob, resultRows, apiResults);
+          try { real._live = mapLiveEvents(await fetchLivescore(key)); } catch (e) { real._live = {}; }
           setData(recomputeLive(real, nowMs()));
         } catch (e) { setData((d) => (d ? recomputeLive(d, nowMs()) : d)); }
       } else setData((d) => (d ? recomputeLive(d, nowMs()) : d));

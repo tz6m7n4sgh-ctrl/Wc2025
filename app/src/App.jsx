@@ -104,6 +104,7 @@ const I18N = {
     loadingData: "Loading live data…", liveData: "Live data",
     syncHint2: "Pull finished scores from TheSportsDB and save them to the database so everyone sees them.",
     syncing: "Syncing…", feedReach: "Feed reachable", feedEvents: "Events fetched", feedCompleted: "Completed found", feedSaved: "Saved to DB", feedMissing: "Still missing a score",
+    timezone: "Display timezone", tzCheck: "Timezone check", tzApp: "App timezone", tzAppNow: "App time now", tzDevice: "Device timezone", tzDeviceNow: "Device time now", tzNote: "Times are shown in the app timezone above, not the device's — change it here if needed.",
   },
   ar: {
     brand: "كأس العالم 2026", dir: "rtl",
@@ -146,6 +147,7 @@ const I18N = {
     loadingData: "جارٍ تحميل البيانات…", liveData: "بيانات مباشرة",
     syncHint2: "اجلب نتائج المباريات المنتهية من TheSportsDB واحفظها في قاعدة البيانات ليراها الجميع.",
     syncing: "جارٍ المزامنة…", feedReach: "وصول الخدمة", feedEvents: "الأحداث المجلوبة", feedCompleted: "المنتهية الموجودة", feedSaved: "حُفظت في القاعدة", feedMissing: "بلا نتيجة بعد",
+    timezone: "المنطقة الزمنية للعرض", tzCheck: "فحص المنطقة الزمنية", tzApp: "منطقة التطبيق", tzAppNow: "وقت التطبيق الآن", tzDevice: "منطقة الجهاز", tzDeviceNow: "وقت الجهاز الآن", tzNote: "تُعرض الأوقات بمنطقة التطبيق أعلاه وليس بمنطقة الجهاز — غيّرها هنا إذا لزم.",
   },
 };
 
@@ -346,16 +348,27 @@ const LINE_COLORS = ["#19c37d", "#f5c451", "#5b8def", "#e2574c", "#9b7ede", "#2b
 
 // --- match-center helpers ---
 const DAY = 864e5;
-// Local-timezone day key (midnight in the device's timezone), so fixtures group
-// under the day the user actually sees — not the UTC day.
-const dayKey = (ms) => { const d = new Date(ms); d.setHours(0, 0, 0, 0); return d.getTime(); };
-const fmtTime = (ms, lang) => new Intl.DateTimeFormat(lang === "ar" ? "ar" : "en-GB", { hour: "2-digit", minute: "2-digit", hour12: false }).format(new Date(ms));
+// The league runs on a fixed display timezone (UAE by default, like the legacy
+// app), NOT the device's timezone — so a phone set to e.g. UTC+3:30 still sees
+// the official kickoff times. Configurable via settings.tz.
+let APP_TZ = "Asia/Dubai";
+function setAppTz(tz) { if (tz && typeof tz === "string") APP_TZ = tz; }
+function getAppTz() { return APP_TZ; }
+// Offset (ms) of APP_TZ from UTC at a given instant.
+function tzOffsetMs(ms) {
+  const d = new Date(ms);
+  return new Date(d.toLocaleString("en-US", { timeZone: APP_TZ })).getTime() - new Date(d.toLocaleString("en-US", { timeZone: "UTC" })).getTime();
+}
+// Day key = midnight in APP_TZ (as a UTC instant), so fixtures group under the
+// official local day.
+const dayKey = (ms) => { const off = tzOffsetMs(ms); return Math.floor((ms + off) / DAY) * DAY - off; };
+const fmtTime = (ms, lang) => new Intl.DateTimeFormat(lang === "ar" ? "ar" : "en-GB", { hour: "2-digit", minute: "2-digit", hour12: false, timeZone: APP_TZ }).format(new Date(ms));
 function fmtDay(ms, lang) {
   const today = dayKey(nowMs()), d = dayKey(ms);
   if (d === today) return lang === "ar" ? "اليوم" : "Today";
   if (d === today + DAY) return lang === "ar" ? "غداً" : "Tomorrow";
   if (d === today - DAY) return lang === "ar" ? "أمس" : "Yesterday";
-  return new Intl.DateTimeFormat(lang === "ar" ? "ar" : "en-GB", { weekday: "short", day: "numeric", month: "short" }).format(new Date(ms));
+  return new Intl.DateTimeFormat(lang === "ar" ? "ar" : "en-GB", { weekday: "short", day: "numeric", month: "short", timeZone: APP_TZ }).format(new Date(ms));
 }
 const matchesOnDay = (data, d) => (data.matches || []).filter((m) => dayKey(m.ko) === d).sort((a, b) => a.ko - b.ko);
 const matchDays = (data) => [...new Set((data.matches || []).map((m) => dayKey(m.ko)))].sort((a, b) => a - b);
@@ -922,7 +935,7 @@ function Dashboard({ data, lb, lang, onOpen, t, go }) {
   const heroLive = live[0] || liveMatches(data)[0] || null;
   const hero = heroLive || next;
   const recent = useMemo(() => recentResults(data, 4), [data]);
-  const dt = new Intl.DateTimeFormat(lang === "ar" ? "ar" : "en-GB", { weekday: "long", day: "numeric", month: "long" }).format(new Date(nowMs()));
+  const dt = new Intl.DateTimeFormat(lang === "ar" ? "ar" : "en-GB", { weekday: "long", day: "numeric", month: "long", timeZone: getAppTz() }).format(new Date(nowMs()));
   const leader = lb[0];
   return (
     <div className="view">
@@ -1615,13 +1628,20 @@ function Results({ data, setData, t, lang }) {
     </div>
   );
 }
+const TZ_OPTIONS = ["Asia/Dubai", "Asia/Riyadh", "Asia/Qatar", "Asia/Amman", "Asia/Baghdad", "Asia/Tehran", "Asia/Kuwait", "Africa/Cairo", "Europe/London", "America/New_York", "UTC"];
 function AdminSettings({ data, setData, t }) {
   const s = data.settings || {};
-  const set = (k, v) => setData((d) => { const nd = { ...d, settings: { ...d.settings, [k]: v } }; persistLive(nd); return nd; });
+  const set = (k, v) => setData((d) => { const nd = { ...d, settings: { ...d.settings, [k]: v } }; if (k === "tz") setAppTz(v); persistLive(nd); return nd; });
   const pool = (Object.keys(data.players).length) * (Number(s.entryFeeAED) || 0);
+  const tz = s.tz || "Asia/Dubai";
   return (
     <div className="view">
       <div className="card"><h3 className="cardh"><Ico name="settings" size={18} /> {t("nav_settings")}</h3>
+        <label className="frow"><span>{t("timezone")}</span>
+          <select className="select sm" value={tz} onChange={(e) => set("tz", e.target.value)}>
+            {(TZ_OPTIONS.includes(tz) ? TZ_OPTIONS : [tz, ...TZ_OPTIONS]).map((z) => <option key={z} value={z}>{z}</option>)}
+          </select>
+        </label>
         <label className="frow"><span>{t("entryFee")}</span><input className="select sm" inputMode="numeric" value={s.entryFeeAED ?? ""} onChange={(e) => set("entryFeeAED", parseInt(e.target.value.replace(/\D/g, "")) || 0)} /></label>
         <label className="frow"><span>{t("currency")}</span><input className="select sm" value={s.currency ?? ""} onChange={(e) => set("currency", e.target.value)} /></label>
         <label className="frow"><span>{t("distribution")}</span>
@@ -1632,7 +1652,25 @@ function AdminSettings({ data, setData, t }) {
         <label className="frow"><span>{t("deadline")}</span><input className="select sm" type="date" value={s.deadline || ""} onChange={(e) => set("deadline", e.target.value)} /></label>
         <label className="frow"><span>{t("lockPicks")}</span><input type="checkbox" checked={!!s.locked} onChange={(e) => set("locked", e.target.checked)} /></label>
       </div>
+      <TimezoneCheck tz={tz} t={t} />
       <div className="card poolcard"><div className="hint">{t("prizePool")}</div><div className="poolv num">{pool.toLocaleString("en-US")} {s.currency || "AED"}</div></div>
+    </div>
+  );
+}
+// Admin diagnostic: confirms what timezone the app displays in vs the device.
+function TimezoneCheck({ tz, t }) {
+  const now = Date.now();
+  const inTz = (zone) => new Intl.DateTimeFormat("en-GB", { weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit", hour12: false, timeZone: zone }).format(new Date(now));
+  const deviceTz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  const match = deviceTz === tz;
+  return (
+    <div className="card">
+      <h3 className="cardh">🕒 {t("tzCheck")}</h3>
+      <div className="hrow"><span className="hlabel">{t("tzApp")}</span><span className="hval">{tz}</span></div>
+      <div className="hrow"><span className="hlabel">{t("tzAppNow")}</span><span className="hval num">{inTz(tz)}</span></div>
+      <div className="hrow"><span className={"hdot " + (match ? "ok" : "bad")}>{match ? "✓" : "!"}</span><span className="hlabel">{t("tzDevice")}</span><span className="hval">{deviceTz}</span></div>
+      <div className="hrow"><span className="hlabel">{t("tzDeviceNow")}</span><span className="hval num">{inTz(deviceTz)}</span></div>
+      {!match && <div className="hint block">{t("tzNote")}</div>}
     </div>
   );
 }
@@ -1900,6 +1938,7 @@ export default function App() {
         const key = blob.settings && blob.settings.sportsdbKey;
         let apiResults = []; try { apiResults = await fetchCompletedResults(key); } catch (e) { apiResults = []; }
         const real = mapBlobToData(blob, resultRows, apiResults);
+        setAppTz(real.settings && real.settings.tz);
         try { real._live = mapLiveEvents(await fetchLivescore(key)); } catch (e) { real._live = {}; }
         if (!alive) return;
         setData(recomputeLive(real, nowMs())); setSource("live");
@@ -1923,6 +1962,7 @@ export default function App() {
           const key = blob.settings && blob.settings.sportsdbKey;
           let apiResults = []; try { apiResults = await fetchCompletedResults(key); } catch (e) { apiResults = []; }
           const real = mapBlobToData(blob, resultRows, apiResults);
+          setAppTz(real.settings && real.settings.tz);
           try { real._live = mapLiveEvents(await fetchLivescore(key)); } catch (e) { real._live = {}; }
           setData(recomputeLive(real, nowMs()));
         } catch (e) { setData((d) => (d ? recomputeLive(d, nowMs()) : d)); }

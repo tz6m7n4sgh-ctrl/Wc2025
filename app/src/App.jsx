@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useEffect, useRef } from "react";
 import { BarChart, Bar, LineChart, Line, CartesianGrid, Legend, XAxis, YAxis, Cell, ResponsiveContainer, Tooltip } from "recharts";
 import { loadFromSupabase, saveBlob, upsertResult } from "./supabase.js";
+import { fetchLivescore } from "./thesportsdb.js";
 
 /* =====================================================================
    WORLD CUP 2026 — Prediction League (React rebuild, foundation)
@@ -407,7 +408,8 @@ function recomputeLive(data, now = nowMs()) {
       // scheduled; after kickoff it is in-progress until the result lands.
       const st = statusOf(m.ko, now);
       if (st.status === "scheduled") return { ...m, status: "scheduled", minute: 0, ht: false, hs: null, as: null, events: [], stats: null };
-      return { ...m, status: "live", minute: Math.min(90, st.minute || 90), ht: !!st.ht, hs: m.liveH != null ? m.liveH : null, as: m.liveA != null ? m.liveA : null, events: [], stats: null };
+      const lv = (data._live || {})[m.id];
+      return { ...m, status: "live", minute: lv && lv.minute != null ? lv.minute : Math.min(90, st.minute || 90), ht: lv ? !!lv.ht : !!st.ht, hs: lv ? lv.hs : null, as: lv ? lv.as : null, events: [], stats: null };
     }
     const st = statusOf(m.ko, now);
     if (st.status === "scheduled") return { ...m, ...st, events: [], hs: null, as: null, stats: null };
@@ -426,8 +428,63 @@ function recomputeLive(data, now = nowMs()) {
   if (!champion) { const f = matches.find((m) => m.stage === "ko" && m.round === "F" && m.status === "finished"); if (f) champion = f.finalH >= f.finalA ? canonTeam(f.home) : canonTeam(f.away); }
   return { ...data, matches, groupResults, knockoutResults, champion };
 }
-// Apply an admin-entered final score to a match: lock it, and regenerate a
-// plausible timeline + stats so the match page stays consistent with the score.
+// Map TheSportsDB live events to fixtures by canonical team names (handles
+// home/away orientation), returning { matchKey: {hs, as, minute, ht} } — the
+// in-progress, display-only scores recomputeLive applies to live matches.
+function mapLiveEvents(events) {
+  const map = {};
+  (events || []).forEach((e) => {
+    const hs = e.homeScore, as = e.awayScore;
+    if (hs == null || as == null || hs === "" || as === "") return;
+    for (const g of GROUP_KEYS) {
+      for (let i = 0; i < RR.length; i++) {
+        const [h, a] = matchTeams(g, i);
+        const direct = sameTeam(e.home, h) && sameTeam(e.away, a);
+        const rev = sameTeam(e.home, a) && sameTeam(e.away, h);
+        if (!direct && !rev) continue;
+        const min = parseInt(e.minute, 10);
+        map[matchKey(g, i)] = { hs: rev ? Number(as) : Number(hs), as: rev ? Number(hs) : Number(as), minute: Number.isFinite(min) ? min : null, ht: /ht|half/i.test(String(e.status)) };
+        return;
+      }
+    }
+  });
+  return map;
+}
+// Map the Supabase blob + merged results into engine data. Fixtures are paired
+// by the canonical round-robin order (the authoritative pairing — the schedule's
+// own keys can be inconsistent); the real schedule is matched BY TEAMS to recover
+// kickoff time/venue, and group results (keyed by canonical matchKey) are applied
+// in canonical home/away orientation.
+function mapBlobToData(blob, groupResults) {
+  blob = blob || {};
+  groupResults = groupResults || blob.groupResults || {};
+  const players = {};
+  Object.entries(blob.players || {}).forEach(([name, p]) => {
+    players[name] = { groupPreds: p.groupPreds || p.predictions || p.groups || {}, champion: p.champion == null ? null : p.champion, knockout: p.knockoutPreds || p.knockout || {}, meta: p.meta };
+  });
+  const sched = blob.scheduleMatches || [];
+  const findSched = (home, away) => sched.find((s) => s && ((sameTeam(s.home, home) && sameTeam(s.away, away)) || (sameTeam(s.home, away) && sameTeam(s.away, home))));
+  const matches = [];
+  for (const g of GROUP_KEYS) {
+    for (let i = 0; i < 6; i++) {
+      const [home, away] = matchTeams(g, i);
+      const key = matchKey(g, i);
+      const res = groupResults[key];
+      const hasRes = res && res.home != null && res.home !== "" && res.away != null && res.away !== "";
+      const s = findSched(home, away);
+      matches.push({ id: key, stage: "group", group: g, idx: i, mid: null, home, away, venue: s ? s.venue || "" : "", ko: s ? Date.parse(s.kickoffUtc || s.date) || 0 : 0, real: true, finalH: hasRes ? Number(res.home) : null, finalA: hasRes ? Number(res.away) : null, allEvents: [], allStats: null, lineups: null });
+    }
+  }
+  const km = blob.knockoutMatches;
+  const koList = Array.isArray(km) ? km : km && typeof km === "object" ? Object.values(km) : [];
+  koList.forEach((s, i) => {
+    if (!s || !(s.home || s.away)) return;
+    const mid = s.mid || s.key || `${s.round || "KO"}_${i}`;
+    matches.push({ id: mid, stage: "ko", group: null, idx: i, mid, round: s.round || (mid.split("_")[0] || "KO"), home: s.home, away: s.away, venue: s.venue || "", ko: Date.parse(s.kickoffUtc || s.date) || 0, real: true, finalH: s.home_score != null ? Number(s.home_score) : null, finalA: s.away_score != null ? Number(s.away_score) : null, allEvents: [], allStats: null, lineups: null });
+  });
+  matches.sort((a, b) => a.ko - b.ko);
+  return { players, groupResults: { ...groupResults }, knockoutResults: { ...(blob.knockoutResults || {}) }, champion: blob.champion || null, championOverride: blob.champion || null, settings: blob.settings || { currency: "AED" }, auditLog: Array.isArray(blob.auditLog) ? blob.auditLog : [], matches, real: true, _blob: blob };
+}
 function applyAdminScore(m, h, a) {
   const seed = hashStr(m.id + ":" + h + ":" + a);
   const allEvents = genEvents(seed, h, a, m.lineups.home, m.lineups.away, null);
@@ -1725,9 +1782,13 @@ export default function App() {
     let alive = true;
     (async () => {
       try {
-        const real = await loadFromSupabase();
+        const { blob, groupResults } = await loadFromSupabase();
         if (!alive) return;
-        setLiveMode(true); setData(recomputeLive(real, nowMs())); setSource("live");
+        setLiveMode(true);
+        const real = mapBlobToData(blob, groupResults);
+        try { real._live = mapLiveEvents(await fetchLivescore(real.settings && real.settings.sportsdbKey)); } catch (e) { real._live = {}; }
+        if (!alive) return;
+        setData(recomputeLive(real, nowMs())); setSource("live");
       } catch (e) {
         if (!alive) return;
         setLiveMode(false); setData(buildSampleData()); setSource("sample");
@@ -1742,10 +1803,16 @@ export default function App() {
     const live = source === "live";
     const id = setInterval(async () => {
       tickClock();
-      if (live) { try { setData(recomputeLive(await loadFromSupabase(), nowMs())); } catch (e) { setData((d) => (d ? recomputeLive(d, nowMs()) : d)); } }
-      else setData((d) => (d ? recomputeLive(d, nowMs()) : d));
+      if (live) {
+        try {
+          const { blob, groupResults } = await loadFromSupabase();
+          const real = mapBlobToData(blob, groupResults);
+          try { real._live = mapLiveEvents(await fetchLivescore(real.settings && real.settings.sportsdbKey)); } catch (e) { real._live = {}; }
+          setData(recomputeLive(real, nowMs()));
+        } catch (e) { setData((d) => (d ? recomputeLive(d, nowMs()) : d)); }
+      } else setData((d) => (d ? recomputeLive(d, nowMs()) : d));
       setNow(nowMs());
-    }, live ? 60000 : 10000);
+    }, live ? 30000 : 10000);
     return () => clearInterval(id);
   }, [source]);
   const lb = useMemo(() => (data ? buildLeaderboard(data) : []), [data]);

@@ -32,93 +32,27 @@ async function fetchJson(url, opts, ms = 12000) {
   return r.json();
 }
 
-/* ---- pure mapping: blob -> engine data ------------------------------- */
-// Turn the schedule + group results into engine match objects. Real matches
-// carry no synthetic timeline; status is derived from kickoff time + results.
-function buildMatches(blob) {
-  const groupResults = blob.groupResults || {};
-  const matches = [];
-  (blob.scheduleMatches || []).forEach((s) => {
-    if (!s || !s.key) return;
-    const res = groupResults[s.key];
-    const hasRes = res && res.home != null && res.away != null && res.home !== "" && res.away !== "";
-    matches.push({
-      id: s.key, stage: "group", group: s.group, idx: s.idx, mid: null,
-      home: s.home, away: s.away, venue: s.venue || "",
-      ko: Date.parse(s.kickoffUtc || s.date) || 0,
-      real: true, scheduleStatus: s.status || "",
-      finalH: hasRes ? Number(res.home) : null, finalA: hasRes ? Number(res.away) : null,
-      allEvents: [], allStats: null, lineups: null,
-    });
-  });
-  // knockout fixtures (object keyed by mid, or array) once they exist
-  const km = blob.knockoutMatches;
-  const koList = Array.isArray(km) ? km : km && typeof km === "object" ? Object.values(km) : [];
-  koList.forEach((s, i) => {
-    if (!s || !(s.home || s.away)) return;
-    const mid = s.mid || s.key || `${s.round || "KO"}_${i}`;
-    const res = (blob.knockoutResults || {})[mid];
-    matches.push({
-      id: mid, stage: "ko", group: null, idx: i, mid, round: s.round || (mid.split("_")[0] || "KO"),
-      home: s.home, away: s.away, venue: s.venue || "",
-      ko: Date.parse(s.kickoffUtc || s.date) || 0, real: true, scheduleStatus: s.status || "",
-      finalH: s.home_score != null ? Number(s.home_score) : null, finalA: s.away_score != null ? Number(s.away_score) : null,
-      koWinner: res || null, allEvents: [], allStats: null, lineups: null,
-    });
-  });
-  matches.sort((a, b) => a.ko - b.ko);
-  return matches;
-}
-
-export function mapBlobToData(blob) {
-  blob = blob || {};
-  const players = {};
-  Object.entries(blob.players || {}).forEach(([name, p]) => {
-    players[name] = {
-      groupPreds: p.groupPreds || p.predictions || p.groups || {},
-      champion: p.champion == null ? null : p.champion,
-      knockout: p.knockoutPreds || p.knockout || {},
-      meta: p.meta,
-    };
-  });
-  return {
-    players,
-    groupResults: { ...(blob.groupResults || {}) },
-    knockoutResults: { ...(blob.knockoutResults || {}) },
-    champion: blob.champion || null,
-    championOverride: blob.champion || null,
-    settings: blob.settings || { currency: "AED" },
-    auditLog: Array.isArray(blob.auditLog) ? blob.auditLog : [],
-    matches: buildMatches(blob),
-    real: true,
-    _blob: blob,
-  };
-}
-
 /* ---- network: load ---------------------------------------------------- */
+// Returns the raw blob plus a merged groupResults map (normalized table wins).
+// IMPORTANT: groupResults is keyed by the canonical round-robin matchKey (g_i),
+// NOT the schedule's own keys — App maps it onto canonical fixtures. The caller
+// builds engine data with its own team helpers (see mapBlobToData in App).
 export async function loadFromSupabase() {
   const rows = await fetchJson(DATA_URL + "?id=eq.main&select=data");
   const blob = (Array.isArray(rows) ? rows[0] && rows[0].data : rows && rows.data) || {};
-  const data = mapBlobToData(blob);
-  // Normalized results table is the source of truth; merge final rows on top.
+  const groupResults = { ...(blob.groupResults || {}) };
   try {
     const res = await fetchJson(RESULTS_URL + "?select=match_key,group_key,match_idx,home_score,away_score,status&order=match_key.asc");
     if (Array.isArray(res)) {
       res.forEach((r) => {
         if (r.status === "final" && r.home_score != null && r.away_score != null) {
           const key = r.match_key || `${r.group_key}_${r.match_idx}`;
-          data.groupResults[key] = { home: String(r.home_score), away: String(r.away_score) };
+          groupResults[key] = { home: String(r.home_score), away: String(r.away_score) };
         }
-      });
-      data.matches.forEach((m) => {
-        if (m.stage !== "group") return;
-        const res2 = data.groupResults[m.id];
-        m.finalH = res2 && res2.home !== "" && res2.home != null ? Number(res2.home) : null;
-        m.finalA = res2 && res2.away !== "" && res2.away != null ? Number(res2.away) : null;
       });
     }
   } catch (e) { /* normalized table optional; blob.groupResults is the fallback */ }
-  return data;
+  return { blob, groupResults };
 }
 
 /* ---- network: save (admin) ------------------------------------------- */

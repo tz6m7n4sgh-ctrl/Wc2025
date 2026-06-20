@@ -82,6 +82,7 @@ const I18N = {
     rule_in: "Team is in the group but in a different position", rule_ko: "Correct knockout-round winner", rule_champ: "Correct champion",
     nav_more: "More", nav_matches: "Matches", nav_predictions: "Predictions", nav_consensus: "Consensus", nav_trends: "Trends", nav_scorers: "Goals", nav_help: "Help",
     nav_today: "Today", liveNow: "Live now", noMatches: "No matches on this day.", noEvents: "No data yet.", predBacking: "backing", whoBacked: "Who backed whom", back: "Back", upcoming: "Upcoming",
+    liveLbl: "LIVE", liveUpdates: "Live updates", hide: "Hide", openMatch: "Open match", kickoff: "Kick-off", fullTime: "Full-time", goalEx: "GOAL!",
     nextMatch: "Next match", todayComing: "Today — coming up", todayDone: "Today — completed", noComing: "No more matches today.", noDone: "No results yet today.", latestResults: "Latest results", seeAll: "See all",
     nav_points: "Points", livePoints: "Live points", livePtsHint: "recalculated from results", howCalc: "How points are calculated", pendingLive: "Pending", fromLive: "from live matches",
     groupBreakdown: "Group-by-group breakdown", tapExpand: "tap to expand", beat: "beat", champPending: "Champion not decided yet", ifCorrect: "if correct",
@@ -134,6 +135,7 @@ const I18N = {
     rule_in: "الفريق في المجموعة لكن في مركز مختلف", rule_ko: "توقع الفائز الصحيح في الدور الإقصائي", rule_champ: "توقع البطل الصحيح",
     nav_more: "المزيد", nav_matches: "المباريات", nav_predictions: "التوقعات", nav_consensus: "الإجماع", nav_trends: "التطور", nav_scorers: "الأهداف", nav_help: "المساعدة",
     nav_today: "اليوم", liveNow: "مباشر الآن", noMatches: "لا مباريات في هذا اليوم.", noEvents: "لا توجد بيانات بعد.", predBacking: "مؤيد", whoBacked: "من أيّد مَن", back: "رجوع", upcoming: "قادمة",
+    liveLbl: "مباشر", liveUpdates: "تحديثات مباشرة", hide: "إخفاء", openMatch: "فتح المباراة", kickoff: "انطلاق المباراة", fullTime: "انتهت المباراة", goalEx: "هدف!",
     nextMatch: "المباراة القادمة", todayComing: "اليوم — قادمة", todayDone: "اليوم — انتهت", noComing: "لا مزيد من المباريات اليوم.", noDone: "لا نتائج بعد اليوم.", latestResults: "أحدث النتائج", seeAll: "عرض الكل",
     nav_points: "النقاط", livePoints: "النقاط المباشرة", livePtsHint: "تُحتسب من النتائج", howCalc: "كيف تُحتسب النقاط", pendingLive: "قيد الاحتساب", fromLive: "من المباريات المباشرة",
     groupBreakdown: "تفصيل لكل مجموعة", tapExpand: "اضغط للتوسيع", beat: "تغلّب على", champPending: "البطل لم يُحسم بعد", ifCorrect: "إذا صح",
@@ -2213,6 +2215,81 @@ const ADMIN_ITEMS = [
   { id: "repair", ic: "tools", key: "nav_repair" },
   { id: "settings", ic: "settings", key: "nav_settings" },
 ];
+/* Global live ticker dock — ported from the legacy app. A fixed strip above the
+   bottom nav, shown on every screen while any match is live: a pulsing dot,
+   the lead match minute, and a marquee of live scores/events. Tap to expand a
+   per-match feed that accumulates kick-off / GOAL! / full-time lines as the
+   live scores change across polls. Hidden entirely when nothing is live. */
+function LiveDock({ data, t, onOpen }) {
+  const live = useMemo(() => liveMatches(data), [data]);
+  const feedsRef = useRef({});
+  const [open, setOpen] = useState(false);
+  const [, bump] = useState(0);
+  useEffect(() => {
+    const feeds = feedsRef.current;
+    const liveKeys = {};
+    live.forEach((m) => {
+      const key = m.id; liveKeys[key] = 1;
+      const hasScore = m.hs != null && m.as != null;
+      const hs = Number(m.hs) || 0, as = Number(m.as) || 0;
+      const mn = m.ht ? "HT" : (m.minute == null ? "" : (m.minute > 90 ? "90+'" : m.minute + "'"));
+      const hn = canonTeam(m.home), an = canonTeam(m.away);
+      let f = feeds[key];
+      if (!f) {
+        f = feeds[key] = { hs, as, hasScore, ended: false, home: hn, away: an, hf: flagOf(m.home), af: flagOf(m.away), events: [] };
+        f.events.push({ min: "0'", kind: "ko", text: t("kickoff") });
+        if (hasScore && (hs || as)) f.events.push({ min: mn, kind: "", text: `${hn} ${hs}–${as} ${an}` });
+      } else {
+        if (hasScore && hs > f.hs) f.events.push({ min: mn, kind: "goal", text: `${t("goalEx")} ${hn} — ${hs}–${as}` });
+        if (hasScore && as > f.as) f.events.push({ min: mn, kind: "goal", text: `${t("goalEx")} ${an} — ${hs}–${as}` });
+        f.hs = hs; f.as = as; f.hasScore = hasScore;
+      }
+      f.curMin = mn;
+    });
+    // Emit full-time for matches that just left the live set.
+    Object.keys(feeds).forEach((key) => {
+      const f = feeds[key];
+      if (!liveKeys[key] && !f.ended) { f.ended = true; const sc = f.hasScore ? `${f.hs}–${f.as}` : "—"; f.events.push({ min: "FT", kind: "", text: `${t("fullTime")} — ${f.home} ${sc} ${f.away}` }); }
+    });
+    bump((n) => n + 1);
+  }, [live, t]);
+  if (!live.length) return null;
+  const feeds = feedsRef.current;
+  const lead = live[0]; const leadMin = feeds[lead.id] ? feeds[lead.id].curMin : "";
+  const ticks = live.map((m) => {
+    const f = feeds[m.id]; const last = f && f.events.length ? f.events[f.events.length - 1] : null;
+    const sc = f && f.hasScore ? `${f.hs}–${f.as}` : "·–·";
+    return `${sc} ${canonTeam(m.home)} v ${canonTeam(m.away)}${last ? " · " + last.text : ""}`;
+  });
+  const marquee = ticks.join("   ·   ") + "   ·   ";
+  return (
+    <div className={"livedock" + (open ? " open" : "")}>
+      {open && (
+        <div className="live-feed">
+          <div className="live-feed-h"><span className="lft"><span className="ld" />{t("liveUpdates")}</span><button className="lfx" onClick={() => setOpen(false)}>{t("hide")} ⌄</button></div>
+          {live.map((m) => {
+            const f = feeds[m.id]; if (!f) return null;
+            const sc = f.hasScore ? `${f.hs}–${f.as}` : "·–·";
+            return (
+              <div key={m.id}>
+                <div className="live-grp">{f.hf} {f.home} {sc} {f.away} {f.af} · {f.curMin}</div>
+                {[...f.events].reverse().map((e, i) => (
+                  <div className="live-ev" key={i}><span className="lmin">{e.min}</span><span className={"ltxt" + (e.kind === "goal" ? " goal" : "")}>{e.text}</span></div>
+                ))}
+              </div>
+            );
+          })}
+          <button className="live-open" onClick={() => { setOpen(false); onOpen(lead); }}>{t("openMatch")}</button>
+        </div>
+      )}
+      <button className="live-strip" onClick={() => setOpen((o) => !o)}>
+        <span className="ld" /><span className="live-lbl">{t("liveLbl")} {leadMin}</span>
+        <div className="live-marquee"><span>{marquee}{marquee}</span></div>
+        <span className="live-chev">⌃</span>
+      </button>
+    </div>
+  );
+}
 export default function App() {
   const [lang, setLang] = useState("en");
   const [dark, setDark] = useState(false);
@@ -2375,6 +2452,8 @@ export default function App() {
           </div>
         </div>
       )}
+
+      <LiveDock data={data} t={t} onOpen={openMatch} />
 
       <nav className="bottom">
         {NAV.map((n) => {
@@ -2568,6 +2647,31 @@ color:var(--muted);font-family:inherit;cursor:pointer;padding:5px 0;border-radiu
 .navbtn .navi{font-size:18px;line-height:1}.navbtn .navl{font-size:10px;font-weight:700}
 .navbtn.on{color:var(--grass-d)}.app[data-theme="dark"] .navbtn.on{color:var(--grass)}
 .navbtn.on .navi{transform:translateY(-1px)}
+
+/* live ticker dock — global, sits just above the bottom nav while a match is live */
+.livedock{position:fixed;left:0;right:0;bottom:calc(58px + env(safe-area-inset-bottom,0px));max-width:520px;margin:0 auto;z-index:29;pointer-events:none}
+.livedock>*{pointer-events:auto}
+.app:has(.live-strip) .main{padding-bottom:50px}
+.live-strip{display:flex;align-items:center;gap:10px;width:100%;background:linear-gradient(90deg,#0a1f17,#123026);color:#fff;padding:9px 12px;border:none;cursor:pointer;box-shadow:0 -8px 24px rgba(7,21,16,.18);font-family:inherit}
+.live-strip .ld,.live-feed-h .ld{width:8px;height:8px;border-radius:50%;background:#ff5b4d;flex:0 0 auto;animation:livepulse 1.3s infinite}
+@keyframes livepulse{0%{box-shadow:0 0 0 0 rgba(255,91,77,.55)}70%{box-shadow:0 0 0 8px rgba(255,91,77,0)}100%{box-shadow:0 0 0 0 rgba(255,91,77,0)}}
+.live-lbl{font-size:11px;font-weight:900;letter-spacing:.04em;flex:0 0 auto;font-variant-numeric:tabular-nums}
+.live-marquee{flex:1;overflow:hidden;white-space:nowrap;-webkit-mask-image:linear-gradient(90deg,transparent,#000 7%,#000 93%,transparent);mask-image:linear-gradient(90deg,transparent,#000 7%,#000 93%,transparent)}
+.live-marquee>span{display:inline-block;padding-left:100%;animation:livescroll 20s linear infinite;font-size:13px;font-weight:600}
+@keyframes livescroll{from{transform:translateX(0)}to{transform:translateX(-100%)}}
+.live-chev{flex:0 0 auto;opacity:.85;font-weight:900;transition:transform .15s}
+.livedock.open .live-chev{transform:rotate(180deg)}
+.live-feed{background:var(--card);border:1px solid var(--border);border-bottom:none;border-radius:14px 14px 0 0;padding:10px 12px;max-height:46vh;overflow:auto;box-shadow:0 -10px 30px rgba(7,21,16,.18)}
+.live-feed-h{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px}
+.live-feed-h .lft{font-size:12px;font-weight:900;display:inline-flex;align-items:center;gap:7px}
+.lfx{font-size:12px;color:var(--muted);font-weight:800;background:none;border:none;cursor:pointer;font-family:inherit}
+.live-grp{font-size:11px;font-weight:900;color:var(--muted);margin:10px 0 2px}
+.live-ev{display:flex;gap:10px;align-items:flex-start;padding:6px 0;border-top:1px solid var(--border)}
+.live-ev:first-child{border-top:none}
+.lmin{font-size:11px;font-weight:900;color:var(--muted);min-width:34px;font-variant-numeric:tabular-nums;flex:0 0 auto}
+.ltxt{font-size:13px;font-weight:600}.ltxt.goal{color:var(--grass-d);font-weight:900}
+.live-open{margin-top:10px;width:100%;height:38px;border:none;border-radius:10px;background:var(--grass);color:#04150d;font-weight:900;cursor:pointer;font-family:inherit}
+@media(prefers-reduced-motion:reduce){.live-strip .ld,.live-feed-h .ld{animation:none}.live-marquee>span{animation:none;padding-left:0}}
 
 /* more sheet */
 .sheetbg{position:fixed;inset:0;z-index:40;background:rgba(8,18,14,.5);display:flex;align-items:flex-end;justify-content:center;animation:fade .2s ease}

@@ -106,6 +106,12 @@ const I18N = {
     syncing: "Syncing…", feedReach: "Feed reachable", feedEvents: "Events fetched", feedCompleted: "Completed found", feedSaved: "Saved to DB", feedMissing: "Still missing a score",
     timezone: "Display timezone", tzCheck: "Timezone check", tzApp: "App timezone", tzAppNow: "App time now", tzDevice: "Device timezone", tzDeviceNow: "Device time now", tzNote: "Times are shown in the app timezone above, not the device's — change it here if needed.",
     noDetail: "No detailed data for this match yet (timelines/lineups can be missing or delayed).",
+    p_howAdd: "How your points add up", p_correct: "correct", p_of: "of",
+    p_winner_t: "Match winners", p_winner_d: "+1 each time your higher-ranked team wins its group match",
+    p_pos_t: "Group standings", p_pos_d: "+3 for a team in the exact final spot, +1 if it finishes in the group but elsewhere",
+    p_ko_t: "Knockout winners", p_ko_d: "Points for picking the team that advances (R32 +2, R16 +3, QF +5, SF +8, Final +12)",
+    p_champ_t: "Champion", p_champ_d: "+10 for correctly picking the World Cup winner",
+    p_exact: "exact", p_ingrp: "in group", p_yes: "correct", p_no: "missed",
   },
   ar: {
     brand: "كأس العالم 2026", dir: "rtl",
@@ -150,6 +156,12 @@ const I18N = {
     syncing: "جارٍ المزامنة…", feedReach: "وصول الخدمة", feedEvents: "الأحداث المجلوبة", feedCompleted: "المنتهية الموجودة", feedSaved: "حُفظت في القاعدة", feedMissing: "بلا نتيجة بعد",
     timezone: "المنطقة الزمنية للعرض", tzCheck: "فحص المنطقة الزمنية", tzApp: "منطقة التطبيق", tzAppNow: "وقت التطبيق الآن", tzDevice: "منطقة الجهاز", tzDeviceNow: "وقت الجهاز الآن", tzNote: "تُعرض الأوقات بمنطقة التطبيق أعلاه وليس بمنطقة الجهاز — غيّرها هنا إذا لزم.",
     noDetail: "لا تتوفر بيانات تفصيلية بعد (قد تتأخر التشكيلات والأحداث).",
+    p_howAdd: "كيف تتكوّن نقاطك", p_correct: "صحيحة", p_of: "من",
+    p_winner_t: "الفائز بالمباراة", p_winner_d: "+1 كلما فاز فريقك الأعلى ترتيباً في مباراة المجموعة",
+    p_pos_t: "ترتيب المجموعة", p_pos_d: "+3 للفريق في مركزه النهائي الصحيح، +1 إذا أنهى ضمن المجموعة بمركز آخر",
+    p_ko_t: "الأدوار الإقصائية", p_ko_d: "نقاط لاختيار الفريق المتأهل (دور 32 +2، دور 16 +3، الربع +5، النصف +8، النهائي +12)",
+    p_champ_t: "البطل", p_champ_d: "+10 لاختيار بطل كأس العالم بشكل صحيح",
+    p_exact: "صحيح", p_ingrp: "في المجموعة", p_yes: "صحيح", p_no: "خطأ",
   },
 };
 
@@ -1047,6 +1059,7 @@ function Profile({ data, lb, name, setName, t }) {
         </div>
       </div>
       <div className="card"><h3 className="cardh">🎯 {t("breakdown")}</h3><Breakdown row={row} t={t} /></div>
+      <PointsHow row={row} t={t} />
       <div className="card">
         <h3 className="cardh">📋 {t("predicted")} · {t("groupRank")}</h3>
         <div className="ppreds">
@@ -1541,6 +1554,43 @@ function AuditGroup({ g, detail, t }) {
     </div>
   );
 }
+// Plain-language "how your points add up" breakdown for end users.
+function pointsCounts(row) {
+  const d = row.detail;
+  return {
+    edges: d.matches.filter((m) => m.got > 0).length, edgesTotal: d.matches.length,
+    exact: d.ranking.filter((r) => r.reason === "exact").length,
+    inGrp: d.ranking.filter((r) => r.reason === "in_group").length,
+    koHit: d.knockout.filter((k) => k.got > 0).length, koTotal: d.knockout.length,
+    champDecided: !!d.champion, champHit: d.champion && d.champion.got > 0,
+  };
+}
+function PointsHow({ row, t }) {
+  const c = pointsCounts(row);
+  const items = [
+    { e: "⚔️", title: t("p_winner_t"), desc: t("p_winner_d"), note: `${c.edges} ${t("p_of")} ${c.edgesTotal} ${t("p_correct")}`, pts: row.groupMatch },
+    { e: "🎯", title: t("p_pos_t"), desc: t("p_pos_d"), note: `${c.exact} ${t("p_exact")} · ${c.inGrp} ${t("p_ingrp")}`, pts: row.groupRank },
+    { e: "🗺️", title: t("p_ko_t"), desc: t("p_ko_d"), note: c.koTotal ? `${c.koHit} ${t("p_of")} ${c.koTotal} ${t("p_correct")}` : t("pending"), pts: row.knockout },
+    { e: "👑", title: t("p_champ_t"), desc: t("p_champ_d"), note: c.champDecided ? (c.champHit ? "✓ " + t("p_yes") : "✗ " + t("p_no")) : t("pending"), pts: row.champ },
+  ];
+  return (
+    <div className="card">
+      <div className="phow-head"><h3 className="cardh" style={{ margin: 0 }}>🧮 {t("p_howAdd")}</h3><div className="phow-total"><b className="num">{row.total}</b> <span className="hint">{t("pts")}</span></div></div>
+      <div className="phow">
+        {items.map((it, i) => (
+          <div className="phow-row" key={i}>
+            <span className="phow-e">{it.e}</span>
+            <span className="phow-main">
+              <span className="phow-t">{it.title} <span className="phow-n">· {it.note}</span></span>
+              <span className="phow-d">{it.desc}</span>
+            </span>
+            <span className={"phow-pts num" + (it.pts > 0 ? " on" : "")}>+{it.pts}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
 function Points({ data, lb, t, name, setName }) {
   const row = lb.find((r) => r.name === name) || lb[0];
   const pending = useMemo(() => livePendingPoints(data, data.players[row.name]), [data, row.name]);
@@ -1586,19 +1636,9 @@ function Points({ data, lb, t, name, setName }) {
         </div>
       </div>
 
-      {/* equation */}
-      <div className="card">
-        <div className="eq">
-          <span className="eq-total num">{row.total}</span><span className="eq-eq">=</span>
-          {cats.map((c, i) => (
-            <React.Fragment key={c.k}>
-              {i > 0 && <span className="eq-plus">+</span>}
-              <span className="eq-part"><b className="num" style={{ color: c.c }}>{[row.groupMatch, row.groupRank, row.knockout, row.champ][i]}</b><span className="eq-lbl">{t(c.k)}</span></span>
-            </React.Fragment>
-          ))}
-        </div>
-        {pending.pts > 0 && <div className="eq-pending">⚡ {t("pendingLive")}: <b>+{pending.pts}</b> {t("fromLive")}</div>}
-      </div>
+      {/* plain-language breakdown */}
+      <PointsHow row={row} t={t} />
+      {pending.pts > 0 && <div className="card slim"><div className="eq-pending">⚡ {t("pendingLive")}: <b>+{pending.pts}</b> {t("fromLive")}</div></div>}
 
       {/* group-by-group audit */}
       <div className="card">
@@ -2536,7 +2576,21 @@ border-radius:18px;padding:16px 14px;margin:10px 0;color:#fff;background:linear-
 .eq-total{font-size:30px;font-weight:800;color:var(--gold-d)}.eq-eq,.eq-plus{font-size:18px;color:var(--muted);font-weight:700}
 .eq-part{display:flex;flex-direction:column;align-items:center}.eq-part b{font-size:20px}
 .eq-lbl{font-size:9.5px;color:var(--muted);font-weight:600;text-align:center;max-width:64px}
-.eq-pending{margin-top:10px;text-align:center;font-size:12px;color:var(--neg);background:rgba(226,87,76,.08);border-radius:8px;padding:6px}
+.eq-pending{text-align:center;font-size:12px;color:var(--neg);background:rgba(226,87,76,.08);border-radius:8px;padding:6px}
+
+/* plain "how points add up" */
+.phow-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.phow-total{font-family:var(--num)}.phow-total b{font-size:24px;font-weight:800;color:var(--gold-d)}
+.phow{display:flex;flex-direction:column;gap:2px}
+.phow-row{display:grid;grid-template-columns:30px 1fr auto;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)}
+.phow-row:last-child{border:none}
+.phow-e{font-size:20px;text-align:center}
+.phow-main{min-width:0}
+.phow-t{display:block;font-size:13.5px;font-weight:700}
+.phow-n{font-weight:600;color:var(--muted);font-size:11px}
+.phow-d{display:block;font-size:11px;color:var(--muted);margin-top:2px;line-height:1.35}
+.phow-pts{font-size:17px;font-weight:800;color:var(--muted);min-width:38px;text-align:end}
+.phow-pts.on{color:var(--grass-d)}.app[data-theme="dark"] .phow-pts.on{color:var(--grass)}
 
 .aglist{display:flex;flex-direction:column;gap:7px}
 .ag{border:1px solid var(--border);border-radius:11px;overflow:hidden}

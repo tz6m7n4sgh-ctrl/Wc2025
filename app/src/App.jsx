@@ -455,9 +455,33 @@ function mapLiveEvents(events) {
 // own keys can be inconsistent); the real schedule is matched BY TEAMS to recover
 // kickoff time/venue, and group results (keyed by canonical matchKey) are applied
 // in canonical home/away orientation.
-function mapBlobToData(blob, groupResults) {
+// Resolve a played fixture (by its stored home/away teams) to the canonical RR
+// fixture, returning the matchKey and whether the stored orientation is reversed.
+function resolveRRByTeams(group, home, away) {
+  const groups = group && GROUPS[group] ? [group] : GROUP_KEYS;
+  for (const g of groups) {
+    for (let i = 0; i < 6; i++) {
+      const [mh, ma] = matchTeams(g, i);
+      if (sameTeam(mh, home) && sameTeam(ma, away)) return { key: matchKey(g, i), reversed: false };
+      if (sameTeam(mh, away) && sameTeam(ma, home)) return { key: matchKey(g, i), reversed: true };
+    }
+  }
+  return null;
+}
+function mapBlobToData(blob, resultRows) {
   blob = blob || {};
-  groupResults = groupResults || blob.groupResults || {};
+  // groupResults keyed by canonical RR matchKey. Start from the blob fallback,
+  // then overlay the normalized table re-resolved BY TEAMS and oriented to the
+  // canonical home/away (mirrors the legacy app's normalizedResultToApp).
+  const groupResults = { ...(blob.groupResults || {}) };
+  (resultRows || []).forEach((r) => {
+    if (!r || r.status !== "final" || r.home_score == null || r.away_score == null) return;
+    let key, hs = r.home_score, as = r.away_score;
+    const m = r.home_team && r.away_team ? resolveRRByTeams(r.group_key, r.home_team, r.away_team) : null;
+    if (m) { key = m.key; if (m.reversed) { const t = hs; hs = as; as = t; } }
+    else key = r.match_key || `${r.group_key}_${r.match_idx}`;
+    if (key) groupResults[key] = { home: String(hs), away: String(as) };
+  });
   const players = {};
   Object.entries(blob.players || {}).forEach(([name, p]) => {
     players[name] = { groupPreds: p.groupPreds || p.predictions || p.groups || {}, champion: p.champion == null ? null : p.champion, knockout: p.knockoutPreds || p.knockout || {}, meta: p.meta };
@@ -1782,10 +1806,10 @@ export default function App() {
     let alive = true;
     (async () => {
       try {
-        const { blob, groupResults } = await loadFromSupabase();
+        const { blob, resultRows } = await loadFromSupabase();
         if (!alive) return;
         setLiveMode(true);
-        const real = mapBlobToData(blob, groupResults);
+        const real = mapBlobToData(blob, resultRows);
         try { real._live = mapLiveEvents(await fetchLivescore(real.settings && real.settings.sportsdbKey)); } catch (e) { real._live = {}; }
         if (!alive) return;
         setData(recomputeLive(real, nowMs())); setSource("live");
@@ -1805,8 +1829,8 @@ export default function App() {
       tickClock();
       if (live) {
         try {
-          const { blob, groupResults } = await loadFromSupabase();
-          const real = mapBlobToData(blob, groupResults);
+          const { blob, resultRows } = await loadFromSupabase();
+          const real = mapBlobToData(blob, resultRows);
           try { real._live = mapLiveEvents(await fetchLivescore(real.settings && real.settings.sportsdbKey)); } catch (e) { real._live = {}; }
           setData(recomputeLive(real, nowMs()));
         } catch (e) { setData((d) => (d ? recomputeLive(d, nowMs()) : d)); }

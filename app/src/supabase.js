@@ -33,26 +33,19 @@ async function fetchJson(url, opts, ms = 12000) {
 }
 
 /* ---- network: load ---------------------------------------------------- */
-// Returns the raw blob plus a merged groupResults map (normalized table wins).
-// IMPORTANT: groupResults is keyed by the canonical round-robin matchKey (g_i),
-// NOT the schedule's own keys — App maps it onto canonical fixtures. The caller
-// builds engine data with its own team helpers (see mapBlobToData in App).
+// Returns the raw blob plus the raw normalized result rows (including the stored
+// home_team/away_team, which App needs to re-resolve each result to the canonical
+// round-robin fixture and orient the score — the schedule order can differ from
+// the RR index, so match_key alone is NOT trustworthy).
 export async function loadFromSupabase() {
   const rows = await fetchJson(DATA_URL + "?id=eq.main&select=data");
   const blob = (Array.isArray(rows) ? rows[0] && rows[0].data : rows && rows.data) || {};
-  const groupResults = { ...(blob.groupResults || {}) };
+  let resultRows = [];
   try {
-    const res = await fetchJson(RESULTS_URL + "?select=match_key,group_key,match_idx,home_score,away_score,status&order=match_key.asc");
-    if (Array.isArray(res)) {
-      res.forEach((r) => {
-        if (r.status === "final" && r.home_score != null && r.away_score != null) {
-          const key = r.match_key || `${r.group_key}_${r.match_idx}`;
-          groupResults[key] = { home: String(r.home_score), away: String(r.away_score) };
-        }
-      });
-    }
+    const res = await fetchJson(RESULTS_URL + "?select=match_key,group_key,match_idx,home_team,away_team,home_score,away_score,status&order=match_key.asc");
+    if (Array.isArray(res)) resultRows = res;
   } catch (e) { /* normalized table optional; blob.groupResults is the fallback */ }
-  return { blob, groupResults };
+  return { blob, resultRows };
 }
 
 /* ---- network: save (admin) ------------------------------------------- */

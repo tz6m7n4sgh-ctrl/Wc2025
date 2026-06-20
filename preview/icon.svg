@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+<defs>
+ <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#071510"/><stop offset=".6" stop-color="#123c2c"/><stop offset="1" stop-color="#1b4a35"/></linearGradient>
+ <radialGradient id="ball" cx=".38" cy=".34" r=".75"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#e7efe9"/></radialGradient>
+ <clipPath id="bc"><circle cx="256" cy="238" r="132"/></clipPath>
+</defs>
+<rect width="512" height="512" rx="112" fill="url(#bg)"/>
+<rect x="14" y="14" width="484" height="484" rx="100" fill="none" stroke="#f7c948" stroke-width="6" opacity=".55"/>
+<ellipse cx="256" cy="388" rx="120" ry="26" fill="#000" opacity=".22"/>
+<circle cx="256" cy="238" r="132" fill="url(#ball)" stroke="#0d1f17" stroke-width="6"/>
+<g clip-path="url(#bc)"><polygon points="216.0,106.0 243.6,68.0 288.4,82.5 288.4,129.5 243.6,144.0" fill="#0d1f17"/><polygon points="369.2,159.2 413.9,173.7 413.9,220.7 369.2,235.3 341.5,197.2" fill="#0d1f17"/><polygon points="365.9,321.3 365.9,368.3 321.2,382.8 293.6,344.8 321.2,306.7" fill="#0d1f17"/><polygon points="210.8,368.3 166.1,382.8 138.4,344.8 166.1,306.7 210.8,321.3" fill="#0d1f17"/><polygon points="118.1,235.3 90.5,197.2 118.1,159.2 162.8,173.7 162.8,220.7" fill="#0d1f17"/><line x1="256.0" y1="192.0" x2="256.0" y2="106.0" stroke="#0d1f17" stroke-width="9" stroke-linecap="round"/><line x1="299.7" y1="223.8" x2="381.5" y2="197.2" stroke="#0d1f17" stroke-width="9" stroke-linecap="round"/><line x1="283.0" y1="275.2" x2="333.6" y2="344.8" stroke="#0d1f17" stroke-width="9" stroke-linecap="round"/><line x1="229.0" y1="275.2" x2="178.4" y2="344.8" stroke="#0d1f17" stroke-width="9" stroke-linecap="round"/><line x1="212.3" y1="223.8" x2="130.5" y2="197.2" stroke="#0d1f17" stroke-width="9" stroke-linecap="round"/><polygon points="256.0,192.0 299.7,223.8 283.0,275.2 229.0,275.2 212.3,223.8" fill="#0d1f17"/></g>
+<text x="256" y="452" text-anchor="middle" font-family="Arial Black, Arial, sans-serif" font-size="92" font-weight="900" fill="#f7c948" letter-spacing="2">2026</text>
+</svg>

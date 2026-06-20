@@ -1193,6 +1193,23 @@ function MatchDetail({ m, data, lang, t, onBack }) {
       .catch(() => { if (alive) { setDetail(null); setDStatus("error"); } });
     return () => { alive = false; };
   }, [m.id, m.eventId, m.status]);
+  // Fill the score from the premium feed when the DB result isn't in yet.
+  let hs = m.hs, as = m.as;
+  if ((hs == null || as == null) && detail) {
+    const ev = detail.event;
+    if (ev && ev.homeScore != null && ev.homeScore !== "" && ev.awayScore != null && ev.awayScore !== "") {
+      if (sameTeam(ev.home, m.away)) { hs = Number(ev.awayScore); as = Number(ev.homeScore); }
+      else { hs = Number(ev.homeScore); as = Number(ev.awayScore); }
+    } else if (detail.timeline && detail.timeline.length) {
+      let gh = 0, ga = 0;
+      detail.timeline.filter((e) => /goal/i.test(e.type) && !/no goal|disallow|missed|saved/i.test(e.type)).forEach((e) => {
+        const own = /own goal/i.test(e.type), home = sameTeam(e.team, m.home);
+        (own ? !home : home) ? gh++ : ga++;
+      });
+      hs = gh; as = ga;
+    }
+  }
+  const showAnyScore = showScore || hs != null;
   return (
     <div className="view md">
       <button className="backbtn" onClick={onBack}>‹ {t("back")}</button>
@@ -1202,7 +1219,7 @@ function MatchDetail({ m, data, lang, t, onBack }) {
         <div className="md-score">
           <div className="md-team"><span className="md-fl">{flagOf(m.home)}</span><span className="md-tn">{canonTeam(m.home)}</span></div>
           <div className="md-mid">
-            {showScore ? <div className="md-sc num">{m.hs ?? "–"}<span className="md-dash">–</span>{m.as ?? "–"}</div> : <div className="md-vs">{fmtTime(m.ko, lang)}</div>}
+            {showAnyScore ? <div className="md-sc num">{hs ?? "–"}<span className="md-dash">–</span>{as ?? "–"}</div> : <div className="md-vs">{fmtTime(m.ko, lang)}</div>}
             <div className={"md-st" + (m.status === "live" ? " live" : "")}>{m.status === "live" ? (m.ht ? t("ht_full") : m.minute + "'") : m.status === "finished" ? t("ft_full") : t("upcoming")}</div>
           </div>
           <div className="md-team"><span className="md-fl">{flagOf(m.away)}</span><span className="md-tn">{canonTeam(m.away)}</span></div>
@@ -1224,20 +1241,27 @@ function MatchDetail({ m, data, lang, t, onBack }) {
 function DetailEmpty({ status, t }) {
   return <div className="card empty">{status === "loading" ? t("loadingData") : t("noDetail")}</div>;
 }
-const tlIcon = (typ) => /own goal/i.test(typ) ? "🔴⚽" : /goal|penalty scored/i.test(typ) ? "⚽" : /yellow/i.test(typ) ? "🟨" : /red/i.test(typ) ? "🟥" : /subst/i.test(typ) ? "🔁" : "•";
+const tlIcon = (typ) => /own goal/i.test(typ) ? "🔴" : /goal|penalty scored/i.test(typ) ? "⚽" : /yellow/i.test(typ) ? "🟨" : /red/i.test(typ) ? "🟥" : /subst/i.test(typ) ? "🔁" : "•";
 function RealEvents({ detail, status, m, t }) {
   const tl = detail && detail.timeline;
   if (!tl || tl.length === 0) return <DetailEmpty status={status} t={t} />;
+  const key = (e) => /goal/i.test(e.type) ? "goal" : /yellow/i.test(e.type) ? "yc" : /red/i.test(e.type) ? "rc" : /subst/i.test(e.type) ? "sub" : "ev";
   return (
     <div className="card">
-      <div className="vtl">
+      <div className="vtimeline">
         {tl.map((e, i) => {
           const home = sameTeam(e.team, m.home);
+          const cell = (
+            <span className={"vt-ev " + key(e)}>
+              <span className="vt-ic">{tlIcon(e.type)}</span>
+              <span className="vt-txt"><b className="vt-pl">{e.player}</b><span className="vt-ty">{e.type}</span></span>
+            </span>
+          );
           return (
-            <div className={"vtlrow " + (home ? "home" : "away")} key={i}>
-              <span className="vtl-min num">{e.min !== "" ? e.min + "'" : ""}</span>
-              <span className="vtl-ic">{tlIcon(e.type)}</span>
-              <span className="vtl-tx"><b>{e.player}</b> <span className="muted">{e.type}</span></span>
+            <div className={"vt-row " + (home ? "home" : "away")} key={i}>
+              <span className="vt-side h">{home && cell}</span>
+              <span className="vt-min num">{e.min !== "" ? e.min + "'" : "•"}</span>
+              <span className="vt-side a">{!home && cell}</span>
             </div>
           );
         })}
@@ -2546,12 +2570,21 @@ background-image:repeating-linear-gradient(180deg,rgba(255,255,255,.06) 0 30px,t
 .sbar{grid-area:b;display:flex;height:6px;border-radius:99px;overflow:hidden;background:var(--soft);gap:2px}
 .sbh{background:var(--grass);border-radius:99px;transition:width .8s ease}.sba{background:var(--gold);border-radius:99px;transition:width .8s ease;margin-inline-start:auto}
 
-/* premium V2 detail: timeline + lineups */
-.vtl{display:flex;flex-direction:column}
-.vtlrow{display:grid;grid-template-columns:38px 22px 1fr;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--border)}
-.vtlrow:last-child{border:none}.vtlrow.away{background:linear-gradient(90deg,transparent,rgba(245,196,81,.06))}
-.vtl-min{color:var(--muted);font-weight:700;font-size:12px}.vtl-ic{font-size:15px;text-align:center}
-.vtl-tx{font-size:12.5px}.vtl-tx b{font-weight:700}
+/* premium V2 detail: two-sided timeline */
+.vtimeline{position:relative}
+.vtimeline::before{content:"";position:absolute;top:0;bottom:0;left:50%;width:2px;transform:translateX(-50%);background:var(--border)}
+.vt-row{display:grid;grid-template-columns:1fr 40px 1fr;align-items:center;gap:6px;padding:7px 0;position:relative}
+.vt-side{min-width:0;display:flex}.vt-side.h{justify-content:flex-end}.vt-side.a{justify-content:flex-start}
+.vt-min{justify-self:center;font-size:11px;font-weight:800;color:#fff;background:var(--pitch2);border-radius:99px;min-width:30px;height:22px;display:flex;align-items:center;justify-content:center;z-index:1}
+.vt-ev{display:inline-flex;align-items:center;gap:8px;max-width:100%;background:var(--soft);border:1px solid var(--border);border-radius:10px;padding:6px 9px}
+.vt-row.away .vt-ev{flex-direction:row-reverse;text-align:end}
+.vt-ic{font-size:15px;line-height:1;flex:none}
+.vt-txt{display:flex;flex-direction:column;min-width:0}
+.vt-pl{font-size:12.5px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.vt-ty{font-size:10px;color:var(--muted);font-weight:600}
+.vt-ev.goal{background:rgba(25,169,107,.12);border-color:rgba(25,169,107,.3)}
+.vt-ev.rc{background:rgba(226,87,76,.12);border-color:rgba(226,87,76,.3)}
+.vt-ev.yc{background:rgba(232,162,59,.12);border-color:rgba(232,162,59,.3)}
 /* lineups on a pitch (both teams) */
 .fpitch-labels{display:flex;justify-content:space-between;font-size:12.5px;font-weight:800;margin-bottom:8px}
 .fpitch{position:relative;border-radius:14px;overflow:hidden;display:flex;flex-direction:column;

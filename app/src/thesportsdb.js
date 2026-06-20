@@ -94,11 +94,14 @@ function eventsToResults(events) {
 export async function fetchMatchDetail(eventId, key) {
   if (!sdbIsPremium(key) || !eventId) return null;
   const firstArr = (j, keys) => { if (!j) return []; for (const k of keys) if (Array.isArray(j[k])) return j[k]; for (const k in j) if (Array.isArray(j[k])) return j[k]; return Array.isArray(j) ? j : []; };
-  const [tlJ, lnJ, stJ] = await Promise.all([
+  const [evJ, tlJ, lnJ, stJ] = await Promise.all([
+    sdbV2("/lookup/event/" + eventId, key),
     sdbV2("/lookup/event_timeline/" + eventId, key),
     sdbV2("/lookup/event_lineup/" + eventId, key),
     sdbV2("/lookup/event_stats/" + eventId, key),
   ]);
+  const ev0 = firstArr(evJ, ["event", "events", "lookup", "results"])[0] || (evJ && !Array.isArray(evJ) && evJ.strHomeTeam ? evJ : null);
+  const event = ev0 ? { home: ev0.strHomeTeam || "", away: ev0.strAwayTeam || "", homeScore: ev0.intHomeScore, awayScore: ev0.intAwayScore, status: ev0.strStatus || ev0.strProgress || "", venue: ev0.strVenue || "" } : null;
   const timeline = firstArr(tlJ, ["timeline", "event_timeline", "events", "results"]).map((e) => ({
     min: e.strTimeline || e.intTime || e.strTime || e.strMinute || "",
     type: String(e.strTimelineDetail || e.strTimelineType || e.strDescription || e.strComment || ""),
@@ -113,7 +116,7 @@ export async function fetchMatchDetail(eventId, key) {
     player: p.strPlayer || "", team: p.strTeam || "?", pos: p.strPosition || p.strFormation || "",
     num: p.intSquadNumber || p.strNumber || p.intShirtNumber || "", sub: /yes/i.test(p.strSubstitute || ""),
   })).filter((p) => p.player);
-  return { timeline, stats, lineup };
+  return { event, timeline, stats, lineup };
 }
 
 // Fetch completed results across a set of dates (UTC yyyy-mm-dd strings).

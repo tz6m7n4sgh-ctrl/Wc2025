@@ -112,6 +112,7 @@ const I18N = {
     p_ko_t: "Knockout winners", p_ko_d: "Points for picking the team that advances (R32 +2, R16 +3, QF +5, SF +8, Final +12)",
     p_champ_t: "Champion", p_champ_d: "+10 for correctly picking the World Cup winner",
     p_exact: "exact", p_ingrp: "in group", p_yes: "correct", p_no: "missed",
+    inProgress: "in progress", gcHint: "Your prediction next to the actual standings, with the points each pick earned.",
   },
   ar: {
     brand: "كأس العالم 2026", dir: "rtl",
@@ -162,6 +163,7 @@ const I18N = {
     p_ko_t: "الأدوار الإقصائية", p_ko_d: "نقاط لاختيار الفريق المتأهل (دور 32 +2، دور 16 +3، الربع +5، النصف +8، النهائي +12)",
     p_champ_t: "البطل", p_champ_d: "+10 لاختيار بطل كأس العالم بشكل صحيح",
     p_exact: "صحيح", p_ingrp: "في المجموعة", p_yes: "صحيح", p_no: "خطأ",
+    inProgress: "قيد اللعب", gcHint: "توقعك بجانب الترتيب الفعلي، مع النقاط التي حققها كل اختيار.",
   },
 };
 
@@ -1622,6 +1624,55 @@ function AuditGroup({ g, detail, t }) {
     </div>
   );
 }
+// Side-by-side: a player's predicted group order vs the actual standings, with
+// the points earned per position (and the match-winner points for the group).
+function GroupCompare({ g, p, data, t }) {
+  const [open, setOpen] = useState(true);
+  const table = useMemo(() => computeGroupTable(g, data), [g, data]);
+  const pred = playerGroupPred(p, g);
+  const complete = groupComplete(g, data);
+  const rankRows = [0, 1, 2, 3].map((pos) => {
+    const pick = pred[pos] || null, actual = table[pos] ? table[pos].team : null;
+    let got = 0, kind = "miss";
+    if (complete && pick) {
+      if (actual && sameTeam(pick, actual)) { got = SCORING.exactPosition; kind = "exact"; }
+      else if (table.some((rw) => sameTeam(rw.team, pick))) { got = SCORING.teamInGroupWrongPos; kind = "in"; }
+    } else if (!complete) kind = "pend";
+    return { pos: pos + 1, pick, actual, got, kind };
+  });
+  let edgeGot = 0, edgeHit = 0, edgePlayed = 0;
+  for (let i = 0; i < 6; i++) {
+    const r = matchResult(g, i, data); if (!r.complete) continue;
+    edgePlayed++;
+    const e = predictedEdge(p, g, r.home, r.away);
+    if (r.outcome !== "draw" && e.status === "ok" && sameTeam(e.edge, r.winner)) { edgeGot += SCORING.edgeCorrect; edgeHit++; }
+  }
+  const total = rankRows.reduce((s, r) => s + r.got, 0) + edgeGot;
+  return (
+    <div className="card gc-card">
+      <button className="gc-head" onClick={() => setOpen((o) => !o)}>
+        <span className="gbadge">{t("group")} {g}</span>
+        {!complete && <span className="hint">{t("inProgress")}</span>}
+        <span className="grow" />
+        <span className="gc-total num">+{total}</span>
+        <span className="ag-chev">{open ? "▾" : "▸"}</span>
+      </button>
+      {open && (
+        <>
+          <div className="gc-colh"><span>{t("predicted")}</span><span className="gc-colh-mid">{t("points")}</span><span>{t("actual")}</span></div>
+          {rankRows.map((r) => (
+            <div className={"gc-row " + r.kind} key={r.pos}>
+              <span className="gc-side pick"><span className="gc-pos num">{r.pos}</span><Team t={r.pick} dim={!r.pick} /></span>
+              <span className={"gc-pt " + r.kind}>{complete ? (r.got > 0 ? "+" + r.got : "0") : "·"}</span>
+              <span className="gc-side act"><Team t={r.actual} dim={!r.actual} /><span className="gc-pos num">{r.pos}</span></span>
+            </div>
+          ))}
+          <div className="gc-edge">⚔️ {t("p_winner_t")} <span className="hint">· {edgeHit}/{edgePlayed} {t("p_correct")}</span><span className="grow" /><b className="gc-edge-pt">+{edgeGot}</b></div>
+        </>
+      )}
+    </div>
+  );
+}
 // Plain-language "how your points add up" breakdown for end users.
 function pointsCounts(row) {
   const d = row.detail;
@@ -1708,13 +1759,9 @@ function Points({ data, lb, t, name, setName }) {
       <PointsHow row={row} t={t} />
       {pending.pts > 0 && <div className="card slim"><div className="eq-pending">⚡ {t("pendingLive")}: <b>+{pending.pts}</b> {t("fromLive")}</div></div>}
 
-      {/* group-by-group audit */}
-      <div className="card">
-        <h3 className="cardh">📂 {t("groupBreakdown")} <span className="hint">{t("tapExpand")}</span></h3>
-        <div className="aglist">
-          {GROUP_KEYS.map((g) => <AuditGroup key={g} g={g} detail={row.detail} t={t} />)}
-        </div>
-      </div>
+      {/* prediction vs actual, side by side, per group */}
+      <div className="card slim"><h3 className="cardh">📂 {t("groupBreakdown")}</h3><p className="hint block">{t("gcHint")}</p></div>
+      {GROUP_KEYS.map((g) => <GroupCompare key={g} g={g} p={data.players[row.name]} data={data} t={t} />)}
 
       {/* knockout + champion */}
       <div className="card">
@@ -2685,6 +2732,25 @@ border-radius:18px;padding:16px 14px;margin:10px 0;color:#fff;background:linear-
 .phow-d{display:block;font-size:11px;color:var(--muted);margin-top:2px;line-height:1.35}
 .phow-pts{font-size:17px;font-weight:800;color:var(--muted);min-width:38px;text-align:end}
 .phow-pts.on{color:var(--grass-d)}.app[data-theme="dark"] .phow-pts.on{color:var(--grass)}
+
+/* side-by-side prediction vs actual */
+.gc-card{padding:10px 12px}
+.gc-head{display:flex;align-items:center;gap:8px;width:100%;background:none;border:none;cursor:pointer;padding:2px 0 8px}
+.gc-total{font-size:15px;font-weight:800;color:var(--gold-d)}
+.gc-colh{display:grid;grid-template-columns:1fr 44px 1fr;gap:6px;font-size:9.5px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;padding-bottom:4px;border-bottom:1px solid var(--border)}
+.gc-colh>span:last-child{text-align:end}.gc-colh-mid{text-align:center}
+.gc-row{display:grid;grid-template-columns:1fr 44px 1fr;gap:6px;align-items:center;padding:6px 0;border-bottom:1px solid var(--border)}
+.gc-row:last-of-type{border:none}
+.gc-side{display:flex;align-items:center;gap:6px;min-width:0}
+.gc-side.act{justify-content:flex-end}
+.gc-pos{width:15px;text-align:center;color:var(--muted);font-size:11px;font-weight:700;flex:none}
+.gc-side .team .tn{font-size:12px}
+.gc-pt{justify-self:center;font-size:12px;font-weight:800;min-width:34px;height:22px;border-radius:7px;display:flex;align-items:center;justify-content:center;color:var(--muted);background:var(--soft)}
+.gc-pt.exact{color:#fff;background:var(--good)}
+.gc-pt.in{color:#7a5a00;background:rgba(245,196,81,.45)}
+.gc-row.exact .gc-side.pick{font-weight:800}
+.gc-edge{display:flex;align-items:center;gap:6px;margin-top:8px;font-size:12px;font-weight:700}
+.gc-edge-pt{color:var(--grass-d)}.app[data-theme="dark"] .gc-edge-pt{color:var(--grass)}
 
 .aglist{display:flex;flex-direction:column;gap:7px}
 .ag{border:1px solid var(--border);border-radius:11px;overflow:hidden}

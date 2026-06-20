@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect, useRef } from "react";
 import { BarChart, Bar, LineChart, Line, CartesianGrid, Legend, XAxis, YAxis, Cell, ResponsiveContainer, Tooltip } from "recharts";
 import { loadFromSupabase, saveBlob, upsertResult, upsertResults } from "./supabase.js";
-import { fetchLivescore, fetchCompletedResults, fetchResultsRange, getFeedStatus } from "./thesportsdb.js";
+import { fetchLivescore, fetchCompletedResults, fetchResultsRange, getFeedStatus, fetchMatchDetail } from "./thesportsdb.js";
 
 /* =====================================================================
    WORLD CUP 2026 — Prediction League (React rebuild, foundation)
@@ -105,6 +105,7 @@ const I18N = {
     syncHint2: "Pull finished scores from TheSportsDB and save them to the database so everyone sees them.",
     syncing: "Syncing…", feedReach: "Feed reachable", feedEvents: "Events fetched", feedCompleted: "Completed found", feedSaved: "Saved to DB", feedMissing: "Still missing a score",
     timezone: "Display timezone", tzCheck: "Timezone check", tzApp: "App timezone", tzAppNow: "App time now", tzDevice: "Device timezone", tzDeviceNow: "Device time now", tzNote: "Times are shown in the app timezone above, not the device's — change it here if needed.",
+    noDetail: "No detailed data for this match yet (timelines/lineups can be missing or delayed).",
   },
   ar: {
     brand: "كأس العالم 2026", dir: "rtl",
@@ -148,6 +149,7 @@ const I18N = {
     syncHint2: "اجلب نتائج المباريات المنتهية من TheSportsDB واحفظها في قاعدة البيانات ليراها الجميع.",
     syncing: "جارٍ المزامنة…", feedReach: "وصول الخدمة", feedEvents: "الأحداث المجلوبة", feedCompleted: "المنتهية الموجودة", feedSaved: "حُفظت في القاعدة", feedMissing: "بلا نتيجة بعد",
     timezone: "المنطقة الزمنية للعرض", tzCheck: "فحص المنطقة الزمنية", tzApp: "منطقة التطبيق", tzAppNow: "وقت التطبيق الآن", tzDevice: "منطقة الجهاز", tzDeviceNow: "وقت الجهاز الآن", tzNote: "تُعرض الأوقات بمنطقة التطبيق أعلاه وليس بمنطقة الجهاز — غيّرها هنا إذا لزم.",
+    noDetail: "لا تتوفر بيانات تفصيلية بعد (قد تتأخر التشكيلات والأحداث).",
   },
 };
 
@@ -532,7 +534,7 @@ function mapBlobToData(blob, resultRows, apiResults) {
       // DB has no result yet → fall back to the API feed, but only once the
       // fixture has actually kicked off (guards bogus finals for future games).
       if (!hasRes && apiMap[key] && ko && ko <= now) { res = apiMap[key]; groupResults[key] = res; hasRes = true; }
-      matches.push({ id: key, stage: "group", group: g, idx: i, mid: null, home, away, venue: s ? s.venue || "" : "", ko, real: true, finalH: hasRes ? Number(res.home) : null, finalA: hasRes ? Number(res.away) : null, allEvents: [], allStats: null, lineups: null });
+      matches.push({ id: key, stage: "group", group: g, idx: i, mid: null, home, away, venue: s ? s.venue || "" : "", ko, real: true, eventId: s ? s.eventId || null : null, finalH: hasRes ? Number(res.home) : null, finalA: hasRes ? Number(res.away) : null, allEvents: [], allStats: null, lineups: null });
     }
   }
   const km = blob.knockoutMatches;
@@ -1164,14 +1166,26 @@ function MatchCenter({ data, lang, onOpen, t }) {
 
 const TABS = ["events", "lineups", "stats", "predictions"];
 function MatchDetail({ m, data, lang, t, onBack }) {
-  const [tab, setTab] = useState(m.status === "scheduled" || m.real ? "predictions" : "events");
+  const [tab, setTab] = useState(m.status === "scheduled" ? "predictions" : "events");
   const showScore = m.status !== "scheduled";
+  // Premium match detail (timeline/lineup/stats) for real matches, by eventId.
+  const [detail, setDetail] = useState(null);
+  const [dStatus, setDStatus] = useState("idle"); // idle | loading | ready | error
+  useEffect(() => {
+    if (!m.real || m.status === "scheduled") { setDetail(null); setDStatus("idle"); return; }
+    if (!m.eventId) { setDetail(null); setDStatus("ready"); return; }
+    let alive = true; setDStatus("loading");
+    fetchMatchDetail(m.eventId, data.settings && data.settings.sportsdbKey)
+      .then((d) => { if (alive) { setDetail(d); setDStatus("ready"); } })
+      .catch(() => { if (alive) { setDetail(null); setDStatus("error"); } });
+    return () => { alive = false; };
+  }, [m.id, m.eventId, m.status]);
   return (
     <div className="view md">
       <button className="backbtn" onClick={onBack}>‹ {t("back")}</button>
       <div className="md-head">
         <div className="md-bg" />
-        <div className="md-stage">{m.stage === "group" ? `${t("group")} ${m.group}` : t("r_" + m.round)} · {fmtDay(m.ko, lang)} {fmtTime(m.ko, lang)}</div>
+        <div className="md-stage">{m.stage === "group" ? `${t("group")} ${m.group}` : t("r_" + m.round)} · {fmtDay(m.ko, lang)} {fmtTime(m.ko, lang)}{m.venue ? ` · ${m.venue}` : ""}</div>
         <div className="md-score">
           <div className="md-team"><span className="md-fl">{flagOf(m.home)}</span><span className="md-tn">{canonTeam(m.home)}</span></div>
           <div className="md-mid">
@@ -1186,10 +1200,75 @@ function MatchDetail({ m, data, lang, t, onBack }) {
           <button key={tb} className={"md-tab" + (tab === tb ? " on" : "")} onClick={() => setTab(tb)} disabled={tb !== "predictions" && m.status === "scheduled"}>{t("tab_" + tb)}</button>
         ))}
       </div>
-      {tab === "events" && <MatchEvents m={m} t={t} />}
-      {tab === "lineups" && <MatchLineups m={m} t={t} />}
-      {tab === "stats" && <MatchStats m={m} t={t} />}
+      {tab === "events" && (m.real ? <RealEvents detail={detail} status={dStatus} m={m} t={t} /> : <MatchEvents m={m} t={t} />)}
+      {tab === "lineups" && (m.real ? <RealLineups detail={detail} status={dStatus} m={m} t={t} /> : <MatchLineups m={m} t={t} />)}
+      {tab === "stats" && (m.real ? <RealStats detail={detail} status={dStatus} m={m} t={t} /> : <MatchStats m={m} t={t} />)}
       {tab === "predictions" && <MatchPredictions m={m} data={data} t={t} />}
+    </div>
+  );
+}
+// --- premium (TheSportsDB V2) match-detail renderers ---
+function DetailEmpty({ status, t }) {
+  return <div className="card empty">{status === "loading" ? t("loadingData") : t("noDetail")}</div>;
+}
+const tlIcon = (typ) => /own goal/i.test(typ) ? "🔴⚽" : /goal|penalty scored/i.test(typ) ? "⚽" : /yellow/i.test(typ) ? "🟨" : /red/i.test(typ) ? "🟥" : /subst/i.test(typ) ? "🔁" : "•";
+function RealEvents({ detail, status, m, t }) {
+  const tl = detail && detail.timeline;
+  if (!tl || tl.length === 0) return <DetailEmpty status={status} t={t} />;
+  return (
+    <div className="card">
+      <div className="vtl">
+        {tl.map((e, i) => {
+          const home = sameTeam(e.team, m.home);
+          return (
+            <div className={"vtlrow " + (home ? "home" : "away")} key={i}>
+              <span className="vtl-min num">{e.min !== "" ? e.min + "'" : ""}</span>
+              <span className="vtl-ic">{tlIcon(e.type)}</span>
+              <span className="vtl-tx"><b>{e.player}</b> <span className="muted">{e.type}</span></span>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+function RealStats({ detail, status, m, t }) {
+  const st = detail && detail.stats;
+  if (!st || st.length === 0) return <DetailEmpty status={status} t={t} />;
+  return (
+    <div className="card">
+      {st.map((s, i) => {
+        const h = parseFloat(s.home) || 0, a = parseFloat(s.away) || 0, tot = h + a || 1;
+        return (
+          <div className="statline" key={i}>
+            <span className="sv num">{s.home}</span>
+            <span className="slabel">{s.name}</span>
+            <span className="sv num end">{s.away}</span>
+            <span className="sbar"><span className="sbh" style={{ width: `${(h / tot) * 100}%` }} /><span className="sba" style={{ width: `${(a / tot) * 100}%` }} /></span>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+function RealLineups({ detail, status, m, t }) {
+  const lu = detail && detail.lineup;
+  if (!lu || lu.length === 0) return <DetailEmpty status={status} t={t} />;
+  const sides = [[m.home, lu.filter((p) => sameTeam(p.team, m.home))], [m.away, lu.filter((p) => sameTeam(p.team, m.away))]];
+  const unmatched = lu.filter((p) => !sameTeam(p.team, m.home) && !sameTeam(p.team, m.away));
+  if (unmatched.length && sides[0][1].length === 0 && sides[1][1].length === 0) { sides[0][1] = lu; } // fallback: show all under home
+  return (
+    <div className="card">
+      <div className="vlu">
+        {sides.map(([team, players], si) => (
+          <div className="vlu-col" key={si}>
+            <div className="vlu-team">{flagOf(team)} {canonTeam(team)}</div>
+            {players.map((p, i) => (
+              <div className="vlu-p" key={i}><span>{p.player}</span><span className="muted">{p.sub ? t("bench") : p.pos}</span></div>
+            ))}
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
@@ -2383,6 +2462,18 @@ background-image:repeating-linear-gradient(180deg,rgba(255,255,255,.06) 0 30px,t
 .statline .slabel{grid-area:c;text-align:center;font-size:11px;color:var(--muted);font-weight:600}
 .sbar{grid-area:b;display:flex;height:6px;border-radius:99px;overflow:hidden;background:var(--soft);gap:2px}
 .sbh{background:var(--grass);border-radius:99px;transition:width .8s ease}.sba{background:var(--gold);border-radius:99px;transition:width .8s ease;margin-inline-start:auto}
+
+/* premium V2 detail: timeline + lineups */
+.vtl{display:flex;flex-direction:column}
+.vtlrow{display:grid;grid-template-columns:38px 22px 1fr;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--border)}
+.vtlrow:last-child{border:none}.vtlrow.away{background:linear-gradient(90deg,transparent,rgba(245,196,81,.06))}
+.vtl-min{color:var(--muted);font-weight:700;font-size:12px}.vtl-ic{font-size:15px;text-align:center}
+.vtl-tx{font-size:12.5px}.vtl-tx b{font-weight:700}
+.vlu{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.vlu-team{font-size:12px;font-weight:800;color:var(--pitch2);margin-bottom:6px}
+.app[data-theme="dark"] .vlu-team{color:var(--grass)}
+.vlu-p{display:flex;align-items:center;justify-content:space-between;gap:6px;font-size:11.5px;padding:3px 0;border-bottom:1px solid var(--border)}
+.vlu-p:last-child{border:none}.vlu-p .muted{font-size:10px}
 
 /* match predictions */
 .pp-split{display:flex;align-items:center;gap:10px;margin-bottom:10px}

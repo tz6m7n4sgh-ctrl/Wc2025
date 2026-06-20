@@ -89,6 +89,32 @@ function eventsToResults(events) {
   });
   return out;
 }
+// Premium match detail (timeline / lineup / stats) by eventId — V2 lookups.
+// Returns normalized arrays, or null if not premium / no eventId.
+export async function fetchMatchDetail(eventId, key) {
+  if (!sdbIsPremium(key) || !eventId) return null;
+  const firstArr = (j, keys) => { if (!j) return []; for (const k of keys) if (Array.isArray(j[k])) return j[k]; for (const k in j) if (Array.isArray(j[k])) return j[k]; return Array.isArray(j) ? j : []; };
+  const [tlJ, lnJ, stJ] = await Promise.all([
+    sdbV2("/lookup/event_timeline/" + eventId, key),
+    sdbV2("/lookup/event_lineup/" + eventId, key),
+    sdbV2("/lookup/event_stats/" + eventId, key),
+  ]);
+  const timeline = firstArr(tlJ, ["timeline", "event_timeline", "events", "results"]).map((e) => ({
+    min: e.strTimeline || e.intTime || e.strTime || e.strMinute || "",
+    type: String(e.strTimelineDetail || e.strTimelineType || e.strDescription || e.strComment || ""),
+    team: e.strTeam || "", player: e.strPlayer || e.strHome || e.strAssist || "",
+  })).filter((e) => e.player || e.type);
+  const stats = firstArr(stJ, ["eventstats", "stats", "statistics", "event_stats", "results"]).map((s) => ({
+    name: s.strStat || s.strStatistic || s.strType || "",
+    home: s.intHome != null ? s.intHome : (s.strHome != null ? s.strHome : ""),
+    away: s.intAway != null ? s.intAway : (s.strAway != null ? s.strAway : ""),
+  })).filter((s) => s.name);
+  const lineup = firstArr(lnJ, ["lineup", "lineups", "event_lineup", "results"]).map((p) => ({
+    player: p.strPlayer || "", team: p.strTeam || "?", pos: p.strPosition || p.strFormation || "", sub: /yes/i.test(p.strSubstitute || ""),
+  })).filter((p) => p.player);
+  return { timeline, stats, lineup };
+}
+
 // Fetch completed results across a set of dates (UTC yyyy-mm-dd strings).
 async function fetchResultsForDates(key, dates) {
   FEED_STATUS = { mode: "unreachable", events: 0, completed: 0, at: Date.now() };

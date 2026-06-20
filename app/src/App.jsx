@@ -1031,7 +1031,7 @@ function Leaderboard({ data, lb, prevRanks, name, setName, t, go }) {
           </div>
           <PointsHow row={sel} t={t} />
           <div className="card slim"><h3 className="cardh">📂 {t("groupBreakdown")}</h3><p className="hint block">{t("gcHint")}</p></div>
-          {GROUP_KEYS.map((g) => <GroupCompare key={g} g={g} p={data.players[sel.name]} data={data} t={t} />)}
+          {GROUP_KEYS.map((g) => <GroupCompare key={g} g={g} p={data.players[sel.name]} data={data} t={t} name={sel.name} />)}
         </>
       )}
     </div>
@@ -1648,7 +1648,7 @@ function AuditGroup({ g, detail, t }) {
 }
 // Side-by-side: a player's predicted group order vs the actual standings, with
 // the points earned per position (and the match-winner points for the group).
-function GroupCompare({ g, p, data, t }) {
+function GroupCompare({ g, p, data, t, name }) {
   const [open, setOpen] = useState(true);
   const table = useMemo(() => computeGroupTable(g, data), [g, data]);
   const pred = playerGroupPred(p, g);
@@ -1681,7 +1681,7 @@ function GroupCompare({ g, p, data, t }) {
       </button>
       {open && (
         <>
-          <div className="gc-colh"><span>{t("predicted")}</span><span className="gc-colh-mid">{t("points")}</span><span>{t("actual")}</span></div>
+          <div className="gc-colh"><span className="gc-colh-name">{name || t("predicted")}</span><span className="gc-colh-mid">{t("points")}</span><span>{t("actual")}</span></div>
           {rankRows.map((r) => (
             <div className={"gc-row " + r.kind} key={r.pos}>
               <span className="gc-side pick"><span className="gc-pos num">{r.pos}</span><Team t={r.pick} dim={!r.pick} /></span>
@@ -1783,7 +1783,7 @@ function Points({ data, lb, t, name, setName }) {
 
       {/* prediction vs actual, side by side, per group */}
       <div className="card slim"><h3 className="cardh">📂 {t("groupBreakdown")}</h3><p className="hint block">{t("gcHint")}</p></div>
-      {GROUP_KEYS.map((g) => <GroupCompare key={g} g={g} p={data.players[row.name]} data={data} t={t} />)}
+      {GROUP_KEYS.map((g) => <GroupCompare key={g} g={g} p={data.players[row.name]} data={data} t={t} name={row.name} />)}
 
       {/* knockout + champion */}
       <div className="card">
@@ -2772,6 +2772,7 @@ border-radius:18px;padding:16px 14px;margin:10px 0;color:#fff;background:linear-
 .gc-total{font-size:15px;font-weight:800;color:var(--gold-d)}
 .gc-colh{display:grid;grid-template-columns:1fr 44px 1fr;gap:6px;font-size:9.5px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;padding-bottom:4px;border-bottom:1px solid var(--border)}
 .gc-colh>span:last-child{text-align:end}.gc-colh-mid{text-align:center}
+.gc-colh-name{color:var(--grass-d);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
 .gc-row{display:grid;grid-template-columns:1fr 44px 1fr;gap:6px;align-items:center;padding:6px 0;border-bottom:1px solid var(--border)}
 .gc-row:last-of-type{border:none}
 .gc-side{display:flex;align-items:center;gap:6px;min-width:0}

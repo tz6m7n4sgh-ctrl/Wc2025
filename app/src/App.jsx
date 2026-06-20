@@ -2762,4 +2762,32 @@ border-radius:18px;padding:16px 14px;margin:10px 0;color:#fff;background:linear-
 /* admin: audit log */
 .logrow{display:flex;gap:10px;padding:7px 0;border-bottom:1px solid var(--border);font-size:12.5px}
 .logrow:last-child{border:none}.logtime{color:var(--muted);font-weight:700;flex:none}.logmsg{font-weight:600}
+
+/* ===== large screens: use the full width (tablet / desktop) ===== */
+@media(min-width:900px){
+  .app{max-width:1180px;padding-bottom:0}
+  .top{max-width:1180px}
+  .main{padding:16px 20px 96px}
+  /* card-stack views flow into columns; match detail stays single, centered */
+  .view:not(.md){display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 18px;align-items:start}
+  .view:not(.md)>.card,.view:not(.md)>.nextcard{margin:14px 0}
+  /* full-width: heroes, strips, and any card with wide single content */
+  .view>.topstrip,.view>.datestrip,.view>.podium,.view>.gwrap,
+  .view>.nextcard,.view>.livecard,.brk-scroll,
+  .view:not(.md)>.card:has(.lb),.view:not(.md)>.card:has(.ptboard),
+  .view:not(.md)>.card:has(.pgrid-scroll),.view:not(.md)>.card:has(.recharts-responsive-container),
+  .view:not(.md)>.card:has(.aglist),.view:not(.md)>.card:has(.cbars),
+  .view:not(.md)>.card:has(.cwgrid),.view:not(.md)>.card:has(.cwbars){grid-column:1 / -1}
+  .gwrap{grid-template-columns:repeat(3,1fr)}
+  /* dense lists use the extra width as two columns */
+  .lb,.ptboard{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .view.md{max-width:680px;margin:0 auto}
+  /* bottom nav: keep the tabs clustered, not stretched across the page */
+  .bottom{max-width:1180px;justify-content:center;gap:10px}
+  .navbtn{flex:0 0 auto;min-width:104px}
+}
+@media(min-width:1280px){
+  .view:not(.md){grid-template-columns:repeat(3,minmax(0,1fr))}
+  .gwrap{grid-template-columns:repeat(4,1fr)}
+}
 `;

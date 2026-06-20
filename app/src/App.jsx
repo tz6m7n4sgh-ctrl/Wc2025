@@ -442,9 +442,11 @@ function recomputeLive(data, now = nowMs()) {
       const st = statusOf(m.ko, now);
       if (st.status === "scheduled") return { ...m, status: "scheduled", minute: 0, ht: false, hs: null, as: null, events: [], stats: null };
       const lv = (data._live || {})[m.id];
-      // No live-feed entry and well past the kickoff window → the match is over,
-      // we just don't have its score yet (so it stops showing under "Live now").
-      if (!lv && now - m.ko > LIVE_WINDOW_MS) return { ...m, status: "finished", minute: 90, ht: false, hs: null, as: null, noScore: true, events: [], stats: null };
+      // Past a sane match duration the game is OVER, even if a stale live feed
+      // still reports it "live" — the clock wins. Show the feed's last score as
+      // the result; otherwise "–" until a real result lands. (KO allows for ET.)
+      const win = (m.stage === "ko" ? 210 : 150) * 60000;
+      if (now - m.ko > win) return { ...m, status: "finished", minute: 90, ht: false, hs: lv ? lv.hs : null, as: lv ? lv.as : null, noScore: !lv, events: [], stats: null };
       return { ...m, status: "live", minute: lv && lv.minute != null ? lv.minute : Math.min(90, st.minute || 90), ht: lv ? !!lv.ht : !!st.ht, hs: lv ? lv.hs : null, as: lv ? lv.as : null, events: [], stats: null };
     }
     const st = statusOf(m.ko, now);
@@ -470,6 +472,8 @@ function recomputeLive(data, now = nowMs()) {
 function mapLiveEvents(events) {
   const map = {};
   (events || []).forEach((e) => {
+    const st = String(e.status || "").toLowerCase();
+    if (/\bft\b|full|finish|aet|\bpen\b|complete|\bfinal\b|abandon|postpon/.test(st)) return; // not live anymore
     const hs = e.homeScore, as = e.awayScore;
     if (hs == null || as == null || hs === "" || as === "") return;
     for (const g of GROUP_KEYS) {
@@ -585,9 +589,6 @@ let LIVE_MODE = false;
 function setLiveMode(v) { LIVE_MODE = v; }
 // Persist an admin mutation back to Supabase (live mode only); best-effort.
 function persistLive(nextData) { if (LIVE_MODE) saveBlob(nextData).catch((e) => console.warn("Supabase save failed", e && e.message)); }
-// A match is only "live" for this long after kickoff when we have no score for
-// it; past that it's treated as finished (over) rather than perpetually live.
-const LIVE_WINDOW_MS = 140 * 60000;
 const TOURNAMENT_ANCHOR = Date.UTC(2026, 5, 30, 19, 30);
 const APP_LOADED_AT = Date.now();
 let CLOCK = TOURNAMENT_ANCHOR;

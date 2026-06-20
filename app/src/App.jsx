@@ -2765,7 +2765,7 @@ border-radius:18px;padding:16px 14px;margin:10px 0;color:#fff;background:linear-
 .gc-pos{width:15px;text-align:center;color:var(--muted);font-size:11px;font-weight:700;flex:none}
 .gc-side .team .tn{font-size:12px}
 .gc-pt{justify-self:center;font-size:12px;font-weight:800;min-width:34px;height:22px;border-radius:7px;display:flex;align-items:center;justify-content:center;color:var(--muted);background:var(--soft)}
-.gc-pt.exact{color:#fff;background:var(--good)}
+.gc-pt.exact{color:#fff;background:var(--pos)}
 .gc-pt.in{color:#7a5a00;background:rgba(245,196,81,.45)}
 .gc-row.exact .gc-side.pick{font-weight:800}
 .gc-edge{display:flex;align-items:center;gap:6px;margin-top:8px;font-size:12px;font-weight:700}
@@ -2862,7 +2862,9 @@ border-radius:18px;padding:16px 14px;margin:10px 0;color:#fff;background:linear-
   .view:not(.md)>.card:has(.lb),.view:not(.md)>.card:has(.ptboard),
   .view:not(.md)>.card:has(.pgrid-scroll),.view:not(.md)>.card:has(.recharts-responsive-container),
   .view:not(.md)>.card:has(.aglist),.view:not(.md)>.card:has(.cbars),
-  .view:not(.md)>.card:has(.cwgrid),.view:not(.md)>.card:has(.cwbars){grid-column:1 / -1}
+  .view:not(.md)>.card:has(.cwgrid),.view:not(.md)>.card:has(.cwbars),
+  .view:not(.md)>.card.slim,.view:not(.md)>.card:has(.phow),
+  .view:not(.md)>.card:has(.psel-strip),.view:not(.md)>.card:has(.eq-pending){grid-column:1 / -1}
   .gwrap{grid-template-columns:repeat(3,1fr)}
   /* dense lists use the extra width as two columns */
   .lb,.ptboard{display:grid;grid-template-columns:1fr 1fr;gap:8px}

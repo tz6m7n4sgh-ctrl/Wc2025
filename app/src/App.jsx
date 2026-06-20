@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect, useRef } from "react";
 import { BarChart, Bar, LineChart, Line, CartesianGrid, Legend, XAxis, YAxis, Cell, ResponsiveContainer, Tooltip } from "recharts";
 import { loadFromSupabase, saveBlob, upsertResult, upsertResults } from "./supabase.js";
-import { fetchLivescore, fetchCompletedResults, fetchResultsRange, getFeedStatus, fetchMatchDetail } from "./thesportsdb.js";
+import { fetchLivescore, fetchCompletedResults, fetchResultsRange, getFeedStatus, fetchMatchDetail, fetchEventFinals } from "./thesportsdb.js";
 import { trackEvent, trackPageView, setAnalyticsContext } from "./analytics.js";
 
 /* =====================================================================
@@ -513,6 +513,24 @@ function resolveRRByTeams(group, home, away) {
   }
   return null;
 }
+/* Fill group-match finals from per-eventId premium lookups (fetchEventFinals).
+   Only touches kicked-off group matches that still have no score, matched by
+   the fixture's own eventId, and orients the feed's home/away to canonical. */
+function applyEventFinals(matches, finals) {
+  if (!finals || !finals.length) return matches;
+  const byEv = {};
+  finals.forEach((f) => { if (f && f.finished && f.eventId != null) byEv[String(f.eventId)] = f; });
+  if (!Object.keys(byEv).length) return matches;
+  return matches.map((m) => {
+    if (m.stage !== "group" || m.finalH != null || !m.eventId) return m;
+    const f = byEv[String(m.eventId)]; if (!f) return m;
+    let hs = Number(f.homeScore), as = Number(f.awayScore);
+    if (!Number.isFinite(hs) || !Number.isFinite(as)) return m;
+    // Orient: swap only when the feed's home positively matches the canonical away.
+    if (f.home && f.away && !sameTeam(f.home, m.home) && sameTeam(f.home, m.away)) { const tmp = hs; hs = as; as = tmp; }
+    return { ...m, finalH: hs, finalA: as, resSource: "api-event" };
+  });
+}
 function mapBlobToData(blob, resultRows, apiResults) {
   blob = blob || {};
   // groupResults keyed by canonical RR matchKey. Start from the blob fallback,
@@ -552,10 +570,13 @@ function mapBlobToData(blob, resultRows, apiResults) {
       const ko = s ? Date.parse(s.kickoffUtc || s.date) || 0 : 0;
       let res = groupResults[key];
       let hasRes = res && res.home != null && res.home !== "" && res.away != null && res.away !== "";
+      // resSource: "db" = persisted (blob/results table), "api" = transient feed
+      // fill (not in the DB yet). Lets the admin Sync know what still needs saving.
+      let resSource = hasRes ? "db" : null;
       // DB has no result yet → fall back to the API feed, but only once the
       // fixture has actually kicked off (guards bogus finals for future games).
-      if (!hasRes && apiMap[key] && ko && ko <= now) { res = apiMap[key]; groupResults[key] = res; hasRes = true; }
-      matches.push({ id: key, stage: "group", group: g, idx: i, mid: null, home, away, venue: s ? s.venue || "" : "", ko, real: true, eventId: s ? s.eventId || null : null, finalH: hasRes ? Number(res.home) : null, finalA: hasRes ? Number(res.away) : null, allEvents: [], allStats: null, lineups: null });
+      if (!hasRes && apiMap[key] && ko && ko <= now) { res = apiMap[key]; groupResults[key] = res; hasRes = true; resSource = "api"; }
+      matches.push({ id: key, stage: "group", group: g, idx: i, mid: null, home, away, venue: s ? s.venue || "" : "", ko, real: true, eventId: s ? s.eventId || null : null, resSource, finalH: hasRes ? Number(res.home) : null, finalA: hasRes ? Number(res.away) : null, allEvents: [], allStats: null, lineups: null });
     }
   }
   const km = blob.knockoutMatches;
@@ -2057,6 +2078,26 @@ function SyncResults({ data, setData, t }) {
         const [home, away] = matchTeams(g, i);
         byKey[m.key] = { match_key: m.key, group_key: g, match_idx: i, home_team: home, away_team: away, home_score: Number(hs), away_score: Number(as), status: "final", source: "api" };
       });
+      // Gap-fill: fixtures the league eventsday feed never returns (different
+      // event-id scheme) — look them up directly by their eventId (premium V2).
+      // Target fixtures not persisted in the DB (resSource !== "db"), even if a
+      // transient feed fill already shows a score locally — they still need saving
+      // so non-premium end users get them too.
+      const stillNeed = (data.matches || []).filter((mm) => mm.stage === "group" && !byKey[mm.id] && mm.resSource !== "db" && mm.eventId && mm.ko && mm.ko <= Date.now()).map((mm) => ({ key: mm.id, eventId: mm.eventId }));
+      if (stillNeed.length) {
+        try {
+          const finals = await fetchEventFinals(stillNeed, key);
+          finals.forEach((f) => {
+            if (!f.finished) return;
+            const [g, iStr] = f.key.split("_"); const i = Number(iStr);
+            const [home, away] = matchTeams(g, i);
+            let hs = Number(f.homeScore), as = Number(f.awayScore);
+            if (!Number.isFinite(hs) || !Number.isFinite(as)) return;
+            if (f.home && f.away && !sameTeam(f.home, home) && sameTeam(f.home, away)) { const tmp = hs; hs = as; as = tmp; }
+            byKey[f.key] = { match_key: f.key, group_key: g, match_idx: i, home_team: home, away_team: away, home_score: hs, away_score: as, status: "final", source: "api-event" };
+          });
+        } catch (e) { /* gap fill is best-effort */ }
+      }
       const rows = Object.values(byKey), filled = Object.keys(byKey);
       let saved = 0;
       if (rows.length) { try { await upsertResults(rows); saved = rows.length; } catch (e) { /* surfaced below */ } }
@@ -2064,13 +2105,13 @@ function SyncResults({ data, setData, t }) {
       setData((d) => {
         const gr = { ...d.groupResults };
         rows.forEach((row) => { gr[row.match_key] = { home: String(row.home_score), away: String(row.away_score) }; });
-        const matches = d.matches.map((mm) => { if (mm.stage !== "group") return mm; const res = gr[mm.id]; return res ? { ...mm, finalH: Number(res.home), finalA: Number(res.away) } : mm; });
+        const matches = d.matches.map((mm) => { if (mm.stage !== "group") return mm; const res = gr[mm.id]; return res ? { ...mm, finalH: Number(res.home), finalA: Number(res.away), resSource: byKey[mm.id] ? "db" : mm.resSource } : mm; });
         const nd = recomputeLive({ ...d, groupResults: gr, matches });
         persistLive(nd);
         return nd;
       });
       // which finished/over matches still have no score?
-      const missing = (data.matches || []).filter((mm) => mm.stage === "group" && (mm.finalH == null || mm.finalA == null) && !filled.includes(mm.id) && mm.ko && mm.ko <= Date.now())
+      const missing = (data.matches || []).filter((mm) => mm.stage === "group" && mm.resSource !== "db" && !filled.includes(mm.id) && mm.ko && mm.ko <= Date.now())
         .map((mm) => `${canonTeam(mm.home)} v ${canonTeam(mm.away)}`);
       setReport({ mode: status.mode, events: status.events, completed: status.completed, mapped: rows.length, saved, missing });
     } catch (e) { setReport({ error: String(e && e.message ? e.message : e) }); }
@@ -2196,6 +2237,11 @@ export default function App() {
         const real = mapBlobToData(blob, resultRows, apiResults);
         setAppTz(real.settings && real.settings.tz);
         try { real._live = mapLiveEvents(await fetchLivescore(key)); } catch (e) { real._live = {}; }
+        // Premium per-eventId fill: kicked-off group matches the league feed missed.
+        try {
+          const need = real.matches.filter((m) => m.stage === "group" && m.finalH == null && m.eventId && m.ko && m.ko <= nowMs()).map((m) => ({ key: m.id, eventId: m.eventId }));
+          if (need.length) { const finals = await fetchEventFinals(need, key); real.matches = applyEventFinals(real.matches, finals); }
+        } catch (e) { /* feed gap fill is best-effort */ }
         if (!alive) return;
         setData(recomputeLive(real, nowMs())); setSource("live");
       } catch (e) {
@@ -2220,6 +2266,10 @@ export default function App() {
           const real = mapBlobToData(blob, resultRows, apiResults);
           setAppTz(real.settings && real.settings.tz);
           try { real._live = mapLiveEvents(await fetchLivescore(key)); } catch (e) { real._live = {}; }
+          try {
+            const need = real.matches.filter((m) => m.stage === "group" && m.finalH == null && m.eventId && m.ko && m.ko <= nowMs()).map((m) => ({ key: m.id, eventId: m.eventId }));
+            if (need.length) { const finals = await fetchEventFinals(need, key); real.matches = applyEventFinals(real.matches, finals); }
+          } catch (e) { /* best-effort */ }
           setData(recomputeLive(real, nowMs()));
         } catch (e) { setData((d) => (d ? recomputeLive(d, nowMs()) : d)); }
       } else setData((d) => (d ? recomputeLive(d, nowMs()) : d));

@@ -119,6 +119,30 @@ export async function fetchMatchDetail(eventId, key) {
   return { event, timeline, stats, lineup };
 }
 
+/* Per-event final scores by eventId (premium V2 /lookup/event).
+   The eventsday feed only covers one league (4429); some fixtures carry
+   event IDs from a different feed and never appear there. Looking each one
+   up directly by its known eventId fills those gaps regardless of league.
+   items: [{key, eventId}] -> [{key, eventId, home, away, homeScore, awayScore, finished}]. */
+export async function fetchEventFinals(items, key) {
+  if (!sdbIsPremium(key) || !Array.isArray(items) || !items.length) return [];
+  const firstArr = (j, keys) => { if (!j) return []; for (const k of keys) if (Array.isArray(j[k])) return j[k]; for (const k in j) if (Array.isArray(j[k])) return j[k]; return Array.isArray(j) ? j : []; };
+  const out = await Promise.all(items.map(async ({ key: fxKey, eventId }) => {
+    if (!eventId) return null;
+    try {
+      const evJ = await sdbV2("/lookup/event/" + eventId, key);
+      const ev = firstArr(evJ, ["event", "events", "lookup", "results"])[0] || (evJ && !Array.isArray(evJ) && evJ.strHomeTeam ? evJ : null);
+      if (!ev) return null;
+      const hs = ev.intHomeScore, as = ev.intAwayScore;
+      if (hs == null || hs === "" || as == null || as === "") return null;
+      const st = String(ev.strStatus || ev.strProgress || "").toLowerCase();
+      const finished = !st || st.includes("match finished") || st === "ft" || st === "aet" || st.includes("full") || st.includes("finished") || st.includes("after") || st.includes("complete");
+      return { key: fxKey, eventId, home: ev.strHomeTeam || "", away: ev.strAwayTeam || "", homeScore: String(hs), awayScore: String(as), finished };
+    } catch (e) { return null; }
+  }));
+  return out.filter(Boolean);
+}
+
 // Fetch completed results across a set of dates (UTC yyyy-mm-dd strings).
 async function fetchResultsForDates(key, dates) {
   FEED_STATUS = { mode: "unreachable", events: 0, completed: 0, at: Date.now() };

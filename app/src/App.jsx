@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useEffect, useRef } from "react";
 import { BarChart, Bar, LineChart, Line, CartesianGrid, Legend, XAxis, YAxis, Cell, ResponsiveContainer, Tooltip } from "recharts";
+import { loadFromSupabase, saveBlob, upsertResult } from "./supabase.js";
 
 /* =====================================================================
    WORLD CUP 2026 — Prediction League (React rebuild, foundation)
@@ -99,6 +100,7 @@ const I18N = {
     brkFills: "The bracket fills in once every group is complete.",
     noPlayers: "No players yet. Add predictions to get started.",
     koNeedsWinner: "needs a winner",
+    loadingData: "Loading live data…", liveData: "Live data",
   },
   ar: {
     brand: "كأس العالم 2026", dir: "rtl",
@@ -138,6 +140,7 @@ const I18N = {
     brkFills: "تكتمل الأدوار الإقصائية بعد انتهاء جميع المجموعات.",
     noPlayers: "لا يوجد لاعبون بعد. أضف التوقعات للبدء.",
     koNeedsWinner: "يلزم تحديد فائز",
+    loadingData: "جارٍ تحميل البيانات…", liveData: "بيانات مباشرة",
   },
 };
 
@@ -394,6 +397,18 @@ function livePendingPoints(data, p) {
 function recomputeLive(data, now = nowMs()) {
   const matches = (data.matches || []).map((m) => {
     if (m.adminLocked) return m; // manual result is fixed
+    if (m.real) {
+      // Real fixtures: a recorded final score means finished; otherwise status
+      // is purely time-based. Live in-progress scores arrive with TheSportsDB.
+      const hasRes = m.finalH != null && m.finalA != null;
+      if (hasRes) return { ...m, status: "finished", minute: 90, ht: false, hs: m.finalH, as: m.finalA, events: [], stats: null };
+      // No recorded result yet: a real match is NEVER "finished" without a score
+      // (full-time is decided by the result, not the clock). Before kickoff it is
+      // scheduled; after kickoff it is in-progress until the result lands.
+      const st = statusOf(m.ko, now);
+      if (st.status === "scheduled") return { ...m, status: "scheduled", minute: 0, ht: false, hs: null, as: null, events: [], stats: null };
+      return { ...m, status: "live", minute: Math.min(90, st.minute || 90), ht: !!st.ht, hs: m.liveH != null ? m.liveH : null, as: m.liveA != null ? m.liveA : null, events: [], stats: null };
+    }
     const st = statusOf(m.ko, now);
     if (st.status === "scheduled") return { ...m, ...st, events: [], hs: null, as: null, stats: null };
     if (st.status === "finished") return { ...m, ...st, events: m.allEvents, hs: m.finalH, as: m.finalA, stats: m.allStats };
@@ -432,11 +447,18 @@ function shuffle(arr, seed) { const r = mulberry(seed), a = arr.slice(); for (le
    the exact behaviour the production TheSportsDB layer will drive; swapping
    in real fixtures means feeding real kickoff/score data through the same
    recomputeLive() path. nowMs() is the single source of "now". */
+// LIVE_MODE flips to true once real Supabase data loads; the clock then runs on
+// the real wall clock against real fixture kickoffs. In demo (sample) mode it
+// runs on an accelerated synthetic anchor so the demo tournament looks alive.
+let LIVE_MODE = false;
+function setLiveMode(v) { LIVE_MODE = v; }
+// Persist an admin mutation back to Supabase (live mode only); best-effort.
+function persistLive(nextData) { if (LIVE_MODE) saveBlob(nextData).catch((e) => console.warn("Supabase save failed", e && e.message)); }
 const TOURNAMENT_ANCHOR = Date.UTC(2026, 5, 30, 19, 30);
 const APP_LOADED_AT = Date.now();
 let CLOCK = TOURNAMENT_ANCHOR;
-function nowMs() { return CLOCK; }
-function tickClock() { CLOCK = TOURNAMENT_ANCHOR + (Date.now() - APP_LOADED_AT); return CLOCK; }
+function nowMs() { return LIVE_MODE ? Date.now() : CLOCK; }
+function tickClock() { if (!LIVE_MODE) CLOCK = TOURNAMENT_ANCHOR + (Date.now() - APP_LOADED_AT); return nowMs(); }
 const groupOf = (team) => GROUP_KEYS.find((g) => GROUPS[g].some((x) => sameTeam(x, team))) || null;
 // Knockout kickoff times: each round starts 5 days after the previous; R32
 // begins at the anchor day so a few are already live/finished on load.
@@ -1015,7 +1037,7 @@ function MatchCenter({ data, lang, onOpen, t }) {
 
 const TABS = ["events", "lineups", "stats", "predictions"];
 function MatchDetail({ m, data, lang, t, onBack }) {
-  const [tab, setTab] = useState(m.status === "scheduled" ? "predictions" : "events");
+  const [tab, setTab] = useState(m.status === "scheduled" || m.real ? "predictions" : "events");
   const showScore = m.status !== "scheduled";
   return (
     <div className="view md">
@@ -1079,6 +1101,7 @@ function Pitch({ squad, side }) {
 }
 function MatchLineups({ m, t }) {
   const [side, setSide] = useState("home");
+  if (!m.lineups) return <div className="card empty">{t("noEvents")}</div>;
   const sq = side === "home" ? m.lineups.home : m.lineups.away;
   const tm = side === "home" ? m.home : m.away;
   return (
@@ -1445,10 +1468,13 @@ function Results({ data, setData, t, lang }) {
     if (target.stage === "ko" && hs === as) return d; // knockouts need a winner
     const matches = d.matches.map((x) => x.id === id ? applyAdminScore(x, hs, as) : x);
     const log = { ts: Date.now(), msg: `${canonTeam(target.home)} ${hs}–${as} ${canonTeam(target.away)}` };
-    return recomputeLive({ ...d, matches, auditLog: [log, ...(d.auditLog || [])].slice(0, 80) });
+    const nd = recomputeLive({ ...d, matches, auditLog: [log, ...(d.auditLog || [])].slice(0, 80) });
+    persistLive(nd);
+    if (LIVE_MODE && target.stage === "group") upsertResult(target.group, target.idx, target.home, target.away, hs, as).catch((e) => console.warn("result upsert failed", e && e.message));
+    return nd;
   });
-  const clearScore = (id) => setData((d) => recomputeLive({ ...d, matches: d.matches.map((x) => x.id === id ? { ...x, adminLocked: false } : x) }));
-  const setChampion = (team) => setData((d) => recomputeLive({ ...d, championOverride: team || null, auditLog: [{ ts: Date.now(), msg: `${t("champion")}: ${team || "—"}` }, ...(d.auditLog || [])].slice(0, 80) }));
+  const clearScore = (id) => setData((d) => { const nd = recomputeLive({ ...d, matches: d.matches.map((x) => x.id === id ? { ...x, adminLocked: false } : x) }); persistLive(nd); return nd; });
+  const setChampion = (team) => setData((d) => { const nd = recomputeLive({ ...d, championOverride: team || null, auditLog: [{ ts: Date.now(), msg: `${t("champion")}: ${team || "—"}` }, ...(d.auditLog || [])].slice(0, 80) }); persistLive(nd); return nd; });
   const allTeams = GROUP_KEYS.flatMap((g) => GROUPS[g]).sort();
   const list = bucket === "KO" ? (data.matches || []).filter((m) => m.stage === "ko") : (data.matches || []).filter((m) => m.stage === "group" && m.group === bucket).sort((a, b) => a.idx - b.idx);
   return (
@@ -1477,7 +1503,7 @@ function Results({ data, setData, t, lang }) {
 }
 function AdminSettings({ data, setData, t }) {
   const s = data.settings || {};
-  const set = (k, v) => setData((d) => ({ ...d, settings: { ...d.settings, [k]: v } }));
+  const set = (k, v) => setData((d) => { const nd = { ...d, settings: { ...d.settings, [k]: v } }; persistLive(nd); return nd; });
   const pool = (Object.keys(data.players).length) * (Number(s.entryFeeAED) || 0);
   return (
     <div className="view">
@@ -1518,7 +1544,9 @@ function Backup({ data, setData, t }) {
             return applyAdminScore(m, Number(s.h) || 0, Number(s.a) || 0);
           });
         }
-        return recomputeLive({ ...d, players: o.players || d.players, settings: o.settings || d.settings, championOverride: o.champion ?? d.championOverride, matches });
+        const nd = recomputeLive({ ...d, players: o.players || d.players, settings: o.settings || d.settings, championOverride: o.champion ?? d.championOverride, matches });
+        persistLive(nd);
+        return nd;
       });
       setMsg(t("loaded"));
     } catch (e) { setMsg(t("badJson")); }
@@ -1587,7 +1615,7 @@ function Repair({ data, setData, t }) {
       const players = { ...d.players };
       Object.keys(players).forEach((n) => { if (!players[n].knockout) { players[n] = { ...players[n], knockout: {} }; fixed++; } });
       const settings = { entryFeeAED: 200, currency: "AED", distribution: "winnerTakesAll", ...d.settings };
-      return recomputeLive({ ...d, players, settings });
+      const nd = recomputeLive({ ...d, players, settings }); persistLive(nd); return nd;
     });
     setMsg(t("repairDone"));
   };
@@ -1689,15 +1717,38 @@ export default function App() {
   const [sheet, setSheet] = useState(false);
   const [match, setMatch] = useState(null);
   const [isAdmin, setIsAdmin] = useState(false);
-  const [data, setData] = useState(() => buildSampleData());
-  // Live clock: advance the tournament in real time so matches tick, fixtures
-  // kick off, and results reveal on their own, then re-derive the whole view.
+  const [data, setData] = useState(null);
+  const [source, setSource] = useState("loading"); // 'live' | 'sample' | 'loading'
   const [, setNow] = useState(nowMs());
+  // Boot: try real Supabase data; on any failure fall back to the sample demo.
   useEffect(() => {
-    const id = setInterval(() => { tickClock(); setNow(nowMs()); setData((d) => recomputeLive(d)); }, 10000);
-    return () => clearInterval(id);
+    let alive = true;
+    (async () => {
+      try {
+        const real = await loadFromSupabase();
+        if (!alive) return;
+        setLiveMode(true); setData(recomputeLive(real, nowMs())); setSource("live");
+      } catch (e) {
+        if (!alive) return;
+        setLiveMode(false); setData(buildSampleData()); setSource("sample");
+      }
+    })();
+    return () => { alive = false; };
   }, []);
-  const lb = useMemo(() => buildLeaderboard(data), [data]);
+  // Tick: live mode polls Supabase for fresh results; sample mode advances the
+  // synthetic clock. Either way the whole view is re-derived reactively.
+  useEffect(() => {
+    if (source === "loading") return;
+    const live = source === "live";
+    const id = setInterval(async () => {
+      tickClock();
+      if (live) { try { setData(recomputeLive(await loadFromSupabase(), nowMs())); } catch (e) { setData((d) => (d ? recomputeLive(d, nowMs()) : d)); } }
+      else setData((d) => (d ? recomputeLive(d, nowMs()) : d));
+      setNow(nowMs());
+    }, live ? 60000 : 10000);
+    return () => clearInterval(id);
+  }, [source]);
+  const lb = useMemo(() => (data ? buildLeaderboard(data) : []), [data]);
   // Real rank movement: compare each leaderboard snapshot to the previous one.
   const prevRanksRef = useRef({});
   const [prevRanks, setPrevRanks] = useState({});
@@ -1714,13 +1765,22 @@ export default function App() {
   const go = (v, name) => { if (v === "more") { setSheet(true); return; } if (name) setProfileName(name); setSheet(false); setMatch(null); setView(v); window.scrollTo({ top: 0, behavior: "smooth" }); };
   const openMatch = (m) => { setMatch(m); setView("match"); window.scrollTo({ top: 0, behavior: "smooth" }); };
 
+  if (!data) {
+    return (
+      <div dir={dir} data-theme={dark ? "dark" : "light"} className="app">
+        <style>{CSS}</style>
+        <div className="splash"><span className="branddot" /> {t("loadingData")}</div>
+      </div>
+    );
+  }
+
   return (
     <div dir={dir} data-theme={dark ? "dark" : "light"} className="app">
       <style>{CSS}</style>
       <header className="top">
         <div className="brand"><span className="branddot" /> {t("brand")}</div>
         <span className="grow" />
-        <span className="badge">{t("sample")}</span>
+        <span className={"badge" + (source === "live" ? " live" : "")}>{source === "live" ? t("liveData") : t("sample")}</span>
         <button className="tbtn" onClick={() => setDark((d) => !d)}>{dark ? "☀" : "☾"}</button>
         <button className="tbtn" onClick={() => setLang((l) => (l === "en" ? "ar" : "en"))}>{lang === "en" ? "ع" : "EN"}</button>
       </header>
@@ -1816,6 +1876,9 @@ background:var(--pitch);color:#fff;box-shadow:0 2px 12px rgba(10,31,23,.18)}
 .brand{font-weight:800;font-size:15px;display:flex;align-items:center;gap:8px;letter-spacing:.2px}
 .branddot{width:9px;height:9px;border-radius:50%;background:var(--grass);box-shadow:0 0 0 4px rgba(25,195,125,.28)}
 .badge{font-size:9.5px;font-weight:700;padding:3px 7px;border-radius:99px;background:rgba(255,255,255,.13);color:#cdeee0}
+.badge.live{background:rgba(25,195,125,.22);color:#7ef0c0}
+.badge.live::before{content:"";display:inline-block;width:6px;height:6px;border-radius:50%;background:#19c37d;margin-inline-end:5px;vertical-align:middle;animation:blink 1.6s infinite}
+.splash{min-height:60vh;display:flex;align-items:center;justify-content:center;gap:10px;color:var(--muted);font-weight:700;font-size:14px}
 .tbtn{min-width:34px;height:30px;border:none;border-radius:99px;background:rgba(255,255,255,.14);color:#fff;font-weight:800;font-size:13px;cursor:pointer}
 .tbtn:active{transform:scale(.94)}
 

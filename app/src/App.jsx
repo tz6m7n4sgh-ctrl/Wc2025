@@ -67,6 +67,7 @@ const I18N = {
   en: {
     brand: "World Cup 2026", dir: "ltr",
     nav_home: "Home", nav_table: "Table", nav_groups: "Groups", nav_bracket: "Bracket", nav_profile: "Profile",
+    nav_team: "Teams", teamFixtures: "Team fixtures", matchesLabel: "Matches", pickTeam: "Select a team", viewMatches: "View matches",
     leader: "Current leader", phase_group: "Group stage", phase_ko: "Knockout stage", phase_done: "Complete", phase_pre: "Pre-tournament",
     matchesDone: "Group matches played", pts: "pts", rank: "Rank", player: "Player", points: "Points",
     breakdown: "Points breakdown", groupMatch: "Group matches", groupRank: "Group ranking", knockout: "Knockout", champion: "Champion",
@@ -120,6 +121,7 @@ const I18N = {
   ar: {
     brand: "كأس العالم 2026", dir: "rtl",
     nav_home: "الرئيسية", nav_table: "الترتيب", nav_groups: "المجموعات", nav_bracket: "الأدوار", nav_profile: "الملف",
+    nav_team: "الفرق", teamFixtures: "مباريات الفريق", matchesLabel: "المباريات", pickTeam: "اختر فريقاً", viewMatches: "عرض المباريات",
     leader: "المتصدر الحالي", phase_group: "دور المجموعات", phase_ko: "الأدوار الإقصائية", phase_done: "انتهت", phase_pre: "قبل البطولة",
     matchesDone: "مباريات المجموعات", pts: "نقطة", rank: "المركز", player: "اللاعب", points: "النقاط",
     breakdown: "تفصيل النقاط", groupMatch: "مباريات المجموعات", groupRank: "ترتيب المجموعات", knockout: "الإقصائيات", champion: "البطل",
@@ -859,11 +861,14 @@ function LeaderboardBars({ lb, prevRanks, t, onPick }) {
   );
 }
 /* Animated group standings */
-function GroupCard({ g, data, t, delay }) {
+function GroupCard({ g, data, t, delay, onOpenGroup }) {
   const table = useMemo(() => computeGroupTable(g, data), [g, data]);
   return (
     <div className="card gcard" style={{ animationDelay: `${delay}ms` }}>
-      <div className="gtitle"><span className="gbadge">{t("group")} {g}</span></div>
+      <button className="gtitle gtitle-btn" onClick={() => onOpenGroup && onOpenGroup(g)}>
+        <span className="gbadge">{t("group")} {g}</span>
+        <span className="gtitle-view">{t("viewMatches")} ›</span>
+      </button>
       <div className="gtable">
         <div className="gtr gthead">
           <span className="gc-pos2">#</span><span className="gc-team2" />
@@ -1060,7 +1065,7 @@ function Leaderboard({ data, lb, prevRanks, name, setName, t, go }) {
     </div>
   );
 }
-function Groups({ data, t }) {
+function Groups({ data, t, onOpenGroup }) {
   return (
     <div className="view">
       <div className="card slim glegend">
@@ -1073,7 +1078,7 @@ function Groups({ data, t }) {
         <span className="glegend-i"><b>{t("Pts")}</b> {t("leg_Pts")}</span>
       </div>
       <div className="gwrap">
-        {GROUP_KEYS.map((g, i) => <GroupCard g={g} data={data} t={t} key={g} delay={i * 40} />)}
+        {GROUP_KEYS.map((g, i) => <GroupCard g={g} data={data} t={t} key={g} delay={i * 40} onOpenGroup={onOpenGroup} />)}
       </div>
     </div>
   );
@@ -1221,6 +1226,58 @@ function MatchCenter({ data, lang, onOpen, t }) {
           {ms.map((m) => <MatchRow key={m.id} m={m} data={data} lang={lang} onOpen={onOpen} />)}
         </div>
       ))}
+    </div>
+  );
+}
+// All fixtures (group + knockout) a team is involved in, chronologically.
+const teamMatches = (data, team) => (data.matches || [])
+  .filter((m) => (m.home && sameTeam(m.home, team)) || (m.away && sameTeam(m.away, team)))
+  .sort((a, b) => (a.ko || 0) - (b.ko || 0));
+// Team browser: pick a team, see its fixtures, tap one for the full detail.
+function TeamFixtures({ data, lang, onOpen, t }) {
+  const teamsByGroup = useMemo(() => GROUP_KEYS.map((g) => ({ g, teams: [...GROUPS[g]].sort((a, b) => canonTeam(a).localeCompare(canonTeam(b))) })), []);
+  const [team, setTeam] = useState(() => GROUPS[GROUP_KEYS[0]][0]);
+  const matches = useMemo(() => teamMatches(data, team), [data, team]);
+  const g = groupOf(team);
+  const standing = useMemo(() => {
+    if (!g) return null;
+    const tbl = computeGroupTable(g, data);
+    const idx = tbl.findIndex((r) => sameTeam(r.team, team));
+    return idx >= 0 ? { pos: idx + 1, pts: tbl[idx].Pts } : null;
+  }, [data, g, team]);
+  return (
+    <div className="view">
+      <div className="card slim">
+        <h3 className="cardh"><Ico name="users" size={18} /> {t("teamFixtures")}</h3>
+        <select className="select teamsel" value={team} onChange={(e) => setTeam(e.target.value)} aria-label={t("pickTeam")}>
+          {teamsByGroup.map(({ g, teams }) => (
+            <optgroup key={g} label={`${t("group")} ${g}`}>
+              {teams.map((tm) => <option key={tm} value={tm}>{canonTeam(tm)}</option>)}
+            </optgroup>
+          ))}
+        </select>
+        <div className="teammeta">
+          <span className="fl">{flagOf(team)}</span> <b>{canonTeam(team)}</b>
+          {g && <span className="hint"> · {t("group")} {g}{standing ? ` · #${standing.pos} · ${standing.pts} ${t("Pts")}` : ""}</span>}
+        </div>
+      </div>
+      <div className="card">
+        {matches.length === 0 ? <div className="empty">{t("noMatches")}</div>
+          : matches.map((m) => <MatchRow key={m.id} m={m} data={data} lang={lang} onOpen={onOpen} />)}
+      </div>
+    </div>
+  );
+}
+// A single group's six matches, opened from the Groups page.
+function GroupGames({ g, data, lang, onOpen, t, onBack }) {
+  const matches = useMemo(() => (data.matches || []).filter((m) => m.stage === "group" && m.group === g).sort((a, b) => (a.ko || 0) - (b.ko || 0)), [data, g]);
+  return (
+    <div className="view">
+      <button className="backbtn" onClick={onBack}>‹ {t("nav_groups")}</button>
+      <div className="card">
+        <h3 className="cardh"><span className="gbadge">{t("group")} {g}</span> · {t("matchesLabel")}</h3>
+        {matches.map((m) => <MatchRow key={m.id} m={m} data={data} lang={lang} onOpen={onOpen} />)}
+      </div>
     </div>
   );
 }
@@ -2195,6 +2252,7 @@ const NAV = [
   { id: "more", ic: "menu", key: "nav_more" },
 ];
 const MORE_ITEMS = [
+  { id: "team", ic: "users", key: "nav_team" },
   { id: "points", ic: "prediction", key: "nav_points" },
   { id: "bracket", ic: "bracket", key: "nav_bracket" },
   { id: "profile", ic: "profile", key: "nav_profile" },
@@ -2297,6 +2355,7 @@ export default function App() {
   const [profileName, setProfileName] = useState(null);
   const [sheet, setSheet] = useState(false);
   const [match, setMatch] = useState(null);
+  const [groupSel, setGroupSel] = useState(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [data, setData] = useState(null);
   const [source, setSource] = useState("loading"); // 'live' | 'sample' | 'loading'
@@ -2373,6 +2432,7 @@ export default function App() {
   useEffect(() => { if (!profileName && lb[0]) setProfileName(lb[0].name); }, [lb, profileName]);
   const go = (v, name) => { if (v === "more") { setSheet(true); trackEvent("nav_click", { view: "more" }); return; } if (name) setProfileName(name); setSheet(false); setMatch(null); setView(v); window.scrollTo({ top: 0, behavior: "smooth" }); trackPageView(v); trackEvent("nav_click", { view: v }); };
   const openMatch = (m) => { setMatch(m); setView("match"); window.scrollTo({ top: 0, behavior: "smooth" }); trackPageView("match"); trackEvent("match_open", {}); };
+  const openGroup = (g) => { setGroupSel(g); setSheet(false); setMatch(null); setView("groupgames"); window.scrollTo({ top: 0, behavior: "smooth" }); trackPageView("groupgames"); trackEvent("group_open", { group: g }); };
   // Profile picker wrapper: same as setProfileName but reports the selection.
   const selectProfile = (n) => { setProfileName(n); trackEvent("profile_select", { has_profile: !!n }); };
 
@@ -2401,7 +2461,9 @@ export default function App() {
         {view === "today" && <MatchCenter data={data} lang={lang} onOpen={openMatch} t={t} />}
         {view === "match" && match && <MatchDetail m={(data.matches || []).find((x) => x.id === match.id) || match} data={data} lang={lang} t={t} onBack={() => go("today")} />}
         {view === "table" && <Leaderboard data={data} lb={lb} prevRanks={prevRanks} name={profileName} setName={selectProfile} t={t} go={go} />}
-        {view === "groups" && <Groups data={data} t={t} />}
+        {view === "groups" && <Groups data={data} t={t} onOpenGroup={openGroup} />}
+        {view === "groupgames" && groupSel && <GroupGames g={groupSel} data={data} lang={lang} onOpen={openMatch} t={t} onBack={() => go("groups")} />}
+        {view === "team" && <TeamFixtures data={data} lang={lang} onOpen={openMatch} t={t} />}
         {view === "bracket" && <BracketView data={data} t={t} />}
         {view === "predictions" && <Predictions data={data} lb={lb} t={t} go={go} />}
         {view === "points" && <Points data={data} lb={lb} t={t} name={profileName} setName={selectProfile} />}
@@ -2427,7 +2489,7 @@ export default function App() {
         <div className="sheetbg" onClick={(e) => { if (e.target === e.currentTarget) setSheet(false); }}>
           <div className="sheet">
             <div className="grab" />
-            <div className="sheeth">{t("nav_more")}</div>
+            <div className="sheeth">{t("nav_more")}<button className="sheetx" onClick={() => setSheet(false)} aria-label={t("hide")}>✕</button></div>
             <div className="sheetgrid">
               {MORE_ITEMS.map((m) => (
                 <button key={m.id} className={"tile" + (view === m.id ? " on" : "")} onClick={() => go(m.id)}>
@@ -2458,7 +2520,7 @@ export default function App() {
       <nav className="bottom">
         {NAV.map((n) => {
           const adminViews = ADMIN_ITEMS.map((a) => a.id).concat("adminlogin");
-          const active = view === n.id || (n.id === "today" && view === "match") || (n.id === "more" && (sheet || MORE_ITEMS.some((m) => m.id === view) || adminViews.includes(view)));
+          const active = view === n.id || (n.id === "today" && view === "match") || (n.id === "groups" && view === "groupgames") || (n.id === "more" && (sheet || MORE_ITEMS.some((m) => m.id === view) || adminViews.includes(view)));
           return (
             <button key={n.id} className={"navbtn" + (active ? " on" : "")} onClick={() => go(n.id)}>
               <span className="navi"><Ico name={n.ic} size={22} /></span><span className="navl">{t(n.key)}</span>
@@ -2572,6 +2634,12 @@ border:1px solid var(--border);width:100%;cursor:pointer;text-align:start;animat
 .gwrap{display:grid;grid-template-columns:1fr;gap:0}
 @media(min-width:460px){.gwrap{grid-template-columns:1fr 1fr;gap:10px}}
 .gcard{margin:10px 0}.gtitle{margin-bottom:8px}
+.gtitle-btn{display:flex;align-items:center;width:100%;background:none;border:none;padding:0 0 8px;margin:0;cursor:pointer;font-family:inherit}
+.gtitle-view{margin-inline-start:auto;font-size:11px;font-weight:800;color:var(--grass-d);background:#eafaf2;border:1px solid #c7eeda;border-radius:99px;padding:4px 10px}
+.app[data-theme="dark"] .gtitle-view{background:rgba(25,195,125,.14);border-color:rgba(25,195,125,.3);color:var(--grass)}
+.teamsel{font-size:14px;font-weight:700;border-color:var(--grass);background:#f3fbf7}
+.app[data-theme="dark"] .teamsel{background:rgba(25,195,125,.08)}
+.teammeta{margin-top:9px;font-size:14px;display:flex;align-items:center;gap:6px;flex-wrap:wrap}.teammeta .fl{font-size:18px}
 .gbadge{display:inline-block;font-size:11px;font-weight:800;color:#fff;background:var(--pitch2);padding:3px 10px;border-radius:99px}
 .glegend{display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;margin:0 0 4px}
 .glegend-h{font-size:11px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-inline-end:2px}
@@ -2680,7 +2748,9 @@ color:var(--muted);font-family:inherit;cursor:pointer;padding:5px 0;border-radiu
 border:1px solid var(--border);box-shadow:0 -10px 40px rgba(10,31,23,.25);animation:slideup .28s cubic-bezier(.2,.8,.2,1)}
 @keyframes slideup{from{transform:translateY(100%)}to{transform:none}}
 .grab{width:38px;height:4px;border-radius:99px;background:var(--border);margin:6px auto 12px}
-.sheeth{font-weight:800;font-size:14px;margin:0 4px 12px}
+.sheeth{font-weight:800;font-size:14px;margin:0 4px 12px;display:flex;align-items:center}
+.sheetx{margin-inline-start:auto;width:30px;height:30px;border-radius:50%;border:1px solid var(--border);background:var(--soft,#f3f6f4);color:var(--muted);font-size:14px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1}
+.app[data-theme="dark"] .sheetx{background:rgba(255,255,255,.06)}
 .sheetgrid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
 .tile{display:flex;flex-direction:column;align-items:center;gap:6px;padding:14px 6px;border-radius:14px;border:1px solid var(--border);
 background:var(--soft);color:var(--ink);cursor:pointer;font-family:inherit}

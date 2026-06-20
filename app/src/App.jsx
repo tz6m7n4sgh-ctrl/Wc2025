@@ -409,6 +409,9 @@ function recomputeLive(data, now = nowMs()) {
       const st = statusOf(m.ko, now);
       if (st.status === "scheduled") return { ...m, status: "scheduled", minute: 0, ht: false, hs: null, as: null, events: [], stats: null };
       const lv = (data._live || {})[m.id];
+      // No live-feed entry and well past the kickoff window → the match is over,
+      // we just don't have its score yet (so it stops showing under "Live now").
+      if (!lv && now - m.ko > LIVE_WINDOW_MS) return { ...m, status: "finished", minute: 90, ht: false, hs: null, as: null, noScore: true, events: [], stats: null };
       return { ...m, status: "live", minute: lv && lv.minute != null ? lv.minute : Math.min(90, st.minute || 90), ht: lv ? !!lv.ht : !!st.ht, hs: lv ? lv.hs : null, as: lv ? lv.as : null, events: [], stats: null };
     }
     const st = statusOf(m.ko, now);
@@ -419,7 +422,7 @@ function recomputeLive(data, now = nowMs()) {
   });
   const groupResults = {}, knockoutResults = {};
   matches.forEach((m) => {
-    if (m.status !== "finished") return;
+    if (m.status !== "finished" || m.finalH == null || m.finalA == null) return; // skip score-less "over" matches
     if (m.stage === "group") groupResults[matchKey(m.group, m.idx)] = { home: m.finalH, away: m.finalA };
     else knockoutResults[m.mid] = m.finalH > m.finalA ? canonTeam(m.home) : m.finalA > m.finalH ? canonTeam(m.away) : canonTeam(m.home);
   });
@@ -549,6 +552,9 @@ let LIVE_MODE = false;
 function setLiveMode(v) { LIVE_MODE = v; }
 // Persist an admin mutation back to Supabase (live mode only); best-effort.
 function persistLive(nextData) { if (LIVE_MODE) saveBlob(nextData).catch((e) => console.warn("Supabase save failed", e && e.message)); }
+// A match is only "live" for this long after kickoff when we have no score for
+// it; past that it's treated as finished (over) rather than perpetually live.
+const LIVE_WINDOW_MS = 140 * 60000;
 const TOURNAMENT_ANCHOR = Date.UTC(2026, 5, 30, 19, 30);
 const APP_LOADED_AT = Date.now();
 let CLOCK = TOURNAMENT_ANCHOR;
@@ -1079,8 +1085,8 @@ function MatchRow({ m, data, lang, onOpen }) {
       <div className="match-main">
         <div className="match-status"><StatusPill m={m} t={(k) => I18N[lang][k]} /></div>
         <div className="match-teams">
-          <div className={"mt" + (homeWin ? " win" : "")}><span className="fl">{flagOf(m.home)}</span><span className="mtn">{canonTeam(m.home)}</span>{showScore && <span className="msc num">{m.hs}</span>}</div>
-          <div className={"mt" + (awayWin ? " win" : "")}><span className="fl">{flagOf(m.away)}</span><span className="mtn">{canonTeam(m.away)}</span>{showScore && <span className="msc num">{m.as}</span>}</div>
+          <div className={"mt" + (homeWin ? " win" : "")}><span className="fl">{flagOf(m.home)}</span><span className="mtn">{canonTeam(m.home)}</span>{showScore && <span className="msc num">{m.hs ?? "–"}</span>}</div>
+          <div className={"mt" + (awayWin ? " win" : "")}><span className="fl">{flagOf(m.away)}</span><span className="mtn">{canonTeam(m.away)}</span>{showScore && <span className="msc num">{m.as ?? "–"}</span>}</div>
         </div>
         <span className="match-chev">›</span>
       </div>
@@ -1097,6 +1103,13 @@ function MatchCenter({ data, lang, onOpen, t }) {
   const dayMatches = useMemo(() => matchesOnDay(data, day), [data, day]);
   const live = useMemo(() => liveMatches(data), [data]);
   const stripRef = useRef();
+  // Center the selected day (Today by default) in the horizontally-scrolling strip.
+  useEffect(() => {
+    const strip = stripRef.current; if (!strip) return;
+    const btn = strip.querySelector(".datebtn.on"); if (!btn) return;
+    const sRect = strip.getBoundingClientRect(), bRect = btn.getBoundingClientRect();
+    strip.scrollLeft += (bRect.left - sRect.left) - (strip.clientWidth - bRect.width) / 2;
+  }, [day, days]);
   // group day's matches by stage/group
   const sections = useMemo(() => {
     const byKey = {};
@@ -1143,7 +1156,7 @@ function MatchDetail({ m, data, lang, t, onBack }) {
         <div className="md-score">
           <div className="md-team"><span className="md-fl">{flagOf(m.home)}</span><span className="md-tn">{canonTeam(m.home)}</span></div>
           <div className="md-mid">
-            {showScore ? <div className="md-sc num">{m.hs}<span className="md-dash">–</span>{m.as}</div> : <div className="md-vs">{fmtTime(m.ko, lang)}</div>}
+            {showScore ? <div className="md-sc num">{m.hs ?? "–"}<span className="md-dash">–</span>{m.as ?? "–"}</div> : <div className="md-vs">{fmtTime(m.ko, lang)}</div>}
             <div className={"md-st" + (m.status === "live" ? " live" : "")}>{m.status === "live" ? (m.ht ? t("ht_full") : m.minute + "'") : m.status === "finished" ? t("ft_full") : t("upcoming")}</div>
           </div>
           <div className="md-team"><span className="md-fl">{flagOf(m.away)}</span><span className="md-tn">{canonTeam(m.away)}</span></div>
@@ -1662,7 +1675,7 @@ function Health({ data, lb, t }) {
   const players = Object.keys(data.players);
   const incompletePreds = players.filter((n) => GROUP_KEYS.some((g) => playerGroupPred(data.players[n], g).length < 4));
   const noChamp = players.filter((n) => !data.players[n].champion);
-  const finished = (data.matches || []).filter((m) => m.status === "finished").length;
+  const finished = (data.matches || []).filter((m) => m.status === "finished" && m.finalH != null && m.finalA != null).length;
   const total = (data.matches || []).length;
   const groupsDone = GROUP_KEYS.filter((g) => groupComplete(g, data)).length;
   const checks = [

@@ -1264,24 +1264,67 @@ function RealStats({ detail, status, m, t }) {
     </div>
   );
 }
+// Classify a free-text position into a pitch line.
+function posLine(pos) {
+  const p = String(pos || "").toLowerCase();
+  if (/keeper|goalkeeper|\bgk\b/.test(p)) return "GK";
+  if (/midfield/.test(p)) return "MID";
+  if (/back|defen|wing.?back/.test(p)) return "DEF";
+  if (/forward|winger|striker|wing/.test(p)) return "FWD";
+  return "MID";
+}
+const lastName = (n) => { const a = String(n || "").trim().split(/\s+/); return a[a.length - 1] || n; };
+function teamLines(players) { const L = { GK: [], DEF: [], MID: [], FWD: [] }; players.forEach((p) => L[posLine(p.pos)].push(p)); return L; }
+function PitchTeam({ players, order, side }) {
+  const lines = teamLines(players);
+  return (
+    <div className={"fpt " + side}>
+      {order.map((ln) => lines[ln].length ? (
+        <div className="fpt-line" key={ln}>
+          {lines[ln].map((p, i) => (
+            <div className="fp-pl" key={i} title={p.player + (p.pos ? " · " + p.pos : "")}>
+              <span className="fp-num">{p.num || ""}</span>
+              <span className="fp-nm">{lastName(p.player)}</span>
+            </div>
+          ))}
+        </div>
+      ) : null)}
+    </div>
+  );
+}
 function RealLineups({ detail, status, m, t }) {
   const lu = detail && detail.lineup;
   if (!lu || lu.length === 0) return <DetailEmpty status={status} t={t} />;
-  const sides = [[m.home, lu.filter((p) => sameTeam(p.team, m.home))], [m.away, lu.filter((p) => sameTeam(p.team, m.away))]];
-  const unmatched = lu.filter((p) => !sameTeam(p.team, m.home) && !sameTeam(p.team, m.away));
-  if (unmatched.length && sides[0][1].length === 0 && sides[1][1].length === 0) { sides[0][1] = lu; } // fallback: show all under home
+  let homeP = lu.filter((p) => sameTeam(p.team, m.home));
+  let awayP = lu.filter((p) => sameTeam(p.team, m.away));
+  // Fallback when team names don't match: split the list in half.
+  if (homeP.length === 0 && awayP.length === 0) { const h = Math.ceil(lu.length / 2); homeP = lu.slice(0, h); awayP = lu.slice(h); }
+  const split = (arr) => {
+    let start = arr.filter((p) => !p.sub), bench = arr.filter((p) => p.sub);
+    if (start.length > 11) { bench = start.slice(11).concat(bench); start = start.slice(0, 11); }
+    return [start, bench];
+  };
+  const [homeStart, homeBench] = split(homeP);
+  const [awayStart, awayBench] = split(awayP);
   return (
     <div className="card">
-      <div className="vlu">
-        {sides.map(([team, players], si) => (
-          <div className="vlu-col" key={si}>
-            <div className="vlu-team">{flagOf(team)} {canonTeam(team)}</div>
-            {players.map((p, i) => (
-              <div className="vlu-p" key={i}><span>{p.player}</span><span className="muted">{p.sub ? t("bench") : p.pos}</span></div>
-            ))}
-          </div>
-        ))}
+      <div className="fpitch-labels"><span>{flagOf(m.home)} {canonTeam(m.home)}</span><span>{canonTeam(m.away)} {flagOf(m.away)}</span></div>
+      <div className="fpitch">
+        <div className="fp-markings" />
+        <PitchTeam players={awayStart} order={["GK", "DEF", "MID", "FWD"]} side="away" />
+        <div className="fpitch-cl" />
+        <PitchTeam players={homeStart} order={["FWD", "MID", "DEF", "GK"]} side="home" />
       </div>
+      {(homeBench.length + awayBench.length) > 0 && (
+        <div className="fbench">
+          {[[m.home, homeBench], [m.away, awayBench]].map(([tm, bench], i) => (
+            <div className="fbench-col" key={i}>
+              <div className="fbench-h">{flagOf(tm)} {t("bench")}</div>
+              {bench.map((p, j) => <span className="benchp" key={j}><span className="num">{p.num || "–"}</span> {p.player}</span>)}
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -2509,11 +2552,26 @@ background-image:repeating-linear-gradient(180deg,rgba(255,255,255,.06) 0 30px,t
 .vtlrow:last-child{border:none}.vtlrow.away{background:linear-gradient(90deg,transparent,rgba(245,196,81,.06))}
 .vtl-min{color:var(--muted);font-weight:700;font-size:12px}.vtl-ic{font-size:15px;text-align:center}
 .vtl-tx{font-size:12.5px}.vtl-tx b{font-weight:700}
-.vlu{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.vlu-team{font-size:12px;font-weight:800;color:var(--pitch2);margin-bottom:6px}
-.app[data-theme="dark"] .vlu-team{color:var(--grass)}
-.vlu-p{display:flex;align-items:center;justify-content:space-between;gap:6px;font-size:11.5px;padding:3px 0;border-bottom:1px solid var(--border)}
-.vlu-p:last-child{border:none}.vlu-p .muted{font-size:10px}
+/* lineups on a pitch (both teams) */
+.fpitch-labels{display:flex;justify-content:space-between;font-size:12.5px;font-weight:800;margin-bottom:8px}
+.fpitch{position:relative;border-radius:14px;overflow:hidden;display:flex;flex-direction:column;
+  background:linear-gradient(180deg,#13a86a,#0a7d4e);
+  background-image:repeating-linear-gradient(180deg,rgba(255,255,255,.05) 0 30px,rgba(0,0,0,.04) 30px 60px);
+  padding:12px 6px;min-height:460px}
+.fp-markings{position:absolute;inset:8px;border:2px solid rgba(255,255,255,.22);border-radius:8px;pointer-events:none}
+.fp-markings::before{content:"";position:absolute;left:50%;top:50%;width:86px;height:86px;transform:translate(-50%,-50%);border:2px solid rgba(255,255,255,.22);border-radius:50%}
+.fpitch-cl{border-top:2px solid rgba(255,255,255,.22);margin:2px 8px;position:relative;z-index:1}
+.fpt{flex:1;display:flex;flex-direction:column;justify-content:space-around;position:relative;z-index:1;gap:4px;padding:4px 0}
+.fpt-line{display:flex;justify-content:space-around;align-items:center;gap:4px}
+.fp-pl{display:flex;flex-direction:column;align-items:center;gap:3px;flex:1;min-width:0}
+.fp-num{width:28px;height:28px;border-radius:50%;background:#fff;color:#0a7d4e;font-weight:800;font-size:12px;
+  display:flex;align-items:center;justify-content:center;font-family:var(--num);box-shadow:0 2px 5px rgba(0,0,0,.35);border:2px solid rgba(255,255,255,.85)}
+.fpt.away .fp-num{background:var(--gold);color:#3a2a00;border-color:rgba(255,255,255,.5)}
+.fp-nm{font-size:9.5px;color:#fff;font-weight:700;text-align:center;text-shadow:0 1px 3px rgba(0,0,0,.6);line-height:1.1;max-width:62px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fbench{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}
+.fbench-h{font-size:11px;font-weight:800;color:var(--muted);margin-bottom:5px}
+.fbench-col .benchp{display:block;font-size:11px;padding:2px 0;color:var(--ink)}
+.fbench-col .benchp .num{color:var(--muted);display:inline-block;min-width:18px}
 
 /* match predictions */
 .pp-split{display:flex;align-items:center;gap:10px;margin-bottom:10px}

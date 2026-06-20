@@ -110,7 +110,8 @@ export async function fetchMatchDetail(eventId, key) {
     away: s.intAway != null ? s.intAway : (s.strAway != null ? s.strAway : ""),
   })).filter((s) => s.name);
   const lineup = firstArr(lnJ, ["lineup", "lineups", "event_lineup", "results"]).map((p) => ({
-    player: p.strPlayer || "", team: p.strTeam || "?", pos: p.strPosition || p.strFormation || "", sub: /yes/i.test(p.strSubstitute || ""),
+    player: p.strPlayer || "", team: p.strTeam || "?", pos: p.strPosition || p.strFormation || "",
+    num: p.intSquadNumber || p.strNumber || p.intShirtNumber || "", sub: /yes/i.test(p.strSubstitute || ""),
   })).filter((p) => p.player);
   return { timeline, stats, lineup };
 }

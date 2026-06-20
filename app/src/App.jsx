@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect, useRef } from "react";
 import { BarChart, Bar, LineChart, Line, CartesianGrid, Legend, XAxis, YAxis, Cell, ResponsiveContainer, Tooltip } from "recharts";
-import { loadFromSupabase, saveBlob, upsertResult } from "./supabase.js";
-import { fetchLivescore, fetchCompletedResults } from "./thesportsdb.js";
+import { loadFromSupabase, saveBlob, upsertResult, upsertResults } from "./supabase.js";
+import { fetchLivescore, fetchCompletedResults, fetchResultsRange, getFeedStatus } from "./thesportsdb.js";
 
 /* =====================================================================
    WORLD CUP 2026 — Prediction League (React rebuild, foundation)
@@ -102,6 +102,8 @@ const I18N = {
     noPlayers: "No players yet. Add predictions to get started.",
     koNeedsWinner: "needs a winner",
     loadingData: "Loading live data…", liveData: "Live data",
+    syncHint2: "Pull finished scores from TheSportsDB and save them to the database so everyone sees them.",
+    syncing: "Syncing…", feedReach: "Feed reachable", feedEvents: "Events fetched", feedCompleted: "Completed found", feedSaved: "Saved to DB", feedMissing: "Still missing a score",
   },
   ar: {
     brand: "كأس العالم 2026", dir: "rtl",
@@ -142,6 +144,8 @@ const I18N = {
     noPlayers: "لا يوجد لاعبون بعد. أضف التوقعات للبدء.",
     koNeedsWinner: "يلزم تحديد فائز",
     loadingData: "جارٍ تحميل البيانات…", liveData: "بيانات مباشرة",
+    syncHint2: "اجلب نتائج المباريات المنتهية من TheSportsDB واحفظها في قاعدة البيانات ليراها الجميع.",
+    syncing: "جارٍ المزامنة…", feedReach: "وصول الخدمة", feedEvents: "الأحداث المجلوبة", feedCompleted: "المنتهية الموجودة", feedSaved: "حُفظت في القاعدة", feedMissing: "بلا نتيجة بعد",
   },
 };
 
@@ -1737,13 +1741,68 @@ function Repair({ data, setData, t }) {
     </div>
   );
 }
-function SyncResults({ t }) {
+function SyncResults({ data, setData, t }) {
+  const [busy, setBusy] = useState(false);
+  const [report, setReport] = useState(null);
+  const run = async () => {
+    setBusy(true); setReport(null);
+    try {
+      const key = data.settings && data.settings.sportsdbKey;
+      const today = new Date().toISOString().slice(0, 10);
+      const results = await fetchResultsRange(key, "2026-06-11", today);
+      const status = getFeedStatus();
+      // Map to canonical fixtures, orient, dedupe by matchKey, build normalized rows.
+      const byKey = {};
+      results.forEach((r) => {
+        if (r.homeScore == null || r.awayScore == null) return;
+        const m = resolveRRByTeams(null, r.home, r.away); if (!m) return;
+        let hs = r.homeScore, as = r.awayScore; if (m.reversed) { const tmp = hs; hs = as; as = tmp; }
+        const [g, iStr] = m.key.split("_"); const i = Number(iStr);
+        const [home, away] = matchTeams(g, i);
+        byKey[m.key] = { match_key: m.key, group_key: g, match_idx: i, home_team: home, away_team: away, home_score: Number(hs), away_score: Number(as), status: "final", source: "api" };
+      });
+      const rows = Object.values(byKey), filled = Object.keys(byKey);
+      let saved = 0;
+      if (rows.length) { try { await upsertResults(rows); saved = rows.length; } catch (e) { /* surfaced below */ } }
+      // Re-derive locally so results show immediately, and persist the blob too.
+      setData((d) => {
+        const gr = { ...d.groupResults };
+        rows.forEach((row) => { gr[row.match_key] = { home: String(row.home_score), away: String(row.away_score) }; });
+        const matches = d.matches.map((mm) => { if (mm.stage !== "group") return mm; const res = gr[mm.id]; return res ? { ...mm, finalH: Number(res.home), finalA: Number(res.away) } : mm; });
+        const nd = recomputeLive({ ...d, groupResults: gr, matches });
+        persistLive(nd);
+        return nd;
+      });
+      // which finished/over matches still have no score?
+      const missing = (data.matches || []).filter((mm) => mm.stage === "group" && (mm.finalH == null || mm.finalA == null) && !filled.includes(mm.id) && mm.ko && mm.ko <= Date.now())
+        .map((mm) => `${canonTeam(mm.home)} v ${canonTeam(mm.away)}`);
+      setReport({ mode: status.mode, events: status.events, completed: status.completed, mapped: rows.length, saved, missing });
+    } catch (e) { setReport({ error: String(e && e.message ? e.message : e) }); }
+    setBusy(false);
+  };
+  const modeOk = report && /direct|proxy/.test(report.mode || "");
   return (
     <div className="view">
       <div className="card"><h3 className="cardh"><Ico name="sync" size={18} /> {t("nav_sync")}</h3>
-        <p className="hint block">{t("syncHint")}</p>
-        <button className="btn ghost" disabled>{t("syncNow")}</button>
+        <p className="hint block">{t("syncHint2")}</p>
+        <button className="btn" onClick={run} disabled={busy}>{busy ? t("syncing") : t("syncNow")}</button>
       </div>
+      {report && (
+        <div className="card">
+          <div className="hrow"><span className={"hdot " + (modeOk ? "ok" : "bad")}>{modeOk ? "✓" : "!"}</span><span className="hlabel">{t("feedReach")}</span><span className="hval">{report.error ? "—" : report.mode}</span></div>
+          {!report.error && <>
+            <div className="hrow"><span className="hlabel">{t("feedEvents")}</span><span className="hval num">{report.events}</span></div>
+            <div className="hrow"><span className="hlabel">{t("feedCompleted")}</span><span className="hval num">{report.completed}</span></div>
+            <div className="hrow"><span className="hlabel">{t("feedSaved")}</span><span className="hval num">{report.saved}</span></div>
+            {report.missing && report.missing.length > 0 && (
+              <div className="ag-section" style={{ marginTop: 8 }}>{t("feedMissing")} ({report.missing.length})
+                <div className="hint block" style={{ marginTop: 4 }}>{report.missing.slice(0, 12).join(" · ")}</div>
+              </div>
+            )}
+          </>}
+          {report.error && <div className="al-err">{report.error}</div>}
+        </div>
+      )}
     </div>
   );
 }
@@ -1929,7 +1988,7 @@ export default function App() {
         {view === "health" && isAdmin && <Health data={data} lb={lb} t={t} />}
         {view === "audit" && isAdmin && <AuditLog data={data} t={t} />}
         {view === "repair" && isAdmin && <Repair data={data} setData={setData} t={t} />}
-        {view === "syncresults" && isAdmin && <SyncResults t={t} />}
+        {view === "syncresults" && isAdmin && <SyncResults data={data} setData={setData} t={t} />}
         {view === "playerpicks" && isAdmin && <PlayerPicks data={data} lb={lb} t={t} name={profileName} setName={setProfileName} />}
         {view === "playerreport" && isAdmin && <PlayerReport data={data} lb={lb} t={t} />}
       </main>

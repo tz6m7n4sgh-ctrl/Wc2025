@@ -77,3 +77,8 @@ export async function upsertResult(group, idx, home, away, homeScore, awayScore)
   };
   return fetchJson(RESULTS_URL + "?on_conflict=match_key", { method: "POST", headers: { ...H, Prefer: "resolution=merge-duplicates,return=minimal" }, body: JSON.stringify(row) });
 }
+// Batch upsert of normalized result rows (used by admin Sync).
+export async function upsertResults(rows) {
+  if (!rows || !rows.length) return true;
+  return fetchJson(RESULTS_URL + "?on_conflict=match_key", { method: "POST", headers: { ...H, Prefer: "resolution=merge-duplicates,return=minimal" }, body: JSON.stringify(rows) });
+}

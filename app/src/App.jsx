@@ -71,6 +71,7 @@ const I18N = {
     breakdown: "Points breakdown", groupMatch: "Group matches", groupRank: "Group ranking", knockout: "Knockout", champion: "Champion",
     pos1: "1st", pos2: "2nd", pos3: "3rd", pos4: "4th",
     P: "P", W: "W", D: "D", L: "L", GD: "GD", GF: "GF", Pts: "Pts",
+    legend: "Key", leg_P: "Played", leg_W: "Won", leg_D: "Drawn", leg_L: "Lost", leg_GD: "Goal difference", leg_Pts: "Points",
     pending: "Pending", spread: "Points spread", movers: "Biggest movers", standings: "Standings",
     predicted: "Your pick", actual: "Actual", champPick: "Champion pick", qualified: "Qualified",
     howScoring: "How scoring works", tapPlayer: "Tap a player for their breakdown",
@@ -122,6 +123,7 @@ const I18N = {
     breakdown: "تفصيل النقاط", groupMatch: "مباريات المجموعات", groupRank: "ترتيب المجموعات", knockout: "الإقصائيات", champion: "البطل",
     pos1: "الأول", pos2: "الثاني", pos3: "الثالث", pos4: "الرابع",
     P: "لعب", W: "فوز", D: "تعادل", L: "خسارة", GD: "الفارق", GF: "له", Pts: "نقاط",
+    legend: "دليل", leg_P: "لعب", leg_W: "فوز", leg_D: "تعادل", leg_L: "خسارة", leg_GD: "فارق الأهداف", leg_Pts: "النقاط",
     pending: "قيد الانتظار", spread: "توزيع النقاط", movers: "أبرز التغيرات", standings: "الترتيب",
     predicted: "توقعك", actual: "الفعلي", champPick: "توقع البطل", qualified: "المتأهلون",
     howScoring: "طريقة احتساب النقاط", tapPlayer: "اضغط على لاعب لعرض التفصيل",
@@ -835,29 +837,24 @@ function LeaderboardBars({ lb, prevRanks, t, onPick }) {
 /* Animated group standings */
 function GroupCard({ g, data, t, delay }) {
   const table = useMemo(() => computeGroupTable(g, data), [g, data]);
-  const maxPts = Math.max(1, ...table.map((r) => r.Pts));
-  const [grow, setGrow] = useState(false);
-  useEffect(() => { const id = requestAnimationFrame(() => setGrow(true)); return () => cancelAnimationFrame(id); }, [g, data]);
   return (
     <div className="card gcard" style={{ animationDelay: `${delay}ms` }}>
       <div className="gtitle"><span className="gbadge">{t("group")} {g}</span></div>
-      <div className="grows">
+      <div className="gtable">
+        <div className="gtr gthead">
+          <span className="gc-pos2">#</span><span className="gc-team2" />
+          <span>{t("P")}</span><span>{t("W")}</span><span>{t("D")}</span><span>{t("L")}</span><span>{t("GD")}</span><span className="gc-ptsh">{t("Pts")}</span>
+        </div>
         {table.map((r, i) => (
-          <div className={"grow" + (i < 2 ? " qual" : "")} key={r.team}>
-            <span className="gpos num">{i + 1}</span>
-            <span className="gteam"><Team t={r.team} /></span>
-            <span className="gbar"><span className="gbarfill" style={{ width: grow ? `${(r.Pts / maxPts) * 100}%` : 0 }} /></span>
-            <span className="gpts num">{r.Pts}</span>
+          <div className={"gtr" + (i < 2 ? " qual" : "")} key={r.team}>
+            <span className="gc-pos2 num">{i + 1}</span>
+            <span className="gc-team2"><Team t={r.team} /></span>
+            <span className="num">{r.P}</span><span className="num">{r.W}</span><span className="num">{r.D}</span><span className="num">{r.L}</span>
+            <span className={"num " + (r.GD > 0 ? "pos" : r.GD < 0 ? "neg" : "")}>{r.GD > 0 ? "+" : ""}{r.GD}</span>
+            <span className="gc-pts2 num">{r.Pts}</span>
           </div>
         ))}
       </div>
-      <div className="gstat"><span>{t("P")}</span><span>{t("W")}</span><span>{t("D")}</span><span>{t("L")}</span><span>{t("GD")}</span></div>
-      {table.map((r) => (
-        <div className="gstatrow" key={r.team + "s"}>
-          <span className="num">{r.P}</span><span className="num">{r.W}</span><span className="num">{r.D}</span><span className="num">{r.L}</span>
-          <span className={"num " + (r.GD > 0 ? "pos" : r.GD < 0 ? "neg" : "")}>{r.GD > 0 ? "+" : ""}{r.GD}</span>
-        </div>
-      ))}
     </div>
   );
 }
@@ -1042,6 +1039,15 @@ function Leaderboard({ data, lb, prevRanks, name, setName, t, go }) {
 function Groups({ data, t }) {
   return (
     <div className="view">
+      <div className="card slim glegend">
+        <span className="glegend-h">{t("legend")}</span>
+        <span className="glegend-i"><b>{t("P")}</b> {t("leg_P")}</span>
+        <span className="glegend-i"><b>{t("W")}</b> {t("leg_W")}</span>
+        <span className="glegend-i"><b>{t("D")}</b> {t("leg_D")}</span>
+        <span className="glegend-i"><b>{t("L")}</b> {t("leg_L")}</span>
+        <span className="glegend-i"><b>{t("GD")}</b> {t("leg_GD")}</span>
+        <span className="glegend-i"><b>{t("Pts")}</b> {t("leg_Pts")}</span>
+      </div>
       <div className="gwrap">
         {GROUP_KEYS.map((g, i) => <GroupCard g={g} data={data} t={t} key={g} delay={i * 40} />)}
       </div>
@@ -2432,17 +2438,19 @@ border:1px solid var(--border);width:100%;cursor:pointer;text-align:start;animat
 @media(min-width:460px){.gwrap{grid-template-columns:1fr 1fr;gap:10px}}
 .gcard{margin:10px 0}.gtitle{margin-bottom:8px}
 .gbadge{display:inline-block;font-size:11px;font-weight:800;color:#fff;background:var(--pitch2);padding:3px 10px;border-radius:99px}
-.grows{display:flex;flex-direction:column;gap:6px}
-.grow{display:flex;align-items:center;gap:8px;padding:4px 0}
-.grow.qual .gteam .tn{font-weight:800}.grow.qual{position:relative}
-.grow.qual::before{content:"";position:absolute;inset-inline-start:-6px;top:6px;bottom:6px;width:3px;border-radius:2px;background:var(--grass)}
-.gpos{width:16px;text-align:center;color:var(--muted);font-size:12px;font-weight:700}
-.gteam{flex:1;min-width:0}.gbar{width:54px;height:6px;border-radius:99px;background:var(--soft);overflow:hidden;flex:none}
-.gbarfill{display:block;height:100%;background:var(--grass);border-radius:99px;transition:width .9s cubic-bezier(.2,.8,.2,1)}
-.gpts{width:22px;text-align:end;font-weight:800;font-size:13px}
-.gstat,.gstatrow{display:grid;grid-template-columns:repeat(5,1fr);gap:2px;text-align:center;font-size:10.5px}
-.gstat{margin-top:10px;color:var(--muted);font-weight:700;border-top:1px solid var(--border);padding-top:6px}
-.gstatrow{padding:2px 0;color:var(--ink)}
+.glegend{display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;margin:0 0 4px}
+.glegend-h{font-size:11px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-inline-end:2px}
+.glegend-i{font-size:11.5px;color:var(--muted)}.glegend-i b{color:var(--ink);font-weight:800;margin-inline-end:3px}
+.gtable{display:flex;flex-direction:column}
+.gtr{display:grid;grid-template-columns:18px minmax(0,1fr) 20px 20px 20px 20px 28px 26px;align-items:center;gap:2px;padding:5px 0;border-top:1px solid var(--border)}
+.gtr .num{text-align:center;font-size:12px;font-variant-numeric:tabular-nums}
+.gthead{border-top:none;color:var(--muted);font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:.02em;text-align:center}
+.gthead span{text-align:center}
+.gc-pos2{text-align:center;color:var(--muted);font-size:12px;font-weight:700}
+.gc-team2{min-width:0;text-align:start;padding-inline-start:2px}
+.gc-ptsh,.gc-pts2{text-align:center}.gc-pts2{font-weight:800;font-size:13px}
+.gtr.qual{position:relative}.gtr.qual .gc-team2 .tn{font-weight:800}
+.gtr.qual::before{content:"";position:absolute;inset-inline-start:-6px;top:5px;bottom:5px;width:3px;border-radius:2px;background:var(--grass)}
 
 /* bracket */
 .brk-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;padding:4px 2px 12px;margin:0 -12px;padding-inline:12px}

@@ -72,8 +72,8 @@ const I18N = {
     matchesDone: "Group matches played", pts: "pts", rank: "Rank", player: "Player", points: "Points",
     breakdown: "Points breakdown", groupMatch: "Group matches", groupRank: "Group ranking", knockout: "Knockout", champion: "Champion",
     pos1: "1st", pos2: "2nd", pos3: "3rd", pos4: "4th",
-    P: "P", W: "W", D: "D", L: "L", GD: "GD", GF: "GF", Pts: "Pts",
-    legend: "Key", leg_P: "Played", leg_W: "Won", leg_D: "Drawn", leg_L: "Lost", leg_GD: "Goal difference", leg_Pts: "Points",
+    P: "P", W: "W", D: "D", L: "L", GD: "GD", GF: "GF", GA: "GA", Pts: "Pts",
+    legend: "Key", leg_P: "Played", leg_W: "Won", leg_D: "Drawn", leg_L: "Lost", leg_GF: "Goals for", leg_GA: "Goals against", leg_GD: "Goal difference", leg_Pts: "Points",
     pending: "Pending", spread: "Points spread", movers: "Biggest movers", standings: "Standings",
     predicted: "Your pick", actual: "Actual", champPick: "Champion pick", qualified: "Qualified",
     howScoring: "How scoring works", tapPlayer: "Tap a player for their breakdown",
@@ -126,8 +126,8 @@ const I18N = {
     matchesDone: "مباريات المجموعات", pts: "نقطة", rank: "المركز", player: "اللاعب", points: "النقاط",
     breakdown: "تفصيل النقاط", groupMatch: "مباريات المجموعات", groupRank: "ترتيب المجموعات", knockout: "الإقصائيات", champion: "البطل",
     pos1: "الأول", pos2: "الثاني", pos3: "الثالث", pos4: "الرابع",
-    P: "لعب", W: "فوز", D: "تعادل", L: "خسارة", GD: "الفارق", GF: "له", Pts: "نقاط",
-    legend: "دليل", leg_P: "لعب", leg_W: "فوز", leg_D: "تعادل", leg_L: "خسارة", leg_GD: "فارق الأهداف", leg_Pts: "النقاط",
+    P: "لعب", W: "فوز", D: "تعادل", L: "خسارة", GD: "الفارق", GF: "له", GA: "عليه", Pts: "نقاط",
+    legend: "دليل", leg_P: "لعب", leg_W: "فوز", leg_D: "تعادل", leg_L: "خسارة", leg_GF: "الأهداف له", leg_GA: "الأهداف عليه", leg_GD: "فارق الأهداف", leg_Pts: "النقاط",
     pending: "قيد الانتظار", spread: "توزيع النقاط", movers: "أبرز التغيرات", standings: "الترتيب",
     predicted: "توقعك", actual: "الفعلي", champPick: "توقع البطل", qualified: "المتأهلون",
     howScoring: "طريقة احتساب النقاط", tapPlayer: "اضغط على لاعب لعرض التفصيل",
@@ -872,13 +872,14 @@ function GroupCard({ g, data, t, delay, onOpenGroup }) {
       <div className="gtable">
         <div className="gtr gthead">
           <span className="gc-pos2">#</span><span className="gc-team2" />
-          <span>{t("P")}</span><span>{t("W")}</span><span>{t("D")}</span><span>{t("L")}</span><span>{t("GD")}</span><span className="gc-ptsh">{t("Pts")}</span>
+          <span>{t("P")}</span><span>{t("W")}</span><span>{t("D")}</span><span>{t("L")}</span><span>{t("GF")}</span><span>{t("GA")}</span><span>{t("GD")}</span><span className="gc-ptsh">{t("Pts")}</span>
         </div>
         {table.map((r, i) => (
           <div className={"gtr" + (i < 2 ? " qual" : "")} key={r.team}>
             <span className="gc-pos2 num">{i + 1}</span>
             <span className="gc-team2"><Team t={r.team} /></span>
             <span className="num">{r.P}</span><span className="num">{r.W}</span><span className="num">{r.D}</span><span className="num">{r.L}</span>
+            <span className="num">{r.GF}</span><span className="num">{r.GA}</span>
             <span className={"num " + (r.GD > 0 ? "pos" : r.GD < 0 ? "neg" : "")}>{r.GD > 0 ? "+" : ""}{r.GD}</span>
             <span className="gc-pts2 num">{r.Pts}</span>
           </div>
@@ -1074,6 +1075,8 @@ function Groups({ data, t, onOpenGroup }) {
         <span className="glegend-i"><b>{t("W")}</b> {t("leg_W")}</span>
         <span className="glegend-i"><b>{t("D")}</b> {t("leg_D")}</span>
         <span className="glegend-i"><b>{t("L")}</b> {t("leg_L")}</span>
+        <span className="glegend-i"><b>{t("GF")}</b> {t("leg_GF")}</span>
+        <span className="glegend-i"><b>{t("GA")}</b> {t("leg_GA")}</span>
         <span className="glegend-i"><b>{t("GD")}</b> {t("leg_GD")}</span>
         <span className="glegend-i"><b>{t("Pts")}</b> {t("leg_Pts")}</span>
       </div>
@@ -2645,8 +2648,8 @@ border:1px solid var(--border);width:100%;cursor:pointer;text-align:start;animat
 .glegend-h{font-size:11px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-inline-end:2px}
 .glegend-i{font-size:11.5px;color:var(--muted)}.glegend-i b{color:var(--ink);font-weight:800;margin-inline-end:3px}
 .gtable{display:flex;flex-direction:column}
-.gtr{display:grid;grid-template-columns:18px minmax(0,1fr) 20px 20px 20px 20px 28px 26px;align-items:center;gap:2px;padding:5px 0;border-top:1px solid var(--border)}
-.gtr .num{text-align:center;font-size:12px;font-variant-numeric:tabular-nums}
+.gtr{display:grid;grid-template-columns:16px minmax(0,1fr) 17px 17px 17px 17px 19px 19px 24px 22px;align-items:center;gap:1px;padding:5px 0;border-top:1px solid var(--border)}
+.gtr .num{text-align:center;font-size:11px;font-variant-numeric:tabular-nums}
 .gthead{border-top:none;color:var(--muted);font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:.02em;text-align:center}
 .gthead span{text-align:center}
 .gc-pos2{text-align:center;color:var(--muted);font-size:12px;font-weight:700}

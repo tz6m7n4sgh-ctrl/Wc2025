@@ -108,6 +108,7 @@ const I18N = {
     ht_full: "HALF-TIME", ft_full: "FULL-TIME",
     brkIllustrative: "Round-of-32 pairings are illustrative — players predict group order, not exact matchups.",
     brkFills: "The bracket fills in once every group is complete.",
+    brkProjected: "projected", brkProjNote: "Based on the current group standings — updates live as results come in.",
     noPlayers: "No players yet. Add predictions to get started.",
     koNeedsWinner: "needs a winner",
     loadingData: "Loading live data…", liveData: "Live data",
@@ -164,6 +165,7 @@ const I18N = {
     ht_full: "نهاية الشوط الأول", ft_full: "نهاية المباراة",
     brkIllustrative: "مواجهات دور الـ32 توضيحية — يتوقع اللاعبون ترتيب المجموعات لا المواجهات بالضبط.",
     brkFills: "تكتمل الأدوار الإقصائية بعد انتهاء جميع المجموعات.",
+    brkProjected: "متوقع", brkProjNote: "مبني على ترتيب المجموعات الحالي — يتحدّث مباشرةً مع ورود النتائج.",
     noPlayers: "لا يوجد لاعبون بعد. أضف التوقعات للبدء.",
     koNeedsWinner: "يلزم تحديد فائز",
     loadingData: "جارٍ تحميل البيانات…", liveData: "بيانات مباشرة",
@@ -303,10 +305,12 @@ function completedCount(data) { let n = 0; for (const g of GROUP_KEYS) for (let 
 /* ---------------- 4. Bracket derivation -------------------------------- */
 const KO_ROUNDS = [["R32", 16], ["R16", 8], ["QF", 4], ["SF", 2], ["F", 1]];
 function buildBracket(data) {
-  if (!GROUP_KEYS.every((g) => groupComplete(g, data))) return null;
+  // Built from the CURRENT standings so it populates live and updates as results
+  // land (computeGroupTable always returns the 4 group teams, ordered by current
+  // points). While any group is unfinished the qualifiers are projected.
   const tables = {}; GROUP_KEYS.forEach((g) => (tables[g] = computeGroupTable(g, data)));
-  const winners = GROUP_KEYS.map((g) => tables[g][0].team);
-  const runners = GROUP_KEYS.map((g) => tables[g][1].team);
+  const winners = GROUP_KEYS.map((g) => tables[g][0] && tables[g][0].team);
+  const runners = GROUP_KEYS.map((g) => tables[g][1] && tables[g][1].team);
   const thirds = GROUP_KEYS.map((g) => ({ ...tables[g][2], g }))
     .sort((a, b) => b.Pts - a.Pts || b.GD - a.GD || b.GF - a.GF).slice(0, 8).map((x) => x.team);
   const pool = [...winners, ...runners, ...thirds]; // 32, illustrative sequential pairing
@@ -903,7 +907,7 @@ function GroupCard({ g, data, t, delay, onOpenGroup }) {
 function Bracket({ data, t }) {
   const rounds = useMemo(() => buildBracket(data), [data]);
   const reduce = useReducedMotion();
-  if (!rounds) return <div className="card empty">{t("brkFills")}</div>;
+  if (!rounds || !rounds.length) return <div className="card empty">{t("brkFills")}</div>;
   return (
     <div className="brk-scroll">
       <div className="brk">
@@ -1097,9 +1101,11 @@ function Groups({ data, t, onOpenGroup }) {
   );
 }
 function BracketView({ data, t }) {
+  const projected = !GROUP_KEYS.every((g) => groupComplete(g, data));
   return (
     <div className="view">
-      <div className="card slim"><h3 className="cardh">🗺️ {t("nav_bracket")}</h3>
+      <div className="card slim"><h3 className="cardh">🗺️ {t("nav_bracket")}{projected && <span className="gc-proj-total" style={{ marginInlineStart: 8 }}>· {t("brkProjected")}</span>}</h3>
+        {projected && <p className="hint block">{t("brkProjNote")}</p>}
         <p className="hint block">{t("brkIllustrative")}</p>
       </div>
       <Bracket data={data} t={t} />

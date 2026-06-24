@@ -60,9 +60,12 @@ export function dataToBlob(data) {
   blob.settings = data.settings || blob.settings;
   blob.champion = data.championOverride || null;
   blob.auditLog = data.auditLog || blob.auditLog || [];
-  // persist final group scores into the blob fallback
-  const gr = { ...(blob.groupResults || {}) };
-  (data.matches || []).forEach((m) => { if (m.stage === "group" && m.finalH != null && m.finalA != null) gr[m.id] = { home: String(m.finalH), away: String(m.finalA) }; });
+  // Persist final group scores into the blob fallback. When the engine's match
+  // list is present, rebuild authoritatively from current finals so cleared /
+  // phantom results don't linger in the fallback; otherwise preserve what's there.
+  const groupMatches = (data.matches || []).filter((m) => m.stage === "group");
+  const gr = groupMatches.length ? {} : { ...(blob.groupResults || {}) };
+  groupMatches.forEach((m) => { if (m.finalH != null && m.finalA != null) gr[m.id] = { home: String(m.finalH), away: String(m.finalA) }; });
   blob.groupResults = gr;
   return blob;
 }

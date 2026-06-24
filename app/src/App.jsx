@@ -27,12 +27,15 @@ const GROUPS = {
 };
 const GROUP_KEYS = Object.keys(GROUPS);
 const RR = [[0, 1], [2, 3], [0, 2], [1, 3], [0, 3], [1, 2]];
+// League rules: group stage = +1 per team in its EXACT final position (no
+// match-winner points, no right-group/wrong-spot points); knockout 2/3/4/5/6;
+// champion +10.
 const SCORING = {
-  edgeCorrect: 1,
-  exactPosition: 3,
-  teamInGroupWrongPos: 1,
+  edgeCorrect: 0,         // group match-winners are not part of the league rules
+  exactPosition: 1,       // +1 for each team placed in its exact final position
+  teamInGroupWrongPos: 0, // no points for correct group but wrong position
   champion: 10,
-  knockout: { R32: 2, R16: 3, QF: 5, SF: 8, F: 12 },
+  knockout: { R32: 2, R16: 3, QF: 4, SF: 5, F: 6 },
 };
 const TEAM_ALIASES = {
   "Bosnia-Herzegovina": ["bosnia and herzegovina", "bosnia", "bosnia herzegovina"],
@@ -113,8 +116,8 @@ const I18N = {
     noDetail: "No detailed data for this match yet (timelines/lineups can be missing or delayed).",
     p_howAdd: "How your points add up", p_correct: "correct", p_of: "of",
     p_winner_t: "Match winners", p_winner_d: "+1 each time your higher-ranked team wins its group match",
-    p_pos_t: "Group standings", p_pos_d: "+3 for a team in the exact final spot, +1 if it finishes in the group but elsewhere",
-    p_ko_t: "Knockout winners", p_ko_d: "Points for picking the team that advances (R32 +2, R16 +3, QF +5, SF +8, Final +12)",
+    p_pos_t: "Group standings", p_pos_d: "+1 for each team you place in its exact final position",
+    p_ko_t: "Knockout winners", p_ko_d: "Points for picking the team that advances (R32 +2, R16 +3, QF +4, SF +5, Final +6)",
     p_champ_t: "Champion", p_champ_d: "+10 for correctly picking the World Cup winner",
     p_exact: "exact", p_ingrp: "in group", p_yes: "correct", p_no: "missed",
     inProgress: "in progress", gcHint: "Your prediction next to the actual standings, with the points each pick earned.", gcProj: "Faded figures (middle column and the → total) are projected position points — provisional until the group finishes.",
@@ -168,8 +171,8 @@ const I18N = {
     noDetail: "لا تتوفر بيانات تفصيلية بعد (قد تتأخر التشكيلات والأحداث).",
     p_howAdd: "كيف تتكوّن نقاطك", p_correct: "صحيحة", p_of: "من",
     p_winner_t: "الفائز بالمباراة", p_winner_d: "+1 كلما فاز فريقك الأعلى ترتيباً في مباراة المجموعة",
-    p_pos_t: "ترتيب المجموعة", p_pos_d: "+3 للفريق في مركزه النهائي الصحيح، +1 إذا أنهى ضمن المجموعة بمركز آخر",
-    p_ko_t: "الأدوار الإقصائية", p_ko_d: "نقاط لاختيار الفريق المتأهل (دور 32 +2، دور 16 +3، الربع +5، النصف +8، النهائي +12)",
+    p_pos_t: "ترتيب المجموعة", p_pos_d: "+1 لكل فريق تضعه في مركزه النهائي الصحيح",
+    p_ko_t: "الأدوار الإقصائية", p_ko_d: "نقاط لاختيار الفريق المتأهل (دور 32 +2، دور 16 +3، الربع +4، النصف +5، النهائي +6)",
     p_champ_t: "البطل", p_champ_d: "+10 لاختيار بطل كأس العالم بشكل صحيح",
     p_exact: "صحيح", p_ingrp: "في المجموعة", p_yes: "صحيح", p_no: "خطأ",
     inProgress: "قيد اللعب", gcHint: "توقعك بجانب الترتيب الفعلي، مع النقاط التي حققها كل اختيار.", gcProj: "الأرقام الباهتة (العمود الأوسط والمجموع بعد ←) هي نقاط مراكز متوقعة — مؤقتة حتى تنتهي المجموعة.",
@@ -941,7 +944,6 @@ function PointsSpread({ lb, t }) {
 /* Player breakdown — animated stacked bar */
 function Breakdown({ row, t }) {
   const parts = [
-    { k: "groupMatch", v: row.groupMatch, c: "var(--grass)" },
     { k: "groupRank", v: row.groupRank, c: "var(--grass-d)" },
     { k: "knockout", v: row.knockout, c: "var(--gold)" },
     { k: "champion", v: row.champ, c: "var(--gold-d)" },
@@ -1697,9 +1699,7 @@ function ptClass(v) { return v >= 3 ? "pt3" : v > 0 ? "pt1" : "pt0"; }
 function AuditGroup({ g, detail, t }) {
   const [open, setOpen] = useState(false);
   const rank = detail.ranking.filter((r) => r.g === g);
-  const matches = detail.matches.filter((m) => m.g === g);
-  const wonMatches = matches.filter((m) => m.got > 0);
-  const sub = rank.reduce((s, r) => s + r.got, 0) + matches.reduce((s, m) => s + m.got, 0);
+  const sub = rank.reduce((s, r) => s + r.got, 0);
   return (
     <div className={"ag" + (open ? " open" : "")}>
       <button className="ag-head" onClick={() => setOpen((o) => !o)}>
@@ -1719,13 +1719,6 @@ function AuditGroup({ g, detail, t }) {
               <span className={"agpt " + ptClass(r.got)}>{r.got > 0 ? "+" + r.got : "0"}</span>
             </div>
           ))}
-          <div className="ag-section">{t("groupMatch")} · +{matches.reduce((s, m) => s + m.got, 0)} <span className="hint">({wonMatches.length}/{matches.length})</span></div>
-          <div className="agmwrap">
-            {wonMatches.length === 0 && <span className="hint">—</span>}
-            {wonMatches.map((m, i) => (
-              <span className="agm" key={i}><span className="fl">{flagOf(m.winner)}</span> {t("beat")} <span className="fl">{flagOf(sameTeam(m.winner, m.home) ? m.away : m.home)}</span> <b className="pt1">+1</b></span>
-            ))}
-          </div>
         </div>
       )}
     </div>
@@ -1740,27 +1733,17 @@ function GroupCompare({ g, p, data, t, name }) {
   const complete = groupComplete(g, data);
   const rankRows = [0, 1, 2, 3].map((pos) => {
     const pick = pred[pos] || null, actual = table[pos] ? table[pos].team : null;
-    // Projected points from the CURRENT standings (what this pick is on track to
-    // earn). Becomes the real award only once the group is finalised.
-    let proj = 0, kind = "miss";
-    if (pick) {
-      if (actual && sameTeam(pick, actual)) { proj = SCORING.exactPosition; kind = "exact"; }
-      else if (table.some((rw) => sameTeam(rw.team, pick))) { proj = SCORING.teamInGroupWrongPos; kind = "in"; }
-    }
+    // +1 only when the pick is in its EXACT current position. Projected while the
+    // group is in progress; banked once it finishes.
+    const exact = !!(pick && actual && sameTeam(pick, actual));
+    const proj = exact ? SCORING.exactPosition : 0;
     const got = complete ? proj : 0;
-    return { pos: pos + 1, pick, actual, proj, got, kind };
+    return { pos: pos + 1, pick, actual, proj, got, kind: exact ? "exact" : "miss" };
   });
-  let edgeGot = 0, edgeHit = 0, edgePlayed = 0;
-  for (let i = 0; i < 6; i++) {
-    const r = matchResult(g, i, data); if (!r.complete) continue;
-    edgePlayed++;
-    const e = predictedEdge(p, g, r.home, r.away);
-    if (r.outcome !== "draw" && e.status === "ok" && sameTeam(e.edge, r.winner)) { edgeGot += SCORING.edgeCorrect; edgeHit++; }
-  }
-  // Earned = points banked now (match-winners + ranking once the group is done).
-  // Projected = earned + projected ranking from the current standings.
-  const earned = rankRows.reduce((s, r) => s + r.got, 0) + edgeGot;
-  const projected = rankRows.reduce((s, r) => s + r.proj, 0) + edgeGot;
+  // Earned = position points banked once the group is done. Projected = the same
+  // from the current standings.
+  const earned = rankRows.reduce((s, r) => s + r.got, 0);
+  const projected = rankRows.reduce((s, r) => s + r.proj, 0);
   return (
     <div className="card gc-card">
       <button className="gc-head" onClick={() => setOpen((o) => !o)}>
@@ -1781,7 +1764,6 @@ function GroupCompare({ g, p, data, t, name }) {
               <span className="gc-side act"><Team t={r.actual} dim={!r.actual} /><span className="gc-pos num">{r.pos}</span></span>
             </div>
           ))}
-          <div className="gc-edge">⚔️ {t("p_winner_t")} <span className="hint">· {edgeHit}/{edgePlayed} {t("p_correct")}</span><span className="grow" /><b className="gc-edge-pt">+{edgeGot}</b></div>
         </>
       )}
     </div>
@@ -1801,8 +1783,7 @@ function pointsCounts(row) {
 function PointsHow({ row, t }) {
   const c = pointsCounts(row);
   const items = [
-    { e: "⚔️", title: t("p_winner_t"), desc: t("p_winner_d"), note: `${c.edges} ${t("p_of")} ${c.edgesTotal} ${t("p_correct")}`, pts: row.groupMatch },
-    { e: "🎯", title: t("p_pos_t"), desc: t("p_pos_d"), note: `${c.exact} ${t("p_exact")} · ${c.inGrp} ${t("p_ingrp")}`, pts: row.groupRank },
+    { e: "🎯", title: t("p_pos_t"), desc: t("p_pos_d"), note: `${c.exact} ${t("p_exact")}`, pts: row.groupRank },
     { e: "🗺️", title: t("p_ko_t"), desc: t("p_ko_d"), note: c.koTotal ? `${c.koHit} ${t("p_of")} ${c.koTotal} ${t("p_correct")}` : t("pending"), pts: row.knockout },
     { e: "👑", title: t("p_champ_t"), desc: t("p_champ_d"), note: c.champDecided ? (c.champHit ? "✓ " + t("p_yes") : "✗ " + t("p_no")) : t("pending"), pts: row.champ },
   ];
@@ -1828,7 +1809,7 @@ function Points({ data, lb, t, name, setName }) {
   const row = lb.find((r) => r.name === name) || lb[0];
   const pending = useMemo(() => livePendingPoints(data, data.players[row.name]), [data, row.name]);
   const cats = [
-    { k: "groupMatch", c: "var(--grass)" }, { k: "groupRank", c: "var(--grass-d)" },
+    { k: "groupRank", c: "var(--grass-d)" },
     { k: "knockout", c: "var(--gold)" }, { k: "champion", c: "var(--gold-d)" },
   ];
   return (
@@ -1841,7 +1822,7 @@ function Points({ data, lb, t, name, setName }) {
           {lb.map((r, i) => {
             const lp = livePendingPoints(data, data.players[r.name]);
             const tot = Math.max(1, r.total);
-            const segs = [r.groupMatch, r.groupRank, r.knockout, r.champ];
+            const segs = [r.groupRank, r.knockout, r.champ];
             return (
               <button className={"pbrow" + (r.name === row.name ? " sel" : "")} key={r.name} onClick={() => setName(r.name)} style={{ animationDelay: `${i * 35}ms` }}>
                 <span className="pbrank num">{r.rank}</span>
@@ -2327,11 +2308,11 @@ function PlayerReport({ data, lb, t }) {
       <div className="card nopad">
         <div className="pgrid-scroll">
           <table className="pgrid">
-            <thead><tr><th className="sticky">{t("player")}</th><th>{t("rank")}</th><th>{t("groupMatch")}</th><th>{t("groupRank")}</th><th>{t("knockout")}</th><th>{t("champion")}</th><th>{t("points")}</th></tr></thead>
+            <thead><tr><th className="sticky">{t("player")}</th><th>{t("rank")}</th><th>{t("groupRank")}</th><th>{t("knockout")}</th><th>{t("champion")}</th><th>{t("points")}</th></tr></thead>
             <tbody>
               {lb.map((r) => (
                 <tr key={r.name}><td className="sticky pgname"><Avatar name={r.name} /><span>{r.name}</span></td>
-                  <td className="num">{r.rank}</td><td className="num">{r.groupMatch}</td><td className="num">{r.groupRank}</td><td className="num">{r.knockout}</td><td className="num">{r.champ}</td><td className="num"><b>{r.total}</b></td></tr>
+                  <td className="num">{r.rank}</td><td className="num">{r.groupRank}</td><td className="num">{r.knockout}</td><td className="num">{r.champ}</td><td className="num"><b>{r.total}</b></td></tr>
               ))}
             </tbody>
           </table>

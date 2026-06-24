@@ -117,7 +117,7 @@ const I18N = {
     p_ko_t: "Knockout winners", p_ko_d: "Points for picking the team that advances (R32 +2, R16 +3, QF +5, SF +8, Final +12)",
     p_champ_t: "Champion", p_champ_d: "+10 for correctly picking the World Cup winner",
     p_exact: "exact", p_ingrp: "in group", p_yes: "correct", p_no: "missed",
-    inProgress: "in progress", gcHint: "Your prediction next to the actual standings, with the points each pick earned.",
+    inProgress: "in progress", gcHint: "Your prediction next to the actual standings, with the points each pick earned.", gcProj: "Middle column shows projected position points — provisional until the group finishes.",
   },
   ar: {
     brand: "كأس العالم 2026", dir: "rtl",
@@ -172,7 +172,7 @@ const I18N = {
     p_ko_t: "الأدوار الإقصائية", p_ko_d: "نقاط لاختيار الفريق المتأهل (دور 32 +2، دور 16 +3، الربع +5، النصف +8، النهائي +12)",
     p_champ_t: "البطل", p_champ_d: "+10 لاختيار بطل كأس العالم بشكل صحيح",
     p_exact: "صحيح", p_ingrp: "في المجموعة", p_yes: "صحيح", p_no: "خطأ",
-    inProgress: "قيد اللعب", gcHint: "توقعك بجانب الترتيب الفعلي، مع النقاط التي حققها كل اختيار.",
+    inProgress: "قيد اللعب", gcHint: "توقعك بجانب الترتيب الفعلي، مع النقاط التي حققها كل اختيار.", gcProj: "العمود الأوسط يعرض نقاط المراكز المتوقعة — مؤقتة حتى تنتهي المجموعة.",
   },
 };
 
@@ -1740,12 +1740,15 @@ function GroupCompare({ g, p, data, t, name }) {
   const complete = groupComplete(g, data);
   const rankRows = [0, 1, 2, 3].map((pos) => {
     const pick = pred[pos] || null, actual = table[pos] ? table[pos].team : null;
-    let got = 0, kind = "miss";
-    if (complete && pick) {
-      if (actual && sameTeam(pick, actual)) { got = SCORING.exactPosition; kind = "exact"; }
-      else if (table.some((rw) => sameTeam(rw.team, pick))) { got = SCORING.teamInGroupWrongPos; kind = "in"; }
-    } else if (!complete) kind = "pend";
-    return { pos: pos + 1, pick, actual, got, kind };
+    // Projected points from the CURRENT standings (what this pick is on track to
+    // earn). Becomes the real award only once the group is finalised.
+    let proj = 0, kind = "miss";
+    if (pick) {
+      if (actual && sameTeam(pick, actual)) { proj = SCORING.exactPosition; kind = "exact"; }
+      else if (table.some((rw) => sameTeam(rw.team, pick))) { proj = SCORING.teamInGroupWrongPos; kind = "in"; }
+    }
+    const got = complete ? proj : 0;
+    return { pos: pos + 1, pick, actual, proj, got, kind };
   });
   let edgeGot = 0, edgeHit = 0, edgePlayed = 0;
   for (let i = 0; i < 6; i++) {
@@ -1767,10 +1770,11 @@ function GroupCompare({ g, p, data, t, name }) {
       {open && (
         <>
           <div className="gc-colh"><span className="gc-colh-name">{name || t("predicted")}</span><span className="gc-colh-mid">{t("points")}</span><span>{t("actual")}</span></div>
+          {!complete && <div className="gc-projhint hint">{t("gcProj")}</div>}
           {rankRows.map((r) => (
-            <div className={"gc-row " + r.kind} key={r.pos}>
+            <div className={"gc-row " + (complete ? r.kind : "pend")} key={r.pos}>
               <span className="gc-side pick"><span className="gc-pos num">{r.pos}</span><Team t={r.pick} dim={!r.pick} /></span>
-              <span className={"gc-pt " + r.kind}>{complete ? (r.got > 0 ? "+" + r.got : "0") : "·"}</span>
+              <span className={"gc-pt " + (complete ? r.kind : "proj")}>{complete ? (r.got > 0 ? "+" + r.got : "0") : (r.proj > 0 ? "+" + r.proj : "·")}</span>
               <span className="gc-side act"><Team t={r.actual} dim={!r.actual} /><span className="gc-pos num">{r.pos}</span></span>
             </div>
           ))}
@@ -3099,6 +3103,8 @@ border-radius:18px;padding:16px 14px;margin:10px 0;color:#fff;background:linear-
 .gc-pt{justify-self:center;font-size:12px;font-weight:800;min-width:34px;height:22px;border-radius:7px;display:flex;align-items:center;justify-content:center;color:var(--muted);background:var(--soft)}
 .gc-pt.exact{color:#fff;background:var(--pos)}
 .gc-pt.in{color:#7a5a00;background:rgba(245,196,81,.45)}
+.gc-pt.proj{color:var(--muted);background:transparent;border:1px dashed var(--border);font-style:italic;font-weight:700}
+.gc-projhint{font-size:10.5px;margin:2px 0 6px;opacity:.8}
 .gc-row.exact .gc-side.pick{font-weight:800}
 .gc-edge{display:flex;align-items:center;gap:6px;margin-top:8px;font-size:12px;font-weight:700}
 .gc-edge-pt{color:var(--grass-d)}.app[data-theme="dark"] .gc-edge-pt{color:var(--grass)}

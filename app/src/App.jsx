@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect, useRef } from "react";
 import { BarChart, Bar, LineChart, Line, CartesianGrid, Legend, XAxis, YAxis, Cell, ResponsiveContainer, Tooltip } from "recharts";
 import { loadFromSupabase, saveBlob, upsertResult, upsertResults } from "./supabase.js";
-import { fetchLivescore, fetchCompletedResults, fetchResultsRange, getFeedStatus, fetchMatchDetail, fetchEventFinals } from "./thesportsdb.js";
+import { fetchLivescore, fetchCompletedResults, fetchResultsRange, fetchSeasonEvents, getFeedStatus, fetchMatchDetail, fetchEventFinals } from "./thesportsdb.js";
 import { trackEvent, trackPageView, setAnalyticsContext } from "./analytics.js";
 
 /* =====================================================================
@@ -107,7 +107,7 @@ const I18N = {
     koNeedsWinner: "needs a winner",
     loadingData: "Loading live data…", liveData: "Live data",
     syncHint2: "Pull finished scores from TheSportsDB and save them to the database so everyone sees them.",
-    syncing: "Syncing…", feedReach: "Feed reachable", feedEvents: "Events fetched", feedCompleted: "Completed found", feedSaved: "Saved to DB", feedMissing: "Still missing a score",
+    syncing: "Syncing…", feedReach: "Feed reachable", feedEvents: "Events fetched", feedCompleted: "Completed found", feedSaved: "Saved to DB", feedCleared: "Phantom results cleared", feedMissing: "Still missing a score",
     timezone: "Display timezone", tzCheck: "Timezone check", tzApp: "App timezone", tzAppNow: "App time now", tzDevice: "Device timezone", tzDeviceNow: "Device time now", tzNote: "Times are shown in the app timezone above, not the device's — change it here if needed.",
     noDetail: "No detailed data for this match yet (timelines/lineups can be missing or delayed).",
     p_howAdd: "How your points add up", p_correct: "correct", p_of: "of",
@@ -161,7 +161,7 @@ const I18N = {
     koNeedsWinner: "يلزم تحديد فائز",
     loadingData: "جارٍ تحميل البيانات…", liveData: "بيانات مباشرة",
     syncHint2: "اجلب نتائج المباريات المنتهية من TheSportsDB واحفظها في قاعدة البيانات ليراها الجميع.",
-    syncing: "جارٍ المزامنة…", feedReach: "وصول الخدمة", feedEvents: "الأحداث المجلوبة", feedCompleted: "المنتهية الموجودة", feedSaved: "حُفظت في القاعدة", feedMissing: "بلا نتيجة بعد",
+    syncing: "جارٍ المزامنة…", feedReach: "وصول الخدمة", feedEvents: "الأحداث المجلوبة", feedCompleted: "المنتهية الموجودة", feedSaved: "حُفظت في القاعدة", feedCleared: "نتائج وهمية أُزيلت", feedMissing: "بلا نتيجة بعد",
     timezone: "المنطقة الزمنية للعرض", tzCheck: "فحص المنطقة الزمنية", tzApp: "منطقة التطبيق", tzAppNow: "وقت التطبيق الآن", tzDevice: "منطقة الجهاز", tzDeviceNow: "وقت الجهاز الآن", tzNote: "تُعرض الأوقات بمنطقة التطبيق أعلاه وليس بمنطقة الجهاز — غيّرها هنا إذا لزم.",
     noDetail: "لا تتوفر بيانات تفصيلية بعد (قد تتأخر التشكيلات والأحداث).",
     p_howAdd: "كيف تتكوّن نقاطك", p_correct: "صحيحة", p_of: "من",
@@ -2127,25 +2127,29 @@ function SyncResults({ data, setData, t }) {
     setBusy(true); setReport(null);
     try {
       const key = data.settings && data.settings.sportsdbKey;
-      const today = new Date().toISOString().slice(0, 10);
-      const results = await fetchResultsRange(key, "2026-06-11", today);
+      // Authoritative source: the full-season feed (every fixture + its status).
+      // Only status === "FT" is persisted as final; every other fixture (NS /
+      // live) is written back as "scheduled", so a stale/phantom final can never
+      // survive a sync — a future match can no longer masquerade as played.
+      const season = await fetchSeasonEvents(key);
       const status = getFeedStatus();
-      // Map to canonical fixtures, orient, dedupe by matchKey, build normalized rows.
-      const byKey = {};
-      results.forEach((r) => {
-        if (r.homeScore == null || r.awayScore == null) return;
-        const m = resolveRRByTeams(null, r.home, r.away); if (!m) return;
-        let hs = r.homeScore, as = r.awayScore; if (m.reversed) { const tmp = hs; hs = as; as = tmp; }
+      const finalRows = {}, clearRows = {};
+      season.forEach((e) => {
+        const m = resolveRRByTeams(null, e.home, e.away); if (!m) return;
         const [g, iStr] = m.key.split("_"); const i = Number(iStr);
         const [home, away] = matchTeams(g, i);
-        byKey[m.key] = { match_key: m.key, group_key: g, match_idx: i, home_team: home, away_team: away, home_score: Number(hs), away_score: Number(as), status: "final", source: "api" };
+        if (e.finished && e.homeScore != null && e.awayScore != null) {
+          let hs = Number(e.homeScore), as = Number(e.awayScore);
+          if (m.reversed) { const tmp = hs; hs = as; as = tmp; }
+          if (!Number.isFinite(hs) || !Number.isFinite(as)) return;
+          finalRows[m.key] = { match_key: m.key, group_key: g, match_idx: i, home_team: home, away_team: away, home_score: hs, away_score: as, status: "final", source: "api" };
+        } else {
+          clearRows[m.key] = { match_key: m.key, group_key: g, match_idx: i, home_team: home, away_team: away, home_score: null, away_score: null, status: "scheduled", source: "api" };
+        }
       });
-      // Gap-fill: fixtures the league eventsday feed never returns (different
-      // event-id scheme) — look them up directly by their eventId (premium V2).
-      // Target fixtures not persisted in the DB (resSource !== "db"), even if a
-      // transient feed fill already shows a score locally — they still need saving
-      // so non-premium end users get them too.
-      const stillNeed = (data.matches || []).filter((mm) => mm.stage === "group" && !byKey[mm.id] && mm.resSource !== "db" && mm.eventId && mm.ko && mm.ko <= Date.now()).map((mm) => ({ key: mm.id, eventId: mm.eventId }));
+      // Gap-fill: any FT fixture the season feed somehow lacks a score for —
+      // look it up directly by eventId (premium V2). Never touches NS matches.
+      const stillNeed = (data.matches || []).filter((mm) => mm.stage === "group" && !finalRows[mm.id] && !clearRows[mm.id] && mm.eventId && mm.ko && mm.ko <= Date.now()).map((mm) => ({ key: mm.id, eventId: mm.eventId }));
       if (stillNeed.length) {
         try {
           const finals = await fetchEventFinals(stillNeed, key);
@@ -2156,26 +2160,38 @@ function SyncResults({ data, setData, t }) {
             let hs = Number(f.homeScore), as = Number(f.awayScore);
             if (!Number.isFinite(hs) || !Number.isFinite(as)) return;
             if (f.home && f.away && !sameTeam(f.home, home) && sameTeam(f.home, away)) { const tmp = hs; hs = as; as = tmp; }
-            byKey[f.key] = { match_key: f.key, group_key: g, match_idx: i, home_team: home, away_team: away, home_score: hs, away_score: as, status: "final", source: "api-event" };
+            finalRows[f.key] = { match_key: f.key, group_key: g, match_idx: i, home_team: home, away_team: away, home_score: hs, away_score: as, status: "final", source: "api-event" };
+            delete clearRows[f.key];
           });
         } catch (e) { /* gap fill is best-effort */ }
       }
-      const rows = Object.values(byKey), filled = Object.keys(byKey);
-      let saved = 0;
-      if (rows.length) { try { await upsertResults(rows); saved = rows.length; } catch (e) { /* surfaced below */ } }
+      // Only reset fixtures the DB currently holds as final (the phantoms) — no
+      // pointless writes for matches that were already scheduled.
+      const dbFinal = new Set((data.matches || []).filter((mm) => mm.resSource === "db" && mm.finalH != null).map((mm) => mm.id));
+      const clears = Object.values(clearRows).filter((row) => dbFinal.has(row.match_key));
+      const clearedSet = new Set(clears.map((r) => r.match_key));
+      const rows = [...Object.values(finalRows), ...clears];
+      let saved = 0; const cleared = clears.length;
+      if (rows.length) { try { await upsertResults(rows); saved = Object.keys(finalRows).length; } catch (e) { /* surfaced below */ } }
       // Re-derive locally so results show immediately, and persist the blob too.
       setData((d) => {
         const gr = { ...d.groupResults };
-        rows.forEach((row) => { gr[row.match_key] = { home: String(row.home_score), away: String(row.away_score) }; });
-        const matches = d.matches.map((mm) => { if (mm.stage !== "group") return mm; const res = gr[mm.id]; return res ? { ...mm, finalH: Number(res.home), finalA: Number(res.away), resSource: byKey[mm.id] ? "db" : mm.resSource } : mm; });
+        Object.values(finalRows).forEach((row) => { gr[row.match_key] = { home: String(row.home_score), away: String(row.away_score) }; });
+        clearedSet.forEach((k) => { delete gr[k]; });
+        const matches = d.matches.map((mm) => {
+          if (mm.stage !== "group") return mm;
+          if (finalRows[mm.id]) { const r = finalRows[mm.id]; return { ...mm, finalH: r.home_score, finalA: r.away_score, resSource: "db" }; }
+          if (clearedSet.has(mm.id)) return { ...mm, finalH: null, finalA: null, resSource: null };
+          return mm;
+        });
         const nd = recomputeLive({ ...d, groupResults: gr, matches });
         persistLive(nd);
         return nd;
       });
-      // which finished/over matches still have no score?
-      const missing = (data.matches || []).filter((mm) => mm.stage === "group" && mm.resSource !== "db" && !filled.includes(mm.id) && mm.ko && mm.ko <= Date.now())
+      // which over matches still have no score (and weren't just cleared as NS)?
+      const missing = (data.matches || []).filter((mm) => mm.stage === "group" && !finalRows[mm.id] && !clearedSet.has(mm.id) && mm.resSource !== "db" && mm.ko && mm.ko <= Date.now())
         .map((mm) => `${canonTeam(mm.home)} v ${canonTeam(mm.away)}`);
-      setReport({ mode: status.mode, events: status.events, completed: status.completed, mapped: rows.length, saved, missing });
+      setReport({ mode: status.mode, events: status.events, completed: status.completed, mapped: Object.keys(finalRows).length, saved, cleared, missing });
     } catch (e) { setReport({ error: String(e && e.message ? e.message : e) }); }
     setBusy(false);
   };
@@ -2193,6 +2209,7 @@ function SyncResults({ data, setData, t }) {
             <div className="hrow"><span className="hlabel">{t("feedEvents")}</span><span className="hval num">{report.events}</span></div>
             <div className="hrow"><span className="hlabel">{t("feedCompleted")}</span><span className="hval num">{report.completed}</span></div>
             <div className="hrow"><span className="hlabel">{t("feedSaved")}</span><span className="hval num">{report.saved}</span></div>
+            {report.cleared > 0 && <div className="hrow"><span className="hlabel">{t("feedCleared")}</span><span className="hval num">{report.cleared}</span></div>}
             {report.missing && report.missing.length > 0 && (
               <div className="ag-section" style={{ marginTop: 8 }}>{t("feedMissing")} ({report.missing.length})
                 <div className="hint block" style={{ marginTop: 4 }}>{report.missing.slice(0, 12).join(" · ")}</div>

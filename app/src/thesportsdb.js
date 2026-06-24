@@ -162,3 +162,34 @@ export async function fetchResultsRange(key, fromISO, toISO) {
   while (d <= end && dates.length < 40) { dates.push(d.toISOString().slice(0, 10)); d = new Date(d.getTime() + 864e5); }
   return fetchResultsForDates(key, dates);
 }
+
+/* Full-season schedule + results (authoritative). One call returns EVERY
+   fixture with its status (FT / NS / 1H / …). Driving the admin sync from this
+   — persisting ONLY status === "FT" as final, and explicitly marking everything
+   else scheduled — makes it structurally impossible to store a not-yet-played
+   match as finished (the phantom-result class of bug). Premium key goes in the
+   V1 path; degrades to [] on failure.
+   Returns [{home, away, homeScore, awayScore, status, finished, eventId, round, date}]. */
+export async function fetchSeasonEvents(key, season = "2026") {
+  FEED_STATUS = { mode: "unreachable", events: 0, completed: 0, at: Date.now() };
+  const url = SDB_V1 + "/" + encodeURIComponent(v1Key(key)) + "/eventsseason.php?id=" + WC_LEAGUE + "&s=" + encodeURIComponent(season);
+  let j = null;
+  try { const r = await fetch(url, { headers: { Accept: "application/json" } }); if (r.ok) { FEED_STATUS.mode = "direct"; j = await r.json(); } } catch (e) { /* proxies */ }
+  if (!j) for (const tmpl of CORS_PROXIES) {
+    try { const purl = tmpl.replace("{U}", encodeURIComponent(url)).replace("{RAW}", url); const r = await fetch(purl, { headers: { Accept: "application/json" } }); if (r.ok) { FEED_STATUS.mode = "proxy:" + tmpl.split("/")[2]; j = await r.json(); break; } } catch (e) { /* next */ }
+  }
+  const arr = asArray(j);
+  const out = arr.map((e) => {
+    const st = String(e.strStatus || "").toUpperCase().trim();
+    const finished = st === "FT" || st === "AET" || st === "AP" || st === "PEN" || st.includes("FINISH") || st.includes("FULL") || st.includes("AFTER");
+    const sc = sportsScore(e);
+    return {
+      home: e.strHomeTeam || e.strHome, away: e.strAwayTeam || e.strAway,
+      homeScore: sc ? sc.home : null, awayScore: sc ? sc.away : null,
+      status: st || "NS", finished, eventId: e.idEvent || null,
+      round: e.intRound || null, date: e.dateEvent || null,
+    };
+  }).filter((e) => e.home && e.away);
+  FEED_STATUS = { ...FEED_STATUS, events: out.length, completed: out.filter((e) => e.finished && e.homeScore != null).length, at: Date.now() };
+  return out;
+}

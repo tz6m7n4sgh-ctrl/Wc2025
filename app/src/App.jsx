@@ -117,7 +117,7 @@ const I18N = {
     p_ko_t: "Knockout winners", p_ko_d: "Points for picking the team that advances (R32 +2, R16 +3, QF +5, SF +8, Final +12)",
     p_champ_t: "Champion", p_champ_d: "+10 for correctly picking the World Cup winner",
     p_exact: "exact", p_ingrp: "in group", p_yes: "correct", p_no: "missed",
-    inProgress: "in progress", gcHint: "Your prediction next to the actual standings, with the points each pick earned.", gcProj: "Middle column shows projected position points — provisional until the group finishes.",
+    inProgress: "in progress", gcHint: "Your prediction next to the actual standings, with the points each pick earned.", gcProj: "Faded figures (middle column and the → total) are projected position points — provisional until the group finishes.",
   },
   ar: {
     brand: "كأس العالم 2026", dir: "rtl",
@@ -172,7 +172,7 @@ const I18N = {
     p_ko_t: "الأدوار الإقصائية", p_ko_d: "نقاط لاختيار الفريق المتأهل (دور 32 +2، دور 16 +3، الربع +5، النصف +8، النهائي +12)",
     p_champ_t: "البطل", p_champ_d: "+10 لاختيار بطل كأس العالم بشكل صحيح",
     p_exact: "صحيح", p_ingrp: "في المجموعة", p_yes: "صحيح", p_no: "خطأ",
-    inProgress: "قيد اللعب", gcHint: "توقعك بجانب الترتيب الفعلي، مع النقاط التي حققها كل اختيار.", gcProj: "العمود الأوسط يعرض نقاط المراكز المتوقعة — مؤقتة حتى تنتهي المجموعة.",
+    inProgress: "قيد اللعب", gcHint: "توقعك بجانب الترتيب الفعلي، مع النقاط التي حققها كل اختيار.", gcProj: "الأرقام الباهتة (العمود الأوسط والمجموع بعد ←) هي نقاط مراكز متوقعة — مؤقتة حتى تنتهي المجموعة.",
   },
 };
 
@@ -1757,14 +1757,17 @@ function GroupCompare({ g, p, data, t, name }) {
     const e = predictedEdge(p, g, r.home, r.away);
     if (r.outcome !== "draw" && e.status === "ok" && sameTeam(e.edge, r.winner)) { edgeGot += SCORING.edgeCorrect; edgeHit++; }
   }
-  const total = rankRows.reduce((s, r) => s + r.got, 0) + edgeGot;
+  // Earned = points banked now (match-winners + ranking once the group is done).
+  // Projected = earned + projected ranking from the current standings.
+  const earned = rankRows.reduce((s, r) => s + r.got, 0) + edgeGot;
+  const projected = rankRows.reduce((s, r) => s + r.proj, 0) + edgeGot;
   return (
     <div className="card gc-card">
       <button className="gc-head" onClick={() => setOpen((o) => !o)}>
         <span className="gbadge">{t("group")} {g}</span>
         {!complete && <span className="hint">{t("inProgress")}</span>}
         <span className="grow" />
-        <span className="gc-total num">+{total}</span>
+        <span className="gc-total num">+{earned}{!complete && projected > earned && <span className="gc-proj-total">{" → +" + projected}</span>}</span>
         <span className="ag-chev">{open ? "▾" : "▸"}</span>
       </button>
       {open && (
@@ -3091,6 +3094,7 @@ border-radius:18px;padding:16px 14px;margin:10px 0;color:#fff;background:linear-
 .gc-card{padding:10px 12px}
 .gc-head{display:flex;align-items:center;gap:8px;width:100%;background:none;border:none;cursor:pointer;padding:2px 0 8px}
 .gc-total{font-size:15px;font-weight:800;color:var(--gold-d)}
+.gc-proj-total{color:var(--muted);font-size:12px;font-weight:700;font-style:italic}
 .gc-colh{display:grid;grid-template-columns:1fr 44px 1fr;gap:6px;font-size:9.5px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;padding-bottom:4px;border-bottom:1px solid var(--border)}
 .gc-colh>span:last-child{text-align:end}.gc-colh-mid{text-align:center}
 .gc-colh-name{color:var(--grass-d);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}

@@ -88,10 +88,11 @@ const I18N = {
     nav_points: "Points", livePoints: "Live points", livePtsHint: "recalculated from results", howCalc: "How points are calculated", pendingLive: "Pending", fromLive: "from live matches",
     groupBreakdown: "Group-by-group breakdown", tapExpand: "tap to expand", beat: "beat", champPending: "Champion not decided yet", ifCorrect: "if correct",
     admin: "Admin", adminLogin: "Admin login", password: "Password", wrongPw: "Incorrect password", login: "Log in", demoPw: "Demo password", logout: "Log out",
-    nav_settings: "Settings", nav_results: "Results", nav_playerpicks: "Player picks", nav_playerreport: "Position report", nav_audit: "Audit log", nav_backup: "Backup", nav_health: "Health", nav_sync: "Sync results", nav_repair: "Repair",
+    nav_settings: "Settings", nav_results: "Results", nav_playerpicks: "Player picks", nav_playerreport: "Position report", nav_audit: "Audit log", nav_backup: "Backup", nav_health: "Health", nav_sync: "Sync results", nav_repair: "Repair", nav_export: "Export",
     resultsEditor: "Results editor", resultsHint: "Enter a score to mark a match finished — standings, points and the bracket update instantly.", setChampion: "Set champion",
     entryFee: "Entry fee", currency: "Currency", distribution: "Prize distribution", winnerTakes: "Winner takes all", topTwo: "Split top 2", topThree: "Split top 3", deadline: "Predictions deadline", lockPicks: "Lock predictions", prizePool: "Prize pool",
     exportData: "Export data", importData: "Import data", pasteJson: "Paste backup JSON here…", copy: "Copy", copied: "copied", loaded: "loaded", badJson: "invalid JSON", load: "Load",
+    expPreds: "Players' predictions", expResults: "Group results", expHint: "Download a snapshot of the live data. CSV opens in Excel/Sheets; JSON is a full backup.", dlCsv: "Download CSV", dlJson: "Download JSON", expPlayersN: "players", expFinishedN: "finished", expScheduledN: "scheduled", expCheck: "These exports reflect the data the app is showing right now — if the player names here look wrong, the app is on sample data and didn't load the live database.",
     hPlayers: "Players", hPreds: "All group predictions complete", hChamp: "All champion picks set", hMatches: "Matches finished", hGroups: "Groups complete", hEngine: "Engine totals reconcile",
     noChanges: "No changes yet.", repairHint: "Normalize the dataset: backfill missing fields and re-derive results.", runRepair: "Run repair", repairDone: "Dataset normalized.",
     syncHint: "Live sync pulls fixtures and results from TheSportsDB. Connect the data layer to enable.", syncNow: "Sync now", reportHint: "Points by category per player. PDF export ships with the data layer.",
@@ -142,10 +143,11 @@ const I18N = {
     nav_points: "النقاط", livePoints: "النقاط المباشرة", livePtsHint: "تُحتسب من النتائج", howCalc: "كيف تُحتسب النقاط", pendingLive: "قيد الاحتساب", fromLive: "من المباريات المباشرة",
     groupBreakdown: "تفصيل لكل مجموعة", tapExpand: "اضغط للتوسيع", beat: "تغلّب على", champPending: "البطل لم يُحسم بعد", ifCorrect: "إذا صح",
     admin: "الإدارة", adminLogin: "دخول الإدارة", password: "كلمة المرور", wrongPw: "كلمة المرور غير صحيحة", login: "دخول", demoPw: "كلمة المرور التجريبية", logout: "خروج",
-    nav_settings: "الإعدادات", nav_results: "النتائج", nav_playerpicks: "توقعات اللاعب", nav_playerreport: "تقرير المراكز", nav_audit: "سجل التغييرات", nav_backup: "نسخ احتياطي", nav_health: "الصحة", nav_sync: "مزامنة النتائج", nav_repair: "إصلاح",
+    nav_settings: "الإعدادات", nav_results: "النتائج", nav_playerpicks: "توقعات اللاعب", nav_playerreport: "تقرير المراكز", nav_audit: "سجل التغييرات", nav_backup: "نسخ احتياطي", nav_health: "الصحة", nav_sync: "مزامنة النتائج", nav_repair: "إصلاح", nav_export: "تصدير",
     resultsEditor: "محرّر النتائج", resultsHint: "أدخل النتيجة لإنهاء المباراة — يُحدّث الترتيب والنقاط والأدوار فوراً.", setChampion: "تعيين البطل",
     entryFee: "رسوم الاشتراك", currency: "العملة", distribution: "توزيع الجوائز", winnerTakes: "الفائز يأخذ الكل", topTwo: "أفضل اثنين", topThree: "أفضل ثلاثة", deadline: "موعد إغلاق التوقعات", lockPicks: "قفل التوقعات", prizePool: "مجموع الجوائز",
     exportData: "تصدير البيانات", importData: "استيراد البيانات", pasteJson: "الصق نسخة JSON هنا…", copy: "نسخ", copied: "تم النسخ", loaded: "تم التحميل", badJson: "JSON غير صالح", load: "تحميل",
+    expPreds: "توقعات اللاعبين", expResults: "نتائج المجموعات", expHint: "نزّل نسخة من البيانات الحية. ملف CSV يفتح في Excel/Sheets، وJSON نسخة احتياطية كاملة.", dlCsv: "تنزيل CSV", dlJson: "تنزيل JSON", expPlayersN: "لاعب", expFinishedN: "منتهية", expScheduledN: "مجدولة", expCheck: "تعكس هذه الملفات البيانات المعروضة حالياً — إذا بدت أسماء اللاعبين خاطئة فالتطبيق يعمل على بيانات تجريبية ولم يحمّل قاعدة البيانات الحية.",
     hPlayers: "اللاعبون", hPreds: "اكتمال توقعات المجموعات", hChamp: "تعيين كل توقعات البطل", hMatches: "المباريات المنتهية", hGroups: "المجموعات المكتملة", hEngine: "تطابق مجاميع المحرّك",
     noChanges: "لا تغييرات بعد.", repairHint: "توحيد البيانات: استكمال الحقول الناقصة وإعادة احتساب النتائج.", runRepair: "تشغيل الإصلاح", repairDone: "تم توحيد البيانات.",
     syncHint: "المزامنة المباشرة تجلب المباريات والنتائج من TheSportsDB. اربط طبقة البيانات للتفعيل.", syncNow: "مزامنة الآن", reportHint: "النقاط حسب الفئة لكل لاعب. تصدير PDF يأتي مع طبقة البيانات.",
@@ -2054,6 +2056,75 @@ function Backup({ data, setData, t }) {
     </div>
   );
 }
+// --- file-download helpers (browser) ---
+function downloadText(name, text, mime) {
+  const blob = new Blob([text], { type: (mime || "text/plain") + ";charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = name; document.body.appendChild(a); a.click();
+  document.body.removeChild(a); setTimeout(() => URL.revokeObjectURL(url), 1500);
+}
+const csvCell = (v) => { const s = v == null ? "" : String(v); return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; };
+const toCsv = (rows) => "﻿" + rows.map((r) => r.map(csvCell).join(",")).join("\r\n"); // BOM for Excel
+// Admin: focused exports — players' predictions and group results, as CSV or JSON.
+function Exports({ data, t }) {
+  const players = Object.keys(data.players);
+  const groupMatches = (data.matches || []).filter((m) => m.stage === "group");
+  const finishedN = groupMatches.filter((m) => m.finalH != null && m.finalA != null).length;
+
+  const predData = useMemo(() => {
+    const rows = [["Player", "Champion", "Group", "1st", "2nd", "3rd", "4th"]];
+    players.forEach((name) => {
+      const p = data.players[name];
+      GROUP_KEYS.forEach((g) => {
+        const pr = playerGroupPred(p, g);
+        rows.push([name, canonTeam(p.champion) || "", g, pr[0] || "", pr[1] || "", pr[2] || "", pr[3] || ""]);
+      });
+    });
+    const json = players.map((name) => {
+      const p = data.players[name];
+      return { player: name, champion: p.champion || null, knockout: p.knockout || {},
+        groupPreds: Object.fromEntries(GROUP_KEYS.map((g) => [g, playerGroupPred(p, g)])) };
+    });
+    return { csv: toCsv(rows), json: JSON.stringify(json, null, 2) };
+  }, [data, players]);
+
+  const resData = useMemo(() => {
+    const rows = [["Group", "MatchKey", "Matchday", "Home", "Away", "HomeScore", "AwayScore", "Status"]];
+    const MD = { 0: 1, 1: 1, 2: 2, 3: 2, 4: 3, 5: 3 };
+    groupMatches.forEach((m) => {
+      const done = m.finalH != null && m.finalA != null;
+      rows.push([m.group, m.id, MD[m.idx], canonTeam(m.home), canonTeam(m.away), done ? m.finalH : "", done ? m.finalA : "", done ? "final" : "scheduled"]);
+    });
+    const json = groupMatches.map((m) => ({ group: m.group, matchKey: m.id, home: canonTeam(m.home), away: canonTeam(m.away),
+      homeScore: m.finalH != null ? m.finalH : null, awayScore: m.finalA != null ? m.finalA : null, status: m.finalH != null && m.finalA != null ? "final" : "scheduled" }));
+    return { csv: toCsv(rows), json: JSON.stringify(json, null, 2) };
+  }, [groupMatches]);
+
+  const stamp = new Date().toISOString().slice(0, 10);
+  return (
+    <div className="view">
+      <div className="card slim"><p className="hint block">{t("expHint")}</p>
+        <p className="hint block" style={{ marginTop: 6, opacity: .85 }}>⚠️ {t("expCheck")}</p>
+      </div>
+      <div className="card">
+        <h3 className="cardh"><Ico name="bracket" size={18} /> {t("expPreds")} <span className="hint">· {players.length} {t("expPlayersN")}</span></h3>
+        <div className="hrow"><span className="hlabel">{players.slice(0, 8).join(", ")}{players.length > 8 ? "…" : ""}</span></div>
+        <div className="exp-btns">
+          <button className="btn" onClick={() => downloadText(`predictions-${stamp}.csv`, predData.csv, "text/csv")}>{t("dlCsv")}</button>
+          <button className="btn ghost" onClick={() => downloadText(`predictions-${stamp}.json`, predData.json, "application/json")}>{t("dlJson")}</button>
+        </div>
+      </div>
+      <div className="card">
+        <h3 className="cardh"><Ico name="edit" size={18} /> {t("expResults")} <span className="hint">· {finishedN} {t("expFinishedN")} · {groupMatches.length - finishedN} {t("expScheduledN")}</span></h3>
+        <div className="exp-btns">
+          <button className="btn" onClick={() => downloadText(`group-results-${stamp}.csv`, resData.csv, "text/csv")}>{t("dlCsv")}</button>
+          <button className="btn ghost" onClick={() => downloadText(`group-results-${stamp}.json`, resData.json, "application/json")}>{t("dlJson")}</button>
+        </div>
+      </div>
+    </div>
+  );
+}
 function Health({ data, lb, t }) {
   const players = Object.keys(data.players);
   const incompletePreds = players.filter((n) => GROUP_KEYS.some((g) => playerGroupPred(data.players[n], g).length < 4));
@@ -2288,6 +2359,7 @@ const ADMIN_ITEMS = [
   { id: "playerreport", ic: "chart", key: "nav_playerreport" },
   { id: "audit", ic: "search", key: "nav_audit" },
   { id: "backup", ic: "backup", key: "nav_backup" },
+  { id: "export", ic: "backup", key: "nav_export" },
   { id: "health", ic: "health", key: "nav_health" },
   { id: "syncresults", ic: "sync", key: "nav_sync" },
   { id: "repair", ic: "tools", key: "nav_repair" },
@@ -2497,6 +2569,7 @@ export default function App() {
         {view === "results" && (isAdmin ? <Results data={data} setData={setData} t={t} lang={lang} /> : <AdminLogin onAuth={() => { setIsAdmin(true); trackEvent("admin_login_success", {}); go("results"); }} t={t} />)}
         {view === "settings" && isAdmin && <AdminSettings data={data} setData={setData} t={t} />}
         {view === "backup" && isAdmin && <Backup data={data} setData={setData} t={t} />}
+        {view === "export" && isAdmin && <Exports data={data} t={t} />}
         {view === "health" && isAdmin && <Health data={data} lb={lb} t={t} />}
         {view === "audit" && isAdmin && <AuditLog data={data} t={t} />}
         {view === "repair" && isAdmin && <Repair data={data} setData={setData} t={t} />}
@@ -3072,6 +3145,7 @@ border-radius:18px;padding:16px 14px;margin:10px 0;color:#fff;background:linear-
 .al-ok{color:var(--pos);font-size:12px;font-weight:700;margin-top:10px}
 .btn{width:100%;margin-top:10px;padding:11px;border:none;border-radius:11px;background:var(--grass);color:#04150d;font-family:inherit;font-size:14px;font-weight:800;cursor:pointer}
 .btn:active{transform:scale(.99)}.btn.ghost{background:var(--soft);color:var(--muted)}.btn:disabled{opacity:.5}
+.exp-btns{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}.exp-btns .btn{flex:1;min-width:130px;margin-top:0}
 
 /* admin: results editor */
 .bucketstrip{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:12px}

@@ -96,7 +96,7 @@ const I18N = {
     entryFee: "Entry fee", currency: "Currency", distribution: "Prize distribution", winnerTakes: "Winner takes all", topTwo: "Split top 2", topThree: "Split top 3", deadline: "Predictions deadline", lockPicks: "Lock predictions", prizePool: "Prize pool",
     exportData: "Export data", importData: "Import data", pasteJson: "Paste backup JSON here…", copy: "Copy", copied: "copied", loaded: "loaded", badJson: "invalid JSON", load: "Load",
     expPreds: "Players' predictions", expResults: "Group results", expHint: "Download a snapshot of the live data. CSV opens in Excel/Sheets; JSON is a full backup.", dlCsv: "Download CSV", dlJson: "Download JSON", expPlayersN: "players", expFinishedN: "finished", expScheduledN: "scheduled", expCheck: "These exports reflect the data the app is showing right now — if the player names here look wrong, the app is on sample data and didn't load the live database.",
-    pdfTitle: "PDF report", pdfHint: "Generates a printable page — pick “Save as PDF” in the print dialog. Choose one player, or the full ranked list.", pdfPlayer: "Player PDF", pdfFull: "Full list PDF", pdfBanked: "Banked", pdfProj: "Projected", pdfLegend: "projected = if current group tables hold · banked = locked from finished groups", pdfNote: "Group columns show exact-position hits (out of 4). Knockout & champion are not scored yet.",
+    pdfTitle: "PDF report", pdfHint: "Generates a printable page — pick “Save as PDF” in the print dialog. Choose one player, or the full ranked list.", pdfPlayer: "Player PDF", pdfFull: "Full list PDF", pdfBanked: "Banked", pdfProj: "Projected", pdfLegend: "points = +1 per team in its exact current position · updates live as results come in", pdfNote: "Group columns show exact-position hits (out of 4). Knockout & champion are not scored yet.",
     hPlayers: "Players", hPreds: "All group predictions complete", hChamp: "All champion picks set", hMatches: "Matches finished", hGroups: "Groups complete", hEngine: "Engine totals reconcile",
     noChanges: "No changes yet.", repairHint: "Normalize the dataset: backfill missing fields and re-derive results.", runRepair: "Run repair", repairDone: "Dataset normalized.",
     syncHint: "Live sync pulls fixtures and results from TheSportsDB. Connect the data layer to enable.", syncNow: "Sync now", reportHint: "Points by category per player. PDF export ships with the data layer.",
@@ -121,7 +121,7 @@ const I18N = {
     p_ko_t: "Knockout winners", p_ko_d: "Points for picking the team that advances (R32 +2, R16 +3, QF +4, SF +5, Final +6)",
     p_champ_t: "Champion", p_champ_d: "+10 for correctly picking the World Cup winner",
     p_exact: "exact", p_ingrp: "in group", p_yes: "correct", p_no: "missed",
-    inProgress: "in progress", gcHint: "Your prediction next to the actual standings, with the points each pick earned.", gcProj: "Faded figures (middle column and the → total) are projected position points — provisional until the group finishes.",
+    inProgress: "in progress", gcHint: "Your prediction next to the actual standings, with the points each pick earned.", gcProj: "Live: +1 for each team in its exact current position — this rises or falls as results come in, and locks once the group finishes.",
   },
   ar: {
     brand: "كأس العالم 2026", dir: "rtl",
@@ -152,7 +152,7 @@ const I18N = {
     entryFee: "رسوم الاشتراك", currency: "العملة", distribution: "توزيع الجوائز", winnerTakes: "الفائز يأخذ الكل", topTwo: "أفضل اثنين", topThree: "أفضل ثلاثة", deadline: "موعد إغلاق التوقعات", lockPicks: "قفل التوقعات", prizePool: "مجموع الجوائز",
     exportData: "تصدير البيانات", importData: "استيراد البيانات", pasteJson: "الصق نسخة JSON هنا…", copy: "نسخ", copied: "تم النسخ", loaded: "تم التحميل", badJson: "JSON غير صالح", load: "تحميل",
     expPreds: "توقعات اللاعبين", expResults: "نتائج المجموعات", expHint: "نزّل نسخة من البيانات الحية. ملف CSV يفتح في Excel/Sheets، وJSON نسخة احتياطية كاملة.", dlCsv: "تنزيل CSV", dlJson: "تنزيل JSON", expPlayersN: "لاعب", expFinishedN: "منتهية", expScheduledN: "مجدولة", expCheck: "تعكس هذه الملفات البيانات المعروضة حالياً — إذا بدت أسماء اللاعبين خاطئة فالتطبيق يعمل على بيانات تجريبية ولم يحمّل قاعدة البيانات الحية.",
-    pdfTitle: "تقرير PDF", pdfHint: "ينشئ صفحة قابلة للطباعة — اختر «حفظ كـ PDF» في نافذة الطباعة. اختر لاعباً واحداً أو القائمة الكاملة.", pdfPlayer: "PDF للاعب", pdfFull: "PDF للقائمة الكاملة", pdfBanked: "محقّقة", pdfProj: "متوقعة", pdfLegend: "المتوقعة = إذا بقيت ترتيبات المجموعات الحالية · المحقّقة = مثبّتة من المجموعات المكتملة", pdfNote: "أعمدة المجموعات تعرض المراكز الصحيحة (من 4). الأدوار الإقصائية والبطل لم تُحتسب بعد.",
+    pdfTitle: "تقرير PDF", pdfHint: "ينشئ صفحة قابلة للطباعة — اختر «حفظ كـ PDF» في نافذة الطباعة. اختر لاعباً واحداً أو القائمة الكاملة.", pdfPlayer: "PDF للاعب", pdfFull: "PDF للقائمة الكاملة", pdfBanked: "محقّقة", pdfProj: "متوقعة", pdfLegend: "النقاط = +1 لكل فريق في مركزه الحالي الصحيح · تتحدّث مباشرةً مع ورود النتائج", pdfNote: "أعمدة المجموعات تعرض المراكز الصحيحة (من 4). الأدوار الإقصائية والبطل لم تُحتسب بعد.",
     hPlayers: "اللاعبون", hPreds: "اكتمال توقعات المجموعات", hChamp: "تعيين كل توقعات البطل", hMatches: "المباريات المنتهية", hGroups: "المجموعات المكتملة", hEngine: "تطابق مجاميع المحرّك",
     noChanges: "لا تغييرات بعد.", repairHint: "توحيد البيانات: استكمال الحقول الناقصة وإعادة احتساب النتائج.", runRepair: "تشغيل الإصلاح", repairDone: "تم توحيد البيانات.",
     syncHint: "المزامنة المباشرة تجلب المباريات والنتائج من TheSportsDB. اربط طبقة البيانات للتفعيل.", syncNow: "مزامنة الآن", reportHint: "النقاط حسب الفئة لكل لاعب. تصدير PDF يأتي مع طبقة البيانات.",
@@ -177,7 +177,7 @@ const I18N = {
     p_ko_t: "الأدوار الإقصائية", p_ko_d: "نقاط لاختيار الفريق المتأهل (دور 32 +2، دور 16 +3، الربع +4، النصف +5، النهائي +6)",
     p_champ_t: "البطل", p_champ_d: "+10 لاختيار بطل كأس العالم بشكل صحيح",
     p_exact: "صحيح", p_ingrp: "في المجموعة", p_yes: "صحيح", p_no: "خطأ",
-    inProgress: "قيد اللعب", gcHint: "توقعك بجانب الترتيب الفعلي، مع النقاط التي حققها كل اختيار.", gcProj: "الأرقام الباهتة (العمود الأوسط والمجموع بعد ←) هي نقاط مراكز متوقعة — مؤقتة حتى تنتهي المجموعة.",
+    inProgress: "قيد اللعب", gcHint: "توقعك بجانب الترتيب الفعلي، مع النقاط التي حققها كل اختيار.", gcProj: "مباشر: +1 لكل فريق في مركزه الحالي الصحيح — يرتفع أو ينخفض مع ورود النتائج، ويُثبَّت عند انتهاء المجموعة.",
   },
 };
 
@@ -259,15 +259,19 @@ function calcPlayerPoints(p, data) {
       gMatch += got;
       detail.matches.push({ g, i, ...r, got });
     }
-    if (groupComplete(g, data)) {
+    // Live group points: +1 per team in its EXACT CURRENT position. Recomputed
+    // every render, so the total rises/falls as results land and tables shift;
+    // it simply locks once the group is complete.
+    {
       const table = computeGroupTable(g, data), pred = playerGroupPred(p, g);
+      const locked = groupComplete(g, data);
       for (let pos = 0; pos < 4; pos++) {
         const actual = table[pos] ? table[pos].team : null, pick = pred[pos] || null;
         let got = 0, reason = "miss";
         if (pick && actual && sameTeam(pick, actual)) { got = SCORING.exactPosition; reason = "exact"; }
         else if (pick && table.some((rw) => sameTeam(rw.team, pick))) { got = SCORING.teamInGroupWrongPos; reason = "in_group"; }
         gRank += got;
-        detail.ranking.push({ g, pos: pos + 1, pick, actual, got, reason });
+        detail.ranking.push({ g, pos: pos + 1, pick, actual, got, reason, locked });
       }
     }
   }
@@ -1735,24 +1739,20 @@ function GroupCompare({ g, p, data, t, name }) {
   const complete = groupComplete(g, data);
   const rankRows = [0, 1, 2, 3].map((pos) => {
     const pick = pred[pos] || null, actual = table[pos] ? table[pos].team : null;
-    // +1 only when the pick is in its EXACT current position. Projected while the
-    // group is in progress; banked once it finishes.
+    // Live: +1 when the pick is in its EXACT current position. Recomputed each
+    // render, so it rises/falls as results land; locks once the group is done.
     const exact = !!(pick && actual && sameTeam(pick, actual));
-    const proj = exact ? SCORING.exactPosition : 0;
-    const got = complete ? proj : 0;
-    return { pos: pos + 1, pick, actual, proj, got, kind: exact ? "exact" : "miss" };
+    const got = exact ? SCORING.exactPosition : 0;
+    return { pos: pos + 1, pick, actual, got, kind: exact ? "exact" : "miss" };
   });
-  // Earned = position points banked once the group is done. Projected = the same
-  // from the current standings.
-  const earned = rankRows.reduce((s, r) => s + r.got, 0);
-  const projected = rankRows.reduce((s, r) => s + r.proj, 0);
+  const total = rankRows.reduce((s, r) => s + r.got, 0);
   return (
     <div className="card gc-card">
       <button className="gc-head" onClick={() => setOpen((o) => !o)}>
         <span className="gbadge">{t("group")} {g}</span>
         {!complete && <span className="hint">{t("inProgress")}</span>}
         <span className="grow" />
-        <span className="gc-total num">+{earned}{!complete && projected > earned && <span className="gc-proj-total">{" → +" + projected}</span>}</span>
+        <span className="gc-total num">+{total}</span>
         <span className="ag-chev">{open ? "▾" : "▸"}</span>
       </button>
       {open && (
@@ -1760,9 +1760,9 @@ function GroupCompare({ g, p, data, t, name }) {
           <div className="gc-colh"><span className="gc-colh-name">{name || t("predicted")}</span><span className="gc-colh-mid">{t("points")}</span><span>{t("actual")}</span></div>
           {!complete && <div className="gc-projhint hint">{t("gcProj")}</div>}
           {rankRows.map((r) => (
-            <div className={"gc-row " + (complete ? r.kind : "pend")} key={r.pos}>
+            <div className={"gc-row " + r.kind} key={r.pos}>
               <span className="gc-side pick"><span className="gc-pos num">{r.pos}</span><Team t={r.pick} dim={!r.pick} /></span>
-              <span className={"gc-pt " + (complete ? r.kind : "proj")}>{complete ? (r.got > 0 ? "+" + r.got : "0") : (r.proj > 0 ? "+" + r.proj : "·")}</span>
+              <span className={"gc-pt " + (r.got > 0 ? "exact" : "miss")}>{r.got > 0 ? "+" + r.got : "·"}</span>
               <span className="gc-side act"><Team t={r.actual} dim={!r.actual} /><span className="gc-pos num">{r.pos}</span></span>
             </div>
           ))}
@@ -2078,18 +2078,11 @@ function openPrintDoc(title, inner) {
 // a group completes), + knockout/champion from the engine. Ranked by projected.
 function projectedRows(data) {
   const rows = Object.keys(data.players).map((name) => {
-    const p = data.players[name];
-    const per = {}; let proj = 0;
-    GROUP_KEYS.forEach((g) => {
-      const table = computeGroupTable(g, data), pred = playerGroupPred(p, g);
-      let hits = 0;
-      for (let pos = 0; pos < 4; pos++) if (pred[pos] && table[pos] && sameTeam(pred[pos], table[pos].team)) hits++;
-      per[g] = hits; proj += hits * SCORING.exactPosition;
-    });
-    const cp = calcPlayerPoints(p, data);
-    return { name, banked: cp.total, proj: proj + cp.knockout + cp.champ, per, champion: canonTeam(p.champion) || "" };
+    const p = data.players[name], cp = calcPlayerPoints(p, data), per = {};
+    GROUP_KEYS.forEach((g) => { per[g] = cp.detail.ranking.filter((r) => r.g === g).reduce((s, r) => s + r.got, 0); });
+    return { name, total: cp.total, per, champion: canonTeam(p.champion) || "" };
   });
-  rows.sort((a, b) => b.proj - a.proj || b.banked - a.banked || a.name.localeCompare(b.name));
+  rows.sort((a, b) => b.total - a.total || a.name.localeCompare(b.name));
   rows.forEach((r, i) => (r.rank = i + 1));
   return rows;
 }
@@ -2097,16 +2090,16 @@ function leaguePdfHtml(data, t) {
   const rows = projectedRows(data), date = new Date().toLocaleDateString();
   let h = `<h1>${esc(t("brand"))} — ${esc(t("standings"))}</h1>`;
   h += `<p class="sub">${esc(date)} · ${rows.length} ${esc(t("expPlayersN"))} · ${esc(t("pdfLegend"))}</p>`;
-  h += `<table><thead><tr><th class="n">#</th><th>${esc(t("player"))}</th><th class="n">${esc(t("pdfBanked"))}</th><th class="n">${esc(t("pdfProj"))}</th>${GROUP_KEYS.map((g) => `<th class="n">${g}</th>`).join("")}</tr></thead><tbody>`;
-  rows.forEach((r) => { h += `<tr><td class="n">${r.rank}</td><td>${esc(r.name)}</td><td class="n">${r.banked}</td><td class="n tot">${r.proj}</td>${GROUP_KEYS.map((g) => `<td class="n">${r.per[g] || 0}</td>`).join("")}</tr>`; });
+  h += `<table><thead><tr><th class="n">#</th><th>${esc(t("player"))}</th><th class="n">${esc(t("points"))}</th>${GROUP_KEYS.map((g) => `<th class="n">${g}</th>`).join("")}</tr></thead><tbody>`;
+  rows.forEach((r) => { h += `<tr><td class="n">${r.rank}</td><td>${esc(r.name)}</td><td class="n tot">${r.total}</td>${GROUP_KEYS.map((g) => `<td class="n">${r.per[g] || 0}</td>`).join("")}</tr>`; });
   h += `</tbody></table><p class="sub">${esc(t("pdfNote"))}</p>`;
   return h;
 }
 function playerPdfHtml(name, data, t) {
   const p = data.players[name], date = new Date().toLocaleDateString();
-  const rows = projectedRows(data), me = rows.find((r) => r.name === name) || { rank: "-", proj: 0, banked: 0, champion: "" };
+  const rows = projectedRows(data), me = rows.find((r) => r.name === name) || { rank: "-", total: 0, champion: "" };
   let h = `<h1>${esc(name)}</h1>`;
-  h += `<p class="sub">${esc(date)} · ${esc(t("rank"))} ${me.rank}/${rows.length} · ${esc(t("pdfBanked"))} ${me.banked} · ${esc(t("pdfProj"))} ${me.proj}${me.champion ? ` · ${esc(t("champPick"))}: ${esc(me.champion)}` : ""}</p>`;
+  h += `<p class="sub">${esc(date)} · ${esc(t("rank"))} ${me.rank}/${rows.length} · ${esc(t("points"))} ${me.total}${me.champion ? ` · ${esc(t("champPick"))}: ${esc(me.champion)}` : ""}</p>`;
   GROUP_KEYS.forEach((g) => {
     const table = computeGroupTable(g, data), pred = playerGroupPred(p, g), done = groupComplete(g, data);
     h += `<h2>${esc(t("group"))} ${g}${done ? "" : " · " + esc(t("inProgress"))}</h2>`;

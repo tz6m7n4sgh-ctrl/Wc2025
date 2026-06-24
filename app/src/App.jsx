@@ -96,6 +96,7 @@ const I18N = {
     entryFee: "Entry fee", currency: "Currency", distribution: "Prize distribution", winnerTakes: "Winner takes all", topTwo: "Split top 2", topThree: "Split top 3", deadline: "Predictions deadline", lockPicks: "Lock predictions", prizePool: "Prize pool",
     exportData: "Export data", importData: "Import data", pasteJson: "Paste backup JSON here…", copy: "Copy", copied: "copied", loaded: "loaded", badJson: "invalid JSON", load: "Load",
     expPreds: "Players' predictions", expResults: "Group results", expHint: "Download a snapshot of the live data. CSV opens in Excel/Sheets; JSON is a full backup.", dlCsv: "Download CSV", dlJson: "Download JSON", expPlayersN: "players", expFinishedN: "finished", expScheduledN: "scheduled", expCheck: "These exports reflect the data the app is showing right now — if the player names here look wrong, the app is on sample data and didn't load the live database.",
+    pdfTitle: "PDF report", pdfHint: "Generates a printable page — pick “Save as PDF” in the print dialog. Choose one player, or the full ranked list.", pdfPlayer: "Player PDF", pdfFull: "Full list PDF", pdfBanked: "Banked", pdfProj: "Projected", pdfLegend: "projected = if current group tables hold · banked = locked from finished groups", pdfNote: "Group columns show exact-position hits (out of 4). Knockout & champion are not scored yet.",
     hPlayers: "Players", hPreds: "All group predictions complete", hChamp: "All champion picks set", hMatches: "Matches finished", hGroups: "Groups complete", hEngine: "Engine totals reconcile",
     noChanges: "No changes yet.", repairHint: "Normalize the dataset: backfill missing fields and re-derive results.", runRepair: "Run repair", repairDone: "Dataset normalized.",
     syncHint: "Live sync pulls fixtures and results from TheSportsDB. Connect the data layer to enable.", syncNow: "Sync now", reportHint: "Points by category per player. PDF export ships with the data layer.",
@@ -151,6 +152,7 @@ const I18N = {
     entryFee: "رسوم الاشتراك", currency: "العملة", distribution: "توزيع الجوائز", winnerTakes: "الفائز يأخذ الكل", topTwo: "أفضل اثنين", topThree: "أفضل ثلاثة", deadline: "موعد إغلاق التوقعات", lockPicks: "قفل التوقعات", prizePool: "مجموع الجوائز",
     exportData: "تصدير البيانات", importData: "استيراد البيانات", pasteJson: "الصق نسخة JSON هنا…", copy: "نسخ", copied: "تم النسخ", loaded: "تم التحميل", badJson: "JSON غير صالح", load: "تحميل",
     expPreds: "توقعات اللاعبين", expResults: "نتائج المجموعات", expHint: "نزّل نسخة من البيانات الحية. ملف CSV يفتح في Excel/Sheets، وJSON نسخة احتياطية كاملة.", dlCsv: "تنزيل CSV", dlJson: "تنزيل JSON", expPlayersN: "لاعب", expFinishedN: "منتهية", expScheduledN: "مجدولة", expCheck: "تعكس هذه الملفات البيانات المعروضة حالياً — إذا بدت أسماء اللاعبين خاطئة فالتطبيق يعمل على بيانات تجريبية ولم يحمّل قاعدة البيانات الحية.",
+    pdfTitle: "تقرير PDF", pdfHint: "ينشئ صفحة قابلة للطباعة — اختر «حفظ كـ PDF» في نافذة الطباعة. اختر لاعباً واحداً أو القائمة الكاملة.", pdfPlayer: "PDF للاعب", pdfFull: "PDF للقائمة الكاملة", pdfBanked: "محقّقة", pdfProj: "متوقعة", pdfLegend: "المتوقعة = إذا بقيت ترتيبات المجموعات الحالية · المحقّقة = مثبّتة من المجموعات المكتملة", pdfNote: "أعمدة المجموعات تعرض المراكز الصحيحة (من 4). الأدوار الإقصائية والبطل لم تُحتسب بعد.",
     hPlayers: "اللاعبون", hPreds: "اكتمال توقعات المجموعات", hChamp: "تعيين كل توقعات البطل", hMatches: "المباريات المنتهية", hGroups: "المجموعات المكتملة", hEngine: "تطابق مجاميع المحرّك",
     noChanges: "لا تغييرات بعد.", repairHint: "توحيد البيانات: استكمال الحقول الناقصة وإعادة احتساب النتائج.", runRepair: "تشغيل الإصلاح", repairDone: "تم توحيد البيانات.",
     syncHint: "المزامنة المباشرة تجلب المباريات والنتائج من TheSportsDB. اربط طبقة البيانات للتفعيل.", syncNow: "مزامنة الآن", reportHint: "النقاط حسب الفئة لكل لاعب. تصدير PDF يأتي مع طبقة البيانات.",
@@ -2055,8 +2057,72 @@ function downloadText(name, text, mime) {
 const csvCell = (v) => { const s = v == null ? "" : String(v); return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; };
 const toCsv = (rows) => "﻿" + rows.map((r) => r.map(csvCell).join(",")).join("\r\n"); // BOM for Excel
 // Admin: focused exports — players' predictions and group results, as CSV or JSON.
+// --- PDF export via the browser's print-to-PDF (no dependency) ------------
+const esc = (s) => String(s == null ? "" : s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+function openPrintDoc(title, inner) {
+  const w = window.open("", "_blank");
+  if (!w) { alert("Allow pop-ups to export the PDF"); return; }
+  w.document.write(`<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(title)}</title><style>
+    *{box-sizing:border-box}body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;color:#111;margin:22px}
+    h1{font-size:19px;margin:0 0 2px}.sub{color:#666;font-size:11px;margin:0 0 14px}
+    h2{font-size:13px;margin:16px 0 5px;color:#13854f;border-bottom:2px solid #13854f;padding-bottom:2px}
+    table{border-collapse:collapse;width:100%;margin:4px 0 14px;font-size:11.5px}
+    th,td{border:1px solid #d0d0d0;padding:4px 7px;text-align:left}th{background:#f4f4f4;font-weight:700}
+    td.n,th.n{text-align:center;font-variant-numeric:tabular-nums}.ok{color:#13854f;font-weight:800}.tot{font-weight:800}
+    @media print{body{margin:10px}}
+  </style></head><body>${inner}</body></html>`);
+  w.document.close(); w.focus();
+  setTimeout(() => { try { w.print(); } catch (e) {} }, 350);
+}
+// Projected league rows: +1 per team in its exact CURRENT position (banked once
+// a group completes), + knockout/champion from the engine. Ranked by projected.
+function projectedRows(data) {
+  const rows = Object.keys(data.players).map((name) => {
+    const p = data.players[name];
+    const per = {}; let proj = 0;
+    GROUP_KEYS.forEach((g) => {
+      const table = computeGroupTable(g, data), pred = playerGroupPred(p, g);
+      let hits = 0;
+      for (let pos = 0; pos < 4; pos++) if (pred[pos] && table[pos] && sameTeam(pred[pos], table[pos].team)) hits++;
+      per[g] = hits; proj += hits * SCORING.exactPosition;
+    });
+    const cp = calcPlayerPoints(p, data);
+    return { name, banked: cp.total, proj: proj + cp.knockout + cp.champ, per, champion: canonTeam(p.champion) || "" };
+  });
+  rows.sort((a, b) => b.proj - a.proj || b.banked - a.banked || a.name.localeCompare(b.name));
+  rows.forEach((r, i) => (r.rank = i + 1));
+  return rows;
+}
+function leaguePdfHtml(data, t) {
+  const rows = projectedRows(data), date = new Date().toLocaleDateString();
+  let h = `<h1>${esc(t("brand"))} — ${esc(t("standings"))}</h1>`;
+  h += `<p class="sub">${esc(date)} · ${rows.length} ${esc(t("expPlayersN"))} · ${esc(t("pdfLegend"))}</p>`;
+  h += `<table><thead><tr><th class="n">#</th><th>${esc(t("player"))}</th><th class="n">${esc(t("pdfBanked"))}</th><th class="n">${esc(t("pdfProj"))}</th>${GROUP_KEYS.map((g) => `<th class="n">${g}</th>`).join("")}</tr></thead><tbody>`;
+  rows.forEach((r) => { h += `<tr><td class="n">${r.rank}</td><td>${esc(r.name)}</td><td class="n">${r.banked}</td><td class="n tot">${r.proj}</td>${GROUP_KEYS.map((g) => `<td class="n">${r.per[g] || 0}</td>`).join("")}</tr>`; });
+  h += `</tbody></table><p class="sub">${esc(t("pdfNote"))}</p>`;
+  return h;
+}
+function playerPdfHtml(name, data, t) {
+  const p = data.players[name], date = new Date().toLocaleDateString();
+  const rows = projectedRows(data), me = rows.find((r) => r.name === name) || { rank: "-", proj: 0, banked: 0, champion: "" };
+  let h = `<h1>${esc(name)}</h1>`;
+  h += `<p class="sub">${esc(date)} · ${esc(t("rank"))} ${me.rank}/${rows.length} · ${esc(t("pdfBanked"))} ${me.banked} · ${esc(t("pdfProj"))} ${me.proj}${me.champion ? ` · ${esc(t("champPick"))}: ${esc(me.champion)}` : ""}</p>`;
+  GROUP_KEYS.forEach((g) => {
+    const table = computeGroupTable(g, data), pred = playerGroupPred(p, g), done = groupComplete(g, data);
+    h += `<h2>${esc(t("group"))} ${g}${done ? "" : " · " + esc(t("inProgress"))}</h2>`;
+    h += `<table><thead><tr><th class="n">#</th><th>${esc(t("predicted"))}</th><th>${esc(t("actual"))}</th><th class="n">+1</th></tr></thead><tbody>`;
+    for (let pos = 0; pos < 4; pos++) {
+      const pick = pred[pos] || "—", actual = table[pos] ? table[pos].team : "—";
+      const exact = pred[pos] && table[pos] && sameTeam(pred[pos], table[pos].team);
+      h += `<tr><td class="n">${pos + 1}</td><td>${esc(canonTeam(pick))}</td><td>${esc(actual)}</td><td class="n ${exact ? "ok" : ""}">${exact ? "+1" : ""}</td></tr>`;
+    }
+    h += `</tbody></table>`;
+  });
+  return h;
+}
 function Exports({ data, t }) {
   const players = Object.keys(data.players);
+  const [pdfPlayer, setPdfPlayer] = useState(players[0] || "");
   const groupMatches = (data.matches || []).filter((m) => m.stage === "group");
   const finishedN = groupMatches.filter((m) => m.finalH != null && m.finalA != null).length;
 
@@ -2108,6 +2174,17 @@ function Exports({ data, t }) {
         <div className="exp-btns">
           <button className="btn" onClick={() => downloadText(`group-results-${stamp}.csv`, resData.csv, "text/csv")}>{t("dlCsv")}</button>
           <button className="btn ghost" onClick={() => downloadText(`group-results-${stamp}.json`, resData.json, "application/json")}>{t("dlJson")}</button>
+        </div>
+      </div>
+      <div className="card">
+        <h3 className="cardh"><Ico name="chart" size={18} /> {t("pdfTitle")}</h3>
+        <p className="hint block">{t("pdfHint")}</p>
+        <select className="select" value={pdfPlayer} onChange={(e) => setPdfPlayer(e.target.value)}>
+          {players.map((n) => <option key={n} value={n}>{n}</option>)}
+        </select>
+        <div className="exp-btns">
+          <button className="btn" disabled={!pdfPlayer} onClick={() => openPrintDoc(pdfPlayer, playerPdfHtml(pdfPlayer, data, t))}>{t("pdfPlayer")}</button>
+          <button className="btn ghost" onClick={() => openPrintDoc(t("standings"), leaguePdfHtml(data, t))}>{t("pdfFull")}</button>
         </div>
       </div>
     </div>

@@ -99,7 +99,7 @@ const I18N = {
     waRemind: "Remind", waRemindMsg1: "here's a reminder to set your World Cup picks before they lock", waRemindMsg2: "tap to open:", lockAuto: "Auto-locks 4h before the first knockout match", lockManual: "Manual override (leave blank to auto-lock 4h before the first knockout)", lockAutoTba: "Will auto-lock 4h before the first knockout match (schedule pending)",
     randomFill: "Fill randomly (unique to me)", randomConfirm: "Fill all your open predictions with a random draw? Each player gets a different one. You can still edit afterwards.",
     groupPredHint: "Order each group 1–4. Open until your league admin sets a deadline.", groupLockedHint: "Group predictions are locked.", groupLockAuto: "Auto-locks at the first group match", groupLock: "Group predictions lock", groupLockOpen: "Open — set a time to close entry (e.g. the first group kickoff)",
-    koPicks: "Knockout picks", koOpensWhen: "Knockout picks open once the group stage finishes.", koLockHint: "Each pick locks 4 hours before its kickoff.", koProjected: "Projected from the current standings — pick now; matchups may still shift until the groups finish. Each pick locks 4h before kickoff.", koPreview: "Preview projected from the current standings. Picks open once the knockout fixtures are confirmed; each pick will lock 4h before its kickoff.", koLockBy: "locks 4h before kickoff", pickWinner: "Pick the winner", koTba: "Awaiting earlier results",
+    koPicks: "Knockout picks", koOpensWhen: "Knockout picks open once the group stage finishes.", koLockHint: "Each pick locks 4 hours before its kickoff.", koProjected: "Projected from the current standings — pick now; matchups may still shift until the groups finish. Each pick locks 4h before kickoff.", koPreview: "Preview projected from the current standings. Picks open once the knockout fixtures are confirmed; each pick will lock 4h before its kickoff.", koLockBy: "locks 4h before kickoff", pickWinner: "Pick the winner", koTba: "Awaiting earlier results", koTba2: "TBD", koVs: "v",
     resultsEditor: "Results editor", resultsHint: "Enter a score to mark a match finished — standings, points and the bracket update instantly.", setChampion: "Set champion",
     entryFee: "Entry fee", currency: "Currency", distribution: "Prize distribution", winnerTakes: "Winner takes all", topTwo: "Split top 2", topThree: "Split top 3", deadline: "Predictions deadline", lockPicks: "Lock predictions", prizePool: "Prize pool",
     exportData: "Export data", importData: "Import data", pasteJson: "Paste backup JSON here…", copy: "Copy", copied: "copied", loaded: "loaded", badJson: "invalid JSON", load: "Load",
@@ -164,7 +164,7 @@ const I18N = {
     waRemind: "تذكير", waRemindMsg1: "تذكير باختيار توقّعاتك في دوري كأس العالم قبل إغلاقها", waRemindMsg2: "اضغط للفتح:", lockAuto: "يُغلق تلقائياً قبل 4 ساعات من أول مباراة إقصائية", lockManual: "تجاوز يدوي (اتركه فارغاً ليُغلق تلقائياً قبل 4 ساعات من أول مباراة إقصائية)", lockAutoTba: "سيُغلق تلقائياً قبل 4 ساعات من أول مباراة إقصائية (الجدول قيد الانتظار)",
     randomFill: "تعبئة عشوائية (خاصة بي)", randomConfirm: "تعبئة كل توقّعاتك المفتوحة بقرعة عشوائية؟ لكل لاعب قرعة مختلفة. يمكنك التعديل لاحقاً.",
     groupPredHint: "رتّب كل مجموعة من 1 إلى 4. مفتوح حتى يحدّد المشرف موعداً للإغلاق.", groupLockedHint: "توقّعات المجموعات مغلقة.", groupLockAuto: "يُغلق تلقائياً عند أول مباراة في المجموعات", groupLock: "إغلاق توقّعات المجموعات", groupLockOpen: "مفتوح — حدّد وقتاً لإغلاق الإدخال (مثلاً أول مباراة في المجموعات)",
-    koPicks: "توقّعات الأدوار الإقصائية", koOpensWhen: "تُفتح توقّعات الأدوار الإقصائية بعد انتهاء دور المجموعات.", koLockHint: "يُغلق كل اختيار قبل 4 ساعات من موعد المباراة.", koProjected: "متوقّعة من الترتيب الحالي — اختر الآن؛ قد تتغيّر المواجهات حتى انتهاء المجموعات. يُغلق كل اختيار قبل 4 ساعات من المباراة.", koPreview: "معاينة متوقّعة من الترتيب الحالي. تُفتح التوقّعات بعد تأكيد مباريات الأدوار الإقصائية؛ ويُغلق كل اختيار قبل 4 ساعات من موعده.", koLockBy: "يُغلق قبل 4 ساعات من المباراة", pickWinner: "اختر الفائز", koTba: "بانتظار النتائج السابقة",
+    koPicks: "توقّعات الأدوار الإقصائية", koOpensWhen: "تُفتح توقّعات الأدوار الإقصائية بعد انتهاء دور المجموعات.", koLockHint: "يُغلق كل اختيار قبل 4 ساعات من موعد المباراة.", koProjected: "متوقّعة من الترتيب الحالي — اختر الآن؛ قد تتغيّر المواجهات حتى انتهاء المجموعات. يُغلق كل اختيار قبل 4 ساعات من المباراة.", koPreview: "معاينة متوقّعة من الترتيب الحالي. تُفتح التوقّعات بعد تأكيد مباريات الأدوار الإقصائية؛ ويُغلق كل اختيار قبل 4 ساعات من موعده.", koLockBy: "يُغلق قبل 4 ساعات من المباراة", pickWinner: "اختر الفائز", koTba: "بانتظار النتائج السابقة", koTba2: "غير محدد", koVs: "ضد",
     resultsEditor: "محرّر النتائج", resultsHint: "أدخل النتيجة لإنهاء المباراة — يُحدّث الترتيب والنقاط والأدوار فوراً.", setChampion: "تعيين البطل",
     entryFee: "رسوم الاشتراك", currency: "العملة", distribution: "توزيع الجوائز", winnerTakes: "الفائز يأخذ الكل", topTwo: "أفضل اثنين", topThree: "أفضل ثلاثة", deadline: "موعد إغلاق التوقعات", lockPicks: "قفل التوقعات", prizePool: "مجموع الجوائز",
     exportData: "تصدير البيانات", importData: "استيراد البيانات", pasteJson: "الصق نسخة JSON هنا…", copy: "نسخ", copied: "تم النسخ", loaded: "تم التحميل", badJson: "JSON غير صالح", load: "تحميل",
@@ -2503,14 +2503,17 @@ function MyPickCard({ data, setData, player, t, logout }) {
                     const ready = m.home && m.away;
                     const tlocked = m.ko ? Date.now() > m.ko - KO_LOCK_MS : false;
                     const pick = myKo[m.mid] || null;
-                    if (!ready) return <div className="kotie tba" key={m.mid}><span className="kotie-tba">{t("koTba")}</span></div>;
+                    if (!ready) return <div className="kotie tba" key={m.mid}><span className="kotie-tba">{canonTeam(m.home) || t("koTba2")} {t("koVs")} {canonTeam(m.away) || t("koTba2")}</span></div>;
                     return (
                       <div className="kotie" key={m.mid}>
-                        {[m.home, m.away].map((tm) => {
-                          const on = pick && sameTeam(pick, tm);
-                          return <button key={tm} className={"kopick" + (on ? " on" : "") + (tlocked ? " lk" : "")} disabled={tlocked && !on} onClick={() => !tlocked && setKo(m.mid, tm)}><Team t={canonTeam(tm)} /></button>;
-                        })}
-                        {tlocked && <span className="kotie-lk">🔒</span>}
+                        <span className="kotie-match"><Team t={canonTeam(m.home)} /> <span className="kovs">{t("koVs")}</span> <Team t={canonTeam(m.away)} /></span>
+                        {tlocked
+                          ? <span className="kotie-lk">{pick ? canonTeam(pick) : "—"} 🔒</span>
+                          : <select className="select kosel" value={canonTeam(pick) || ""} onChange={(e) => setKo(m.mid, e.target.value)}>
+                              <option value="">— {t("pickWinner")} —</option>
+                              <option value={canonTeam(m.home)}>{canonTeam(m.home)}</option>
+                              <option value={canonTeam(m.away)}>{canonTeam(m.away)}</option>
+                            </select>}
                       </div>
                     );
                   })}
@@ -3755,7 +3758,11 @@ border-radius:18px;padding:16px 14px;margin:10px 0;color:#fff;background:linear-
 .gpsel{flex:1;margin:0;padding:7px 9px;font-size:13px}
 .mypick-ko{margin-top:14px;padding-top:12px;border-top:1px dashed var(--border)}
 .koround{margin-top:10px}.koround-h{font-weight:800;font-size:11px;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
-.kotie{display:flex;align-items:center;gap:6px;margin-bottom:6px}
+.kotie{display:flex;flex-direction:column;gap:5px;margin-bottom:9px;padding-bottom:9px;border-bottom:1px dashed var(--border)}
+.kotie:last-child{border-bottom:none}
+.kotie-match{display:flex;align-items:center;gap:7px;font-size:12.5px;font-weight:700;flex-wrap:wrap}
+.kovs{font-size:10.5px;color:var(--muted);font-weight:700}
+.kosel{margin:0;padding:7px 9px;font-size:13px}
 .kopick{flex:1;min-width:0;display:flex;align-items:center;gap:6px;padding:7px 9px;border:1px solid var(--border);border-radius:9px;background:var(--card);color:var(--ink);font-family:inherit;font-weight:700;font-size:12.5px;cursor:pointer}
 .kopick.on{background:var(--pitch);color:#fff;border-color:var(--pitch)}
 .kopick.lk{opacity:.55;cursor:not-allowed}.kopick.on.lk{opacity:1}

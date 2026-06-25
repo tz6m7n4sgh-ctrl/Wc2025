@@ -32,9 +32,9 @@ const RR = [[0, 1], [2, 3], [0, 2], [1, 3], [0, 3], [1, 2]];
 // match-winner points, no right-group/wrong-spot points); knockout 2/3/4/5/6;
 // champion +10.
 const SCORING = {
-  edgeCorrect: 0,         // group match-winners are not part of the league rules
-  exactPosition: 1,       // +1 for each team placed in its exact final position
-  teamInGroupWrongPos: 0, // no points for correct group but wrong position
+  edgeCorrect: 0,             // group match-winners are not part of the league rules
+  groupPos: [3, 2, 1, 0],    // exact finish: 1st +3, 2nd +2, 3rd +1, 4th nil
+  qualifierWrongSlot: 1,     // predicted a top-2 team that qualified, but in the other slot
   champion: 10,
   knockout: { R32: 2, R16: 3, QF: 4, SF: 5, F: 6 },
 };
@@ -100,7 +100,7 @@ const I18N = {
     waCodeMsg: "your World Cup league sign-in code is:", waCodeMsg2: "Open the app → More → My picks, and enter this code. Keep it private — it's just for you.",
     codeTitle: "Enter your code", codeHint: "Enter the 4-digit sign-in code your league admin sent you on WhatsApp.", codePh: "e.g. 1234", codeBad: "That code isn't recognised — check it and try again.", codeGo: "Sign in", regenCode: "New code",
     waRemind: "Remind", waRemindMsg1: "here's a reminder to set your World Cup picks before they lock", waRemindMsg2: "tap to open:", lockAuto: "Auto-locks 4h before the first knockout match", lockManual: "Manual override (leave blank to auto-lock 4h before the first knockout)", lockAutoTba: "Will auto-lock 4h before the first knockout match (schedule pending)",
-    randomFill: "Fill randomly (unique to me)", randomConfirm: "Fill all your open predictions with a random draw? Each player gets a different one. You can still edit afterwards.",
+    picksMade: "Your picks", randomFill: "Fill randomly (unique to me)", randomConfirm: "Fill all your open predictions with a random draw? Each player gets a different one. You can still edit afterwards.",
     groupPredHint: "Order each group 1–4. Open until your league admin sets a deadline.", groupLockedHint: "Group predictions are locked.", groupLockAuto: "Auto-locks at the first group match", groupLock: "Group predictions lock", groupLockOpen: "Open — set a time to close entry (e.g. the first group kickoff)",
     koPicks: "Knockout picks", koOpensWhen: "Knockout picks open once the group stage finishes.", koLockHint: "Each pick locks 4 hours before its kickoff.", koProjected: "Projected from the current standings — pick now; matchups may still shift until the groups finish. Each pick locks 4h before kickoff.", koPreview: "Preview projected from the current standings. Picks open once the knockout fixtures are confirmed; each pick will lock 4h before its kickoff.", koLockBy: "locks 4h before kickoff", pickWinner: "Pick the winner", koTba: "Awaiting earlier results", koTba2: "TBD", koVs: "v",
     resultsEditor: "Results editor", resultsHint: "Enter a score to mark a match finished — standings, points and the bracket update instantly.", setChampion: "Set champion",
@@ -133,7 +133,7 @@ const I18N = {
     p_ko_t: "Knockout winners", p_ko_d: "Points for picking the team that advances (R32 +2, R16 +3, QF +4, SF +5, Final +6)",
     p_champ_t: "Champion", p_champ_d: "+10 for correctly picking the World Cup winner",
     p_exact: "exact", p_ingrp: "in group", p_yes: "correct", p_no: "missed",
-    inProgress: "in progress", gcHint: "Your prediction next to the actual standings, with the points each pick earned.", gcProj: "Live: +1 for each team in its exact current position — this rises or falls as results come in, and locks once the group finishes.",
+    inProgress: "in progress", gcHint: "Your prediction next to the actual standings, with the points each pick earned.", gcProj: "Live: exact finish scores 1st +3, 2nd +2, 3rd +1; +1 for a top-2 pick that qualifies in the other slot. Rises/falls as results come in, locks once the group finishes.",
   },
   ar: {
     brand: "كأس العالم 2026", dir: "rtl",
@@ -167,7 +167,7 @@ const I18N = {
     waCodeMsg: "رمز دخولك لدوري كأس العالم هو:", waCodeMsg2: "افتح التطبيق ← المزيد ← توقعاتي وأدخل هذا الرمز. احتفظ به لنفسك — خاص بك.",
     codeTitle: "أدخل رمزك", codeHint: "أدخل رمز الدخول المكوّن من 4 أرقام الذي أرسله لك مشرف الدوري عبر واتساب.", codePh: "مثال 1234", codeBad: "هذا الرمز غير معروف — تحقق منه وحاول مجدداً.", codeGo: "دخول", regenCode: "رمز جديد",
     waRemind: "تذكير", waRemindMsg1: "تذكير باختيار توقّعاتك في دوري كأس العالم قبل إغلاقها", waRemindMsg2: "اضغط للفتح:", lockAuto: "يُغلق تلقائياً قبل 4 ساعات من أول مباراة إقصائية", lockManual: "تجاوز يدوي (اتركه فارغاً ليُغلق تلقائياً قبل 4 ساعات من أول مباراة إقصائية)", lockAutoTba: "سيُغلق تلقائياً قبل 4 ساعات من أول مباراة إقصائية (الجدول قيد الانتظار)",
-    randomFill: "تعبئة عشوائية (خاصة بي)", randomConfirm: "تعبئة كل توقّعاتك المفتوحة بقرعة عشوائية؟ لكل لاعب قرعة مختلفة. يمكنك التعديل لاحقاً.",
+    picksMade: "اختياراتك", randomFill: "تعبئة عشوائية (خاصة بي)", randomConfirm: "تعبئة كل توقّعاتك المفتوحة بقرعة عشوائية؟ لكل لاعب قرعة مختلفة. يمكنك التعديل لاحقاً.",
     groupPredHint: "رتّب كل مجموعة من 1 إلى 4. مفتوح حتى يحدّد المشرف موعداً للإغلاق.", groupLockedHint: "توقّعات المجموعات مغلقة.", groupLockAuto: "يُغلق تلقائياً عند أول مباراة في المجموعات", groupLock: "إغلاق توقّعات المجموعات", groupLockOpen: "مفتوح — حدّد وقتاً لإغلاق الإدخال (مثلاً أول مباراة في المجموعات)",
     koPicks: "توقّعات الأدوار الإقصائية", koOpensWhen: "تُفتح توقّعات الأدوار الإقصائية بعد انتهاء دور المجموعات.", koLockHint: "يُغلق كل اختيار قبل 4 ساعات من موعد المباراة.", koProjected: "متوقّعة من الترتيب الحالي — اختر الآن؛ قد تتغيّر المواجهات حتى انتهاء المجموعات. يُغلق كل اختيار قبل 4 ساعات من المباراة.", koPreview: "معاينة متوقّعة من الترتيب الحالي. تُفتح التوقّعات بعد تأكيد مباريات الأدوار الإقصائية؛ ويُغلق كل اختيار قبل 4 ساعات من موعده.", koLockBy: "يُغلق قبل 4 ساعات من المباراة", pickWinner: "اختر الفائز", koTba: "بانتظار النتائج السابقة", koTba2: "غير محدد", koVs: "ضد",
     resultsEditor: "محرّر النتائج", resultsHint: "أدخل النتيجة لإنهاء المباراة — يُحدّث الترتيب والنقاط والأدوار فوراً.", setChampion: "تعيين البطل",
@@ -200,7 +200,7 @@ const I18N = {
     p_ko_t: "الأدوار الإقصائية", p_ko_d: "نقاط لاختيار الفريق المتأهل (دور 32 +2، دور 16 +3، الربع +4، النصف +5، النهائي +6)",
     p_champ_t: "البطل", p_champ_d: "+10 لاختيار بطل كأس العالم بشكل صحيح",
     p_exact: "صحيح", p_ingrp: "في المجموعة", p_yes: "صحيح", p_no: "خطأ",
-    inProgress: "قيد اللعب", gcHint: "توقعك بجانب الترتيب الفعلي، مع النقاط التي حققها كل اختيار.", gcProj: "مباشر: +1 لكل فريق في مركزه الحالي الصحيح — يرتفع أو ينخفض مع ورود النتائج، ويُثبَّت عند انتهاء المجموعة.",
+    inProgress: "قيد اللعب", gcHint: "توقعك بجانب الترتيب الفعلي، مع النقاط التي حققها كل اختيار.", gcProj: "مباشر: المركز الصحيح يمنح الأول +3، الثاني +2، الثالث +1؛ و+1 لاختيار ضمن أول اثنين تأهّل في الخانة الأخرى. يتغيّر مع النتائج ويُثبَّت عند انتهاء المجموعة.",
   },
 };
 
@@ -315,17 +315,18 @@ function calcPlayerPoints(p, data) {
       gMatch += got;
       detail.matches.push({ g, i, ...r, got });
     }
-    // Live group points: +1 per team in its EXACT CURRENT position. Recomputed
-    // every render, so the total rises/falls as results land and tables shift;
-    // it simply locks once the group is complete.
+    // Football-weighted group points: exact 1st +3, 2nd +2, 3rd +1 (4th nil), plus
+    // +1 for a predicted top-2 team that qualified in the OTHER top-2 slot. Live:
+    // recomputed every render and locks once the group is complete.
     {
       const table = computeGroupTable(g, data), pred = playerGroupPred(p, g);
       const locked = groupComplete(g, data);
+      const actualTop2 = new Set([table[0], table[1]].filter(Boolean).map((x) => teamKey(x.team)));
       for (let pos = 0; pos < 4; pos++) {
         const actual = table[pos] ? table[pos].team : null, pick = pred[pos] || null;
         let got = 0, reason = "miss";
-        if (pick && actual && sameTeam(pick, actual)) { got = SCORING.exactPosition; reason = "exact"; }
-        else if (pick && table.some((rw) => sameTeam(rw.team, pick))) { got = SCORING.teamInGroupWrongPos; reason = "in_group"; }
+        if (pick && actual && sameTeam(pick, actual)) { got = SCORING.groupPos[pos]; reason = "exact"; }
+        else if (pick && pos < 2 && actualTop2.has(teamKey(pick))) { got = SCORING.qualifierWrongSlot; reason = "qualifier"; }
         gRank += got;
         detail.ranking.push({ g, pos: pos + 1, pick, actual, got, reason, locked });
       }
@@ -1860,13 +1861,16 @@ function GroupCompare({ g, p, data, t, name }) {
   const table = useMemo(() => computeGroupTable(g, data), [g, data]);
   const pred = playerGroupPred(p, g);
   const complete = groupComplete(g, data);
+  const actualTop2 = new Set([table[0], table[1]].filter(Boolean).map((x) => teamKey(x.team)));
   const rankRows = [0, 1, 2, 3].map((pos) => {
     const pick = pred[pos] || null, actual = table[pos] ? table[pos].team : null;
-    // Live: +1 when the pick is in its EXACT current position. Recomputed each
-    // render, so it rises/falls as results land; locks once the group is done.
+    // Exact 1st +3 / 2nd +2 / 3rd +1; or +1 for a top-2 pick that qualified in the
+    // other slot. Recomputed each render; locks once the group is done.
     const exact = !!(pick && actual && sameTeam(pick, actual));
-    const got = exact ? SCORING.exactPosition : 0;
-    return { pos: pos + 1, pick, actual, got, kind: exact ? "exact" : "miss" };
+    let got = 0, kind = "miss";
+    if (exact) { got = SCORING.groupPos[pos]; kind = "exact"; }
+    else if (pick && pos < 2 && actualTop2.has(teamKey(pick))) { got = SCORING.qualifierWrongSlot; kind = "qualifier"; }
+    return { pos: pos + 1, pick, actual, got, kind };
   });
   const total = rankRows.reduce((s, r) => s + r.got, 0);
   return (
@@ -2487,9 +2491,15 @@ function MyPickCard({ data, setData, player, t, logout, persist }) {
     });
   };
   const anyOpen = !groupsDisabled || !locked || koRounds.some((r) => r.ties.some((m) => m.home && m.away && !(m.ko && Date.now() > m.ko - KO_LOCK_MS)));
+  // Progress over the currently-actionable picks: champion + each known knockout tie.
+  const koReady = koRounds.flatMap((r) => r.ties).filter((m) => m.home && m.away);
+  const picksTotal = 1 + koReady.length;
+  const picksMade = (canonTeam(p.champion) ? 1 : 0) + koReady.filter((m) => myKo[m.mid]).length;
+  const pickPct = picksTotal ? Math.round((picksMade / picksTotal) * 100) : 0;
   return (
     <div className="card mypick">
       <div className="mypick-head"><Avatar name={player} /><span className="champname">{t("signedInAs")} <b>{player}</b></span><button className="seeall" onClick={logout}>{t("logout")}</button></div>
+      <div className="pickprog"><div className="pickprog-row"><span>{t("picksMade")}</span><span className="num"><b>{picksMade}</b>/{picksTotal}{picksMade >= picksTotal && " ✓"}</span></div><div className="pickprog-bar"><span style={{ width: pickPct + "%" }} /></div></div>
       {anyOpen && <button className="btn mypick-fill" onClick={randomFill}>🎲 {t("randomFill")}</button>}
 
       <div className={"mypick-groups" + (groupsDisabled ? " off" : "")}>
@@ -3842,6 +3852,10 @@ border-radius:18px;padding:16px 14px;margin:10px 0;color:#fff;background:linear-
 .mypick-head{display:flex;align-items:center;gap:8px}
 .mypick-body{display:flex;align-items:center;gap:10px;margin-top:10px}.mypick-lbl{font-weight:800;font-size:14px}
 .mypick-locked{font-weight:700;display:flex;align-items:center;gap:6px;color:var(--muted)}
+.pickprog{margin-top:10px}
+.pickprog-row{display:flex;justify-content:space-between;align-items:center;font-size:12.5px;font-weight:700;color:var(--muted);margin-bottom:4px}
+.pickprog-bar{height:6px;border-radius:4px;background:var(--soft);overflow:hidden}
+.pickprog-bar>span{display:block;height:100%;background:var(--grass);border-radius:4px;transition:width .3s ease}
 .mypick-fill{width:100%;margin-top:10px;background:var(--gold);color:#241c00;border-color:var(--gold-d);font-weight:800}
 .mypick-groups{margin-top:12px;padding-top:12px;border-top:1px dashed var(--border)}
 .mypick-groups.off{opacity:.92}

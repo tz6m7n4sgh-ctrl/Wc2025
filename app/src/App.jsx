@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useEffect, useRef } from "react";
 import { BarChart, Bar, LineChart, Line, CartesianGrid, Legend, XAxis, YAxis, Cell, ResponsiveContainer, Tooltip } from "recharts";
-import { loadFromSupabase, saveBlob, upsertResult, upsertResults } from "./supabase.js";
+import { loadFromSupabase, saveBlob, upsertResult, upsertResults, SB_URL } from "./supabase.js";
+import { SECURE_AUTH_URL, secureAuthOn, secureLogin, secureSave, loadPlayerRows } from "./secureAuth.js";
 import { fetchLivescore, fetchCompletedResults, fetchResultsRange, fetchSeasonEvents, getFeedStatus, fetchMatchDetail, fetchEventFinals } from "./thesportsdb.js";
 import { trackEvent, trackPageView, setAnalyticsContext } from "./analytics.js";
 
@@ -650,7 +651,7 @@ function applyEventFinals(matches, finals) {
     return { ...m, finalH: hs, finalA: as, resSource: "api-event" };
   });
 }
-function mapBlobToData(blob, resultRows, apiResults) {
+function mapBlobToData(blob, resultRows, apiResults, playerRows) {
   blob = blob || {};
   // groupResults keyed by canonical RR matchKey. Start from the blob fallback,
   // then overlay the normalized table re-resolved BY TEAMS and oriented to the
@@ -676,6 +677,14 @@ function mapBlobToData(blob, resultRows, apiResults) {
   const players = {};
   Object.entries(blob.players || {}).forEach(([name, p]) => {
     players[name] = { groupPreds: p.groupPreds || p.predictions || p.groups || {}, champion: p.champion == null ? null : p.champion, knockout: p.knockoutPreds || p.knockout || {}, phone: p.phone || "", token: p.token || null, meta: p.meta };
+  });
+  // Secure mode: the authoritative picks live in the per-player rows table.
+  // Overlay them over the blob so the leaderboard reflects gateway writes.
+  // (Codes are NOT here — they're private; login goes through the function.)
+  (playerRows || []).forEach((r) => {
+    if (!r || !r.name) return;
+    const cur = players[r.name] || { groupPreds: {}, champion: null, knockout: {}, phone: "", token: null, meta: null };
+    players[r.name] = { ...cur, groupPreds: r.group_preds || cur.groupPreds || {}, champion: r.champion == null ? null : r.champion, knockout: r.knockout || cur.knockout || {}, phone: r.phone || cur.phone || "" };
   });
   const sched = blob.scheduleMatches || [];
   const findSched = (home, away) => sched.find((s) => s && ((sameTeam(s.home, home) && sameTeam(s.away, away)) || (sameTeam(s.home, away) && sameTeam(s.away, home))));
@@ -2423,7 +2432,8 @@ function GroupPredEditor({ g, pred, locked, onSet, t }) {
   );
 }
 // Self-service: the signed-in player sets their own group order, champion + knockout winners (until lock).
-function MyPickCard({ data, setData, player, t, logout }) {
+function MyPickCard({ data, setData, player, t, logout, persist }) {
+  const save = persist || persistLive; // secure gateway when provided, else blob
   const allTeams = useMemo(() => GROUP_KEYS.flatMap((g) => GROUPS[g]).slice().sort((a, b) => a.localeCompare(b)), []);
   const cl = champLock(data);
   const locked = cl.at ? Date.now() > cl.at : false;
@@ -2437,18 +2447,18 @@ function MyPickCard({ data, setData, player, t, logout }) {
     const cur = (d.players[player] && d.players[player].groupPreds) || {};
     const nd = { ...d, players: { ...d.players, [player]: { ...d.players[player], groupPreds: { ...cur, [g]: arr } } },
       auditLog: [{ ts: Date.now(), msg: `${t("nav_predictions")} (self): ${player} ${g} → ${arr.map((x) => x || "—").join(", ")}` }, ...(d.auditLog || [])].slice(0, 80) };
-    persistLive(nd); return nd;
+    save(nd); return nd;
   });
   const setChamp = (team) => setData((d) => {
     const nd = { ...d, players: { ...d.players, [player]: { ...d.players[player], champion: team || null } },
       auditLog: [{ ts: Date.now(), msg: `${t("champPick")} (self): ${player} → ${team || "—"}` }, ...(d.auditLog || [])].slice(0, 80) };
-    persistLive(nd); return nd;
+    save(nd); return nd;
   });
   const setKo = (mid, team) => setData((d) => {
     const cur = (d.players[player] && d.players[player].knockout) || {};
     const nd = { ...d, players: { ...d.players, [player]: { ...d.players[player], knockout: { ...cur, [mid]: team } } },
       auditLog: [{ ts: Date.now(), msg: `${t("koPicks")} (self): ${player} ${mid} → ${team}` }, ...(d.auditLog || [])].slice(0, 80) };
-    persistLive(nd); return nd;
+    save(nd); return nd;
   });
   const myKo = (p && p.knockout) || {};
   // One-tap fill: randomises every UNLOCKED section. Seeded with the player's
@@ -2470,7 +2480,7 @@ function MyPickCard({ data, setData, player, t, logout }) {
       }));
       const nd = { ...d, players: { ...d.players, [player]: { ...cur, groupPreds: gp, champion: champion || null, knockout: ko } },
         auditLog: [{ ts: nonce, msg: `${t("randomFill")} (self): ${player}` }, ...(d.auditLog || [])].slice(0, 80) };
-      persistLive(nd); return nd;
+      save(nd); return nd;
     });
   };
   const anyOpen = !groupLocked || !locked || koRounds.some((r) => r.ties.some((m) => m.home && m.away && !(m.ko && Date.now() > m.ko - KO_LOCK_MS)));
@@ -3021,7 +3031,8 @@ export default function App() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [data, setData] = useState(null);
   const [player, setPlayer] = useState(null); // self-service logged-in player (null = admin/guest)
-  const [codeOpen, setCodeOpen] = useState(false); const [codeVal, setCodeVal] = useState(""); const [codeErr, setCodeErr] = useState(false);
+  const [playerCode, setPlayerCode] = useState(null); // secure-mode credential for writes
+  const [codeOpen, setCodeOpen] = useState(false); const [codeVal, setCodeVal] = useState(""); const [codeErr, setCodeErr] = useState(false); const [codeBusy, setCodeBusy] = useState(false);
   const [source, setSource] = useState("loading"); // 'live' | 'sample' | 'loading'
   const [, setNow] = useState(nowMs());
   // Boot: try real Supabase data; on any failure fall back to the sample demo.
@@ -3034,7 +3045,8 @@ export default function App() {
         setLiveMode(true);
         const key = blob.settings && blob.settings.sportsdbKey;
         let apiResults = []; try { apiResults = await fetchCompletedResults(key); } catch (e) { apiResults = []; }
-        const real = mapBlobToData(blob, resultRows, apiResults);
+        let playerRows = []; if (secureAuthOn()) { try { playerRows = await loadPlayerRows(SB_URL); } catch (e) { playerRows = []; } }
+        const real = mapBlobToData(blob, resultRows, apiResults, playerRows);
         setAppTz(real.settings && real.settings.tz);
         try { real._live = mapLiveEvents(await fetchLivescore(key)); } catch (e) { real._live = {}; }
         // Premium per-eventId fill: kicked-off group matches the league feed missed.
@@ -3066,18 +3078,41 @@ export default function App() {
       } else {
         const saved = localStorage.getItem("wc_player");
         if (saved && data.players[saved] && saved !== player) setPlayer(saved);
+        if (!playerCode) { const sc = localStorage.getItem("wc_code"); if (sc) setPlayerCode(sc); }
       }
     } catch (e) { /* ignore */ }
   }, [data]);
-  const logout = () => { try { localStorage.removeItem("wc_player"); } catch (e) {} setPlayer(null); };
+  const logout = () => { try { localStorage.removeItem("wc_player"); localStorage.removeItem("wc_code"); } catch (e) {} setPlayer(null); setPlayerCode(null); };
   // Self-service login by code: the admin sends each player their code over
-  // WhatsApp; the player enters it here to reveal their own picks.
-  const submitCode = () => {
+  // WhatsApp; the player enters it here to reveal their own picks. In secure
+  // mode the code is validated server-side; otherwise it's matched locally.
+  const finishLogin = (name, code) => { try { localStorage.setItem("wc_player", name); if (code) localStorage.setItem("wc_code", code); } catch (e) {} setPlayer(name); setPlayerCode(code || null); setCodeOpen(false); setCodeVal(""); setCodeErr(false); go("mypicks"); };
+  const submitCode = async () => {
     const c = (codeVal || "").trim().toUpperCase();
-    if (!c || !data || !data.players) { setCodeErr(true); return; }
+    if (!c) { setCodeErr(true); return; }
+    if (secureAuthOn()) {
+      setCodeBusy(true);
+      try {
+        const res = await secureLogin(c);
+        if (res && res.name) {
+          setData((d) => ({ ...d, players: { ...d.players, [res.name]: { ...(d.players[res.name] || {}), ...(res.picks || {}) } } }));
+          finishLogin(res.name, c);
+        } else setCodeErr(true);
+      } catch (e) { setCodeErr(true); }
+      setCodeBusy(false);
+      return;
+    }
+    if (!data || !data.players) { setCodeErr(true); return; }
     const match = Object.keys(data.players).find((n) => { const tk = data.players[n] && data.players[n].token; return tk && String(tk).toUpperCase() === c; });
-    if (match) { try { localStorage.setItem("wc_player", match); } catch (e) {} setPlayer(match); setCodeOpen(false); setCodeVal(""); setCodeErr(false); go("mypicks"); }
+    if (match) finishLogin(match, null);
     else setCodeErr(true);
+  };
+  // Persist the signed-in player's picks: gateway in secure mode, blob otherwise.
+  const persistMyPicks = (nd) => {
+    if (secureAuthOn() && playerCode && player) {
+      const p = (nd.players && nd.players[player]) || {};
+      secureSave(playerCode, { groupPreds: p.groupPreds || {}, champion: p.champion ?? null, knockout: p.knockout || {} }).catch((e) => console.warn("secure save failed", e && e.message));
+    } else persistLive(nd);
   };
   // Tick: live mode polls Supabase for fresh results; sample mode advances the
   // synthetic clock. Either way the whole view is re-derived reactively.
@@ -3091,7 +3126,8 @@ export default function App() {
           const { blob, resultRows } = await loadFromSupabase();
           const key = blob.settings && blob.settings.sportsdbKey;
           let apiResults = []; try { apiResults = await fetchCompletedResults(key); } catch (e) { apiResults = []; }
-          const real = mapBlobToData(blob, resultRows, apiResults);
+          let playerRows = []; if (secureAuthOn()) { try { playerRows = await loadPlayerRows(SB_URL); } catch (e) { playerRows = []; } }
+          const real = mapBlobToData(blob, resultRows, apiResults, playerRows);
           setAppTz(real.settings && real.settings.tz);
           try { real._live = mapLiveEvents(await fetchLivescore(key)); } catch (e) { real._live = {}; }
           try {
@@ -3150,7 +3186,7 @@ export default function App() {
 
       <main className="main">
         {view === "mypicks" && (player && data.players[player]
-          ? <MyPickCard data={data} setData={setData} player={player} t={t} logout={logout} />
+          ? <MyPickCard data={data} setData={setData} player={player} t={t} logout={logout} persist={persistMyPicks} />
           : <div className="view"><div className="card empty"><p className="block">{t("mypicksSignIn")}</p><button className="btn" onClick={() => setCodeOpen(true)}>🔑 {t("codeGo")}</button></div></div>)}
         {view === "home" && <Dashboard data={data} lb={lb} lang={lang} onOpen={openMatch} t={t} go={go} />}
         {view === "today" && <MatchCenter data={data} lang={lang} onOpen={openMatch} t={t} />}
@@ -3225,7 +3261,7 @@ export default function App() {
             <input className="select codeinp" autoFocus value={codeVal} placeholder={t("codePh")}
               onChange={(e) => { setCodeVal(e.target.value); setCodeErr(false); }} onKeyDown={(e) => e.key === "Enter" && submitCode()} />
             {codeErr && <div className="al-err">{t("codeBad")}</div>}
-            <button className="btn" onClick={submitCode}>{t("codeGo")}</button>
+            <button className="btn" onClick={submitCode} disabled={codeBusy}>{codeBusy ? t("syncing") : t("codeGo")}</button>
           </div>
         </div>
       )}

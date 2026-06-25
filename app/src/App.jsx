@@ -94,8 +94,10 @@ const I18N = {
     nav_settings: "Settings", nav_results: "Results", nav_playerpicks: "Player picks", nav_playerreport: "Position report", nav_audit: "Audit log", nav_backup: "Backup", nav_health: "Health", nav_sync: "Sync results", nav_repair: "Repair", nav_export: "Export", nav_champions: "Champion picks", nav_knockout: "Knockout fixtures",
     koFixturesHint: "Enter the real knockout matchups and kickoff times. Seed the Round of 32 from the current standings, then correct the teams to the actual draw. Saving powers the champion lock, players' knockout picks and the results editor.", koSeedR32: "Seed R32 from standings", koSave: "Save fixtures", koSaved: "Fixtures saved", koFixtures: "Fixtures set", koFirstKick: "First kickoff", koHome: "Home", koAway: "Away", koOverrideNote: "Showing the live-synced knockout fixtures. Edits here override the feed; Save to keep them.",
     champEntryHint: "Set each player's World Cup winner pick. It scores +10 once the actual champion is decided.", champSetCount: "Picks set",
-    nav_players: "Players & login", playersHint: "Set each player's phone, then tap WhatsApp to send them a personal sign-in link from your own number (free). They open it to set their own champion pick — until the lock time.", phonePh: "+9715xxxxxxxx", waSend: "WhatsApp", champLock: "Champion pick lock", signedInAs: "Signed in as", lockBy: "You can change this until", locked: "locked",
+    nav_players: "Players & login", playersHint: "Set each player's phone, then tap WhatsApp to send them their personal sign-in code from your own number (free). They open the app → More → My picks and enter the code.", phonePh: "+9715xxxxxxxx", waSend: "WhatsApp", copyCode: "Copy code", champLock: "Champion pick lock", signedInAs: "Signed in as", lockBy: "You can change this until", locked: "locked",
     waMsg1: "Hi", waMsg2: "here's your World Cup league sign-in — tap to set your champion pick:", waMsg3: "(Keep this link private — it's just for you.)",
+    waCodeMsg: "your World Cup league sign-in code is:", waCodeMsg2: "Open the app → More → My picks, and enter this code. Keep it private — it's just for you.",
+    codeTitle: "Enter your code", codeHint: "Enter the sign-in code your league admin sent you on WhatsApp.", codePh: "e.g. ABC234", codeBad: "That code isn't recognised — check it and try again.", codeGo: "Sign in",
     waRemind: "Remind", waRemindMsg1: "here's a reminder to set your World Cup picks before they lock", waRemindMsg2: "tap to open:", lockAuto: "Auto-locks 4h before the first knockout match", lockManual: "Manual override (leave blank to auto-lock 4h before the first knockout)", lockAutoTba: "Will auto-lock 4h before the first knockout match (schedule pending)",
     randomFill: "Fill randomly (unique to me)", randomConfirm: "Fill all your open predictions with a random draw? Each player gets a different one. You can still edit afterwards.",
     groupPredHint: "Order each group 1–4. Open until your league admin sets a deadline.", groupLockedHint: "Group predictions are locked.", groupLockAuto: "Auto-locks at the first group match", groupLock: "Group predictions lock", groupLockOpen: "Open — set a time to close entry (e.g. the first group kickoff)",
@@ -159,8 +161,10 @@ const I18N = {
     nav_settings: "الإعدادات", nav_results: "النتائج", nav_playerpicks: "توقعات اللاعب", nav_playerreport: "تقرير المراكز", nav_audit: "سجل التغييرات", nav_backup: "نسخ احتياطي", nav_health: "الصحة", nav_sync: "مزامنة النتائج", nav_repair: "إصلاح", nav_export: "تصدير", nav_champions: "اختيارات البطل", nav_knockout: "مباريات الإقصائيات",
     koFixturesHint: "أدخل مواجهات الأدوار الإقصائية الحقيقية وأوقات انطلاقها. عبّئ دور الـ32 من الترتيب الحالي ثم صحّح الفرق وفق القرعة الفعلية. الحفظ يُفعّل إغلاق البطل وتوقّعات اللاعبين ومحرّر النتائج.", koSeedR32: "تعبئة دور الـ32 من الترتيب", koSave: "حفظ المباريات", koSaved: "تم حفظ المباريات", koFixtures: "المباريات المحدّدة", koFirstKick: "أول انطلاق", koHome: "المضيف", koAway: "الضيف", koOverrideNote: "تُعرض مباريات الأدوار الإقصائية المتزامنة مباشرةً. التعديلات هنا تتجاوز الخدمة؛ اضغط حفظ للإبقاء عليها.",
     champEntryHint: "حدّد توقع بطل كأس العالم لكل لاعب. يُحتسب +10 عند تحديد البطل فعلياً.", champSetCount: "اختيارات محددة",
-    nav_players: "اللاعبون والدخول", playersHint: "أدخل رقم كل لاعب ثم اضغط واتساب لإرسال رابط دخول خاص له من رقمك (مجاناً). يفتحه لاختيار البطل — حتى وقت الإغلاق.", phonePh: "+9715xxxxxxxx", waSend: "واتساب", champLock: "إغلاق اختيار البطل", signedInAs: "مسجّل الدخول باسم", lockBy: "يمكنك التغيير حتى", locked: "مغلق",
+    nav_players: "اللاعبون والدخول", playersHint: "أدخل رقم كل لاعب ثم اضغط واتساب لإرسال رمز الدخول الخاص به من رقمك (مجاناً). يفتح التطبيق ← المزيد ← توقعاتي ويُدخل الرمز.", phonePh: "+9715xxxxxxxx", waSend: "واتساب", copyCode: "نسخ الرمز", champLock: "إغلاق اختيار البطل", signedInAs: "مسجّل الدخول باسم", lockBy: "يمكنك التغيير حتى", locked: "مغلق",
     waMsg1: "مرحباً", waMsg2: "هذا رابط دخولك لدوري كأس العالم — اضغط لاختيار البطل:", waMsg3: "(احتفظ بالرابط لنفسك — خاص بك.)",
+    waCodeMsg: "رمز دخولك لدوري كأس العالم هو:", waCodeMsg2: "افتح التطبيق ← المزيد ← توقعاتي وأدخل هذا الرمز. احتفظ به لنفسك — خاص بك.",
+    codeTitle: "أدخل رمزك", codeHint: "أدخل رمز الدخول الذي أرسله لك مشرف الدوري عبر واتساب.", codePh: "مثال ABC234", codeBad: "هذا الرمز غير معروف — تحقق منه وحاول مجدداً.", codeGo: "دخول",
     waRemind: "تذكير", waRemindMsg1: "تذكير باختيار توقّعاتك في دوري كأس العالم قبل إغلاقها", waRemindMsg2: "اضغط للفتح:", lockAuto: "يُغلق تلقائياً قبل 4 ساعات من أول مباراة إقصائية", lockManual: "تجاوز يدوي (اتركه فارغاً ليُغلق تلقائياً قبل 4 ساعات من أول مباراة إقصائية)", lockAutoTba: "سيُغلق تلقائياً قبل 4 ساعات من أول مباراة إقصائية (الجدول قيد الانتظار)",
     randomFill: "تعبئة عشوائية (خاصة بي)", randomConfirm: "تعبئة كل توقّعاتك المفتوحة بقرعة عشوائية؟ لكل لاعب قرعة مختلفة. يمكنك التعديل لاحقاً.",
     groupPredHint: "رتّب كل مجموعة من 1 إلى 4. مفتوح حتى يحدّد المشرف موعداً للإغلاق.", groupLockedHint: "توقّعات المجموعات مغلقة.", groupLockAuto: "يُغلق تلقائياً عند أول مباراة في المجموعات", groupLock: "إغلاق توقّعات المجموعات", groupLockOpen: "مفتوح — حدّد وقتاً لإغلاق الإدخال (مثلاً أول مباراة في المجموعات)",
@@ -2545,22 +2549,25 @@ function MyPickCard({ data, setData, player, t, logout }) {
 // Admin: phone numbers + one-tap "send login over WhatsApp" + the pick lock time.
 function AdminPlayers({ data, setData, t }) {
   const players = Object.keys(data.players);
-  const origin = window.location.origin + window.location.pathname;
-  const newToken = () => ((window.crypto && window.crypto.randomUUID && window.crypto.randomUUID()) || (Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2))).replace(/-/g, "").slice(0, 18);
+  // Short, readable sign-in code (no ambiguous chars), unique across players.
+  const newCode = () => {
+    const A = "ABCDEFGHJKMNPQRSTUVWXYZ23456789", used = new Set(players.map((n) => (data.players[n].token || "").toUpperCase()).filter(Boolean));
+    for (let tries = 0; tries < 60; tries++) { let c = ""; for (let i = 0; i < 6; i++) c += A[Math.floor(Math.random() * A.length)]; if (!used.has(c)) return c; }
+    return Math.random().toString(36).slice(2, 8).toUpperCase();
+  };
   const update = (name, patch) => setData((d) => { const nd = { ...d, players: { ...d.players, [name]: { ...d.players[name], ...patch } } }; persistLive(nd); return nd; });
-  const tokenFor = (name) => { let tk = data.players[name].token; if (!tk) { tk = newToken(); update(name, { token: tk }); } return tk; };
-  const linkFor = (name) => `${origin}?key=${tokenFor(name)}`;
+  const codeFor = (name) => { let tk = data.players[name].token; if (!tk) { tk = newCode(); update(name, { token: tk }); } return tk; };
   const waSend = (name) => {
-    const link = linkFor(name), num = String(data.players[name].phone || "").replace(/[^\d]/g, "");
-    const msg = `${t("waMsg1")} ${name}! ${t("waMsg2")}\n${link}\n\n${t("waMsg3")}`;
+    const code = codeFor(name), num = String(data.players[name].phone || "").replace(/[^\d]/g, "");
+    const msg = `${t("waMsg1")} ${name}! ${t("waCodeMsg")} *${code}*\n\n${t("waCodeMsg2")}`;
     window.open(num ? `https://wa.me/${num}?text=${encodeURIComponent(msg)}` : `https://wa.me/?text=${encodeURIComponent(msg)}`, "_blank");
   };
   const waRemind = (name) => {
-    const link = linkFor(name), num = String(data.players[name].phone || "").replace(/[^\d]/g, "");
-    const msg = `${t("waMsg1")} ${name}, ${t("waRemindMsg1")}. ${t("waRemindMsg2")}\n${link}`;
+    const code = codeFor(name), num = String(data.players[name].phone || "").replace(/[^\d]/g, "");
+    const msg = `${t("waMsg1")} ${name}, ${t("waRemindMsg1")}. ${t("waCodeMsg")} *${code}*\n${t("waCodeMsg2")}`;
     window.open(num ? `https://wa.me/${num}?text=${encodeURIComponent(msg)}` : `https://wa.me/?text=${encodeURIComponent(msg)}`, "_blank");
   };
-  const copyLink = (name) => { try { navigator.clipboard.writeText(linkFor(name)); } catch (e) {} };
+  const copyLink = (name) => { try { navigator.clipboard.writeText(codeFor(name)); } catch (e) {} };
   const cl = champLock(data);
   const gl = groupPredLock(data);
   const setGroupLock = (val) => setData((d) => { const nd = { ...d, settings: { ...(d.settings || {}), groupLockUtc: val || null } }; persistLive(nd); return nd; });
@@ -2583,12 +2590,12 @@ function AdminPlayers({ data, setData, t }) {
       <div className="card">
         {players.map((name) => (
           <div className="plrow" key={name}>
-            <div className="plrow-top"><Avatar name={name} /><span className="champname">{name}</span>{data.players[name].champion && <span className="plpick">👑 {canonTeam(data.players[name].champion)}</span>}</div>
+            <div className="plrow-top"><Avatar name={name} /><span className="champname">{name}</span>{data.players[name].token && <span className="plcode">🔑 {data.players[name].token}</span>}{data.players[name].champion && <span className="plpick">👑 {canonTeam(data.players[name].champion)}</span>}</div>
             <div className="plrow-ctl">
               <input className="select plphone" type="tel" inputMode="tel" placeholder={t("phonePh")} value={data.players[name].phone || ""} onChange={(e) => update(name, { phone: e.target.value })} />
               <button className="btn wabtn" onClick={() => waSend(name)}>{t("waSend")}</button>
               <button className="btn wabtn ghost" onClick={() => waRemind(name)}>{t("waRemind")}</button>
-              <button className="btn ghost" onClick={() => copyLink(name)}>{t("copy")}</button>
+              <button className="btn ghost" onClick={() => copyLink(name)}>{t("copyCode")}</button>
             </div>
           </div>
         ))}
@@ -3014,6 +3021,7 @@ export default function App() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [data, setData] = useState(null);
   const [player, setPlayer] = useState(null); // self-service logged-in player (null = admin/guest)
+  const [codeOpen, setCodeOpen] = useState(false); const [codeVal, setCodeVal] = useState(""); const [codeErr, setCodeErr] = useState(false);
   const [source, setSource] = useState("loading"); // 'live' | 'sample' | 'loading'
   const [, setNow] = useState(nowMs());
   // Boot: try real Supabase data; on any failure fall back to the sample demo.
@@ -3062,6 +3070,15 @@ export default function App() {
     } catch (e) { /* ignore */ }
   }, [data]);
   const logout = () => { try { localStorage.removeItem("wc_player"); } catch (e) {} setPlayer(null); };
+  // Self-service login by code: the admin sends each player their code over
+  // WhatsApp; the player enters it here to reveal their own picks.
+  const submitCode = () => {
+    const c = (codeVal || "").trim().toUpperCase();
+    if (!c || !data || !data.players) { setCodeErr(true); return; }
+    const match = Object.keys(data.players).find((n) => { const tk = data.players[n] && data.players[n].token; return tk && String(tk).toUpperCase() === c; });
+    if (match) { try { localStorage.setItem("wc_player", match); } catch (e) {} setPlayer(match); setCodeOpen(false); setCodeVal(""); setCodeErr(false); go("mypicks"); }
+    else setCodeErr(true);
+  };
   // Tick: live mode polls Supabase for fresh results; sample mode advances the
   // synthetic clock. Either way the whole view is re-derived reactively.
   useEffect(() => {
@@ -3134,7 +3151,7 @@ export default function App() {
       <main className="main">
         {view === "mypicks" && (player && data.players[player]
           ? <MyPickCard data={data} setData={setData} player={player} t={t} logout={logout} />
-          : <div className="view"><div className="card empty">{t("mypicksSignIn")}</div></div>)}
+          : <div className="view"><div className="card empty"><p className="block">{t("mypicksSignIn")}</p><button className="btn" onClick={() => setCodeOpen(true)}>🔑 {t("codeGo")}</button></div></div>)}
         {view === "home" && <Dashboard data={data} lb={lb} lang={lang} onOpen={openMatch} t={t} go={go} />}
         {view === "today" && <MatchCenter data={data} lang={lang} onOpen={openMatch} t={t} />}
         {view === "match" && match && <MatchDetail m={(data.matches || []).find((x) => x.id === match.id) || match} data={data} lang={lang} t={t} onBack={() => go("today")} />}
@@ -3173,8 +3190,9 @@ export default function App() {
             <div className="grab" />
             <div className="sheeth">{t("nav_more")}<button className="sheetx" onClick={() => setSheet(false)} aria-label={t("hide")}>✕</button></div>
             <div className="sheetgrid">
-              {MORE_ITEMS.filter((m) => m.id !== "mypicks" || (player && data.players[player])).map((m) => (
-                <button key={m.id} className={"tile" + (view === m.id ? " on" : "") + (m.id === "mypicks" ? " mine" : "")} onClick={() => go(m.id)}>
+              {MORE_ITEMS.map((m) => (
+                <button key={m.id} className={"tile" + (view === m.id ? " on" : "") + (m.id === "mypicks" ? " mine" : "")}
+                  onClick={() => (m.id === "mypicks" && !(player && data.players[player])) ? (setSheet(false), setCodeOpen(true)) : go(m.id)}>
                   <span className="tilei"><Ico name={m.ic} size={22} /></span><span className="tilel">{t(m.key)}</span>
                 </button>
               ))}
@@ -3193,6 +3211,21 @@ export default function App() {
                 ))}
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {codeOpen && (
+        <div className="sheetbg modal" onClick={(e) => { if (e.target === e.currentTarget) setCodeOpen(false); }}>
+          <div className="codecard">
+            <button className="sheetx codex" onClick={() => setCodeOpen(false)} aria-label={t("hide")}>✕</button>
+            <div className="code-ico">🔑</div>
+            <h3 className="cardh">{t("codeTitle")}</h3>
+            <p className="hint block">{t("codeHint")}</p>
+            <input className="select codeinp" autoFocus value={codeVal} placeholder={t("codePh")}
+              onChange={(e) => { setCodeVal(e.target.value); setCodeErr(false); }} onKeyDown={(e) => e.key === "Enter" && submitCode()} />
+            {codeErr && <div className="al-err">{t("codeBad")}</div>}
+            <button className="btn" onClick={submitCode}>{t("codeGo")}</button>
           </div>
         </div>
       )}
@@ -3428,6 +3461,12 @@ color:var(--muted);font-family:inherit;cursor:pointer;padding:5px 0;border-radiu
 
 /* more sheet */
 .sheetbg{position:fixed;inset:0;z-index:40;background:rgba(8,18,14,.5);display:flex;align-items:flex-end;justify-content:center;animation:fade .2s ease}
+.sheetbg.modal{align-items:center;padding:16px}
+.codecard{position:relative;width:100%;max-width:380px;background:var(--card);border:1px solid var(--border);border-radius:18px;padding:22px 18px 18px;text-align:center;box-shadow:0 12px 48px rgba(10,31,23,.3);animation:slideup .26s cubic-bezier(.2,.8,.2,1)}
+.codex{position:absolute;top:10px;inset-inline-end:10px}
+.code-ico{font-size:30px;margin-bottom:6px}
+.codeinp{text-align:center;font-size:18px;font-weight:800;letter-spacing:.18em;text-transform:uppercase;font-family:ui-monospace,monospace;margin:10px 0}
+.codecard .btn{width:100%}
 @keyframes fade{from{opacity:0}to{opacity:1}}
 .sheet{width:100%;max-width:520px;background:var(--card);border-radius:20px 20px 0 0;padding:8px 14px calc(20px + env(safe-area-inset-bottom));
 border:1px solid var(--border);box-shadow:0 -10px 40px rgba(10,31,23,.25);animation:slideup .28s cubic-bezier(.2,.8,.2,1)}
@@ -3746,7 +3785,8 @@ border-radius:18px;padding:16px 14px;margin:10px 0;color:#fff;background:linear-
 .champname{flex:1;min-width:0;font-weight:700;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .champsel{width:auto;min-width:140px;max-width:180px;margin:0;padding:8px 10px;font-size:13px}
 .plrow{padding:10px 0;border-top:1px solid var(--soft)}.plrow:first-child{border-top:none}
-.plrow-top{display:flex;align-items:center;gap:8px}.plpick{margin-inline-start:auto;font-size:12px;font-weight:700;color:var(--gold-d)}
+.plrow-top{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.plpick{font-size:12px;font-weight:700;color:var(--gold-d)}
+.plcode{margin-inline-start:auto;font-size:12px;font-weight:800;letter-spacing:.06em;font-family:ui-monospace,monospace;color:var(--ink);background:var(--soft);padding:2px 7px;border-radius:6px}.plcode+.plpick{margin-inline-start:0}
 .plrow-ctl{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap}
 .plphone{flex:1;min-width:130px;margin:0;padding:9px 10px;font-size:13px}
 .wabtn{flex:none;width:auto;margin:0;padding:9px 14px;background:#25d366;color:#06311b}

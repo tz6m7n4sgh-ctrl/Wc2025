@@ -2434,11 +2434,14 @@ function GroupPredEditor({ g, pred, locked, onSet, t }) {
 // Self-service: the signed-in player sets their own group order, champion + knockout winners (until lock).
 function MyPickCard({ data, setData, player, t, logout, persist }) {
   const save = persist || persistLive; // secure gateway when provided, else blob
+  const [groupsExp, setGroupsExp] = useState(false); // group predictions collapsed by default
   const allTeams = useMemo(() => GROUP_KEYS.flatMap((g) => GROUPS[g]).slice().sort((a, b) => a.localeCompare(b)), []);
   const cl = champLock(data);
   const locked = cl.at ? Date.now() > cl.at : false;
   const gl = groupPredLock(data);
-  const groupLocked = gl.at ? Date.now() > gl.at : false;
+  // Group predictions are disabled once the group stage is underway (any result in)
+  // or an admin lock has passed — they're done by the knockout phase.
+  const groupsDisabled = (gl.at ? Date.now() > gl.at : false) || completedCount(data) > 0;
   const p = data.players[player] || {};
   const bracket = useMemo(() => buildBracket(data), [data]);
   const koRounds = useMemo(() => realKoRounds(data).filter((r) => KO_PREDICT_ROUNDS.has(r.round)), [data]);
@@ -2469,7 +2472,7 @@ function MyPickCard({ data, setData, player, t, logout, persist }) {
     setData((d) => {
       const cur = d.players[player] || {};
       const gp = { ...(cur.groupPreds || {}) };
-      if (!groupLocked) GROUP_KEYS.forEach((g) => { gp[g] = shuffle(GROUPS[g], hashStr(player + "|g|" + g + "|" + nonce)); });
+      if (!groupsDisabled) GROUP_KEYS.forEach((g) => { gp[g] = shuffle(GROUPS[g], hashStr(player + "|g|" + g + "|" + nonce)); });
       let champion = cur.champion;
       if (!locked) champion = shuffle(allTeams.slice(), hashStr(player + "|c|" + nonce))[0];
       const ko = { ...(cur.knockout || {}) };
@@ -2483,19 +2486,24 @@ function MyPickCard({ data, setData, player, t, logout, persist }) {
       save(nd); return nd;
     });
   };
-  const anyOpen = !groupLocked || !locked || koRounds.some((r) => r.ties.some((m) => m.home && m.away && !(m.ko && Date.now() > m.ko - KO_LOCK_MS)));
+  const anyOpen = !groupsDisabled || !locked || koRounds.some((r) => r.ties.some((m) => m.home && m.away && !(m.ko && Date.now() > m.ko - KO_LOCK_MS)));
   return (
     <div className="card mypick">
       <div className="mypick-head"><Avatar name={player} /><span className="champname">{t("signedInAs")} <b>{player}</b></span><button className="seeall" onClick={logout}>{t("logout")}</button></div>
       {anyOpen && <button className="btn mypick-fill" onClick={randomFill}>🎲 {t("randomFill")}</button>}
 
-      <div className="mypick-groups">
-        <span className="mypick-lbl">📋 {t("nav_predictions")}</span>
-        <p className="hint block">{groupLocked ? t("groupLockedHint") : t("groupPredHint")}</p>
-        {GROUP_KEYS.map((g) => (
-          <GroupPredEditor key={g} g={g} pred={playerGroupPred(p, g)} locked={groupLocked} onSet={(arr) => setGroupPred(g, arr)} t={t} />
-        ))}
-        {gl.at && !groupLocked && <p className="hint block">{t("lockBy")} {new Date(gl.at).toLocaleString()}{gl.auto ? ` · ${t("groupLockAuto")}` : ""}</p>}
+      <div className={"mypick-groups" + (groupsDisabled ? " off" : "")}>
+        <button className="mypick-lbl collapse" onClick={() => setGroupsExp((v) => !v)} aria-expanded={groupsExp}>
+          <span>📋 {t("nav_predictions")}{groupsDisabled && <span className="coll-lock"> · {t("locked")}</span>}</span>
+          <span className="coll-chev">{groupsExp ? "▾" : "▸"}</span>
+        </button>
+        {groupsExp && <>
+          <p className="hint block">{groupsDisabled ? t("groupLockedHint") : t("groupPredHint")}</p>
+          {GROUP_KEYS.map((g) => (
+            <GroupPredEditor key={g} g={g} pred={playerGroupPred(p, g)} locked={groupsDisabled} onSet={(arr) => setGroupPred(g, arr)} t={t} />
+          ))}
+          {gl.at && !groupsDisabled && <p className="hint block">{t("lockBy")} {new Date(gl.at).toLocaleString()}{gl.auto ? ` · ${t("groupLockAuto")}` : ""}</p>}
+        </>}
       </div>
 
       <div className="mypick-body">
@@ -3834,6 +3842,10 @@ border-radius:18px;padding:16px 14px;margin:10px 0;color:#fff;background:linear-
 .mypick-locked{font-weight:700;display:flex;align-items:center;gap:6px;color:var(--muted)}
 .mypick-fill{width:100%;margin-top:10px;background:var(--gold);color:#241c00;border-color:var(--gold-d);font-weight:800}
 .mypick-groups{margin-top:12px;padding-top:12px;border-top:1px dashed var(--border)}
+.mypick-groups.off{opacity:.92}
+.mypick-lbl.collapse{display:flex;align-items:center;justify-content:space-between;width:100%;background:none;border:none;padding:0;cursor:pointer;font-family:inherit;color:var(--ink)}
+.coll-lock{font-weight:700;color:var(--muted);font-size:12px}
+.coll-chev{font-size:12px;color:var(--muted)}
 .gpred{margin-top:8px;padding:8px 10px;border:1px solid var(--border);border-radius:10px;background:var(--card)}
 .gpred-h{font-weight:800;font-size:11px;letter-spacing:.03em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
 .gpline{display:flex;align-items:center;gap:8px;margin-bottom:5px}

@@ -54,7 +54,7 @@ export function dataToBlob(data) {
   const blob = { ...(data._blob || {}) };
   const players = { ...(blob.players || {}) };
   Object.entries(data.players || {}).forEach(([name, p]) => {
-    players[name] = { ...(players[name] || {}), groupPreds: p.groupPreds, champion: p.champion ?? null, knockoutPreds: p.knockout || {} };
+    players[name] = { ...(players[name] || {}), groupPreds: p.groupPreds, champion: p.champion ?? null, knockoutPreds: p.knockout || {}, phone: p.phone ?? (players[name] || {}).phone ?? "", token: p.token ?? (players[name] || {}).token ?? null };
   });
   blob.players = players;
   blob.settings = data.settings || blob.settings;

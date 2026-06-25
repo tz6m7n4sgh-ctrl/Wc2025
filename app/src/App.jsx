@@ -114,14 +114,14 @@ const I18N = {
     predHitGroup: "Matches the actual group winner", trendsHint: "cumulative points", scorersNote: "Top scoring teams (computed from results). Player-level scorers arrive with the live data layer.",
     sample: "Sample data — engine is live",
     ht_full: "HALF-TIME", ft_full: "FULL-TIME",
-    brkIllustrative: "Round-of-32 pairings are illustrative — players predict group order, not exact matchups.",
+    brkIllustrative: "Round-of-32 pairings are illustrative — players predict group order, not exact matchups.", brkLive: "Drawn from the live knockout fixtures — matchups and winners update as the feed does.",
     brkFills: "The bracket fills in once every group is complete.",
     brkProjected: "projected", brkProjNote: "Based on the current group standings — updates live as results come in.",
     noPlayers: "No players yet. Add predictions to get started.",
     koNeedsWinner: "needs a winner", koPenWonBy: "Draw — won on penalties by:",
     loadingData: "Loading live data…", liveData: "Live data",
     syncHint2: "Pull finished scores from TheSportsDB and save them to the database so everyone sees them.",
-    syncing: "Syncing…", feedReach: "Feed reachable", feedEvents: "Events fetched", feedCompleted: "Completed found", feedSaved: "Saved to DB", feedCleared: "Phantom results cleared", feedMissing: "Still missing a score",
+    syncing: "Syncing…", feedReach: "Feed reachable", feedEvents: "Events fetched", feedCompleted: "Completed found", feedSaved: "Saved to DB", feedKo: "Knockout fixtures synced", feedCleared: "Phantom results cleared", feedMissing: "Still missing a score",
     timezone: "Display timezone", tzCheck: "Timezone check", tzApp: "App timezone", tzAppNow: "App time now", tzDevice: "Device timezone", tzDeviceNow: "Device time now", tzNote: "Times are shown in the app timezone above, not the device's — change it here if needed.",
     noDetail: "No detailed data for this match yet (timelines/lineups can be missing or delayed).",
     p_howAdd: "How your points add up", p_correct: "correct", p_of: "of",
@@ -179,14 +179,14 @@ const I18N = {
     predHitGroup: "يطابق المتصدر الفعلي", trendsHint: "النقاط التراكمية", scorersNote: "الفرق الأكثر تسجيلاً (محسوبة من النتائج). الهدّافون يصلون مع طبقة البيانات المباشرة.",
     sample: "بيانات تجريبية — المحرّك يعمل",
     ht_full: "نهاية الشوط الأول", ft_full: "نهاية المباراة",
-    brkIllustrative: "مواجهات دور الـ32 توضيحية — يتوقع اللاعبون ترتيب المجموعات لا المواجهات بالضبط.",
+    brkIllustrative: "مواجهات دور الـ32 توضيحية — يتوقع اللاعبون ترتيب المجموعات لا المواجهات بالضبط.", brkLive: "مأخوذة من مباريات الأدوار الإقصائية المباشرة — تتحدّث المواجهات والفائزون مع تحديث الخدمة.",
     brkFills: "تكتمل الأدوار الإقصائية بعد انتهاء جميع المجموعات.",
     brkProjected: "متوقع", brkProjNote: "مبني على ترتيب المجموعات الحالي — يتحدّث مباشرةً مع ورود النتائج.",
     noPlayers: "لا يوجد لاعبون بعد. أضف التوقعات للبدء.",
     koNeedsWinner: "يلزم تحديد فائز", koPenWonBy: "تعادل — الفائز بركلات الترجيح:",
     loadingData: "جارٍ تحميل البيانات…", liveData: "بيانات مباشرة",
     syncHint2: "اجلب نتائج المباريات المنتهية من TheSportsDB واحفظها في قاعدة البيانات ليراها الجميع.",
-    syncing: "جارٍ المزامنة…", feedReach: "وصول الخدمة", feedEvents: "الأحداث المجلوبة", feedCompleted: "المنتهية الموجودة", feedSaved: "حُفظت في القاعدة", feedCleared: "نتائج وهمية أُزيلت", feedMissing: "بلا نتيجة بعد",
+    syncing: "جارٍ المزامنة…", feedReach: "وصول الخدمة", feedEvents: "الأحداث المجلوبة", feedCompleted: "المنتهية الموجودة", feedSaved: "حُفظت في القاعدة", feedKo: "مباريات إقصائية تمت مزامنتها", feedCleared: "نتائج وهمية أُزيلت", feedMissing: "بلا نتيجة بعد",
     timezone: "المنطقة الزمنية للعرض", tzCheck: "فحص المنطقة الزمنية", tzApp: "منطقة التطبيق", tzAppNow: "وقت التطبيق الآن", tzDevice: "منطقة الجهاز", tzDeviceNow: "وقت الجهاز الآن", tzNote: "تُعرض الأوقات بمنطقة التطبيق أعلاه وليس بمنطقة الجهاز — غيّرها هنا إذا لزم.",
     noDetail: "لا تتوفر بيانات تفصيلية بعد (قد تتأخر التشكيلات والأحداث).",
     p_howAdd: "كيف تتكوّن نقاطك", p_correct: "صحيحة", p_of: "من",
@@ -347,10 +347,48 @@ function completedCount(data) { let n = 0; for (const g of GROUP_KEYS) for (let 
 
 /* ---------------- 4. Bracket derivation -------------------------------- */
 const KO_ROUNDS = [["R32", 16], ["R16", 8], ["QF", 4], ["SF", 2], ["F", 1]];
+// TheSportsDB intRound -> our round code. CONFIRMED against the live 2026 feed:
+// group matchdays are intRound 1/2/3 and the Round of 32 is intRound 32. The
+// later rounds follow the same round-of-N scheme (16/8/4/2) — they aren't in the
+// feed until the draw is made, so they're auto-verified as they appear; the admin
+// Knockout screen overrides anything the feed gets wrong.
+const KO_INTROUND = { "32": "R32", "16": "R16", "8": "QF", "4": "SF", "2": "F" };
+const GROUP_INTROUND = new Set(["1", "2", "3"]);
+const isRealTeam = (t) => !!t && GROUP_KEYS.some((g) => GROUPS[g].some((x) => sameTeam(x, t)));
+function parseFeedTs(ts) { if (!ts) return 0; const s = /[zZ]|[+-]\d\d:?\d\d$/.test(ts) ? ts : ts + "Z"; const v = Date.parse(s); return Number.isFinite(v) ? v : 0; }
+// Extract knockout fixtures from the season feed. A match is a knockout iff its
+// intRound isn't a group matchday (1/2/3) OR it falls after the last group date
+// (catches the Final, which on the round-of-N scheme reuses code 2). Group MD3 and
+// R32 share dates (28 Jun), so intRound — not date alone — does the separation.
+function koFixturesFromSeason(season) {
+  if (!season || !season.length) return [];
+  const lastGroupDate = season.filter((e) => GROUP_INTROUND.has(String(e.round))).map((e) => e.date).filter(Boolean).sort().pop() || "";
+  return season.filter((e) => !GROUP_INTROUND.has(String(e.round)) || (e.date && e.date > lastGroupDate)).map((e) => {
+    const round = KO_INTROUND[String(e.round)]; if (!round) return null; // e.g. 3rd-place — not in scored bracket
+    const finished = e.finished && e.homeScore != null && e.awayScore != null;
+    return {
+      mid: `${round}_${e.eventId}`, round,
+      home: isRealTeam(e.home) ? canonTeam(e.home) : null, away: isRealTeam(e.away) ? canonTeam(e.away) : null,
+      venue: e.venue || "", kickoffUtc: e.ts ? new Date(parseFeedTs(e.ts)).toISOString() : null,
+      home_score: finished ? Number(e.homeScore) : null, away_score: finished ? Number(e.awayScore) : null, winner: null, eventId: e.eventId,
+    };
+  }).filter(Boolean);
+}
 function buildBracket(data) {
-  // Built from the CURRENT standings so it populates live and updates as results
-  // land (computeGroupTable always returns the 4 group teams, ordered by current
-  // points). While any group is unfinished the qualifiers are projected.
+  // If real knockout fixtures exist (synced from the live feed or admin-entered),
+  // the bracket is drawn straight from them — real matchups and real progression.
+  const koMs = (data.matches || []).filter((m) => m.stage === "ko");
+  if (koMs.length) {
+    const kr = data.knockoutResults || {};
+    return KO_ROUNDS.map(([rk]) => ({
+      round: rk,
+      ties: koMs.filter((m) => m.round === rk).sort((a, b) => (a.ko || 0) - (b.ko || 0))
+        .map((m) => ({ mid: m.mid, home: m.home || null, away: m.away || null, winner: kr[m.mid] || null })),
+    })).filter((r) => r.ties.length);
+  }
+  // Otherwise project from the CURRENT standings so it populates live and updates as
+  // results land (computeGroupTable always returns the 4 group teams, ordered by
+  // current points). While any group is unfinished the qualifiers are projected.
   const tables = {}; GROUP_KEYS.forEach((g) => (tables[g] = computeGroupTable(g, data)));
   const winners = GROUP_KEYS.map((g) => tables[g][0] && tables[g][0].team);
   const runners = GROUP_KEYS.map((g) => tables[g][1] && tables[g][1].team);
@@ -1152,12 +1190,13 @@ function Groups({ data, t, onOpenGroup }) {
   );
 }
 function BracketView({ data, t }) {
-  const projected = !GROUP_KEYS.every((g) => groupComplete(g, data));
+  const hasReal = (data.matches || []).some((m) => m.stage === "ko");
+  const projected = !hasReal && !GROUP_KEYS.every((g) => groupComplete(g, data));
   return (
     <div className="view">
       <div className="card slim"><h3 className="cardh">🗺️ {t("nav_bracket")}{projected && <span className="gc-proj-total" style={{ marginInlineStart: 8 }}>· {t("brkProjected")}</span>}</h3>
         {projected && <p className="hint block">{t("brkProjNote")}</p>}
-        <p className="hint block">{t("brkIllustrative")}</p>
+        <p className="hint block">{hasReal ? t("brkLive") : t("brkIllustrative")}</p>
       </div>
       <Bracket data={data} t={t} />
     </div>
@@ -2729,25 +2768,35 @@ function SyncResults({ data, setData, t }) {
       const rows = [...Object.values(finalRows), ...clears];
       let saved = 0; const cleared = clears.length;
       if (rows.length) { try { await upsertResults(rows); saved = Object.keys(finalRows).length; } catch (e) { /* surfaced below */ } }
+      // Knockout fixtures + results, straight from the same season feed.
+      const koFix = koFixturesFromSeason(season);
       // Re-derive locally so results show immediately, and persist the blob too.
       setData((d) => {
         const gr = { ...d.groupResults };
         Object.values(finalRows).forEach((row) => { gr[row.match_key] = { home: String(row.home_score), away: String(row.away_score) }; });
         clearedSet.forEach((k) => { delete gr[k]; });
-        const matches = d.matches.map((mm) => {
+        let matches = d.matches.map((mm) => {
           if (mm.stage !== "group") return mm;
           if (finalRows[mm.id]) { const r = finalRows[mm.id]; return { ...mm, finalH: r.home_score, finalA: r.away_score, resSource: "db" }; }
           if (clearedSet.has(mm.id)) return { ...mm, finalH: null, finalA: null, resSource: null };
           return mm;
         });
-        const nd = recomputeLive({ ...d, groupResults: gr, matches });
+        let blob = { ...(d._blob || {}) };
+        if (koFix.length) {
+          const koObjs = koFix.map((f, i) => ({ id: f.mid, stage: "ko", group: null, idx: i, mid: f.mid, round: f.round, home: f.home, away: f.away, venue: f.venue || "",
+            ko: f.kickoffUtc ? Date.parse(f.kickoffUtc) : 0, real: true, finalH: f.home_score != null ? Number(f.home_score) : null, finalA: f.away_score != null ? Number(f.away_score) : null,
+            penWinner: f.winner || null, eventId: f.eventId || null, allEvents: [], allStats: null, lineups: null }));
+          matches = [...matches.filter((m) => m.stage !== "ko"), ...koObjs].sort((a, b) => (a.ko || 0) - (b.ko || 0));
+          blob.knockoutMatches = koFix.map(({ eventId, ...r }) => r);
+        }
+        const nd = recomputeLive({ ...d, _blob: blob, groupResults: gr, matches });
         persistLive(nd);
         return nd;
       });
       // which over matches still have no score (and weren't just cleared as NS)?
       const missing = (data.matches || []).filter((mm) => mm.stage === "group" && !finalRows[mm.id] && !clearedSet.has(mm.id) && mm.resSource !== "db" && mm.ko && mm.ko <= Date.now())
         .map((mm) => `${canonTeam(mm.home)} v ${canonTeam(mm.away)}`);
-      setReport({ mode: status.mode, events: status.events, completed: status.completed, mapped: Object.keys(finalRows).length, saved, cleared, missing });
+      setReport({ mode: status.mode, events: status.events, completed: status.completed, mapped: Object.keys(finalRows).length, saved, cleared, missing, ko: koFix.length });
     } catch (e) { setReport({ error: String(e && e.message ? e.message : e) }); }
     setBusy(false);
   };
@@ -2765,6 +2814,7 @@ function SyncResults({ data, setData, t }) {
             <div className="hrow"><span className="hlabel">{t("feedEvents")}</span><span className="hval num">{report.events}</span></div>
             <div className="hrow"><span className="hlabel">{t("feedCompleted")}</span><span className="hval num">{report.completed}</span></div>
             <div className="hrow"><span className="hlabel">{t("feedSaved")}</span><span className="hval num">{report.saved}</span></div>
+            <div className="hrow"><span className="hlabel">{t("feedKo")}</span><span className="hval num">{report.ko != null ? report.ko : 0}</span></div>
             {report.cleared > 0 && <div className="hrow"><span className="hlabel">{t("feedCleared")}</span><span className="hval num">{report.cleared}</span></div>}
             {report.missing && report.missing.length > 0 && (
               <div className="ag-section" style={{ marginTop: 8 }}>{t("feedMissing")} ({report.missing.length})

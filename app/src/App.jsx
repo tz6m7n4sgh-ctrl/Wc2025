@@ -93,6 +93,8 @@ const I18N = {
     admin: "Admin", adminLogin: "Admin login", password: "Password", wrongPw: "Incorrect password", login: "Log in", demoPw: "Demo password", logout: "Log out",
     nav_settings: "Settings", nav_results: "Results", nav_playerpicks: "Player picks", nav_playerreport: "Position report", nav_audit: "Audit log", nav_backup: "Backup", nav_health: "Health", nav_sync: "Sync results", nav_repair: "Repair", nav_export: "Export", nav_champions: "Champion picks",
     champEntryHint: "Set each player's World Cup winner pick. It scores +10 once the actual champion is decided.", champSetCount: "Picks set",
+    nav_players: "Players & login", playersHint: "Set each player's phone, then tap WhatsApp to send them a personal sign-in link from your own number (free). They open it to set their own champion pick — until the lock time.", phonePh: "+9715xxxxxxxx", waSend: "WhatsApp", champLock: "Champion pick lock", signedInAs: "Signed in as", lockBy: "You can change this until", locked: "locked",
+    waMsg1: "Hi", waMsg2: "here's your World Cup league sign-in — tap to set your champion pick:", waMsg3: "(Keep this link private — it's just for you.)",
     resultsEditor: "Results editor", resultsHint: "Enter a score to mark a match finished — standings, points and the bracket update instantly.", setChampion: "Set champion",
     entryFee: "Entry fee", currency: "Currency", distribution: "Prize distribution", winnerTakes: "Winner takes all", topTwo: "Split top 2", topThree: "Split top 3", deadline: "Predictions deadline", lockPicks: "Lock predictions", prizePool: "Prize pool",
     exportData: "Export data", importData: "Import data", pasteJson: "Paste backup JSON here…", copy: "Copy", copied: "copied", loaded: "loaded", badJson: "invalid JSON", load: "Load",
@@ -151,6 +153,8 @@ const I18N = {
     admin: "الإدارة", adminLogin: "دخول الإدارة", password: "كلمة المرور", wrongPw: "كلمة المرور غير صحيحة", login: "دخول", demoPw: "كلمة المرور التجريبية", logout: "خروج",
     nav_settings: "الإعدادات", nav_results: "النتائج", nav_playerpicks: "توقعات اللاعب", nav_playerreport: "تقرير المراكز", nav_audit: "سجل التغييرات", nav_backup: "نسخ احتياطي", nav_health: "الصحة", nav_sync: "مزامنة النتائج", nav_repair: "إصلاح", nav_export: "تصدير", nav_champions: "اختيارات البطل",
     champEntryHint: "حدّد توقع بطل كأس العالم لكل لاعب. يُحتسب +10 عند تحديد البطل فعلياً.", champSetCount: "اختيارات محددة",
+    nav_players: "اللاعبون والدخول", playersHint: "أدخل رقم كل لاعب ثم اضغط واتساب لإرسال رابط دخول خاص له من رقمك (مجاناً). يفتحه لاختيار البطل — حتى وقت الإغلاق.", phonePh: "+9715xxxxxxxx", waSend: "واتساب", champLock: "إغلاق اختيار البطل", signedInAs: "مسجّل الدخول باسم", lockBy: "يمكنك التغيير حتى", locked: "مغلق",
+    waMsg1: "مرحباً", waMsg2: "هذا رابط دخولك لدوري كأس العالم — اضغط لاختيار البطل:", waMsg3: "(احتفظ بالرابط لنفسك — خاص بك.)",
     resultsEditor: "محرّر النتائج", resultsHint: "أدخل النتيجة لإنهاء المباراة — يُحدّث الترتيب والنقاط والأدوار فوراً.", setChampion: "تعيين البطل",
     entryFee: "رسوم الاشتراك", currency: "العملة", distribution: "توزيع الجوائز", winnerTakes: "الفائز يأخذ الكل", topTwo: "أفضل اثنين", topThree: "أفضل ثلاثة", deadline: "موعد إغلاق التوقعات", lockPicks: "قفل التوقعات", prizePool: "مجموع الجوائز",
     exportData: "تصدير البيانات", importData: "استيراد البيانات", pasteJson: "الصق نسخة JSON هنا…", copy: "نسخ", copied: "تم النسخ", loaded: "تم التحميل", badJson: "JSON غير صالح", load: "تحميل",
@@ -2226,6 +2230,72 @@ function AdminChampions({ data, setData, t }) {
     </div>
   );
 }
+// Self-service: the signed-in player sets their own champion (until lock).
+function MyPickCard({ data, setData, player, t, logout }) {
+  const allTeams = useMemo(() => GROUP_KEYS.flatMap((g) => GROUPS[g]).slice().sort((a, b) => a.localeCompare(b)), []);
+  const lock = data.settings && data.settings.champLockUtc;
+  const locked = lock ? Date.now() > Date.parse(lock) : false;
+  const p = data.players[player] || {};
+  const setChamp = (team) => setData((d) => {
+    const nd = { ...d, players: { ...d.players, [player]: { ...d.players[player], champion: team || null } },
+      auditLog: [{ ts: Date.now(), msg: `${t("champPick")} (self): ${player} → ${team || "—"}` }, ...(d.auditLog || [])].slice(0, 80) };
+    persistLive(nd); return nd;
+  });
+  return (
+    <div className="card mypick">
+      <div className="mypick-head"><Avatar name={player} /><span className="champname">{t("signedInAs")} <b>{player}</b></span><button className="seeall" onClick={logout}>{t("logout")}</button></div>
+      <div className="mypick-body">
+        <span className="mypick-lbl">👑 {t("champPick")}</span>
+        {locked
+          ? <span className="mypick-locked"><Team t={canonTeam(p.champion)} dim={!p.champion} /> · {t("locked")}</span>
+          : <select className="select champsel" value={canonTeam(p.champion) || ""} onChange={(e) => setChamp(e.target.value)}>
+              <option value="">— {t("champPick")} —</option>
+              {allTeams.map((tm) => <option key={tm} value={tm}>{tm}</option>)}
+            </select>}
+      </div>
+      {lock && !locked && <p className="hint block">{t("lockBy")} {new Date(lock).toLocaleString()}</p>}
+    </div>
+  );
+}
+// Admin: phone numbers + one-tap "send login over WhatsApp" + the pick lock time.
+function AdminPlayers({ data, setData, t }) {
+  const players = Object.keys(data.players);
+  const origin = window.location.origin + window.location.pathname;
+  const newToken = () => ((window.crypto && window.crypto.randomUUID && window.crypto.randomUUID()) || (Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2))).replace(/-/g, "").slice(0, 18);
+  const update = (name, patch) => setData((d) => { const nd = { ...d, players: { ...d.players, [name]: { ...d.players[name], ...patch } } }; persistLive(nd); return nd; });
+  const tokenFor = (name) => { let tk = data.players[name].token; if (!tk) { tk = newToken(); update(name, { token: tk }); } return tk; };
+  const linkFor = (name) => `${origin}?key=${tokenFor(name)}`;
+  const waSend = (name) => {
+    const link = linkFor(name), num = String(data.players[name].phone || "").replace(/[^\d]/g, "");
+    const msg = `${t("waMsg1")} ${name}! ${t("waMsg2")}\n${link}\n\n${t("waMsg3")}`;
+    window.open(num ? `https://wa.me/${num}?text=${encodeURIComponent(msg)}` : `https://wa.me/?text=${encodeURIComponent(msg)}`, "_blank");
+  };
+  const copyLink = (name) => { try { navigator.clipboard.writeText(linkFor(name)); } catch (e) {} };
+  const setLock = (val) => setData((d) => { const nd = { ...d, settings: { ...(d.settings || {}), champLockUtc: val || null } }; persistLive(nd); return nd; });
+  return (
+    <div className="view">
+      <div className="card slim"><h3 className="cardh"><Ico name="prediction" size={18} /> {t("nav_players")}</h3>
+        <p className="hint block">{t("playersHint")}</p>
+      </div>
+      <div className="card slim">
+        <span className="hlabel">⏰ {t("champLock")}</span>
+        <input className="select" type="datetime-local" value={(data.settings && data.settings.champLockUtc) || ""} onChange={(e) => setLock(e.target.value)} />
+      </div>
+      <div className="card">
+        {players.map((name) => (
+          <div className="plrow" key={name}>
+            <div className="plrow-top"><Avatar name={name} /><span className="champname">{name}</span>{data.players[name].champion && <span className="plpick">👑 {canonTeam(data.players[name].champion)}</span>}</div>
+            <div className="plrow-ctl">
+              <input className="select plphone" type="tel" inputMode="tel" placeholder={t("phonePh")} value={data.players[name].phone || ""} onChange={(e) => update(name, { phone: e.target.value })} />
+              <button className="btn wabtn" onClick={() => waSend(name)}>{t("waSend")}</button>
+              <button className="btn ghost" onClick={() => copyLink(name)}>{t("copy")}</button>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
 function Health({ data, lb, t }) {
   const players = Object.keys(data.players);
   const incompletePreds = players.filter((n) => GROUP_KEYS.some((g) => playerGroupPred(data.players[n], g).length < 4));
@@ -2456,6 +2526,7 @@ const MORE_ITEMS = [
 ];
 const ADMIN_ITEMS = [
   { id: "results", ic: "edit", key: "nav_results" },
+  { id: "players", ic: "prediction", key: "nav_players" },
   { id: "champions", ic: "trophy", key: "nav_champions" },
   { id: "playerpicks", ic: "bracket", key: "nav_playerpicks" },
   { id: "playerreport", ic: "chart", key: "nav_playerreport" },
@@ -2552,6 +2623,7 @@ export default function App() {
   const [groupSel, setGroupSel] = useState(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [data, setData] = useState(null);
+  const [player, setPlayer] = useState(null); // self-service logged-in player (null = admin/guest)
   const [source, setSource] = useState("loading"); // 'live' | 'sample' | 'loading'
   const [, setNow] = useState(nowMs());
   // Boot: try real Supabase data; on any failure fall back to the sample demo.
@@ -2581,6 +2653,25 @@ export default function App() {
     })();
     return () => { alive = false; };
   }, []);
+  // Self-service login: a ?key=<token> link (admin-sent over WhatsApp, free)
+  // signs a player in; the session is remembered on the device.
+  useEffect(() => {
+    if (!data || !data.players) return;
+    try {
+      const url = new URL(window.location.href);
+      const tok = url.searchParams.get("key");
+      if (tok) {
+        const match = Object.keys(data.players).find((n) => data.players[n] && data.players[n].token === tok);
+        if (match) { localStorage.setItem("wc_player", match); setPlayer(match); }
+        url.searchParams.delete("key");
+        window.history.replaceState({}, "", url.pathname + (url.search || "") + (url.hash || ""));
+      } else {
+        const saved = localStorage.getItem("wc_player");
+        if (saved && data.players[saved] && saved !== player) setPlayer(saved);
+      }
+    } catch (e) { /* ignore */ }
+  }, [data]);
+  const logout = () => { try { localStorage.removeItem("wc_player"); } catch (e) {} setPlayer(null); };
   // Tick: live mode polls Supabase for fresh results; sample mode advances the
   // synthetic clock. Either way the whole view is re-derived reactively.
   useEffect(() => {
@@ -2651,6 +2742,7 @@ export default function App() {
       </header>
 
       <main className="main">
+        {player && data.players[player] && <MyPickCard data={data} setData={setData} player={player} t={t} logout={logout} />}
         {view === "home" && <Dashboard data={data} lb={lb} lang={lang} onOpen={openMatch} t={t} go={go} />}
         {view === "today" && <MatchCenter data={data} lang={lang} onOpen={openMatch} t={t} />}
         {view === "match" && match && <MatchDetail m={(data.matches || []).find((x) => x.id === match.id) || match} data={data} lang={lang} t={t} onBack={() => go("today")} />}
@@ -2670,6 +2762,7 @@ export default function App() {
         {view === "adminlogin" && <AdminLogin onAuth={() => { setIsAdmin(true); trackEvent("admin_login_success", {}); go("results"); }} t={t} />}
         {view === "results" && (isAdmin ? <Results data={data} setData={setData} t={t} lang={lang} /> : <AdminLogin onAuth={() => { setIsAdmin(true); trackEvent("admin_login_success", {}); go("results"); }} t={t} />)}
         {view === "champions" && isAdmin && <AdminChampions data={data} setData={setData} t={t} />}
+        {view === "players" && isAdmin && <AdminPlayers data={data} setData={setData} t={t} />}
         {view === "settings" && isAdmin && <AdminSettings data={data} setData={setData} t={t} />}
         {view === "backup" && isAdmin && <Backup data={data} setData={setData} t={t} />}
         {view === "export" && isAdmin && <Exports data={data} t={t} />}
@@ -3255,6 +3348,17 @@ border-radius:18px;padding:16px 14px;margin:10px 0;color:#fff;background:linear-
 .champrow{display:flex;align-items:center;gap:10px;padding:8px 0;border-top:1px solid var(--soft)}.champrow:first-child{border-top:none}
 .champname{flex:1;min-width:0;font-weight:700;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .champsel{width:auto;min-width:140px;max-width:180px;margin:0;padding:8px 10px;font-size:13px}
+.plrow{padding:10px 0;border-top:1px solid var(--soft)}.plrow:first-child{border-top:none}
+.plrow-top{display:flex;align-items:center;gap:8px}.plpick{margin-inline-start:auto;font-size:12px;font-weight:700;color:var(--gold-d)}
+.plrow-ctl{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap}
+.plphone{flex:1;min-width:130px;margin:0;padding:9px 10px;font-size:13px}
+.wabtn{flex:none;width:auto;margin:0;padding:9px 14px;background:#25d366;color:#06311b}
+.plrow-ctl .btn.ghost{flex:none;width:auto;margin:0;padding:9px 12px}
+.mypick{border:2px solid var(--grass);background:linear-gradient(180deg,#f3fbf7,var(--card))}
+.app[data-theme="dark"] .mypick{background:rgba(25,195,125,.08)}
+.mypick-head{display:flex;align-items:center;gap:8px}
+.mypick-body{display:flex;align-items:center;gap:10px;margin-top:10px}.mypick-lbl{font-weight:800;font-size:14px}
+.mypick-locked{font-weight:700;display:flex;align-items:center;gap:6px;color:var(--muted)}
 
 /* admin: results editor */
 .bucketstrip{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:12px}

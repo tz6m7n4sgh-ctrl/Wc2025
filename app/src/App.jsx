@@ -84,7 +84,7 @@ const I18N = {
     selectPlayer: "Select a player", group: "Group", winnerAdv: "advances",
     rule_edge: "Pick the higher-ranked team and they win the match", rule_exact: "Team finishes in the exact position you predicted",
     rule_in: "Team is in the group but in a different position", rule_ko: "Correct knockout-round winner", rule_champ: "Correct champion",
-    nav_more: "More", nav_matches: "Matches", nav_predictions: "Predictions", nav_consensus: "Consensus", nav_trends: "Trends", nav_scorers: "Goals", nav_help: "Help",
+    nav_more: "More", nav_matches: "Matches", nav_predictions: "Predictions", nav_consensus: "Consensus", nav_trends: "Trends", nav_scorers: "Goals", nav_help: "Help", nav_mypicks: "My picks", mypicksSignIn: "Open your personal sign-in link (sent on WhatsApp) to fill and edit your predictions.",
     nav_today: "Today", liveNow: "Live now", noMatches: "No matches on this day.", noEvents: "No data yet.", predBacking: "backing", whoBacked: "Who backed whom", back: "Back", upcoming: "Upcoming",
     liveLbl: "LIVE", liveUpdates: "Live updates", hide: "Hide", openMatch: "Open match", kickoff: "Kick-off", fullTime: "Full-time", goalEx: "GOAL!",
     nextMatch: "Next match", todayComing: "Today — coming up", todayDone: "Today — completed", noComing: "No more matches today.", noDone: "No results yet today.", latestResults: "Latest results", seeAll: "See all",
@@ -149,7 +149,7 @@ const I18N = {
     selectPlayer: "اختر لاعباً", group: "المجموعة", winnerAdv: "يتأهل",
     rule_edge: "اختر الفريق الأعلى ترتيباً ويفوز بالمباراة", rule_exact: "الفريق ينهي في المركز الذي توقعته بالضبط",
     rule_in: "الفريق في المجموعة لكن في مركز مختلف", rule_ko: "توقع الفائز الصحيح في الدور الإقصائي", rule_champ: "توقع البطل الصحيح",
-    nav_more: "المزيد", nav_matches: "المباريات", nav_predictions: "التوقعات", nav_consensus: "الإجماع", nav_trends: "التطور", nav_scorers: "الأهداف", nav_help: "المساعدة",
+    nav_more: "المزيد", nav_matches: "المباريات", nav_predictions: "التوقعات", nav_consensus: "الإجماع", nav_trends: "التطور", nav_scorers: "الأهداف", nav_help: "المساعدة", nav_mypicks: "توقعاتي", mypicksSignIn: "افتح رابط الدخول الخاص بك (المُرسل عبر واتساب) لتعبئة توقّعاتك وتعديلها.",
     nav_today: "اليوم", liveNow: "مباشر الآن", noMatches: "لا مباريات في هذا اليوم.", noEvents: "لا توجد بيانات بعد.", predBacking: "مؤيد", whoBacked: "من أيّد مَن", back: "رجوع", upcoming: "قادمة",
     liveLbl: "مباشر", liveUpdates: "تحديثات مباشرة", hide: "إخفاء", openMatch: "فتح المباراة", kickoff: "انطلاق المباراة", fullTime: "انتهت المباراة", goalEx: "هدف!",
     nextMatch: "المباراة القادمة", todayComing: "اليوم — قادمة", todayDone: "اليوم — انتهت", noComing: "لا مزيد من المباريات اليوم.", noDone: "لا نتائج بعد اليوم.", latestResults: "أحدث النتائج", seeAll: "عرض الكل",
@@ -2891,6 +2891,7 @@ const NAV = [
   { id: "more", ic: "menu", key: "nav_more" },
 ];
 const MORE_ITEMS = [
+  { id: "mypicks", ic: "prediction", key: "nav_mypicks" },
   { id: "team", ic: "users", key: "nav_team" },
   { id: "points", ic: "prediction", key: "nav_points" },
   { id: "bracket", ic: "bracket", key: "nav_bracket" },
@@ -3040,7 +3041,7 @@ export default function App() {
       const tok = url.searchParams.get("key");
       if (tok) {
         const match = Object.keys(data.players).find((n) => data.players[n] && data.players[n].token === tok);
-        if (match) { localStorage.setItem("wc_player", match); setPlayer(match); }
+        if (match) { localStorage.setItem("wc_player", match); setPlayer(match); setView("mypicks"); }
         url.searchParams.delete("key");
         window.history.replaceState({}, "", url.pathname + (url.search || "") + (url.hash || ""));
       } else {
@@ -3120,7 +3121,9 @@ export default function App() {
       </header>
 
       <main className="main">
-        {player && data.players[player] && <MyPickCard data={data} setData={setData} player={player} t={t} logout={logout} />}
+        {view === "mypicks" && (player && data.players[player]
+          ? <MyPickCard data={data} setData={setData} player={player} t={t} logout={logout} />
+          : <div className="view"><div className="card empty">{t("mypicksSignIn")}</div></div>)}
         {view === "home" && <Dashboard data={data} lb={lb} lang={lang} onOpen={openMatch} t={t} go={go} />}
         {view === "today" && <MatchCenter data={data} lang={lang} onOpen={openMatch} t={t} />}
         {view === "match" && match && <MatchDetail m={(data.matches || []).find((x) => x.id === match.id) || match} data={data} lang={lang} t={t} onBack={() => go("today")} />}
@@ -3159,8 +3162,8 @@ export default function App() {
             <div className="grab" />
             <div className="sheeth">{t("nav_more")}<button className="sheetx" onClick={() => setSheet(false)} aria-label={t("hide")}>✕</button></div>
             <div className="sheetgrid">
-              {MORE_ITEMS.map((m) => (
-                <button key={m.id} className={"tile" + (view === m.id ? " on" : "")} onClick={() => go(m.id)}>
+              {MORE_ITEMS.filter((m) => m.id !== "mypicks" || (player && data.players[player])).map((m) => (
+                <button key={m.id} className={"tile" + (view === m.id ? " on" : "") + (m.id === "mypicks" ? " mine" : "")} onClick={() => go(m.id)}>
                   <span className="tilei"><Ico name={m.ic} size={22} /></span><span className="tilel">{t(m.key)}</span>
                 </button>
               ))}
@@ -3423,6 +3426,7 @@ border:1px solid var(--border);box-shadow:0 -10px 40px rgba(10,31,23,.25);animat
 .tile{display:flex;flex-direction:column;align-items:center;gap:6px;padding:14px 6px;border-radius:14px;border:1px solid var(--border);
 background:var(--soft);color:var(--ink);cursor:pointer;font-family:inherit}
 .tile:active{transform:scale(.96)}.tile.on{border-color:var(--grass);background:rgba(25,195,125,.1)}
+.tile.mine{border-color:var(--gold-d);background:rgba(245,196,81,.14)}.tile.mine.on{border-color:var(--gold-d)}
 .tilei{font-size:22px}.tilel{font-size:11px;font-weight:700}
 
 /* matches */

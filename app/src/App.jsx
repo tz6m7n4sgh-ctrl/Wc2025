@@ -91,7 +91,8 @@ const I18N = {
     nav_points: "Points", livePoints: "Live points", livePtsHint: "recalculated from results", howCalc: "How points are calculated", pendingLive: "Pending", fromLive: "from live matches",
     groupBreakdown: "Group-by-group breakdown", tapExpand: "tap to expand", beat: "beat", champPending: "Champion not decided yet", ifCorrect: "if correct",
     admin: "Admin", adminLogin: "Admin login", password: "Password", wrongPw: "Incorrect password", login: "Log in", demoPw: "Demo password", logout: "Log out",
-    nav_settings: "Settings", nav_results: "Results", nav_playerpicks: "Player picks", nav_playerreport: "Position report", nav_audit: "Audit log", nav_backup: "Backup", nav_health: "Health", nav_sync: "Sync results", nav_repair: "Repair", nav_export: "Export", nav_champions: "Champion picks",
+    nav_settings: "Settings", nav_results: "Results", nav_playerpicks: "Player picks", nav_playerreport: "Position report", nav_audit: "Audit log", nav_backup: "Backup", nav_health: "Health", nav_sync: "Sync results", nav_repair: "Repair", nav_export: "Export", nav_champions: "Champion picks", nav_knockout: "Knockout fixtures",
+    koFixturesHint: "Enter the real knockout matchups and kickoff times. Seed the Round of 32 from the current standings, then correct the teams to the actual draw. Saving powers the champion lock, players' knockout picks and the results editor.", koSeedR32: "Seed R32 from standings", koSave: "Save fixtures", koSaved: "Fixtures saved", koFixtures: "Fixtures set", koFirstKick: "First kickoff", koHome: "Home", koAway: "Away",
     champEntryHint: "Set each player's World Cup winner pick. It scores +10 once the actual champion is decided.", champSetCount: "Picks set",
     nav_players: "Players & login", playersHint: "Set each player's phone, then tap WhatsApp to send them a personal sign-in link from your own number (free). They open it to set their own champion pick — until the lock time.", phonePh: "+9715xxxxxxxx", waSend: "WhatsApp", champLock: "Champion pick lock", signedInAs: "Signed in as", lockBy: "You can change this until", locked: "locked",
     waMsg1: "Hi", waMsg2: "here's your World Cup league sign-in — tap to set your champion pick:", waMsg3: "(Keep this link private — it's just for you.)",
@@ -154,7 +155,8 @@ const I18N = {
     nav_points: "النقاط", livePoints: "النقاط المباشرة", livePtsHint: "تُحتسب من النتائج", howCalc: "كيف تُحتسب النقاط", pendingLive: "قيد الاحتساب", fromLive: "من المباريات المباشرة",
     groupBreakdown: "تفصيل لكل مجموعة", tapExpand: "اضغط للتوسيع", beat: "تغلّب على", champPending: "البطل لم يُحسم بعد", ifCorrect: "إذا صح",
     admin: "الإدارة", adminLogin: "دخول الإدارة", password: "كلمة المرور", wrongPw: "كلمة المرور غير صحيحة", login: "دخول", demoPw: "كلمة المرور التجريبية", logout: "خروج",
-    nav_settings: "الإعدادات", nav_results: "النتائج", nav_playerpicks: "توقعات اللاعب", nav_playerreport: "تقرير المراكز", nav_audit: "سجل التغييرات", nav_backup: "نسخ احتياطي", nav_health: "الصحة", nav_sync: "مزامنة النتائج", nav_repair: "إصلاح", nav_export: "تصدير", nav_champions: "اختيارات البطل",
+    nav_settings: "الإعدادات", nav_results: "النتائج", nav_playerpicks: "توقعات اللاعب", nav_playerreport: "تقرير المراكز", nav_audit: "سجل التغييرات", nav_backup: "نسخ احتياطي", nav_health: "الصحة", nav_sync: "مزامنة النتائج", nav_repair: "إصلاح", nav_export: "تصدير", nav_champions: "اختيارات البطل", nav_knockout: "مباريات الإقصائيات",
+    koFixturesHint: "أدخل مواجهات الأدوار الإقصائية الحقيقية وأوقات انطلاقها. عبّئ دور الـ32 من الترتيب الحالي ثم صحّح الفرق وفق القرعة الفعلية. الحفظ يُفعّل إغلاق البطل وتوقّعات اللاعبين ومحرّر النتائج.", koSeedR32: "تعبئة دور الـ32 من الترتيب", koSave: "حفظ المباريات", koSaved: "تم حفظ المباريات", koFixtures: "المباريات المحدّدة", koFirstKick: "أول انطلاق", koHome: "المضيف", koAway: "الضيف",
     champEntryHint: "حدّد توقع بطل كأس العالم لكل لاعب. يُحتسب +10 عند تحديد البطل فعلياً.", champSetCount: "اختيارات محددة",
     nav_players: "اللاعبون والدخول", playersHint: "أدخل رقم كل لاعب ثم اضغط واتساب لإرسال رابط دخول خاص له من رقمك (مجاناً). يفتحه لاختيار البطل — حتى وقت الإغلاق.", phonePh: "+9715xxxxxxxx", waSend: "واتساب", champLock: "إغلاق اختيار البطل", signedInAs: "مسجّل الدخول باسم", lockBy: "يمكنك التغيير حتى", locked: "مغلق",
     waMsg1: "مرحباً", waMsg2: "هذا رابط دخولك لدوري كأس العالم — اضغط لاختيار البطل:", waMsg3: "(احتفظ بالرابط لنفسك — خاص بك.)",
@@ -2509,6 +2511,79 @@ function AdminPlayers({ data, setData, t }) {
     </div>
   );
 }
+// Admin: enter/confirm the real knockout fixtures (matchups + kickoff times).
+// Writes blob.knockoutMatches, which powers the champion lock, players' knockout
+// picks (real 4h locks + scoring) and the results editor.
+const KO_SLOTS = KO_ROUNDS.flatMap(([rk, n]) => Array.from({ length: n }, (_, k) => ({ mid: `${rk}_${k}`, round: rk })));
+function toLocalInput(ms) { if (!ms) return ""; const d = new Date(ms - new Date(ms).getTimezoneOffset() * 60000); return d.toISOString().slice(0, 16); }
+function AdminKnockout({ data, setData, t }) {
+  const allTeams = useMemo(() => GROUP_KEYS.flatMap((g) => GROUPS[g]).slice().sort((a, b) => a.localeCompare(b)), []);
+  const init = useMemo(() => {
+    const byMid = {}; (data.matches || []).forEach((m) => { if (m.stage === "ko" && m.mid) byMid[m.mid] = m; });
+    return KO_SLOTS.map((s) => { const m = byMid[s.mid] || {}; return { ...s, home: canonTeam(m.home) || "", away: canonTeam(m.away) || "", venue: m.venue || "", kickoff: toLocalInput(m.ko) }; });
+  }, [data]);
+  const [rows, setRows] = useState(init);
+  const [savedAt, setSavedAt] = useState(null);
+  const setRow = (mid, patch) => setRows((rs) => rs.map((r) => r.mid === mid ? { ...r, ...patch } : r));
+  const seedR32 = () => {
+    const bracket = buildBracket(data); const r32 = (bracket.find((r) => r.round === "R32") || { ties: [] }).ties;
+    setRows((rs) => rs.map((r) => { if (!r.mid.startsWith("R32_")) return r; const k = Number(r.mid.split("_")[1]); const tie = r32[k] || {}; return { ...r, home: canonTeam(tie.home) || r.home, away: canonTeam(tie.away) || r.away }; }));
+  };
+  const filled = rows.filter((r) => r.home || r.away);
+  const kicks = filled.map((r) => (r.kickoff ? Date.parse(r.kickoff) : 0)).filter(Boolean);
+  const firstKick = kicks.length ? Math.min(...kicks) : null;
+  const save = () => {
+    setData((d) => {
+      const byMid = {}; (d.matches || []).forEach((m) => { if (m.stage === "ko" && m.mid) byMid[m.mid] = m; });
+      const koMatches = filled.map((r, i) => {
+        const prev = byMid[r.mid] || {};
+        return { id: r.mid, stage: "ko", group: null, idx: i, mid: r.mid, round: r.round, home: r.home || null, away: r.away || null, venue: r.venue || "",
+          ko: r.kickoff ? Date.parse(r.kickoff) : 0, real: true, finalH: prev.finalH ?? null, finalA: prev.finalA ?? null, penWinner: prev.penWinner ?? null,
+          adminLocked: prev.adminLocked || false, hs: prev.hs ?? null, as: prev.as ?? null, status: prev.status || "scheduled", minute: prev.minute ?? null,
+          allEvents: prev.allEvents || [], allStats: prev.allStats || null, lineups: prev.lineups || null };
+      });
+      const others = (d.matches || []).filter((m) => m.stage !== "ko");
+      const matches = [...others, ...koMatches].sort((a, b) => (a.ko || 0) - (b.ko || 0));
+      const blob = { ...(d._blob || {}) };
+      blob.knockoutMatches = filled.map((r) => { const prev = byMid[r.mid] || {}; return { mid: r.mid, round: r.round, home: r.home || null, away: r.away || null, venue: r.venue || "", kickoffUtc: r.kickoff ? new Date(Date.parse(r.kickoff)).toISOString() : null, home_score: prev.finalH ?? null, away_score: prev.finalA ?? null, winner: prev.penWinner ?? null }; });
+      const nd = recomputeLive({ ...d, _blob: blob, matches, auditLog: [{ ts: Date.now(), msg: `${t("nav_knockout")}: ${koMatches.length} ${t("koFixtures")}` }, ...(d.auditLog || [])].slice(0, 80) }, nowMs());
+      persistLive(nd); return nd;
+    });
+    setSavedAt(Date.now());
+  };
+  let lastRound = null;
+  return (
+    <div className="view">
+      <div className="card slim"><h3 className="cardh"><Ico name="bracket" size={18} /> {t("nav_knockout")}</h3>
+        <p className="hint block">{t("koFixturesHint")}</p>
+        <div className="kf-actions"><button className="btn ghost" onClick={seedR32}>{t("koSeedR32")}</button><button className="btn" onClick={save}>{t("koSave")}</button></div>
+        <div className="hrow"><span className="hlabel">{t("koFixtures")}</span><span className="hval num">{filled.length}/{KO_SLOTS.length}</span></div>
+        <div className="hrow"><span className="hlabel">{t("koFirstKick")}</span><span className="hval num">{firstKick ? new Date(firstKick).toLocaleString() : "—"}</span></div>
+        {savedAt && <p className="hint block ok">✓ {t("koSaved")}</p>}
+      </div>
+      <div className="card">
+        {rows.map((r) => {
+          const head = r.round !== lastRound ? (lastRound = r.round) : null;
+          return (
+            <div key={r.mid}>
+              {head && <div className="kf-round">{t("r_" + r.round)}</div>}
+              <div className="kf-row">
+                <select className="select kf-team" value={r.home} onChange={(e) => setRow(r.mid, { home: e.target.value })}>
+                  <option value="">— {t("koHome")} —</option>{allTeams.map((tm) => <option key={tm} value={tm}>{tm}</option>)}
+                </select>
+                <span className="kf-v">v</span>
+                <select className="select kf-team" value={r.away} onChange={(e) => setRow(r.mid, { away: e.target.value })}>
+                  <option value="">— {t("koAway")} —</option>{allTeams.map((tm) => <option key={tm} value={tm}>{tm}</option>)}
+                </select>
+                <input className="select kf-ko" type="datetime-local" value={r.kickoff} onChange={(e) => setRow(r.mid, { kickoff: e.target.value })} />
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
 function Health({ data, lb, t }) {
   const players = Object.keys(data.players);
   const incompletePreds = players.filter((n) => GROUP_KEYS.some((g) => playerGroupPred(data.players[n], g).length < 4));
@@ -2739,6 +2814,7 @@ const MORE_ITEMS = [
 ];
 const ADMIN_ITEMS = [
   { id: "results", ic: "edit", key: "nav_results" },
+  { id: "knockout", ic: "bracket", key: "nav_knockout" },
   { id: "players", ic: "prediction", key: "nav_players" },
   { id: "champions", ic: "trophy", key: "nav_champions" },
   { id: "playerpicks", ic: "bracket", key: "nav_playerpicks" },
@@ -2975,6 +3051,7 @@ export default function App() {
         {view === "adminlogin" && <AdminLogin onAuth={() => { setIsAdmin(true); trackEvent("admin_login_success", {}); go("results"); }} t={t} />}
         {view === "results" && (isAdmin ? <Results data={data} setData={setData} t={t} lang={lang} /> : <AdminLogin onAuth={() => { setIsAdmin(true); trackEvent("admin_login_success", {}); go("results"); }} t={t} />)}
         {view === "champions" && isAdmin && <AdminChampions data={data} setData={setData} t={t} />}
+        {view === "knockout" && isAdmin && <AdminKnockout data={data} setData={setData} t={t} />}
         {view === "players" && isAdmin && <AdminPlayers data={data} setData={setData} t={t} />}
         {view === "settings" && isAdmin && <AdminSettings data={data} setData={setData} t={t} />}
         {view === "backup" && isAdmin && <Backup data={data} setData={setData} t={t} />}
@@ -3595,6 +3672,13 @@ border-radius:18px;padding:16px 14px;margin:10px 0;color:#fff;background:linear-
 .erow{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
 .erow.invalid .scoreinp{border-color:var(--neg);outline-color:var(--neg)}
 .ko-warn{flex-basis:100%;text-align:center;font-size:10.5px;font-weight:700;color:var(--neg)}
+.kf-actions{display:flex;gap:8px;margin:8px 0}.kf-actions .btn{flex:1}
+.hint.block.ok{color:var(--pos);font-weight:700}
+.kf-round{font-weight:800;font-size:11px;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);margin:12px 0 6px}
+.kf-row{display:flex;align-items:center;gap:6px;margin-bottom:6px;flex-wrap:wrap}
+.kf-team{flex:1;min-width:110px;margin:0;padding:7px 8px;font-size:12.5px}
+.kf-v{font-size:11px;color:var(--muted);font-weight:700}
+.kf-ko{flex-basis:100%;margin:0;padding:6px 8px;font-size:12px}
 .ko-pens{flex-basis:100%;display:flex;flex-wrap:wrap;align-items:center;gap:6px;justify-content:center;margin-top:4px}
 .ko-pens-lbl{font-size:10.5px;font-weight:700;color:var(--muted)}
 .ko-penbtn{padding:4px 9px;border:1px solid var(--border);border-radius:7px;background:var(--card);color:var(--ink);font-family:inherit;font-weight:700;font-size:11px;cursor:pointer}

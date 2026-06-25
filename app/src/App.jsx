@@ -91,7 +91,8 @@ const I18N = {
     nav_points: "Points", livePoints: "Live points", livePtsHint: "recalculated from results", howCalc: "How points are calculated", pendingLive: "Pending", fromLive: "from live matches",
     groupBreakdown: "Group-by-group breakdown", tapExpand: "tap to expand", beat: "beat", champPending: "Champion not decided yet", ifCorrect: "if correct",
     admin: "Admin", adminLogin: "Admin login", password: "Password", wrongPw: "Incorrect password", login: "Log in", demoPw: "Demo password", logout: "Log out",
-    nav_settings: "Settings", nav_results: "Results", nav_playerpicks: "Player picks", nav_playerreport: "Position report", nav_audit: "Audit log", nav_backup: "Backup", nav_health: "Health", nav_sync: "Sync results", nav_repair: "Repair", nav_export: "Export",
+    nav_settings: "Settings", nav_results: "Results", nav_playerpicks: "Player picks", nav_playerreport: "Position report", nav_audit: "Audit log", nav_backup: "Backup", nav_health: "Health", nav_sync: "Sync results", nav_repair: "Repair", nav_export: "Export", nav_champions: "Champion picks",
+    champEntryHint: "Set each player's World Cup winner pick. It scores +10 once the actual champion is decided.", champSetCount: "Picks set",
     resultsEditor: "Results editor", resultsHint: "Enter a score to mark a match finished — standings, points and the bracket update instantly.", setChampion: "Set champion",
     entryFee: "Entry fee", currency: "Currency", distribution: "Prize distribution", winnerTakes: "Winner takes all", topTwo: "Split top 2", topThree: "Split top 3", deadline: "Predictions deadline", lockPicks: "Lock predictions", prizePool: "Prize pool",
     exportData: "Export data", importData: "Import data", pasteJson: "Paste backup JSON here…", copy: "Copy", copied: "copied", loaded: "loaded", badJson: "invalid JSON", load: "Load",
@@ -148,7 +149,8 @@ const I18N = {
     nav_points: "النقاط", livePoints: "النقاط المباشرة", livePtsHint: "تُحتسب من النتائج", howCalc: "كيف تُحتسب النقاط", pendingLive: "قيد الاحتساب", fromLive: "من المباريات المباشرة",
     groupBreakdown: "تفصيل لكل مجموعة", tapExpand: "اضغط للتوسيع", beat: "تغلّب على", champPending: "البطل لم يُحسم بعد", ifCorrect: "إذا صح",
     admin: "الإدارة", adminLogin: "دخول الإدارة", password: "كلمة المرور", wrongPw: "كلمة المرور غير صحيحة", login: "دخول", demoPw: "كلمة المرور التجريبية", logout: "خروج",
-    nav_settings: "الإعدادات", nav_results: "النتائج", nav_playerpicks: "توقعات اللاعب", nav_playerreport: "تقرير المراكز", nav_audit: "سجل التغييرات", nav_backup: "نسخ احتياطي", nav_health: "الصحة", nav_sync: "مزامنة النتائج", nav_repair: "إصلاح", nav_export: "تصدير",
+    nav_settings: "الإعدادات", nav_results: "النتائج", nav_playerpicks: "توقعات اللاعب", nav_playerreport: "تقرير المراكز", nav_audit: "سجل التغييرات", nav_backup: "نسخ احتياطي", nav_health: "الصحة", nav_sync: "مزامنة النتائج", nav_repair: "إصلاح", nav_export: "تصدير", nav_champions: "اختيارات البطل",
+    champEntryHint: "حدّد توقع بطل كأس العالم لكل لاعب. يُحتسب +10 عند تحديد البطل فعلياً.", champSetCount: "اختيارات محددة",
     resultsEditor: "محرّر النتائج", resultsHint: "أدخل النتيجة لإنهاء المباراة — يُحدّث الترتيب والنقاط والأدوار فوراً.", setChampion: "تعيين البطل",
     entryFee: "رسوم الاشتراك", currency: "العملة", distribution: "توزيع الجوائز", winnerTakes: "الفائز يأخذ الكل", topTwo: "أفضل اثنين", topThree: "أفضل ثلاثة", deadline: "موعد إغلاق التوقعات", lockPicks: "قفل التوقعات", prizePool: "مجموع الجوائز",
     exportData: "تصدير البيانات", importData: "استيراد البيانات", pasteJson: "الصق نسخة JSON هنا…", copy: "نسخ", copied: "تم النسخ", loaded: "تم التحميل", badJson: "JSON غير صالح", load: "تحميل",
@@ -2189,6 +2191,41 @@ function Exports({ data, t }) {
     </div>
   );
 }
+// Admin: set each player's champion pick (+10 when the real champion is decided).
+function AdminChampions({ data, setData, t }) {
+  const players = Object.keys(data.players);
+  const allTeams = useMemo(() => GROUP_KEYS.flatMap((g) => GROUPS[g]).slice().sort((a, b) => a.localeCompare(b)), []);
+  const setChamp = (name, team) => setData((d) => {
+    const nd = {
+      ...d,
+      players: { ...d.players, [name]: { ...(d.players[name] || {}), champion: team || null } },
+      auditLog: [{ ts: Date.now(), msg: `${t("champPick")}: ${name} → ${team || "—"}` }, ...(d.auditLog || [])].slice(0, 80),
+    };
+    persistLive(nd);
+    return nd;
+  });
+  const setN = players.filter((n) => data.players[n].champion).length;
+  return (
+    <div className="view">
+      <div className="card slim"><h3 className="cardh"><Ico name="trophy" size={18} /> {t("nav_champions")}</h3>
+        <p className="hint block">{t("champEntryHint")}</p>
+        <div className="hrow"><span className="hlabel">{t("champSetCount")}</span><span className="hval num">{setN}/{players.length}</span></div>
+      </div>
+      <div className="card">
+        {players.map((name) => (
+          <div className="champrow" key={name}>
+            <Avatar name={name} />
+            <span className="champname">{name}</span>
+            <select className="select champsel" value={canonTeam(data.players[name].champion) || ""} onChange={(e) => setChamp(name, e.target.value)}>
+              <option value="">— {t("champPick")} —</option>
+              {allTeams.map((tm) => <option key={tm} value={tm}>{tm}</option>)}
+            </select>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
 function Health({ data, lb, t }) {
   const players = Object.keys(data.players);
   const incompletePreds = players.filter((n) => GROUP_KEYS.some((g) => playerGroupPred(data.players[n], g).length < 4));
@@ -2419,6 +2456,7 @@ const MORE_ITEMS = [
 ];
 const ADMIN_ITEMS = [
   { id: "results", ic: "edit", key: "nav_results" },
+  { id: "champions", ic: "trophy", key: "nav_champions" },
   { id: "playerpicks", ic: "bracket", key: "nav_playerpicks" },
   { id: "playerreport", ic: "chart", key: "nav_playerreport" },
   { id: "audit", ic: "search", key: "nav_audit" },
@@ -2631,6 +2669,7 @@ export default function App() {
         {/* admin */}
         {view === "adminlogin" && <AdminLogin onAuth={() => { setIsAdmin(true); trackEvent("admin_login_success", {}); go("results"); }} t={t} />}
         {view === "results" && (isAdmin ? <Results data={data} setData={setData} t={t} lang={lang} /> : <AdminLogin onAuth={() => { setIsAdmin(true); trackEvent("admin_login_success", {}); go("results"); }} t={t} />)}
+        {view === "champions" && isAdmin && <AdminChampions data={data} setData={setData} t={t} />}
         {view === "settings" && isAdmin && <AdminSettings data={data} setData={setData} t={t} />}
         {view === "backup" && isAdmin && <Backup data={data} setData={setData} t={t} />}
         {view === "export" && isAdmin && <Exports data={data} t={t} />}
@@ -3213,6 +3252,9 @@ border-radius:18px;padding:16px 14px;margin:10px 0;color:#fff;background:linear-
 .btn{width:100%;margin-top:10px;padding:11px;border:none;border-radius:11px;background:var(--grass);color:#04150d;font-family:inherit;font-size:14px;font-weight:800;cursor:pointer}
 .btn:active{transform:scale(.99)}.btn.ghost{background:var(--soft);color:var(--muted)}.btn:disabled{opacity:.5}
 .exp-btns{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}.exp-btns .btn{flex:1;min-width:130px;margin-top:0}
+.champrow{display:flex;align-items:center;gap:10px;padding:8px 0;border-top:1px solid var(--soft)}.champrow:first-child{border-top:none}
+.champname{flex:1;min-width:0;font-weight:700;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.champsel{width:auto;min-width:140px;max-width:180px;margin:0;padding:8px 10px;font-size:13px}
 
 /* admin: results editor */
 .bucketstrip{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:12px}

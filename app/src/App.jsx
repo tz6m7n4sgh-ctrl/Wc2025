@@ -97,6 +97,7 @@ const I18N = {
     nav_players: "Players & login", playersHint: "Set each player's phone, then tap WhatsApp to send them a personal sign-in link from your own number (free). They open it to set their own champion pick — until the lock time.", phonePh: "+9715xxxxxxxx", waSend: "WhatsApp", champLock: "Champion pick lock", signedInAs: "Signed in as", lockBy: "You can change this until", locked: "locked",
     waMsg1: "Hi", waMsg2: "here's your World Cup league sign-in — tap to set your champion pick:", waMsg3: "(Keep this link private — it's just for you.)",
     waRemind: "Remind", waRemindMsg1: "here's a reminder to set your World Cup picks before they lock", waRemindMsg2: "tap to open:", lockAuto: "Auto-locks 4h before the first knockout match", lockAutoTba: "Will auto-lock 4h before the first knockout match (schedule pending)",
+    randomFill: "Fill randomly (unique to me)", randomConfirm: "Fill all your open predictions with a random draw? Each player gets a different one. You can still edit afterwards.",
     groupPredHint: "Order each group 1–4. Open until your league admin sets a deadline.", groupLockedHint: "Group predictions are locked.", groupLockAuto: "Auto-locks at the first group match", groupLock: "Group predictions lock", groupLockOpen: "Open — set a time to close entry (e.g. the first group kickoff)",
     koPicks: "Knockout picks", koOpensWhen: "Knockout picks open once the group stage finishes.", koLockHint: "Each pick locks 4 hours before its kickoff.", koProjected: "Projected from the current standings — pick now; matchups may still shift until the groups finish. Each pick locks 4h before kickoff.", koPreview: "Preview projected from the current standings. Picks open once the knockout fixtures are confirmed; each pick will lock 4h before its kickoff.", koLockBy: "locks 4h before kickoff", pickWinner: "Pick the winner", koTba: "Awaiting earlier results",
     resultsEditor: "Results editor", resultsHint: "Enter a score to mark a match finished — standings, points and the bracket update instantly.", setChampion: "Set champion",
@@ -161,6 +162,7 @@ const I18N = {
     nav_players: "اللاعبون والدخول", playersHint: "أدخل رقم كل لاعب ثم اضغط واتساب لإرسال رابط دخول خاص له من رقمك (مجاناً). يفتحه لاختيار البطل — حتى وقت الإغلاق.", phonePh: "+9715xxxxxxxx", waSend: "واتساب", champLock: "إغلاق اختيار البطل", signedInAs: "مسجّل الدخول باسم", lockBy: "يمكنك التغيير حتى", locked: "مغلق",
     waMsg1: "مرحباً", waMsg2: "هذا رابط دخولك لدوري كأس العالم — اضغط لاختيار البطل:", waMsg3: "(احتفظ بالرابط لنفسك — خاص بك.)",
     waRemind: "تذكير", waRemindMsg1: "تذكير باختيار توقّعاتك في دوري كأس العالم قبل إغلاقها", waRemindMsg2: "اضغط للفتح:", lockAuto: "يُغلق تلقائياً قبل 4 ساعات من أول مباراة إقصائية", lockAutoTba: "سيُغلق تلقائياً قبل 4 ساعات من أول مباراة إقصائية (الجدول قيد الانتظار)",
+    randomFill: "تعبئة عشوائية (خاصة بي)", randomConfirm: "تعبئة كل توقّعاتك المفتوحة بقرعة عشوائية؟ لكل لاعب قرعة مختلفة. يمكنك التعديل لاحقاً.",
     groupPredHint: "رتّب كل مجموعة من 1 إلى 4. مفتوح حتى يحدّد المشرف موعداً للإغلاق.", groupLockedHint: "توقّعات المجموعات مغلقة.", groupLockAuto: "يُغلق تلقائياً عند أول مباراة في المجموعات", groupLock: "إغلاق توقّعات المجموعات", groupLockOpen: "مفتوح — حدّد وقتاً لإغلاق الإدخال (مثلاً أول مباراة في المجموعات)",
     koPicks: "توقّعات الأدوار الإقصائية", koOpensWhen: "تُفتح توقّعات الأدوار الإقصائية بعد انتهاء دور المجموعات.", koLockHint: "يُغلق كل اختيار قبل 4 ساعات من موعد المباراة.", koProjected: "متوقّعة من الترتيب الحالي — اختر الآن؛ قد تتغيّر المواجهات حتى انتهاء المجموعات. يُغلق كل اختيار قبل 4 ساعات من المباراة.", koPreview: "معاينة متوقّعة من الترتيب الحالي. تُفتح التوقّعات بعد تأكيد مباريات الأدوار الإقصائية؛ ويُغلق كل اختيار قبل 4 ساعات من موعده.", koLockBy: "يُغلق قبل 4 ساعات من المباراة", pickWinner: "اختر الفائز", koTba: "بانتظار النتائج السابقة",
     resultsEditor: "محرّر النتائج", resultsHint: "أدخل النتيجة لإنهاء المباراة — يُحدّث الترتيب والنقاط والأدوار فوراً.", setChampion: "تعيين البطل",
@@ -2391,9 +2393,33 @@ function MyPickCard({ data, setData, player, t, logout }) {
     persistLive(nd); return nd;
   });
   const myKo = (p && p.knockout) || {};
+  // One-tap fill: randomises every UNLOCKED section. Seeded with the player's
+  // own name (+ a per-click nonce) so two players never get the same draw.
+  const randomFill = () => {
+    if (!window.confirm(t("randomConfirm"))) return;
+    const nonce = Date.now();
+    setData((d) => {
+      const cur = d.players[player] || {};
+      const gp = { ...(cur.groupPreds || {}) };
+      if (!groupLocked) GROUP_KEYS.forEach((g) => { gp[g] = shuffle(GROUPS[g], hashStr(player + "|g|" + g + "|" + nonce)); });
+      let champion = cur.champion;
+      if (!locked) champion = shuffle(allTeams.slice(), hashStr(player + "|c|" + nonce))[0];
+      const ko = { ...(cur.knockout || {}) };
+      koRounds.forEach((rnd) => rnd.ties.forEach((m) => {
+        if (!m.home || !m.away) return;
+        if (m.ko && Date.now() > m.ko - KO_LOCK_MS) return; // tie locked
+        ko[m.mid] = shuffle([m.home, m.away], hashStr(player + "|k|" + m.mid + "|" + nonce))[0];
+      }));
+      const nd = { ...d, players: { ...d.players, [player]: { ...cur, groupPreds: gp, champion: champion || null, knockout: ko } },
+        auditLog: [{ ts: nonce, msg: `${t("randomFill")} (self): ${player}` }, ...(d.auditLog || [])].slice(0, 80) };
+      persistLive(nd); return nd;
+    });
+  };
+  const anyOpen = !groupLocked || !locked || koRounds.some((r) => r.ties.some((m) => m.home && m.away && !(m.ko && Date.now() > m.ko - KO_LOCK_MS)));
   return (
     <div className="card mypick">
       <div className="mypick-head"><Avatar name={player} /><span className="champname">{t("signedInAs")} <b>{player}</b></span><button className="seeall" onClick={logout}>{t("logout")}</button></div>
+      {anyOpen && <button className="btn mypick-fill" onClick={randomFill}>🎲 {t("randomFill")}</button>}
 
       <div className="mypick-groups">
         <span className="mypick-lbl">📋 {t("nav_predictions")}</span>
@@ -3649,6 +3675,7 @@ border-radius:18px;padding:16px 14px;margin:10px 0;color:#fff;background:linear-
 .mypick-head{display:flex;align-items:center;gap:8px}
 .mypick-body{display:flex;align-items:center;gap:10px;margin-top:10px}.mypick-lbl{font-weight:800;font-size:14px}
 .mypick-locked{font-weight:700;display:flex;align-items:center;gap:6px;color:var(--muted)}
+.mypick-fill{width:100%;margin-top:10px;background:var(--gold);color:#241c00;border-color:var(--gold-d);font-weight:800}
 .mypick-groups{margin-top:12px;padding-top:12px;border-top:1px dashed var(--border)}
 .gpred{margin-top:8px;padding:8px 10px;border:1px solid var(--border);border-radius:10px;background:var(--card)}
 .gpred-h{font-weight:800;font-size:11px;letter-spacing:.03em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}

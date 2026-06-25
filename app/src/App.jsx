@@ -96,7 +96,7 @@ const I18N = {
     nav_players: "Players & login", playersHint: "Set each player's phone, then tap WhatsApp to send them a personal sign-in link from your own number (free). They open it to set their own champion pick — until the lock time.", phonePh: "+9715xxxxxxxx", waSend: "WhatsApp", champLock: "Champion pick lock", signedInAs: "Signed in as", lockBy: "You can change this until", locked: "locked",
     waMsg1: "Hi", waMsg2: "here's your World Cup league sign-in — tap to set your champion pick:", waMsg3: "(Keep this link private — it's just for you.)",
     waRemind: "Remind", waRemindMsg1: "here's a reminder to set your World Cup picks before they lock", waRemindMsg2: "tap to open:", lockAuto: "Auto-locks 4h before the first knockout match", lockAutoTba: "Will auto-lock 4h before the first knockout match (schedule pending)",
-    koPicks: "Knockout picks", koOpensWhen: "Knockout picks open once the group stage finishes.", koLockHint: "Each pick locks 4 hours before its kickoff.", koProjected: "Projected from the current standings — pick now; matchups may still shift until the groups finish. Each pick locks 4h before kickoff.", koLockBy: "locks 4h before kickoff", pickWinner: "Pick the winner", koTba: "Awaiting earlier results",
+    koPicks: "Knockout picks", koOpensWhen: "Knockout picks open once the group stage finishes.", koLockHint: "Each pick locks 4 hours before its kickoff.", koProjected: "Projected from the current standings — pick now; matchups may still shift until the groups finish. Each pick locks 4h before kickoff.", koPreview: "Preview projected from the current standings. Picks open once the knockout fixtures are confirmed; each pick will lock 4h before its kickoff.", koLockBy: "locks 4h before kickoff", pickWinner: "Pick the winner", koTba: "Awaiting earlier results",
     resultsEditor: "Results editor", resultsHint: "Enter a score to mark a match finished — standings, points and the bracket update instantly.", setChampion: "Set champion",
     entryFee: "Entry fee", currency: "Currency", distribution: "Prize distribution", winnerTakes: "Winner takes all", topTwo: "Split top 2", topThree: "Split top 3", deadline: "Predictions deadline", lockPicks: "Lock predictions", prizePool: "Prize pool",
     exportData: "Export data", importData: "Import data", pasteJson: "Paste backup JSON here…", copy: "Copy", copied: "copied", loaded: "loaded", badJson: "invalid JSON", load: "Load",
@@ -158,7 +158,7 @@ const I18N = {
     nav_players: "اللاعبون والدخول", playersHint: "أدخل رقم كل لاعب ثم اضغط واتساب لإرسال رابط دخول خاص له من رقمك (مجاناً). يفتحه لاختيار البطل — حتى وقت الإغلاق.", phonePh: "+9715xxxxxxxx", waSend: "واتساب", champLock: "إغلاق اختيار البطل", signedInAs: "مسجّل الدخول باسم", lockBy: "يمكنك التغيير حتى", locked: "مغلق",
     waMsg1: "مرحباً", waMsg2: "هذا رابط دخولك لدوري كأس العالم — اضغط لاختيار البطل:", waMsg3: "(احتفظ بالرابط لنفسك — خاص بك.)",
     waRemind: "تذكير", waRemindMsg1: "تذكير باختيار توقّعاتك في دوري كأس العالم قبل إغلاقها", waRemindMsg2: "اضغط للفتح:", lockAuto: "يُغلق تلقائياً قبل 4 ساعات من أول مباراة إقصائية", lockAutoTba: "سيُغلق تلقائياً قبل 4 ساعات من أول مباراة إقصائية (الجدول قيد الانتظار)",
-    koPicks: "توقّعات الأدوار الإقصائية", koOpensWhen: "تُفتح توقّعات الأدوار الإقصائية بعد انتهاء دور المجموعات.", koLockHint: "يُغلق كل اختيار قبل 4 ساعات من موعد المباراة.", koProjected: "متوقّعة من الترتيب الحالي — اختر الآن؛ قد تتغيّر المواجهات حتى انتهاء المجموعات. يُغلق كل اختيار قبل 4 ساعات من المباراة.", koLockBy: "يُغلق قبل 4 ساعات من المباراة", pickWinner: "اختر الفائز", koTba: "بانتظار النتائج السابقة",
+    koPicks: "توقّعات الأدوار الإقصائية", koOpensWhen: "تُفتح توقّعات الأدوار الإقصائية بعد انتهاء دور المجموعات.", koLockHint: "يُغلق كل اختيار قبل 4 ساعات من موعد المباراة.", koProjected: "متوقّعة من الترتيب الحالي — اختر الآن؛ قد تتغيّر المواجهات حتى انتهاء المجموعات. يُغلق كل اختيار قبل 4 ساعات من المباراة.", koPreview: "معاينة متوقّعة من الترتيب الحالي. تُفتح التوقّعات بعد تأكيد مباريات الأدوار الإقصائية؛ ويُغلق كل اختيار قبل 4 ساعات من موعده.", koLockBy: "يُغلق قبل 4 ساعات من المباراة", pickWinner: "اختر الفائز", koTba: "بانتظار النتائج السابقة",
     resultsEditor: "محرّر النتائج", resultsHint: "أدخل النتيجة لإنهاء المباراة — يُحدّث الترتيب والنقاط والأدوار فوراً.", setChampion: "تعيين البطل",
     entryFee: "رسوم الاشتراك", currency: "العملة", distribution: "توزيع الجوائز", winnerTakes: "الفائز يأخذ الكل", topTwo: "أفضل اثنين", topThree: "أفضل ثلاثة", deadline: "موعد إغلاق التوقعات", lockPicks: "قفل التوقعات", prizePool: "مجموع الجوائز",
     exportData: "تصدير البيانات", importData: "استيراد البيانات", pasteJson: "الصق نسخة JSON هنا…", copy: "نسخ", copied: "تم النسخ", loaded: "تم التحميل", badJson: "JSON غير صالح", load: "تحميل",
@@ -2249,9 +2249,13 @@ function champLock(data) {
   const manual = data.settings && data.settings.champLockUtc;
   return { at: manual ? Date.parse(manual) : null, auto: false };
 }
-// mid -> kickoff(ms) for loaded knockout matches.
-function koKickoffMap(data) {
-  const m = {}; (data.matches || []).forEach((x) => { if (x.stage === "ko" && x.mid) m[x.mid] = x.ko; }); return m;
+// Real knockout fixtures (admin-entered), grouped by round in encounter order.
+// Picks/locks/scoring all key off the SAME real mid (m.mid), so they actually align.
+function realKoRounds(data) {
+  const ms = (data.matches || []).filter((m) => m.stage === "ko").sort((a, b) => (a.ko || 0) - (b.ko || 0));
+  const out = [];
+  ms.forEach((m) => { const r = m.round || "KO"; let g = out.find((x) => x.round === r); if (!g) { g = { round: r, ties: [] }; out.push(g); } g.ties.push(m); });
+  return out;
 }
 // Self-service: the signed-in player sets their own champion + knockout winners (until lock).
 function MyPickCard({ data, setData, player, t, logout }) {
@@ -2259,9 +2263,9 @@ function MyPickCard({ data, setData, player, t, logout }) {
   const cl = champLock(data);
   const locked = cl.at ? Date.now() > cl.at : false;
   const p = data.players[player] || {};
-  const groupsDone = GROUP_KEYS.every((g) => groupComplete(g, data));
   const bracket = useMemo(() => buildBracket(data), [data]);
-  const koAt = useMemo(() => koKickoffMap(data), [data]);
+  const koRounds = useMemo(() => realKoRounds(data), [data]);
+  const hasKoFixtures = koRounds.length > 0;
   const setChamp = (team) => setData((d) => {
     const nd = { ...d, players: { ...d.players, [player]: { ...d.players[player], champion: team || null } },
       auditLog: [{ ts: Date.now(), msg: `${t("champPick")} (self): ${player} → ${team || "—"}` }, ...(d.auditLog || [])].slice(0, 80) };
@@ -2290,23 +2294,22 @@ function MyPickCard({ data, setData, player, t, logout }) {
 
       <div className="mypick-ko">
         <span className="mypick-lbl">🏆 {t("koPicks")}</span>
-        {(
-              <>
-              <p className="hint block">{groupsDone ? t("koLockHint") : t("koProjected")}</p>
-              {bracket.map((rnd) => (
+        {hasKoFixtures
+          ? <>
+              <p className="hint block">{t("koLockHint")}</p>
+              {koRounds.map((rnd) => (
                 <div className="koround" key={rnd.round}>
-                  <div className="koround-h">{t("r_" + rnd.round)}</div>
-                  {rnd.ties.map((ti) => {
-                    const ready = ti.home && ti.away;
-                    const at = koAt[ti.mid];
-                    const tlocked = at ? Date.now() > at - KO_LOCK_MS : false;
-                    const pick = myKo[ti.mid] || null;
-                    if (!ready) return <div className="kotie tba" key={ti.mid}><span className="kotie-tba">{t("koTba")}</span></div>;
+                  <div className="koround-h">{t("r_" + rnd.round) || rnd.round}</div>
+                  {rnd.ties.map((m) => {
+                    const ready = m.home && m.away;
+                    const tlocked = m.ko ? Date.now() > m.ko - KO_LOCK_MS : false;
+                    const pick = myKo[m.mid] || null;
+                    if (!ready) return <div className="kotie tba" key={m.mid}><span className="kotie-tba">{t("koTba")}</span></div>;
                     return (
-                      <div className="kotie" key={ti.mid}>
-                        {[ti.home, ti.away].map((tm) => {
+                      <div className="kotie" key={m.mid}>
+                        {[m.home, m.away].map((tm) => {
                           const on = pick && sameTeam(pick, tm);
-                          return <button key={tm} className={"kopick" + (on ? " on" : "") + (tlocked ? " lk" : "")} disabled={tlocked && !on} onClick={() => !tlocked && setKo(ti.mid, tm)}><Team t={canonTeam(tm)} /></button>;
+                          return <button key={tm} className={"kopick" + (on ? " on" : "") + (tlocked ? " lk" : "")} disabled={tlocked && !on} onClick={() => !tlocked && setKo(m.mid, tm)}><Team t={canonTeam(tm)} /></button>;
                         })}
                         {tlocked && <span className="kotie-lk">🔒</span>}
                       </div>
@@ -2315,7 +2318,20 @@ function MyPickCard({ data, setData, player, t, logout }) {
                 </div>
               ))}
             </>
-        )}
+          : <>
+              <p className="hint block">{t("koPreview")}</p>
+              {bracket.map((rnd) => (
+                <div className="koround preview" key={rnd.round}>
+                  <div className="koround-h">{t("r_" + rnd.round)}</div>
+                  {rnd.ties.map((ti) => (
+                    <div className="kotie ro" key={ti.mid}>
+                      <span className="kopick ro"><Team t={ti.home} dim={!ti.home} /></span>
+                      <span className="kopick ro"><Team t={ti.away} dim={!ti.away} /></span>
+                    </div>
+                  ))}
+                </div>
+              ))}
+            </>}
       </div>
     </div>
   );
@@ -3435,6 +3451,7 @@ border-radius:18px;padding:16px 14px;margin:10px 0;color:#fff;background:linear-
 .kopick.on{background:var(--pitch);color:#fff;border-color:var(--pitch)}
 .kopick.lk{opacity:.55;cursor:not-allowed}.kopick.on.lk{opacity:1}
 .kotie-lk{font-size:12px}.kotie.tba{opacity:.6}.kotie-tba{font-size:12px;color:var(--muted);font-style:italic}
+.koround.preview{opacity:.85}.kotie.ro{gap:6px}.kopick.ro{cursor:default;background:var(--soft);border-style:dashed}
 
 /* admin: results editor */
 .bucketstrip{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:12px}

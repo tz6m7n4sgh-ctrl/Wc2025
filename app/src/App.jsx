@@ -393,7 +393,7 @@ function buildBracket(data) {
     return KO_ROUNDS.map(([rk]) => ({
       round: rk,
       ties: koMs.filter((m) => m.round === rk).sort((a, b) => (a.ko || 0) - (b.ko || 0))
-        .map((m) => ({ mid: m.mid, home: m.home || null, away: m.away || null, winner: kr[m.mid] || null })),
+        .map((m) => ({ mid: m.mid, home: m.home || null, away: m.away || null, winner: kr[m.mid] || null, ko: m.ko || null, venue: m.venue || "" })),
     })).filter((r) => r.ties.length);
   }
   // Otherwise project from the CURRENT standings so it populates live and updates as
@@ -414,7 +414,7 @@ function buildBracket(data) {
       if (rk === "R32") { home = pool[2 * k]; away = pool[2 * k + 1]; }
       else { home = prevWinners ? prevWinners[2 * k] : null; away = prevWinners ? prevWinners[2 * k + 1] : null; }
       const winner = (data.knockoutResults || {})[`${rk}_${k}`] || null;
-      ties.push({ mid: `${rk}_${k}`, home, away, winner });
+      ties.push({ mid: `${rk}_${k}`, home, away, winner, ko: null, venue: "" });
     }
     rounds.push({ round: rk, ties });
     prevWinners = ties.map((t) => t.winner);
@@ -1002,8 +1002,8 @@ function GroupCard({ g, data, t, delay, onOpenGroup }) {
     </div>
   );
 }
-/* Animated knockout bracket */
-function Bracket({ data, t }) {
+/* Animated knockout bracket — official-style connected columns with kickoff times */
+function Bracket({ data, t, lang }) {
   const rounds = useMemo(() => buildBracket(data), [data]);
   const reduce = useReducedMotion();
   if (!rounds || !rounds.length) return <div className="card empty">{t("brkFills")}</div>;
@@ -1011,15 +1011,19 @@ function Bracket({ data, t }) {
     <div className="brk-scroll">
       <div className="brk">
         {rounds.map((rd, ri) => (
-          <div className="brk-col" key={rd.round} style={{ gap: `${Math.max(8, ri * 18 + 8)}px` }}>
+          <div className="brk-col" key={rd.round} style={{ gap: `${Math.max(10, ri * 22 + 10)}px` }}>
             <div className="brk-rlabel">{t("r_" + rd.round)}</div>
             {rd.ties.map((tie, ti) => {
               const decided = !!tie.winner;
+              const hw = tie.winner && sameTeam(tie.winner, tie.home), aw = tie.winner && sameTeam(tie.winner, tie.away);
               return (
                 <div className={"brk-tie" + (decided ? " decided" : "")} key={tie.mid}
                   style={{ animation: reduce ? "none" : `tieIn .5s ease both`, animationDelay: `${ri * 220 + ti * 40}ms` }}>
-                  <div className={"brk-slot" + (tie.winner && sameTeam(tie.winner, tie.home) ? " win" : tie.winner ? " lose" : "")}><Team t={tie.home} dim={!tie.home} /></div>
-                  <div className={"brk-slot" + (tie.winner && sameTeam(tie.winner, tie.away) ? " win" : tie.winner ? " lose" : "")}><Team t={tie.away} dim={!tie.away} /></div>
+                  {tie.ko ? <div className="brk-when">{fmtDay(tie.ko, lang)} · {fmtTime(tie.ko, lang)}</div> : null}
+                  <div className="brk-box">
+                    <div className={"brk-slot" + (hw ? " win" : tie.winner ? " lose" : "")}><Team t={tie.home} dim={!tie.home} />{hw && <span className="brk-tick">✓</span>}</div>
+                    <div className={"brk-slot" + (aw ? " win" : tie.winner ? " lose" : "")}><Team t={tie.away} dim={!tie.away} />{aw && <span className="brk-tick">✓</span>}</div>
+                  </div>
                   {ri < rounds.length - 1 && <span className="brk-conn" />}
                 </div>
               );
@@ -1199,7 +1203,7 @@ function Groups({ data, t, onOpenGroup }) {
     </div>
   );
 }
-function BracketView({ data, t }) {
+function BracketView({ data, t, lang }) {
   const hasReal = (data.matches || []).some((m) => m.stage === "ko");
   const projected = !hasReal && !GROUP_KEYS.every((g) => groupComplete(g, data));
   return (
@@ -1208,7 +1212,7 @@ function BracketView({ data, t }) {
         {projected && <p className="hint block">{t("brkProjNote")}</p>}
         <p className="hint block">{hasReal ? t("brkLive") : t("brkIllustrative")}</p>
       </div>
-      <Bracket data={data} t={t} />
+      <Bracket data={data} t={t} lang={lang} />
     </div>
   );
 }
@@ -3138,7 +3142,7 @@ export default function App() {
         {view === "groups" && <Groups data={data} t={t} onOpenGroup={openGroup} />}
         {view === "groupgames" && groupSel && <GroupGames g={groupSel} data={data} lang={lang} onOpen={openMatch} t={t} onBack={() => go("groups")} />}
         {view === "team" && <TeamFixtures data={data} lang={lang} onOpen={openMatch} t={t} />}
-        {view === "bracket" && <BracketView data={data} t={t} />}
+        {view === "bracket" && <BracketView data={data} t={t} lang={lang} />}
         {view === "predictions" && <Predictions data={data} lb={lb} t={t} go={go} />}
         {view === "points" && <Points data={data} lb={lb} t={t} name={profileName} setName={selectProfile} />}
         {view === "consensus" && <Consensus data={data} t={t} />}
@@ -3338,14 +3342,17 @@ border:1px solid var(--border);width:100%;cursor:pointer;text-align:start;animat
 .brk{display:flex;gap:14px;min-width:max-content;align-items:flex-start}
 .brk-col{display:flex;flex-direction:column;padding-top:22px;position:relative}
 .brk-rlabel{position:absolute;top:0;inset-inline-start:0;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:var(--muted)}
-.brk-tie{position:relative;background:var(--card);border:1px solid var(--border);border-radius:10px;overflow:hidden;width:130px;box-shadow:0 1px 4px rgba(10,31,23,.05)}
-.brk-tie.decided{border-color:var(--grass-d)}
+.brk-tie{position:relative;display:flex;flex-direction:column;gap:3px;width:140px}
+.brk-when{font-size:9.5px;font-weight:700;color:var(--muted);padding-inline-start:3px;white-space:nowrap}
+.brk-box{background:var(--card);border:1px solid var(--border);border-radius:10px;overflow:hidden;box-shadow:0 1px 4px rgba(10,31,23,.05)}
+.brk-tie.decided .brk-box{border-color:var(--grass-d)}
 @keyframes tieIn{from{opacity:0;transform:scale(.9)}to{opacity:1;transform:none}}
-.brk-slot{display:flex;align-items:center;padding:6px 8px;border-bottom:1px solid var(--border)}
+.brk-slot{display:flex;align-items:center;gap:4px;padding:7px 8px;border-bottom:1px solid var(--border)}
 .brk-slot:last-child{border-bottom:none}
 .brk-slot .tn{font-size:11.5px}.brk-slot.win{background:rgba(25,195,125,.12)}.brk-slot.win .tn{font-weight:800}
 .brk-slot.lose{opacity:.5}
-.brk-conn{position:absolute;inset-inline-end:-14px;top:50%;width:14px;height:2px;background:var(--border)}
+.brk-tick{margin-inline-start:auto;color:var(--grass-d);font-weight:800;font-size:11px}
+.brk-conn{position:absolute;inset-inline-end:-14px;top:60%;width:14px;height:2px;background:var(--border)}
 .brk-tie.decided .brk-conn{background:var(--grass)}
 .brk-col.trophy{justify-content:center;align-items:center;padding-top:22px}
 .brk-trophy{font-size:34px;margin-top:20px;animation:float 2.4s ease-in-out infinite}

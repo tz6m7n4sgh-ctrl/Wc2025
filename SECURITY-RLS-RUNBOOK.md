@@ -33,8 +33,8 @@ commented `insert ... select` in the migration).
 **b) Fresh codes.** Pick a short code per player and insert:
 ```sql
 insert into public.wc2026_auth (name, code_hash) values
-  ('Ahmed', encode(digest(upper('ABC234'),'sha256'),'hex')),
-  ('Sara',  encode(digest(upper('DEF567'),'sha256'),'hex'))
+  ('Ahmed', encode(digest(upper('1234'),'sha256'),'hex')),
+  ('Sara',  encode(digest(upper('5678'),'sha256'),'hex'))
 on conflict (name) do update set code_hash = excluded.code_hash;
 ```
 Keep a record of the plaintext codes — you'll send them over WhatsApp. They are
@@ -64,7 +64,7 @@ the repo root `index.html`, commit). From then on:
 ```bash
 # valid code -> { name, picks }
 curl -s -X POST "$URL" -H "apikey: $ANON" -H "content-type: application/json" \
-  -d '{"action":"login","code":"ABC234"}'
+  -d '{"action":"login","code":"1234"}'
 
 # wrong code -> 401 {"error":"invalid code"}
 curl -s -X POST "$URL" -H "apikey: $ANON" -H "content-type: application/json" \
@@ -72,7 +72,7 @@ curl -s -X POST "$URL" -H "apikey: $ANON" -H "content-type: application/json" \
 
 # save (only the code's own row is written)
 curl -s -X POST "$URL" -H "apikey: $ANON" -H "content-type: application/json" \
-  -d '{"action":"save","code":"ABC234","patch":{"champion":"Brazil"}}'
+  -d '{"action":"save","code":"1234","patch":{"champion":"Brazil"}}'
 
 # confirm the private table is NOT readable with the anon key (should be empty/denied)
 curl -s "https://<ref>.supabase.co/rest/v1/wc2026_auth?select=*" -H "apikey: $ANON"

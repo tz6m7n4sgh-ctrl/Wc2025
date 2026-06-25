@@ -96,6 +96,7 @@ const I18N = {
     nav_players: "Players & login", playersHint: "Set each player's phone, then tap WhatsApp to send them a personal sign-in link from your own number (free). They open it to set their own champion pick — until the lock time.", phonePh: "+9715xxxxxxxx", waSend: "WhatsApp", champLock: "Champion pick lock", signedInAs: "Signed in as", lockBy: "You can change this until", locked: "locked",
     waMsg1: "Hi", waMsg2: "here's your World Cup league sign-in — tap to set your champion pick:", waMsg3: "(Keep this link private — it's just for you.)",
     waRemind: "Remind", waRemindMsg1: "here's a reminder to set your World Cup picks before they lock", waRemindMsg2: "tap to open:", lockAuto: "Auto-locks 4h before the first knockout match", lockAutoTba: "Will auto-lock 4h before the first knockout match (schedule pending)",
+    groupPredHint: "Order each group 1–4. Picks lock when the group stage kicks off.", groupLockedHint: "The group stage has started — your group order is locked.", groupLockAuto: "Auto-locks at the first group match", groupLock: "Group predictions lock", groupLockOpen: "Open (set a time, or it auto-locks at the first group match)",
     koPicks: "Knockout picks", koOpensWhen: "Knockout picks open once the group stage finishes.", koLockHint: "Each pick locks 4 hours before its kickoff.", koProjected: "Projected from the current standings — pick now; matchups may still shift until the groups finish. Each pick locks 4h before kickoff.", koPreview: "Preview projected from the current standings. Picks open once the knockout fixtures are confirmed; each pick will lock 4h before its kickoff.", koLockBy: "locks 4h before kickoff", pickWinner: "Pick the winner", koTba: "Awaiting earlier results",
     resultsEditor: "Results editor", resultsHint: "Enter a score to mark a match finished — standings, points and the bracket update instantly.", setChampion: "Set champion",
     entryFee: "Entry fee", currency: "Currency", distribution: "Prize distribution", winnerTakes: "Winner takes all", topTwo: "Split top 2", topThree: "Split top 3", deadline: "Predictions deadline", lockPicks: "Lock predictions", prizePool: "Prize pool",
@@ -158,6 +159,7 @@ const I18N = {
     nav_players: "اللاعبون والدخول", playersHint: "أدخل رقم كل لاعب ثم اضغط واتساب لإرسال رابط دخول خاص له من رقمك (مجاناً). يفتحه لاختيار البطل — حتى وقت الإغلاق.", phonePh: "+9715xxxxxxxx", waSend: "واتساب", champLock: "إغلاق اختيار البطل", signedInAs: "مسجّل الدخول باسم", lockBy: "يمكنك التغيير حتى", locked: "مغلق",
     waMsg1: "مرحباً", waMsg2: "هذا رابط دخولك لدوري كأس العالم — اضغط لاختيار البطل:", waMsg3: "(احتفظ بالرابط لنفسك — خاص بك.)",
     waRemind: "تذكير", waRemindMsg1: "تذكير باختيار توقّعاتك في دوري كأس العالم قبل إغلاقها", waRemindMsg2: "اضغط للفتح:", lockAuto: "يُغلق تلقائياً قبل 4 ساعات من أول مباراة إقصائية", lockAutoTba: "سيُغلق تلقائياً قبل 4 ساعات من أول مباراة إقصائية (الجدول قيد الانتظار)",
+    groupPredHint: "رتّب كل مجموعة من 1 إلى 4. تُغلق التوقّعات عند انطلاق دور المجموعات.", groupLockedHint: "انطلق دور المجموعات — ترتيبك للمجموعات مغلق.", groupLockAuto: "يُغلق تلقائياً عند أول مباراة في المجموعات", groupLock: "إغلاق توقّعات المجموعات", groupLockOpen: "مفتوح (حدّد وقتاً، أو يُغلق تلقائياً عند أول مباراة)",
     koPicks: "توقّعات الأدوار الإقصائية", koOpensWhen: "تُفتح توقّعات الأدوار الإقصائية بعد انتهاء دور المجموعات.", koLockHint: "يُغلق كل اختيار قبل 4 ساعات من موعد المباراة.", koProjected: "متوقّعة من الترتيب الحالي — اختر الآن؛ قد تتغيّر المواجهات حتى انتهاء المجموعات. يُغلق كل اختيار قبل 4 ساعات من المباراة.", koPreview: "معاينة متوقّعة من الترتيب الحالي. تُفتح التوقّعات بعد تأكيد مباريات الأدوار الإقصائية؛ ويُغلق كل اختيار قبل 4 ساعات من موعده.", koLockBy: "يُغلق قبل 4 ساعات من المباراة", pickWinner: "اختر الفائز", koTba: "بانتظار النتائج السابقة",
     resultsEditor: "محرّر النتائج", resultsHint: "أدخل النتيجة لإنهاء المباراة — يُحدّث الترتيب والنقاط والأدوار فوراً.", setChampion: "تعيين البطل",
     entryFee: "رسوم الاشتراك", currency: "العملة", distribution: "توزيع الجوائز", winnerTakes: "الفائز يأخذ الكل", topTwo: "أفضل اثنين", topThree: "أفضل ثلاثة", deadline: "موعد إغلاق التوقعات", lockPicks: "قفل التوقعات", prizePool: "مجموع الجوائز",
@@ -2299,6 +2301,20 @@ function champLock(data) {
   const manual = data.settings && data.settings.champLockUtc;
   return { at: manual ? Date.parse(manual) : null, auto: false };
 }
+// Group-order predictions close when the group stage begins (first group kickoff),
+// matching "predictions lock when play starts"; manual fallback until the schedule loads.
+function firstGroupKickoff(data) {
+  const ks = (data.matches || []).filter((m) => m.stage === "group" && m.ko).map((m) => m.ko);
+  return ks.length ? Math.min(...ks) : null;
+}
+function groupPredLock(data) {
+  // A manual lock (admin) takes precedence so entry can be opened or extended;
+  // otherwise it auto-locks at the first group kickoff.
+  const manual = data.settings && data.settings.groupLockUtc;
+  if (manual) return { at: Date.parse(manual), auto: false };
+  const fg = firstGroupKickoff(data);
+  return { at: fg, auto: true };
+}
 // Real knockout fixtures (admin-entered), grouped by round in encounter order.
 // Picks/locks/scoring all key off the SAME real mid (m.mid), so they actually align.
 function realKoRounds(data) {
@@ -2307,15 +2323,62 @@ function realKoRounds(data) {
   ms.forEach((m) => { const r = m.round || "KO"; let g = out.find((x) => x.round === r); if (!g) { g = { round: r, ties: [] }; out.push(g); } g.ties.push(m); });
   return out;
 }
-// Self-service: the signed-in player sets their own champion + knockout winners (until lock).
+// One group's 1–4 order editor: four position selects, each excluding teams
+// already chosen in the group's other positions so a team can't be duplicated.
+function GroupPredEditor({ g, pred, locked, onSet, t }) {
+  const teams = GROUPS[g];
+  const cur = [0, 1, 2, 3].map((i) => canonTeam(pred[i]) || "");
+  if (locked) {
+    return (
+      <div className="gpred">
+        <div className="gpred-h">{t("group")} {g} · {t("locked")}</div>
+        {[0, 1, 2, 3].map((i) => <div className="gpline" key={i}><span className="ppos num">{i + 1}</span><Team t={cur[i]} dim={!cur[i]} /></div>)}
+      </div>
+    );
+  }
+  const setPos = (i, team) => {
+    const next = cur.slice();
+    // if the team is used elsewhere, swap it out of that slot
+    const at = next.findIndex((x) => x && sameTeam(x, team));
+    if (at >= 0 && at !== i) next[at] = next[i] || "";
+    next[i] = team || "";
+    onSet(next);
+  };
+  return (
+    <div className="gpred">
+      <div className="gpred-h">{t("group")} {g}</div>
+      {[0, 1, 2, 3].map((i) => (
+        <div className="gpline" key={i}>
+          <span className="ppos num">{i + 1}</span>
+          <select className="select gpsel" value={cur[i]} onChange={(e) => setPos(i, e.target.value)}>
+            <option value="">—</option>
+            {teams.map((tm) => {
+              const usedElsewhere = cur.some((x, j) => j !== i && x && sameTeam(x, tm));
+              return <option key={tm} value={tm} disabled={usedElsewhere}>{tm}</option>;
+            })}
+          </select>
+        </div>
+      ))}
+    </div>
+  );
+}
+// Self-service: the signed-in player sets their own group order, champion + knockout winners (until lock).
 function MyPickCard({ data, setData, player, t, logout }) {
   const allTeams = useMemo(() => GROUP_KEYS.flatMap((g) => GROUPS[g]).slice().sort((a, b) => a.localeCompare(b)), []);
   const cl = champLock(data);
   const locked = cl.at ? Date.now() > cl.at : false;
+  const gl = groupPredLock(data);
+  const groupLocked = gl.at ? Date.now() > gl.at : false;
   const p = data.players[player] || {};
   const bracket = useMemo(() => buildBracket(data), [data]);
   const koRounds = useMemo(() => realKoRounds(data), [data]);
   const hasKoFixtures = koRounds.length > 0;
+  const setGroupPred = (g, arr) => setData((d) => {
+    const cur = (d.players[player] && d.players[player].groupPreds) || {};
+    const nd = { ...d, players: { ...d.players, [player]: { ...d.players[player], groupPreds: { ...cur, [g]: arr } } },
+      auditLog: [{ ts: Date.now(), msg: `${t("nav_predictions")} (self): ${player} ${g} → ${arr.map((x) => x || "—").join(", ")}` }, ...(d.auditLog || [])].slice(0, 80) };
+    persistLive(nd); return nd;
+  });
   const setChamp = (team) => setData((d) => {
     const nd = { ...d, players: { ...d.players, [player]: { ...d.players[player], champion: team || null } },
       auditLog: [{ ts: Date.now(), msg: `${t("champPick")} (self): ${player} → ${team || "—"}` }, ...(d.auditLog || [])].slice(0, 80) };
@@ -2331,6 +2394,16 @@ function MyPickCard({ data, setData, player, t, logout }) {
   return (
     <div className="card mypick">
       <div className="mypick-head"><Avatar name={player} /><span className="champname">{t("signedInAs")} <b>{player}</b></span><button className="seeall" onClick={logout}>{t("logout")}</button></div>
+
+      <div className="mypick-groups">
+        <span className="mypick-lbl">📋 {t("nav_predictions")}</span>
+        <p className="hint block">{groupLocked ? t("groupLockedHint") : t("groupPredHint")}</p>
+        {GROUP_KEYS.map((g) => (
+          <GroupPredEditor key={g} g={g} pred={playerGroupPred(p, g)} locked={groupLocked} onSet={(arr) => setGroupPred(g, arr)} t={t} />
+        ))}
+        {gl.at && !groupLocked && <p className="hint block">{t("lockBy")} {new Date(gl.at).toLocaleString()}{gl.auto ? ` · ${t("groupLockAuto")}` : ""}</p>}
+      </div>
+
       <div className="mypick-body">
         <span className="mypick-lbl">👑 {t("champPick")}</span>
         {locked
@@ -2406,6 +2479,8 @@ function AdminPlayers({ data, setData, t }) {
   };
   const copyLink = (name) => { try { navigator.clipboard.writeText(linkFor(name)); } catch (e) {} };
   const cl = champLock(data);
+  const gl = groupPredLock(data);
+  const setGroupLock = (val) => setData((d) => { const nd = { ...d, settings: { ...(d.settings || {}), groupLockUtc: val || null } }; persistLive(nd); return nd; });
   return (
     <div className="view">
       <div className="card slim"><h3 className="cardh"><Ico name="prediction" size={18} /> {t("nav_players")}</h3>
@@ -2414,6 +2489,11 @@ function AdminPlayers({ data, setData, t }) {
       <div className="card slim">
         <span className="hlabel">⏰ {t("champLock")}</span>
         <p className="hint block">{cl.at ? new Date(cl.at).toLocaleString() + (cl.auto ? ` · ${t("lockAuto")}` : "") : t("lockAutoTba")}</p>
+      </div>
+      <div className="card slim">
+        <span className="hlabel">📋 {t("groupLock")}</span>
+        <input className="select" type="datetime-local" value={(data.settings && data.settings.groupLockUtc) || ""} onChange={(e) => setGroupLock(e.target.value)} />
+        <p className="hint block">{gl.at ? new Date(gl.at).toLocaleString() + (gl.auto ? ` · ${t("groupLockAuto")}` : "") : t("groupLockOpen")}</p>
       </div>
       <div className="card">
         {players.map((name) => (
@@ -3494,6 +3574,12 @@ border-radius:18px;padding:16px 14px;margin:10px 0;color:#fff;background:linear-
 .mypick-head{display:flex;align-items:center;gap:8px}
 .mypick-body{display:flex;align-items:center;gap:10px;margin-top:10px}.mypick-lbl{font-weight:800;font-size:14px}
 .mypick-locked{font-weight:700;display:flex;align-items:center;gap:6px;color:var(--muted)}
+.mypick-groups{margin-top:12px;padding-top:12px;border-top:1px dashed var(--border)}
+.gpred{margin-top:8px;padding:8px 10px;border:1px solid var(--border);border-radius:10px;background:var(--card)}
+.gpred-h{font-weight:800;font-size:11px;letter-spacing:.03em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+.gpline{display:flex;align-items:center;gap:8px;margin-bottom:5px}
+.gpline .ppos{flex:none;width:18px;height:18px;display:flex;align-items:center;justify-content:center;border-radius:5px;background:var(--soft);font-size:11px;font-weight:800}
+.gpsel{flex:1;margin:0;padding:7px 9px;font-size:13px}
 .mypick-ko{margin-top:14px;padding-top:12px;border-top:1px dashed var(--border)}
 .koround{margin-top:10px}.koround-h{font-weight:800;font-size:11px;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
 .kotie{display:flex;align-items:center;gap:6px;margin-bottom:6px}

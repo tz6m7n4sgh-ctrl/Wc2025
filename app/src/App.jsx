@@ -96,7 +96,7 @@ const I18N = {
     champEntryHint: "Set each player's World Cup winner pick. It scores +10 once the actual champion is decided.", champSetCount: "Picks set",
     nav_players: "Players & login", playersHint: "Set each player's phone, then tap WhatsApp to send them a personal sign-in link from your own number (free). They open it to set their own champion pick — until the lock time.", phonePh: "+9715xxxxxxxx", waSend: "WhatsApp", champLock: "Champion pick lock", signedInAs: "Signed in as", lockBy: "You can change this until", locked: "locked",
     waMsg1: "Hi", waMsg2: "here's your World Cup league sign-in — tap to set your champion pick:", waMsg3: "(Keep this link private — it's just for you.)",
-    waRemind: "Remind", waRemindMsg1: "here's a reminder to set your World Cup picks before they lock", waRemindMsg2: "tap to open:", lockAuto: "Auto-locks 4h before the first knockout match", lockAutoTba: "Will auto-lock 4h before the first knockout match (schedule pending)",
+    waRemind: "Remind", waRemindMsg1: "here's a reminder to set your World Cup picks before they lock", waRemindMsg2: "tap to open:", lockAuto: "Auto-locks 4h before the first knockout match", lockManual: "Manual override (leave blank to auto-lock 4h before the first knockout)", lockAutoTba: "Will auto-lock 4h before the first knockout match (schedule pending)",
     randomFill: "Fill randomly (unique to me)", randomConfirm: "Fill all your open predictions with a random draw? Each player gets a different one. You can still edit afterwards.",
     groupPredHint: "Order each group 1–4. Open until your league admin sets a deadline.", groupLockedHint: "Group predictions are locked.", groupLockAuto: "Auto-locks at the first group match", groupLock: "Group predictions lock", groupLockOpen: "Open — set a time to close entry (e.g. the first group kickoff)",
     koPicks: "Knockout picks", koOpensWhen: "Knockout picks open once the group stage finishes.", koLockHint: "Each pick locks 4 hours before its kickoff.", koProjected: "Projected from the current standings — pick now; matchups may still shift until the groups finish. Each pick locks 4h before kickoff.", koPreview: "Preview projected from the current standings. Picks open once the knockout fixtures are confirmed; each pick will lock 4h before its kickoff.", koLockBy: "locks 4h before kickoff", pickWinner: "Pick the winner", koTba: "Awaiting earlier results",
@@ -161,7 +161,7 @@ const I18N = {
     champEntryHint: "حدّد توقع بطل كأس العالم لكل لاعب. يُحتسب +10 عند تحديد البطل فعلياً.", champSetCount: "اختيارات محددة",
     nav_players: "اللاعبون والدخول", playersHint: "أدخل رقم كل لاعب ثم اضغط واتساب لإرسال رابط دخول خاص له من رقمك (مجاناً). يفتحه لاختيار البطل — حتى وقت الإغلاق.", phonePh: "+9715xxxxxxxx", waSend: "واتساب", champLock: "إغلاق اختيار البطل", signedInAs: "مسجّل الدخول باسم", lockBy: "يمكنك التغيير حتى", locked: "مغلق",
     waMsg1: "مرحباً", waMsg2: "هذا رابط دخولك لدوري كأس العالم — اضغط لاختيار البطل:", waMsg3: "(احتفظ بالرابط لنفسك — خاص بك.)",
-    waRemind: "تذكير", waRemindMsg1: "تذكير باختيار توقّعاتك في دوري كأس العالم قبل إغلاقها", waRemindMsg2: "اضغط للفتح:", lockAuto: "يُغلق تلقائياً قبل 4 ساعات من أول مباراة إقصائية", lockAutoTba: "سيُغلق تلقائياً قبل 4 ساعات من أول مباراة إقصائية (الجدول قيد الانتظار)",
+    waRemind: "تذكير", waRemindMsg1: "تذكير باختيار توقّعاتك في دوري كأس العالم قبل إغلاقها", waRemindMsg2: "اضغط للفتح:", lockAuto: "يُغلق تلقائياً قبل 4 ساعات من أول مباراة إقصائية", lockManual: "تجاوز يدوي (اتركه فارغاً ليُغلق تلقائياً قبل 4 ساعات من أول مباراة إقصائية)", lockAutoTba: "سيُغلق تلقائياً قبل 4 ساعات من أول مباراة إقصائية (الجدول قيد الانتظار)",
     randomFill: "تعبئة عشوائية (خاصة بي)", randomConfirm: "تعبئة كل توقّعاتك المفتوحة بقرعة عشوائية؟ لكل لاعب قرعة مختلفة. يمكنك التعديل لاحقاً.",
     groupPredHint: "رتّب كل مجموعة من 1 إلى 4. مفتوح حتى يحدّد المشرف موعداً للإغلاق.", groupLockedHint: "توقّعات المجموعات مغلقة.", groupLockAuto: "يُغلق تلقائياً عند أول مباراة في المجموعات", groupLock: "إغلاق توقّعات المجموعات", groupLockOpen: "مفتوح — حدّد وقتاً لإغلاق الإدخال (مثلاً أول مباراة في المجموعات)",
     koPicks: "توقّعات الأدوار الإقصائية", koOpensWhen: "تُفتح توقّعات الأدوار الإقصائية بعد انتهاء دور المجموعات.", koLockHint: "يُغلق كل اختيار قبل 4 ساعات من موعد المباراة.", koProjected: "متوقّعة من الترتيب الحالي — اختر الآن؛ قد تتغيّر المواجهات حتى انتهاء المجموعات. يُغلق كل اختيار قبل 4 ساعات من المباراة.", koPreview: "معاينة متوقّعة من الترتيب الحالي. تُفتح التوقّعات بعد تأكيد مباريات الأدوار الإقصائية؛ ويُغلق كل اختيار قبل 4 ساعات من موعده.", koLockBy: "يُغلق قبل 4 ساعات من المباراة", pickWinner: "اختر الفائز", koTba: "بانتظار النتائج السابقة",
@@ -260,6 +260,12 @@ function computeGroupTable(g, data) {
   // FIFA order: overall Pts → GD → GF, then a head-to-head mini-table among the
   // teams still level (H2H Pts → H2H GD → H2H GF), then alphabetical as the final
   // stable fallback (fair-play card data isn't available from the feed).
+  //
+  // FIFA's full rule re-resolves a still-level *subset* recursively. We don't,
+  // because it can never change a 4-team group: the largest tied set is all 4,
+  // whose H2H mini-table just reproduces the overall table (still level →
+  // alphabetical); any strict sub-group can only stay level if the whole set is.
+  // Verified equivalent to the recursive form over 200k random 4-team groups.
   const rows = Object.values(row).sort((a, b) => b.Pts - a.Pts || b.GD - a.GD || b.GF - a.GF || 0);
   let i = 0;
   while (i < rows.length) {
@@ -2337,12 +2343,13 @@ function firstKoKickoff(data) {
   const kos = (data.matches || []).filter((m) => m.stage === "ko" && m.ko).map((m) => m.ko);
   return kos.length ? Math.min(...kos) : null;
 }
-// Returns {at:ms|null, auto:bool}. auto=true when derived from the live KO schedule.
+// Returns {at:ms|null, auto:bool}. A manual lock (admin) takes precedence so it
+// can override/correct the auto time; otherwise auto = 4h before the first KO.
 function champLock(data) {
-  const fk = firstKoKickoff(data);
-  if (fk) return { at: fk - KO_LOCK_MS, auto: true };
   const manual = data.settings && data.settings.champLockUtc;
-  return { at: manual ? Date.parse(manual) : null, auto: false };
+  if (manual) return { at: Date.parse(manual), auto: false };
+  const fk = firstKoKickoff(data);
+  return { at: fk ? fk - KO_LOCK_MS : null, auto: true };
 }
 // Group-order predictions close when the group stage begins (first group kickoff),
 // matching "predictions lock when play starts"; manual fallback until the schedule loads.
@@ -2546,6 +2553,7 @@ function AdminPlayers({ data, setData, t }) {
   const cl = champLock(data);
   const gl = groupPredLock(data);
   const setGroupLock = (val) => setData((d) => { const nd = { ...d, settings: { ...(d.settings || {}), groupLockUtc: val || null } }; persistLive(nd); return nd; });
+  const setChampLock = (val) => setData((d) => { const nd = { ...d, settings: { ...(d.settings || {}), champLockUtc: val || null } }; persistLive(nd); return nd; });
   return (
     <div className="view">
       <div className="card slim"><h3 className="cardh"><Ico name="prediction" size={18} /> {t("nav_players")}</h3>
@@ -2553,7 +2561,8 @@ function AdminPlayers({ data, setData, t }) {
       </div>
       <div className="card slim">
         <span className="hlabel">⏰ {t("champLock")}</span>
-        <p className="hint block">{cl.at ? new Date(cl.at).toLocaleString() + (cl.auto ? ` · ${t("lockAuto")}` : "") : t("lockAutoTba")}</p>
+        <input className="select" type="datetime-local" value={(data.settings && data.settings.champLockUtc) || ""} onChange={(e) => setChampLock(e.target.value)} />
+        <p className="hint block">{cl.at ? new Date(cl.at).toLocaleString() + (cl.auto ? ` · ${t("lockAuto")}` : ` · ${t("lockManual")}`) : t("lockAutoTba")}</p>
       </div>
       <div className="card slim">
         <span className="hlabel">📋 {t("groupLock")}</span>

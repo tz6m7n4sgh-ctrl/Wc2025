@@ -55,8 +55,8 @@ alter table public.wc2026_auth enable row level security;
 --
 -- Example:
 --   insert into public.wc2026_auth (name, code_hash) values
---     ('Ahmed', encode(digest(upper('ABC234'), 'sha256'), 'hex')),
---     ('Sara',  encode(digest(upper('DEF567'), 'sha256'), 'hex'))
+--     ('Ahmed', encode(digest(upper('1234'), 'sha256'), 'hex')),
+--     ('Sara',  encode(digest(upper('5678'), 'sha256'), 'hex'))
 --   on conflict (name) do update set code_hash = excluded.code_hash;
 --
 --   insert into public.wc2026_players (name, phone, group_preds, champion, knockout)

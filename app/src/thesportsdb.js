@@ -188,6 +188,7 @@ export async function fetchSeasonEvents(key, season = "2026") {
       homeScore: sc ? sc.home : null, awayScore: sc ? sc.away : null,
       status: st || "NS", finished, eventId: e.idEvent || null,
       round: e.intRound || null, date: e.dateEvent || null,
+      ts: e.strTimestamp || (e.dateEvent ? e.dateEvent + "T" + (e.strTime || "00:00:00") : null), venue: e.strVenue || "",
     };
   }).filter((e) => e.home && e.away);
   FEED_STATUS = { ...FEED_STATUS, events: out.length, completed: out.filter((e) => e.finished && e.homeScore != null).length, at: Date.now() };

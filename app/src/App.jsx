@@ -115,7 +115,7 @@ const I18N = {
     brkFills: "The bracket fills in once every group is complete.",
     brkProjected: "projected", brkProjNote: "Based on the current group standings — updates live as results come in.",
     noPlayers: "No players yet. Add predictions to get started.",
-    koNeedsWinner: "needs a winner",
+    koNeedsWinner: "needs a winner", koPenWonBy: "Draw — won on penalties by:",
     loadingData: "Loading live data…", liveData: "Live data",
     syncHint2: "Pull finished scores from TheSportsDB and save them to the database so everyone sees them.",
     syncing: "Syncing…", feedReach: "Feed reachable", feedEvents: "Events fetched", feedCompleted: "Completed found", feedSaved: "Saved to DB", feedCleared: "Phantom results cleared", feedMissing: "Still missing a score",
@@ -177,7 +177,7 @@ const I18N = {
     brkFills: "تكتمل الأدوار الإقصائية بعد انتهاء جميع المجموعات.",
     brkProjected: "متوقع", brkProjNote: "مبني على ترتيب المجموعات الحالي — يتحدّث مباشرةً مع ورود النتائج.",
     noPlayers: "لا يوجد لاعبون بعد. أضف التوقعات للبدء.",
-    koNeedsWinner: "يلزم تحديد فائز",
+    koNeedsWinner: "يلزم تحديد فائز", koPenWonBy: "تعادل — الفائز بركلات الترجيح:",
     loadingData: "جارٍ تحميل البيانات…", liveData: "بيانات مباشرة",
     syncHint2: "اجلب نتائج المباريات المنتهية من TheSportsDB واحفظها في قاعدة البيانات ليراها الجميع.",
     syncing: "جارٍ المزامنة…", feedReach: "وصول الخدمة", feedEvents: "الأحداث المجلوبة", feedCompleted: "المنتهية الموجودة", feedSaved: "حُفظت في القاعدة", feedCleared: "نتائج وهمية أُزيلت", feedMissing: "بلا نتيجة بعد",
@@ -239,9 +239,11 @@ function computeGroupTable(g, data) {
   const row = {};
   const ensure = (t) => { const tm = canonTeam(t); const k = teamKey(tm); if (!row[k]) row[k] = { team: tm, P: 0, W: 0, D: 0, L: 0, GF: 0, GA: 0, GD: 0, Pts: 0 }; return row[k]; };
   GROUPS[g].forEach(ensure);
+  const completed = [];
   for (let i = 0; i < 6; i++) {
     const r = matchResult(g, i, data);
     if (!r.complete) continue;
+    completed.push(r);
     const H = ensure(r.home), A = ensure(r.away);
     H.P++; A.P++; H.GF += r.hs; H.GA += r.as; A.GF += r.as; A.GA += r.hs;
     if (r.hs > r.as) { H.W++; A.L++; H.Pts += 3; }
@@ -249,7 +251,32 @@ function computeGroupTable(g, data) {
     else { H.D++; A.D++; H.Pts++; A.Pts++; }
     H.GD = H.GF - H.GA; A.GD = A.GF - A.GA;
   }
-  return Object.values(row).sort((a, b) => b.Pts - a.Pts || b.GD - a.GD || b.GF - a.GF || a.team.localeCompare(b.team));
+  // FIFA order: overall Pts → GD → GF, then a head-to-head mini-table among the
+  // teams still level (H2H Pts → H2H GD → H2H GF), then alphabetical as the final
+  // stable fallback (fair-play card data isn't available from the feed).
+  const rows = Object.values(row).sort((a, b) => b.Pts - a.Pts || b.GD - a.GD || b.GF - a.GF || 0);
+  let i = 0;
+  while (i < rows.length) {
+    let j = i + 1;
+    while (j < rows.length && rows[j].Pts === rows[i].Pts && rows[j].GD === rows[i].GD && rows[j].GF === rows[i].GF) j++;
+    if (j - i > 1) {
+      const tied = new Set(rows.slice(i, j).map((r) => teamKey(r.team)));
+      const h = {}; tied.forEach((k) => (h[k] = { Pts: 0, GF: 0, GA: 0 }));
+      completed.forEach((r) => {
+        const hk = teamKey(r.home), ak = teamKey(r.away);
+        if (!tied.has(hk) || !tied.has(ak)) return;
+        h[hk].GF += r.hs; h[hk].GA += r.as; h[ak].GF += r.as; h[ak].GA += r.hs;
+        if (r.hs > r.as) h[hk].Pts += 3; else if (r.as > r.hs) h[ak].Pts += 3; else { h[hk].Pts++; h[ak].Pts++; }
+      });
+      const sub = rows.slice(i, j).sort((a, b) => {
+        const ha = h[teamKey(a.team)], hb = h[teamKey(b.team)];
+        return (hb.Pts - ha.Pts) || ((hb.GF - hb.GA) - (ha.GF - ha.GA)) || (hb.GF - ha.GF) || a.team.localeCompare(b.team);
+      });
+      for (let k = 0; k < sub.length; k++) rows[i + k] = sub[k];
+    }
+    i = j;
+  }
+  return rows;
 }
 function rankOfTeamInPred(p, g, team) { const arr = playerGroupPred(p, g); const i = arr.findIndex((x) => sameTeam(x, team)); return i < 0 ? 0 : i + 1; }
 function predictedEdge(p, g, home, away) {
@@ -493,7 +520,12 @@ function recomputeLive(data, now = nowMs()) {
   matches.forEach((m) => {
     if (m.status !== "finished" || m.finalH == null || m.finalA == null) return; // skip score-less "over" matches
     if (m.stage === "group") groupResults[matchKey(m.group, m.idx)] = { home: m.finalH, away: m.finalA };
-    else knockoutResults[m.mid] = m.finalH > m.finalA ? canonTeam(m.home) : m.finalA > m.finalH ? canonTeam(m.away) : canonTeam(m.home);
+    else {
+      // A drawn knockout is decided on penalties: use the recorded shootout winner.
+      // With no winner recorded, leave the tie undecided rather than crediting home.
+      const w = m.finalH > m.finalA ? canonTeam(m.home) : m.finalA > m.finalH ? canonTeam(m.away) : (m.penWinner ? canonTeam(m.penWinner) : null);
+      if (w) knockoutResults[m.mid] = w;
+    }
   });
   // champion: admin override wins; otherwise the finished Final's winner.
   let champion = data.championOverride || null;
@@ -613,16 +645,19 @@ function mapBlobToData(blob, resultRows, apiResults) {
   koList.forEach((s, i) => {
     if (!s || !(s.home || s.away)) return;
     const mid = s.mid || s.key || `${s.round || "KO"}_${i}`;
-    matches.push({ id: mid, stage: "ko", group: null, idx: i, mid, round: s.round || (mid.split("_")[0] || "KO"), home: s.home, away: s.away, venue: s.venue || "", ko: Date.parse(s.kickoffUtc || s.date) || 0, real: true, finalH: s.home_score != null ? Number(s.home_score) : null, finalA: s.away_score != null ? Number(s.away_score) : null, allEvents: [], allStats: null, lineups: null });
+    matches.push({ id: mid, stage: "ko", group: null, idx: i, mid, round: s.round || (mid.split("_")[0] || "KO"), home: s.home, away: s.away, venue: s.venue || "", ko: Date.parse(s.kickoffUtc || s.date) || 0, real: true, finalH: s.home_score != null ? Number(s.home_score) : null, finalA: s.away_score != null ? Number(s.away_score) : null, penWinner: s.winner || s.penWinner || s.advance || null, allEvents: [], allStats: null, lineups: null });
   });
   matches.sort((a, b) => a.ko - b.ko);
   return { players, groupResults: { ...groupResults }, knockoutResults: { ...(blob.knockoutResults || {}) }, champion: blob.champion || null, championOverride: blob.champion || null, settings: blob.settings || { currency: "AED" }, auditLog: Array.isArray(blob.auditLog) ? blob.auditLog : [], matches, real: true, _blob: blob };
 }
-function applyAdminScore(m, h, a) {
+function applyAdminScore(m, h, a, winner) {
   const seed = hashStr(m.id + ":" + h + ":" + a);
-  const allEvents = genEvents(seed, h, a, m.lineups.home, m.lineups.away, null);
-  const allStats = genStats(seed, h, a);
-  return { ...m, adminLocked: true, status: "finished", minute: 90, ht: false, finalH: h, finalA: a, hs: h, as: a, allEvents, allStats, events: allEvents, stats: allStats };
+  // Synthetic match details need lineups; real KO fixtures may not have them.
+  let allEvents = [], allStats = null;
+  if (m.lineups) { allEvents = genEvents(seed, h, a, m.lineups.home, m.lineups.away, null); allStats = genStats(seed, h, a); }
+  // penWinner only meaningful on a drawn knockout (decided on penalties).
+  const penWinner = m.stage === "ko" && h === a ? (winner || null) : null;
+  return { ...m, adminLocked: true, status: "finished", minute: 90, ht: false, finalH: h, finalA: a, hs: h, as: a, penWinner, allEvents, allStats, events: allEvents, stats: allStats };
 }
 
 /* ---------------- 5. Seeded sample data -------------------------------- */
@@ -1917,31 +1952,46 @@ function AdminLogin({ onAuth, t }) {
     </div>
   );
 }
-function MatchEditRow({ m, onSet, onClear, koError }) {
+function MatchEditRow({ m, onSet, onClear, penLabel }) {
   const [h, setH] = useState(m.hs ?? ""); const [a, setA] = useState(m.as ?? "");
   useEffect(() => { setH(m.hs ?? ""); setA(m.as ?? ""); }, [m.hs, m.as]);
-  const invalid = m.stage === "ko" && h !== "" && a !== "" && Number(h) === Number(a);
-  const change = (hh, aa) => { setH(hh); setA(aa); if (hh !== "" && aa !== "") onSet(m.id, parseInt(hh, 10) || 0, parseInt(aa, 10) || 0); };
+  const drawnKo = m.stage === "ko" && h !== "" && a !== "" && Number(h) === Number(a);
+  const change = (hh, aa) => {
+    setH(hh); setA(aa);
+    if (hh !== "" && aa !== "") {
+      const drawn = m.stage === "ko" && Number(hh) === Number(aa);
+      if (!drawn) onSet(m.id, parseInt(hh, 10) || 0, parseInt(aa, 10) || 0); // drawn KO waits for a penalty winner
+    }
+  };
+  const pickPen = (team) => onSet(m.id, parseInt(h, 10) || 0, parseInt(a, 10) || 0, team);
   return (
-    <div className={"erow" + (invalid ? " invalid" : "")}>
+    <div className={"erow" + (drawnKo && !m.penWinner ? " invalid" : "")}>
       <span className="eteam"><span className="fl">{flagOf(m.home)}</span><span className="etn">{canonTeam(m.home)}</span></span>
       <input className="scoreinp" inputMode="numeric" value={h} onChange={(e) => change(e.target.value.replace(/\D/g, "").slice(0, 2), a)} />
       <span className="edash">–</span>
       <input className="scoreinp" inputMode="numeric" value={a} onChange={(e) => change(h, e.target.value.replace(/\D/g, "").slice(0, 2))} />
       <span className="eteam end"><span className="etn">{canonTeam(m.away)}</span><span className="fl">{flagOf(m.away)}</span></span>
       <button className="eclear" onClick={() => onClear(m.id)} title="clear">✕</button>
-      {invalid && <span className="ko-warn">{koError}</span>}
+      {drawnKo && (
+        <span className="ko-pens">
+          <span className="ko-pens-lbl">{penLabel}</span>
+          {[m.home, m.away].map((tm) => (
+            <button key={tm} className={"ko-penbtn" + (m.penWinner && sameTeam(m.penWinner, tm) ? " on" : "")} onClick={() => pickPen(tm)}>{canonTeam(tm)}</button>
+          ))}
+        </span>
+      )}
     </div>
   );
 }
 function Results({ data, setData, t, lang }) {
   const [bucket, setBucket] = useState("A");
-  const setScore = (id, hs, as) => setData((d) => {
+  const setScore = (id, hs, as, winner) => setData((d) => {
     const target = d.matches.find((x) => x.id === id);
     if (!target) return d;
-    if (target.stage === "ko" && hs === as) return d; // knockouts need a winner
-    const matches = d.matches.map((x) => x.id === id ? applyAdminScore(x, hs, as) : x);
-    const log = { ts: Date.now(), msg: `${canonTeam(target.home)} ${hs}–${as} ${canonTeam(target.away)}` };
+    if (target.stage === "ko" && hs === as && !winner) return d; // drawn KO needs a penalty winner
+    const matches = d.matches.map((x) => x.id === id ? applyAdminScore(x, hs, as, winner) : x);
+    const pens = target.stage === "ko" && hs === as && winner ? ` (${t("koPenWonBy")} ${canonTeam(winner)})` : "";
+    const log = { ts: Date.now(), msg: `${canonTeam(target.home)} ${hs}–${as} ${canonTeam(target.away)}${pens}` };
     const nd = recomputeLive({ ...d, matches, auditLog: [log, ...(d.auditLog || [])].slice(0, 80) });
     persistLive(nd);
     if (LIVE_MODE && target.stage === "group") upsertResult(target.group, target.idx, target.home, target.away, hs, as).catch((e) => console.warn("result upsert failed", e && e.message));
@@ -1962,7 +2012,7 @@ function Results({ data, setData, t, lang }) {
           <button className={"bbtn ko" + (bucket === "KO" ? " on" : "")} onClick={() => setBucket("KO")}>KO</button>
         </div>
         <div className="erows">
-          {list.map((m) => <MatchEditRow key={m.id} m={m} onSet={setScore} onClear={clearScore} koError={t("koNeedsWinner")} />)}
+          {list.map((m) => <MatchEditRow key={m.id} m={m} onSet={setScore} onClear={clearScore} penLabel={t("koPenWonBy")} />)}
         </div>
       </div>
       <div className="card">
@@ -3461,6 +3511,10 @@ border-radius:18px;padding:16px 14px;margin:10px 0;color:#fff;background:linear-
 .erow{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
 .erow.invalid .scoreinp{border-color:var(--neg);outline-color:var(--neg)}
 .ko-warn{flex-basis:100%;text-align:center;font-size:10.5px;font-weight:700;color:var(--neg)}
+.ko-pens{flex-basis:100%;display:flex;flex-wrap:wrap;align-items:center;gap:6px;justify-content:center;margin-top:4px}
+.ko-pens-lbl{font-size:10.5px;font-weight:700;color:var(--muted)}
+.ko-penbtn{padding:4px 9px;border:1px solid var(--border);border-radius:7px;background:var(--card);color:var(--ink);font-family:inherit;font-weight:700;font-size:11px;cursor:pointer}
+.ko-penbtn.on{background:var(--grass);color:#fff;border-color:var(--grass)}
 .eteam{flex:1;display:flex;align-items:center;gap:6px;min-width:0}.eteam.end{justify-content:flex-end}
 .eteam .fl{font-size:16px}.etn{font-size:12px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .scoreinp{width:34px;height:34px;text-align:center;border:1px solid var(--border);border-radius:8px;background:var(--card);color:var(--ink);font-family:var(--num);font-weight:800;font-size:15px}

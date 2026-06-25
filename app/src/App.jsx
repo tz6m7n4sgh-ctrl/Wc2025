@@ -92,7 +92,7 @@ const I18N = {
     groupBreakdown: "Group-by-group breakdown", tapExpand: "tap to expand", beat: "beat", champPending: "Champion not decided yet", ifCorrect: "if correct",
     admin: "Admin", adminLogin: "Admin login", password: "Password", wrongPw: "Incorrect password", login: "Log in", demoPw: "Demo password", logout: "Log out",
     nav_settings: "Settings", nav_results: "Results", nav_playerpicks: "Player picks", nav_playerreport: "Position report", nav_audit: "Audit log", nav_backup: "Backup", nav_health: "Health", nav_sync: "Sync results", nav_repair: "Repair", nav_export: "Export", nav_champions: "Champion picks", nav_knockout: "Knockout fixtures",
-    koFixturesHint: "Enter the real knockout matchups and kickoff times. Seed the Round of 32 from the current standings, then correct the teams to the actual draw. Saving powers the champion lock, players' knockout picks and the results editor.", koSeedR32: "Seed R32 from standings", koSave: "Save fixtures", koSaved: "Fixtures saved", koFixtures: "Fixtures set", koFirstKick: "First kickoff", koHome: "Home", koAway: "Away",
+    koFixturesHint: "Enter the real knockout matchups and kickoff times. Seed the Round of 32 from the current standings, then correct the teams to the actual draw. Saving powers the champion lock, players' knockout picks and the results editor.", koSeedR32: "Seed R32 from standings", koSave: "Save fixtures", koSaved: "Fixtures saved", koFixtures: "Fixtures set", koFirstKick: "First kickoff", koHome: "Home", koAway: "Away", koOverrideNote: "Showing the live-synced knockout fixtures. Edits here override the feed; Save to keep them.",
     champEntryHint: "Set each player's World Cup winner pick. It scores +10 once the actual champion is decided.", champSetCount: "Picks set",
     nav_players: "Players & login", playersHint: "Set each player's phone, then tap WhatsApp to send them a personal sign-in link from your own number (free). They open it to set their own champion pick — until the lock time.", phonePh: "+9715xxxxxxxx", waSend: "WhatsApp", champLock: "Champion pick lock", signedInAs: "Signed in as", lockBy: "You can change this until", locked: "locked",
     waMsg1: "Hi", waMsg2: "here's your World Cup league sign-in — tap to set your champion pick:", waMsg3: "(Keep this link private — it's just for you.)",
@@ -157,7 +157,7 @@ const I18N = {
     groupBreakdown: "تفصيل لكل مجموعة", tapExpand: "اضغط للتوسيع", beat: "تغلّب على", champPending: "البطل لم يُحسم بعد", ifCorrect: "إذا صح",
     admin: "الإدارة", adminLogin: "دخول الإدارة", password: "كلمة المرور", wrongPw: "كلمة المرور غير صحيحة", login: "دخول", demoPw: "كلمة المرور التجريبية", logout: "خروج",
     nav_settings: "الإعدادات", nav_results: "النتائج", nav_playerpicks: "توقعات اللاعب", nav_playerreport: "تقرير المراكز", nav_audit: "سجل التغييرات", nav_backup: "نسخ احتياطي", nav_health: "الصحة", nav_sync: "مزامنة النتائج", nav_repair: "إصلاح", nav_export: "تصدير", nav_champions: "اختيارات البطل", nav_knockout: "مباريات الإقصائيات",
-    koFixturesHint: "أدخل مواجهات الأدوار الإقصائية الحقيقية وأوقات انطلاقها. عبّئ دور الـ32 من الترتيب الحالي ثم صحّح الفرق وفق القرعة الفعلية. الحفظ يُفعّل إغلاق البطل وتوقّعات اللاعبين ومحرّر النتائج.", koSeedR32: "تعبئة دور الـ32 من الترتيب", koSave: "حفظ المباريات", koSaved: "تم حفظ المباريات", koFixtures: "المباريات المحدّدة", koFirstKick: "أول انطلاق", koHome: "المضيف", koAway: "الضيف",
+    koFixturesHint: "أدخل مواجهات الأدوار الإقصائية الحقيقية وأوقات انطلاقها. عبّئ دور الـ32 من الترتيب الحالي ثم صحّح الفرق وفق القرعة الفعلية. الحفظ يُفعّل إغلاق البطل وتوقّعات اللاعبين ومحرّر النتائج.", koSeedR32: "تعبئة دور الـ32 من الترتيب", koSave: "حفظ المباريات", koSaved: "تم حفظ المباريات", koFixtures: "المباريات المحدّدة", koFirstKick: "أول انطلاق", koHome: "المضيف", koAway: "الضيف", koOverrideNote: "تُعرض مباريات الأدوار الإقصائية المتزامنة مباشرةً. التعديلات هنا تتجاوز الخدمة؛ اضغط حفظ للإبقاء عليها.",
     champEntryHint: "حدّد توقع بطل كأس العالم لكل لاعب. يُحتسب +10 عند تحديد البطل فعلياً.", champSetCount: "اختيارات محددة",
     nav_players: "اللاعبون والدخول", playersHint: "أدخل رقم كل لاعب ثم اضغط واتساب لإرسال رابط دخول خاص له من رقمك (مجاناً). يفتحه لاختيار البطل — حتى وقت الإغلاق.", phonePh: "+9715xxxxxxxx", waSend: "واتساب", champLock: "إغلاق اختيار البطل", signedInAs: "مسجّل الدخول باسم", lockBy: "يمكنك التغيير حتى", locked: "مغلق",
     waMsg1: "مرحباً", waMsg2: "هذا رابط دخولك لدوري كأس العالم — اضغط لاختيار البطل:", waMsg3: "(احتفظ بالرابط لنفسك — خاص بك.)",
@@ -2583,10 +2583,14 @@ const KO_SLOTS = KO_ROUNDS.flatMap(([rk, n]) => Array.from({ length: n }, (_, k)
 function toLocalInput(ms) { if (!ms) return ""; const d = new Date(ms - new Date(ms).getTimezoneOffset() * 60000); return d.toISOString().slice(0, 16); }
 function AdminKnockout({ data, setData, t }) {
   const allTeams = useMemo(() => GROUP_KEYS.flatMap((g) => GROUPS[g]).slice().sort((a, b) => a.localeCompare(b)), []);
+  // Prefer the real KO fixtures already in the data (synced from the live feed or
+  // previously saved) — keyed by their own mid so edits override the right match.
+  // Only fall back to the blank R32… scaffold when no fixtures exist yet.
+  const real = useMemo(() => (data.matches || []).filter((m) => m.stage === "ko").sort((a, b) => (a.ko || 0) - (b.ko || 0)), [data]);
   const init = useMemo(() => {
-    const byMid = {}; (data.matches || []).forEach((m) => { if (m.stage === "ko" && m.mid) byMid[m.mid] = m; });
-    return KO_SLOTS.map((s) => { const m = byMid[s.mid] || {}; return { ...s, home: canonTeam(m.home) || "", away: canonTeam(m.away) || "", venue: m.venue || "", kickoff: toLocalInput(m.ko) }; });
-  }, [data]);
+    if (real.length) return real.map((m) => ({ mid: m.mid, round: m.round, home: canonTeam(m.home) || "", away: canonTeam(m.away) || "", venue: m.venue || "", kickoff: toLocalInput(m.ko) }));
+    return KO_SLOTS.map((s) => ({ ...s, home: "", away: "", venue: "", kickoff: "" }));
+  }, [real]);
   const [rows, setRows] = useState(init);
   const [savedAt, setSavedAt] = useState(null);
   const setRow = (mid, patch) => setRows((rs) => rs.map((r) => r.mid === mid ? { ...r, ...patch } : r));
@@ -2620,9 +2624,9 @@ function AdminKnockout({ data, setData, t }) {
   return (
     <div className="view">
       <div className="card slim"><h3 className="cardh"><Ico name="bracket" size={18} /> {t("nav_knockout")}</h3>
-        <p className="hint block">{t("koFixturesHint")}</p>
-        <div className="kf-actions"><button className="btn ghost" onClick={seedR32}>{t("koSeedR32")}</button><button className="btn" onClick={save}>{t("koSave")}</button></div>
-        <div className="hrow"><span className="hlabel">{t("koFixtures")}</span><span className="hval num">{filled.length}/{KO_SLOTS.length}</span></div>
+        <p className="hint block">{real.length ? t("koOverrideNote") : t("koFixturesHint")}</p>
+        <div className="kf-actions">{!real.length && <button className="btn ghost" onClick={seedR32}>{t("koSeedR32")}</button>}<button className="btn" onClick={save}>{t("koSave")}</button></div>
+        <div className="hrow"><span className="hlabel">{t("koFixtures")}</span><span className="hval num">{filled.length}{real.length ? "" : `/${KO_SLOTS.length}`}</span></div>
         <div className="hrow"><span className="hlabel">{t("koFirstKick")}</span><span className="hval num">{firstKick ? new Date(firstKick).toLocaleString() : "—"}</span></div>
         {savedAt && <p className="hint block ok">✓ {t("koSaved")}</p>}
       </div>

@@ -846,7 +846,7 @@ function CountUp({ value, dur = 900 }) {
 }
 const flagOf = (t) => TEAM_FLAGS[canonTeam(t)] || "🏳️";
 function Team({ t, dim }) {
-  if (!t) return <span className="team muted">— —</span>;
+  if (!t) return <span className="team muted">TBD</span>;
   return <span className={"team" + (dim ? " dim" : "")}><span className="fl">{flagOf(t)}</span><span className="tn">{canonTeam(t)}</span></span>;
 }
 function Avatar({ name }) {

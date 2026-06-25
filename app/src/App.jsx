@@ -330,6 +330,7 @@ function calcPlayerPoints(p, data) {
   for (const mid in kr) {
     const actualW = kr[mid]; if (!actualW) continue;
     const round = (mid.split("_")[0] || "").toUpperCase();
+    if (!KO_PREDICT_ROUNDS.has(round)) continue; // Round of 32 isn't predicted, so it isn't scored
     const got = kp[mid] && sameTeam(kp[mid], actualW) ? SCORING.knockout[round] || 0 : 0;
     ko += got;
     detail.knockout.push({ mid, round, predW: kp[mid] || null, actualW, got });
@@ -353,6 +354,9 @@ function completedCount(data) { let n = 0; for (const g of GROUP_KEYS) for (let 
 
 /* ---------------- 4. Bracket derivation -------------------------------- */
 const KO_ROUNDS = [["R32", 16], ["R16", 8], ["QF", 4], ["SF", 2], ["F", 1]];
+// Rounds players actually predict & are scored on — the Round of 32 (play-in) is
+// excluded, so it's hidden from the pick UI and never awards points.
+const KO_PREDICT_ROUNDS = new Set(["R16", "QF", "SF", "F"]);
 // TheSportsDB intRound -> our round code. CONFIRMED against the live 2026 feed:
 // group matchdays are intRound 1/2/3 and the Round of 32 is intRound 32. The
 // later rounds follow the same round-of-N scheme (16/8/4/2) — they aren't in the
@@ -2419,7 +2423,7 @@ function MyPickCard({ data, setData, player, t, logout }) {
   const groupLocked = gl.at ? Date.now() > gl.at : false;
   const p = data.players[player] || {};
   const bracket = useMemo(() => buildBracket(data), [data]);
-  const koRounds = useMemo(() => realKoRounds(data), [data]);
+  const koRounds = useMemo(() => realKoRounds(data).filter((r) => KO_PREDICT_ROUNDS.has(r.round)), [data]);
   const hasKoFixtures = koRounds.length > 0;
   const setGroupPred = (g, arr) => setData((d) => {
     const cur = (d.players[player] && d.players[player].groupPreds) || {};
@@ -2515,7 +2519,7 @@ function MyPickCard({ data, setData, player, t, logout }) {
             </>
           : <>
               <p className="hint block">{t("koPreview")}</p>
-              {bracket.map((rnd) => (
+              {bracket.filter((rnd) => KO_PREDICT_ROUNDS.has(rnd.round)).map((rnd) => (
                 <div className="koround preview" key={rnd.round}>
                   <div className="koround-h">{t("r_" + rnd.round)}</div>
                   {rnd.ties.map((ti) => (

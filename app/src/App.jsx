@@ -95,6 +95,8 @@ const I18N = {
     champEntryHint: "Set each player's World Cup winner pick. It scores +10 once the actual champion is decided.", champSetCount: "Picks set",
     nav_players: "Players & login", playersHint: "Set each player's phone, then tap WhatsApp to send them a personal sign-in link from your own number (free). They open it to set their own champion pick — until the lock time.", phonePh: "+9715xxxxxxxx", waSend: "WhatsApp", champLock: "Champion pick lock", signedInAs: "Signed in as", lockBy: "You can change this until", locked: "locked",
     waMsg1: "Hi", waMsg2: "here's your World Cup league sign-in — tap to set your champion pick:", waMsg3: "(Keep this link private — it's just for you.)",
+    waRemind: "Remind", waRemindMsg1: "here's a reminder to set your World Cup picks before they lock", waRemindMsg2: "tap to open:", lockAuto: "Auto-locks 4h before the first knockout match", lockAutoTba: "Will auto-lock 4h before the first knockout match (schedule pending)",
+    koPicks: "Knockout picks", koOpensWhen: "Knockout picks open once the group stage finishes.", koLockHint: "Each pick locks 4 hours before its kickoff.", koLockBy: "locks 4h before kickoff", pickWinner: "Pick the winner", koTba: "Awaiting earlier results",
     resultsEditor: "Results editor", resultsHint: "Enter a score to mark a match finished — standings, points and the bracket update instantly.", setChampion: "Set champion",
     entryFee: "Entry fee", currency: "Currency", distribution: "Prize distribution", winnerTakes: "Winner takes all", topTwo: "Split top 2", topThree: "Split top 3", deadline: "Predictions deadline", lockPicks: "Lock predictions", prizePool: "Prize pool",
     exportData: "Export data", importData: "Import data", pasteJson: "Paste backup JSON here…", copy: "Copy", copied: "copied", loaded: "loaded", badJson: "invalid JSON", load: "Load",
@@ -155,6 +157,8 @@ const I18N = {
     champEntryHint: "حدّد توقع بطل كأس العالم لكل لاعب. يُحتسب +10 عند تحديد البطل فعلياً.", champSetCount: "اختيارات محددة",
     nav_players: "اللاعبون والدخول", playersHint: "أدخل رقم كل لاعب ثم اضغط واتساب لإرسال رابط دخول خاص له من رقمك (مجاناً). يفتحه لاختيار البطل — حتى وقت الإغلاق.", phonePh: "+9715xxxxxxxx", waSend: "واتساب", champLock: "إغلاق اختيار البطل", signedInAs: "مسجّل الدخول باسم", lockBy: "يمكنك التغيير حتى", locked: "مغلق",
     waMsg1: "مرحباً", waMsg2: "هذا رابط دخولك لدوري كأس العالم — اضغط لاختيار البطل:", waMsg3: "(احتفظ بالرابط لنفسك — خاص بك.)",
+    waRemind: "تذكير", waRemindMsg1: "تذكير باختيار توقّعاتك في دوري كأس العالم قبل إغلاقها", waRemindMsg2: "اضغط للفتح:", lockAuto: "يُغلق تلقائياً قبل 4 ساعات من أول مباراة إقصائية", lockAutoTba: "سيُغلق تلقائياً قبل 4 ساعات من أول مباراة إقصائية (الجدول قيد الانتظار)",
+    koPicks: "توقّعات الأدوار الإقصائية", koOpensWhen: "تُفتح توقّعات الأدوار الإقصائية بعد انتهاء دور المجموعات.", koLockHint: "يُغلق كل اختيار قبل 4 ساعات من موعد المباراة.", koLockBy: "يُغلق قبل 4 ساعات من المباراة", pickWinner: "اختر الفائز", koTba: "بانتظار النتائج السابقة",
     resultsEditor: "محرّر النتائج", resultsHint: "أدخل النتيجة لإنهاء المباراة — يُحدّث الترتيب والنقاط والأدوار فوراً.", setChampion: "تعيين البطل",
     entryFee: "رسوم الاشتراك", currency: "العملة", distribution: "توزيع الجوائز", winnerTakes: "الفائز يأخذ الكل", topTwo: "أفضل اثنين", topThree: "أفضل ثلاثة", deadline: "موعد إغلاق التوقعات", lockPicks: "قفل التوقعات", prizePool: "مجموع الجوائز",
     exportData: "تصدير البيانات", importData: "استيراد البيانات", pasteJson: "الصق نسخة JSON هنا…", copy: "نسخ", copied: "تم النسخ", loaded: "تم التحميل", badJson: "JSON غير صالح", load: "تحميل",
@@ -2230,17 +2234,46 @@ function AdminChampions({ data, setData, t }) {
     </div>
   );
 }
-// Self-service: the signed-in player sets their own champion (until lock).
+// Lock helpers: the champion pick auto-locks 4h before the first knockout match
+// (falling back to a manually-set time if the KO schedule isn't loaded yet); each
+// knockout pick locks 4h before its own kickoff.
+const KO_LOCK_MS = 4 * 3600 * 1000;
+function firstKoKickoff(data) {
+  const kos = (data.matches || []).filter((m) => m.stage === "ko" && m.ko).map((m) => m.ko);
+  return kos.length ? Math.min(...kos) : null;
+}
+// Returns {at:ms|null, auto:bool}. auto=true when derived from the live KO schedule.
+function champLock(data) {
+  const fk = firstKoKickoff(data);
+  if (fk) return { at: fk - KO_LOCK_MS, auto: true };
+  const manual = data.settings && data.settings.champLockUtc;
+  return { at: manual ? Date.parse(manual) : null, auto: false };
+}
+// mid -> kickoff(ms) for loaded knockout matches.
+function koKickoffMap(data) {
+  const m = {}; (data.matches || []).forEach((x) => { if (x.stage === "ko" && x.mid) m[x.mid] = x.ko; }); return m;
+}
+// Self-service: the signed-in player sets their own champion + knockout winners (until lock).
 function MyPickCard({ data, setData, player, t, logout }) {
   const allTeams = useMemo(() => GROUP_KEYS.flatMap((g) => GROUPS[g]).slice().sort((a, b) => a.localeCompare(b)), []);
-  const lock = data.settings && data.settings.champLockUtc;
-  const locked = lock ? Date.now() > Date.parse(lock) : false;
+  const cl = champLock(data);
+  const locked = cl.at ? Date.now() > cl.at : false;
   const p = data.players[player] || {};
+  const groupsDone = GROUP_KEYS.every((g) => groupComplete(g, data));
+  const bracket = useMemo(() => buildBracket(data), [data]);
+  const koAt = useMemo(() => koKickoffMap(data), [data]);
   const setChamp = (team) => setData((d) => {
     const nd = { ...d, players: { ...d.players, [player]: { ...d.players[player], champion: team || null } },
       auditLog: [{ ts: Date.now(), msg: `${t("champPick")} (self): ${player} → ${team || "—"}` }, ...(d.auditLog || [])].slice(0, 80) };
     persistLive(nd); return nd;
   });
+  const setKo = (mid, team) => setData((d) => {
+    const cur = (d.players[player] && d.players[player].knockout) || {};
+    const nd = { ...d, players: { ...d.players, [player]: { ...d.players[player], knockout: { ...cur, [mid]: team } } },
+      auditLog: [{ ts: Date.now(), msg: `${t("koPicks")} (self): ${player} ${mid} → ${team}` }, ...(d.auditLog || [])].slice(0, 80) };
+    persistLive(nd); return nd;
+  });
+  const myKo = (p && p.knockout) || {};
   return (
     <div className="card mypick">
       <div className="mypick-head"><Avatar name={player} /><span className="champname">{t("signedInAs")} <b>{player}</b></span><button className="seeall" onClick={logout}>{t("logout")}</button></div>
@@ -2253,7 +2286,37 @@ function MyPickCard({ data, setData, player, t, logout }) {
               {allTeams.map((tm) => <option key={tm} value={tm}>{tm}</option>)}
             </select>}
       </div>
-      {lock && !locked && <p className="hint block">{t("lockBy")} {new Date(lock).toLocaleString()}</p>}
+      {cl.at && !locked && <p className="hint block">{t("lockBy")} {new Date(cl.at).toLocaleString()}{cl.auto ? ` · ${t("lockAuto")}` : ""}</p>}
+
+      <div className="mypick-ko">
+        <span className="mypick-lbl">🏆 {t("koPicks")}</span>
+        {!groupsDone
+          ? <p className="hint block">{t("koOpensWhen")}</p>
+          : <>
+              <p className="hint block">{t("koLockHint")}</p>
+              {bracket.map((rnd) => (
+                <div className="koround" key={rnd.round}>
+                  <div className="koround-h">{t("r_" + rnd.round)}</div>
+                  {rnd.ties.map((ti) => {
+                    const ready = ti.home && ti.away;
+                    const at = koAt[ti.mid];
+                    const tlocked = at ? Date.now() > at - KO_LOCK_MS : false;
+                    const pick = myKo[ti.mid] || null;
+                    if (!ready) return <div className="kotie tba" key={ti.mid}><span className="kotie-tba">{t("koTba")}</span></div>;
+                    return (
+                      <div className="kotie" key={ti.mid}>
+                        {[ti.home, ti.away].map((tm) => {
+                          const on = pick && sameTeam(pick, tm);
+                          return <button key={tm} className={"kopick" + (on ? " on" : "") + (tlocked ? " lk" : "")} disabled={tlocked && !on} onClick={() => !tlocked && setKo(ti.mid, tm)}><Team t={canonTeam(tm)} /></button>;
+                        })}
+                        {tlocked && <span className="kotie-lk">🔒</span>}
+                      </div>
+                    );
+                  })}
+                </div>
+              ))}
+            </>}
+      </div>
     </div>
   );
 }
@@ -2270,8 +2333,13 @@ function AdminPlayers({ data, setData, t }) {
     const msg = `${t("waMsg1")} ${name}! ${t("waMsg2")}\n${link}\n\n${t("waMsg3")}`;
     window.open(num ? `https://wa.me/${num}?text=${encodeURIComponent(msg)}` : `https://wa.me/?text=${encodeURIComponent(msg)}`, "_blank");
   };
+  const waRemind = (name) => {
+    const link = linkFor(name), num = String(data.players[name].phone || "").replace(/[^\d]/g, "");
+    const msg = `${t("waMsg1")} ${name}, ${t("waRemindMsg1")}. ${t("waRemindMsg2")}\n${link}`;
+    window.open(num ? `https://wa.me/${num}?text=${encodeURIComponent(msg)}` : `https://wa.me/?text=${encodeURIComponent(msg)}`, "_blank");
+  };
   const copyLink = (name) => { try { navigator.clipboard.writeText(linkFor(name)); } catch (e) {} };
-  const setLock = (val) => setData((d) => { const nd = { ...d, settings: { ...(d.settings || {}), champLockUtc: val || null } }; persistLive(nd); return nd; });
+  const cl = champLock(data);
   return (
     <div className="view">
       <div className="card slim"><h3 className="cardh"><Ico name="prediction" size={18} /> {t("nav_players")}</h3>
@@ -2279,7 +2347,7 @@ function AdminPlayers({ data, setData, t }) {
       </div>
       <div className="card slim">
         <span className="hlabel">⏰ {t("champLock")}</span>
-        <input className="select" type="datetime-local" value={(data.settings && data.settings.champLockUtc) || ""} onChange={(e) => setLock(e.target.value)} />
+        <p className="hint block">{cl.at ? new Date(cl.at).toLocaleString() + (cl.auto ? ` · ${t("lockAuto")}` : "") : t("lockAutoTba")}</p>
       </div>
       <div className="card">
         {players.map((name) => (
@@ -2288,6 +2356,7 @@ function AdminPlayers({ data, setData, t }) {
             <div className="plrow-ctl">
               <input className="select plphone" type="tel" inputMode="tel" placeholder={t("phonePh")} value={data.players[name].phone || ""} onChange={(e) => update(name, { phone: e.target.value })} />
               <button className="btn wabtn" onClick={() => waSend(name)}>{t("waSend")}</button>
+              <button className="btn wabtn ghost" onClick={() => waRemind(name)}>{t("waRemind")}</button>
               <button className="btn ghost" onClick={() => copyLink(name)}>{t("copy")}</button>
             </div>
           </div>
@@ -3359,6 +3428,13 @@ border-radius:18px;padding:16px 14px;margin:10px 0;color:#fff;background:linear-
 .mypick-head{display:flex;align-items:center;gap:8px}
 .mypick-body{display:flex;align-items:center;gap:10px;margin-top:10px}.mypick-lbl{font-weight:800;font-size:14px}
 .mypick-locked{font-weight:700;display:flex;align-items:center;gap:6px;color:var(--muted)}
+.mypick-ko{margin-top:14px;padding-top:12px;border-top:1px dashed var(--border)}
+.koround{margin-top:10px}.koround-h{font-weight:800;font-size:11px;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+.kotie{display:flex;align-items:center;gap:6px;margin-bottom:6px}
+.kopick{flex:1;min-width:0;display:flex;align-items:center;gap:6px;padding:7px 9px;border:1px solid var(--border);border-radius:9px;background:var(--card);color:var(--ink);font-family:inherit;font-weight:700;font-size:12.5px;cursor:pointer}
+.kopick.on{background:var(--pitch);color:#fff;border-color:var(--pitch)}
+.kopick.lk{opacity:.55;cursor:not-allowed}.kopick.on.lk{opacity:1}
+.kotie-lk{font-size:12px}.kotie.tba{opacity:.6}.kotie-tba{font-size:12px;color:var(--muted);font-style:italic}
 
 /* admin: results editor */
 .bucketstrip{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:12px}

@@ -33,10 +33,10 @@ const RR = [[0, 1], [2, 3], [0, 2], [1, 3], [0, 3], [1, 2]];
 // champion +10.
 const SCORING = {
   edgeCorrect: 0,             // group match-winners are not part of the league rules
-  groupPos: [3, 2, 1, 0],    // exact finish: 1st +3, 2nd +2, 3rd +1, 4th nil
-  qualifierWrongSlot: 1,     // predicted a top-2 team that qualified, but in the other slot
-  champion: 10,
-  knockout: { R32: 2, R16: 3, QF: 4, SF: 5, F: 6 },
+  groupPos: [1, 1, 1, 1],    // flat: +1 for each team in its exact final position
+  qualifierWrongSlot: 0,     // no partial credit — only exact predictions score
+  champion: 1,
+  knockout: { R32: 1, R16: 1, QF: 1, SF: 1, F: 1 },
 };
 const TEAM_ALIASES = {
   "Bosnia-Herzegovina": ["bosnia and herzegovina", "bosnia", "bosnia herzegovina"],
@@ -94,7 +94,7 @@ const I18N = {
     admin: "Admin", adminLogin: "Admin login", password: "Password", wrongPw: "Incorrect password", login: "Log in", demoPw: "Demo password", logout: "Log out",
     nav_settings: "Settings", nav_results: "Results", nav_playerpicks: "Player picks", nav_playerreport: "Position report", nav_audit: "Audit log", nav_backup: "Backup", nav_health: "Health", nav_sync: "Sync results", nav_repair: "Repair", nav_export: "Export", nav_champions: "Champion picks", nav_knockout: "Knockout fixtures",
     koFixturesHint: "Enter the real knockout matchups and kickoff times. Seed the Round of 32 from the current standings, then correct the teams to the actual draw. Saving powers the champion lock, players' knockout picks and the results editor.", koSeedR32: "Seed R32 from standings", koSave: "Save fixtures", koSaved: "Fixtures saved", koFixtures: "Fixtures set", koFirstKick: "First kickoff", koHome: "Home", koAway: "Away", koOverrideNote: "Showing the live-synced knockout fixtures. Edits here override the feed; Save to keep them.",
-    champEntryHint: "Set each player's World Cup winner pick. It scores +10 once the actual champion is decided.", champSetCount: "Picks set",
+    champEntryHint: "Set each player's World Cup winner pick. It scores +1 once the actual champion is decided.", champSetCount: "Picks set",
     nav_players: "Players & login", playersHint: "Set each player's phone, then tap WhatsApp to send them their personal sign-in code from your own number (free). They open the app → More → My picks and enter the code.", phonePh: "+9715xxxxxxxx", waSend: "WhatsApp", copyCode: "Copy code", champLock: "Champion pick lock", signedInAs: "Signed in as", lockBy: "You can change this until", locked: "locked",
     waMsg1: "Hi", waMsg2: "here's your World Cup league sign-in — tap to set your champion pick:", waMsg3: "(Keep this link private — it's just for you.)",
     waCodeMsg: "your World Cup league sign-in code is:", waCodeMsg2: "Open the app → More → My picks, and enter this code. Keep it private — it's just for you.",
@@ -130,10 +130,10 @@ const I18N = {
     p_howAdd: "How your points add up", p_correct: "correct", p_of: "of",
     p_winner_t: "Match winners", p_winner_d: "+1 each time your higher-ranked team wins its group match",
     p_pos_t: "Group standings", p_pos_d: "+1 for each team you place in its exact final position",
-    p_ko_t: "Knockout winners", p_ko_d: "Points for picking the team that advances (R32 +2, R16 +3, QF +4, SF +5, Final +6)",
-    p_champ_t: "Champion", p_champ_d: "+10 for correctly picking the World Cup winner",
+    p_ko_t: "Knockout winners", p_ko_d: "+1 for each knockout tie where you pick the winner (R16, QF, SF, Final)",
+    p_champ_t: "Champion", p_champ_d: "+1 for correctly picking the World Cup winner",
     p_exact: "exact", p_ingrp: "in group", p_yes: "correct", p_no: "missed",
-    inProgress: "in progress", gcHint: "Your prediction next to the actual standings, with the points each pick earned.", gcProj: "Live: exact finish scores 1st +3, 2nd +2, 3rd +1; +1 for a top-2 pick that qualifies in the other slot. Rises/falls as results come in, locks once the group finishes.",
+    inProgress: "in progress", gcHint: "Your prediction next to the actual standings, with the points each pick earned.", gcProj: "Live: +1 for each team in its exact final position. Rises/falls as results come in, locks once the group finishes.",
   },
   ar: {
     brand: "كأس العالم 2026", dir: "rtl",
@@ -161,7 +161,7 @@ const I18N = {
     admin: "الإدارة", adminLogin: "دخول الإدارة", password: "كلمة المرور", wrongPw: "كلمة المرور غير صحيحة", login: "دخول", demoPw: "كلمة المرور التجريبية", logout: "خروج",
     nav_settings: "الإعدادات", nav_results: "النتائج", nav_playerpicks: "توقعات اللاعب", nav_playerreport: "تقرير المراكز", nav_audit: "سجل التغييرات", nav_backup: "نسخ احتياطي", nav_health: "الصحة", nav_sync: "مزامنة النتائج", nav_repair: "إصلاح", nav_export: "تصدير", nav_champions: "اختيارات البطل", nav_knockout: "مباريات الإقصائيات",
     koFixturesHint: "أدخل مواجهات الأدوار الإقصائية الحقيقية وأوقات انطلاقها. عبّئ دور الـ32 من الترتيب الحالي ثم صحّح الفرق وفق القرعة الفعلية. الحفظ يُفعّل إغلاق البطل وتوقّعات اللاعبين ومحرّر النتائج.", koSeedR32: "تعبئة دور الـ32 من الترتيب", koSave: "حفظ المباريات", koSaved: "تم حفظ المباريات", koFixtures: "المباريات المحدّدة", koFirstKick: "أول انطلاق", koHome: "المضيف", koAway: "الضيف", koOverrideNote: "تُعرض مباريات الأدوار الإقصائية المتزامنة مباشرةً. التعديلات هنا تتجاوز الخدمة؛ اضغط حفظ للإبقاء عليها.",
-    champEntryHint: "حدّد توقع بطل كأس العالم لكل لاعب. يُحتسب +10 عند تحديد البطل فعلياً.", champSetCount: "اختيارات محددة",
+    champEntryHint: "حدّد توقع بطل كأس العالم لكل لاعب. يُحتسب +1 عند تحديد البطل فعلياً.", champSetCount: "اختيارات محددة",
     nav_players: "اللاعبون والدخول", playersHint: "أدخل رقم كل لاعب ثم اضغط واتساب لإرسال رمز الدخول الخاص به من رقمك (مجاناً). يفتح التطبيق ← المزيد ← توقعاتي ويُدخل الرمز.", phonePh: "+9715xxxxxxxx", waSend: "واتساب", copyCode: "نسخ الرمز", champLock: "إغلاق اختيار البطل", signedInAs: "مسجّل الدخول باسم", lockBy: "يمكنك التغيير حتى", locked: "مغلق",
     waMsg1: "مرحباً", waMsg2: "هذا رابط دخولك لدوري كأس العالم — اضغط لاختيار البطل:", waMsg3: "(احتفظ بالرابط لنفسك — خاص بك.)",
     waCodeMsg: "رمز دخولك لدوري كأس العالم هو:", waCodeMsg2: "افتح التطبيق ← المزيد ← توقعاتي وأدخل هذا الرمز. احتفظ به لنفسك — خاص بك.",
@@ -197,10 +197,10 @@ const I18N = {
     p_howAdd: "كيف تتكوّن نقاطك", p_correct: "صحيحة", p_of: "من",
     p_winner_t: "الفائز بالمباراة", p_winner_d: "+1 كلما فاز فريقك الأعلى ترتيباً في مباراة المجموعة",
     p_pos_t: "ترتيب المجموعة", p_pos_d: "+1 لكل فريق تضعه في مركزه النهائي الصحيح",
-    p_ko_t: "الأدوار الإقصائية", p_ko_d: "نقاط لاختيار الفريق المتأهل (دور 32 +2، دور 16 +3، الربع +4، النصف +5، النهائي +6)",
-    p_champ_t: "البطل", p_champ_d: "+10 لاختيار بطل كأس العالم بشكل صحيح",
+    p_ko_t: "الأدوار الإقصائية", p_ko_d: "+1 لكل مواجهة إقصائية تختار فائزها (دور 16، الربع، النصف، النهائي)",
+    p_champ_t: "البطل", p_champ_d: "+1 لاختيار بطل كأس العالم بشكل صحيح",
     p_exact: "صحيح", p_ingrp: "في المجموعة", p_yes: "صحيح", p_no: "خطأ",
-    inProgress: "قيد اللعب", gcHint: "توقعك بجانب الترتيب الفعلي، مع النقاط التي حققها كل اختيار.", gcProj: "مباشر: المركز الصحيح يمنح الأول +3، الثاني +2، الثالث +1؛ و+1 لاختيار ضمن أول اثنين تأهّل في الخانة الأخرى. يتغيّر مع النتائج ويُثبَّت عند انتهاء المجموعة.",
+    inProgress: "قيد اللعب", gcHint: "توقعك بجانب الترتيب الفعلي، مع النقاط التي حققها كل اختيار.", gcProj: "مباشر: +1 لكل فريق في مركزه النهائي الصحيح. يتغيّر مع النتائج ويُثبَّت عند انتهاء المجموعة.",
   },
 };
 
@@ -315,9 +315,8 @@ function calcPlayerPoints(p, data) {
       gMatch += got;
       detail.matches.push({ g, i, ...r, got });
     }
-    // Football-weighted group points: exact 1st +3, 2nd +2, 3rd +1 (4th nil), plus
-    // +1 for a predicted top-2 team that qualified in the OTHER top-2 slot. Live:
-    // recomputed every render and locks once the group is complete.
+    // Flat group points: +1 for each team in its exact final position (all four).
+    // Live: recomputed every render and locks once the group is complete.
     {
       const table = computeGroupTable(g, data), pred = playerGroupPred(p, g);
       const locked = groupComplete(g, data);
@@ -1286,8 +1285,7 @@ function Profile({ data, lb, name, setName, t }) {
 }
 function Help({ t }) {
   const rules = [
-    { e: "⚔️", k: "rule_edge", p: "+1" }, { e: "🎯", k: "rule_exact", p: "+3" },
-    { e: "📍", k: "rule_in", p: "+1" }, { e: "🗺️", k: "rule_ko", p: "+2…12" }, { e: "🏆", k: "rule_champ", p: "+10" },
+    { e: "🎯", k: "rule_exact", p: "+1" }, { e: "🗺️", k: "rule_ko", p: "+1" }, { e: "🏆", k: "rule_champ", p: "+1" },
   ];
   return (
     <div className="view">
@@ -1873,8 +1871,8 @@ function GroupCompare({ g, p, data, t, name }) {
   const actualTop2 = new Set([table[0], table[1]].filter(Boolean).map((x) => teamKey(x.team)));
   const rankRows = [0, 1, 2, 3].map((pos) => {
     const pick = pred[pos] || null, actual = table[pos] ? table[pos].team : null;
-    // Exact 1st +3 / 2nd +2 / 3rd +1; or +1 for a top-2 pick that qualified in the
-    // other slot. Recomputed each render; locks once the group is done.
+    // Flat: +1 for each team in its exact final position. Recomputed each render;
+    // locks once the group is done.
     const exact = !!(pick && actual && sameTeam(pick, actual));
     let got = 0, kind = "miss";
     if (exact) { got = SCORING.groupPos[pos]; kind = "exact"; }

@@ -390,6 +390,15 @@ function koFixturesFromSeason(season) {
     };
   }).filter(Boolean);
 }
+// Build engine match objects (stage "ko") from KO fixtures — used by boot + Sync.
+function koMatchObjsFromFixtures(fixtures) {
+  return (fixtures || []).map((f, i) => ({
+    id: f.mid, stage: "ko", group: null, idx: i, mid: f.mid, round: f.round, home: f.home, away: f.away, venue: f.venue || "",
+    ko: f.kickoffUtc ? Date.parse(f.kickoffUtc) : 0, real: true,
+    finalH: f.home_score != null ? Number(f.home_score) : null, finalA: f.away_score != null ? Number(f.away_score) : null,
+    penWinner: f.winner || null, eventId: f.eventId || null, allEvents: [], allStats: null, lineups: null,
+  }));
+}
 function buildBracket(data) {
   // If real knockout fixtures exist (synced from the live feed or admin-entered),
   // the bracket is drawn straight from them — real matchups and real progression.
@@ -2844,9 +2853,7 @@ function SyncResults({ data, setData, t }) {
         });
         let blob = { ...(d._blob || {}) };
         if (koFix.length) {
-          const koObjs = koFix.map((f, i) => ({ id: f.mid, stage: "ko", group: null, idx: i, mid: f.mid, round: f.round, home: f.home, away: f.away, venue: f.venue || "",
-            ko: f.kickoffUtc ? Date.parse(f.kickoffUtc) : 0, real: true, finalH: f.home_score != null ? Number(f.home_score) : null, finalA: f.away_score != null ? Number(f.away_score) : null,
-            penWinner: f.winner || null, eventId: f.eventId || null, allEvents: [], allStats: null, lineups: null }));
+          const koObjs = koMatchObjsFromFixtures(koFix);
           matches = [...matches.filter((m) => m.stage !== "ko"), ...koObjs].sort((a, b) => (a.ko || 0) - (b.ko || 0));
           blob.knockoutMatches = koFix.map(({ eventId, ...r }) => r);
         }
@@ -3074,6 +3081,12 @@ export default function App() {
           const need = real.matches.filter((m) => m.stage === "group" && m.finalH == null && m.eventId && m.ko && m.ko <= nowMs()).map((m) => ({ key: m.id, eventId: m.eventId }));
           if (need.length) { const finals = await fetchEventFinals(need, key); real.matches = applyEventFinals(real.matches, finals); }
         } catch (e) { /* feed gap fill is best-effort */ }
+        // Knockout fixtures straight from the live season feed, so the bracket
+        // populates automatically (no manual Sync needed) as the draw fills in.
+        try {
+          const koFix = koFixturesFromSeason(await fetchSeasonEvents(key));
+          if (koFix.length) real.matches = [...real.matches.filter((m) => m.stage !== "ko"), ...koMatchObjsFromFixtures(koFix)].sort((a, b) => (a.ko || 0) - (b.ko || 0));
+        } catch (e) { /* feed KO is best-effort */ }
         if (!alive) return;
         setData(recomputeLive(real, nowMs())); setSource("live");
       } catch (e) {
@@ -3154,6 +3167,10 @@ export default function App() {
             const need = real.matches.filter((m) => m.stage === "group" && m.finalH == null && m.eventId && m.ko && m.ko <= nowMs()).map((m) => ({ key: m.id, eventId: m.eventId }));
             if (need.length) { const finals = await fetchEventFinals(need, key); real.matches = applyEventFinals(real.matches, finals); }
           } catch (e) { /* best-effort */ }
+          try {
+            const koFix = koFixturesFromSeason(await fetchSeasonEvents(key));
+            if (koFix.length) real.matches = [...real.matches.filter((m) => m.stage !== "ko"), ...koMatchObjsFromFixtures(koFix)].sort((a, b) => (a.ko || 0) - (b.ko || 0));
+          } catch (e) { /* feed KO is best-effort */ }
           setData(recomputeLive(real, nowMs()));
         } catch (e) { setData((d) => (d ? recomputeLive(d, nowMs()) : d)); }
       } else setData((d) => (d ? recomputeLive(d, nowMs()) : d));

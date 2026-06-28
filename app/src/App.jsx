@@ -106,7 +106,7 @@ const I18N = {
     groupPredHint: "Order each group 1–4. Open until your league admin sets a deadline.", groupLockedHint: "Group predictions are locked.", groupLockAuto: "Auto-locks at the first group match", groupLock: "Group predictions lock", groupLockOpen: "Open — set a time to close entry (e.g. the first group kickoff)",
     koPicks: "Knockout picks", koOpensWhen: "Knockout picks open once the group stage finishes.", koLockHint: "Each pick locks 4 hours before its kickoff.", koProjected: "Projected from the current standings — pick now; matchups may still shift until the groups finish. Each pick locks 4h before kickoff.", koPreview: "Preview projected from the current standings. Picks open once the knockout fixtures are confirmed; each pick will lock 4h before its kickoff.", koLockBy: "locks 4h before kickoff", pickWinner: "Pick the winner", koTba: "Awaiting earlier results", koTba2: "TBD", koVs: "v",
     r16CandHint: "The Round-of-16 bracket is fixed. For each tie, pick the winner from its possible teams now — scored against the real result. Locks at the champion deadline.", r16TieFrom: "from",
-    brkOverlayHint: "Picks turn green when correct, red when wrong, as results come in. Scroll to see the whole bracket.", shareBracket: "Share image",
+    brkOverlayHint: "Picks turn green when correct, red when wrong, as results come in. Scroll to see the whole bracket.", shareBracket: "Share image", brkTapZoom: "Tap the bracket for a full-size image to save or share.",
     koBracket: "Knockout bracket", koBracketHint: "Pick a winner in every tie from the Round of 32 to the Final — winners advance, and your Final winner is your champion. Locks at the champion deadline; each correct pick scores +1.", koBracketLocked: "Bracket locked. ✓ = correct, ✕ = wrong, as results come in.",
     resultsEditor: "Results editor", resultsHint: "Enter a score to mark a match finished — standings, points and the bracket update instantly.", setChampion: "Set champion",
     entryFee: "Entry fee", currency: "Currency", distribution: "Prize distribution", winnerTakes: "Winner takes all", topTwo: "Split top 2", topThree: "Split top 3", deadline: "Predictions deadline", lockPicks: "Lock predictions", prizePool: "Prize pool",
@@ -178,7 +178,7 @@ const I18N = {
     groupPredHint: "رتّب كل مجموعة من 1 إلى 4. مفتوح حتى يحدّد المشرف موعداً للإغلاق.", groupLockedHint: "توقّعات المجموعات مغلقة.", groupLockAuto: "يُغلق تلقائياً عند أول مباراة في المجموعات", groupLock: "إغلاق توقّعات المجموعات", groupLockOpen: "مفتوح — حدّد وقتاً لإغلاق الإدخال (مثلاً أول مباراة في المجموعات)",
     koPicks: "توقّعات الأدوار الإقصائية", koOpensWhen: "تُفتح توقّعات الأدوار الإقصائية بعد انتهاء دور المجموعات.", koLockHint: "يُغلق كل اختيار قبل 4 ساعات من موعد المباراة.", koProjected: "متوقّعة من الترتيب الحالي — اختر الآن؛ قد تتغيّر المواجهات حتى انتهاء المجموعات. يُغلق كل اختيار قبل 4 ساعات من المباراة.", koPreview: "معاينة متوقّعة من الترتيب الحالي. تُفتح التوقّعات بعد تأكيد مباريات الأدوار الإقصائية؛ ويُغلق كل اختيار قبل 4 ساعات من موعده.", koLockBy: "يُغلق قبل 4 ساعات من المباراة", pickWinner: "اختر الفائز", koTba: "بانتظار النتائج السابقة", koTba2: "غير محدد", koVs: "ضد",
     r16CandHint: "جدول دور الـ16 ثابت. لكل مواجهة، اختر الفائز الآن من الفرق المحتملة — وتُحتسب وفق النتيجة الفعلية. يُغلق عند موعد إغلاق توقّع البطل.", r16TieFrom: "من",
-    brkOverlayHint: "تتحوّل التوقّعات إلى الأخضر عند الصواب والأحمر عند الخطأ مع ظهور النتائج. مرّر لرؤية الجدول كاملاً.", shareBracket: "مشاركة صورة",
+    brkOverlayHint: "تتحوّل التوقّعات إلى الأخضر عند الصواب والأحمر عند الخطأ مع ظهور النتائج. مرّر لرؤية الجدول كاملاً.", shareBracket: "مشاركة صورة", brkTapZoom: "اضغط على الجدول للحصول على صورة كاملة للحفظ أو المشاركة.",
     koBracket: "جدول الأدوار الإقصائية", koBracketHint: "اختر الفائز في كل مواجهة من دور الـ32 حتى النهائي — يتأهّل الفائزون، والفائز بالنهائي هو بطلك. يُغلق عند موعد إغلاق البطل؛ كل توقّع صحيح يمنح نقطة.", koBracketLocked: "الجدول مُغلق. ✓ = صحيح، ✕ = خاطئ، مع ظهور النتائج.",
     resultsEditor: "محرّر النتائج", resultsHint: "أدخل النتيجة لإنهاء المباراة — يُحدّث الترتيب والنقاط والأدوار فوراً.", setChampion: "تعيين البطل",
     entryFee: "رسوم الاشتراك", currency: "العملة", distribution: "توزيع الجوائز", winnerTakes: "الفائز يأخذ الكل", topTwo: "أفضل اثنين", topThree: "أفضل ثلاثة", deadline: "موعد إغلاق التوقعات", lockPicks: "قفل التوقعات", prizePool: "مجموع الجوائز",
@@ -1297,158 +1297,92 @@ function Groups({ data, t, onOpenGroup }) {
 }
 // A player's full predicted bracket in the classic template layout (left half →
 // trophy → right half). Each pick is coloured green/red once its real result lands.
-function PlayerBracket({ data, picks, t }) {
-  const cell = (code, i) => {
-    const id = koSlotId(code, i);
-    const [a, b] = koSlotContenders(picks, code, i).map((x) => (x ? canonTeam(x) : null));
-    const pick = picks[id] ? canonTeam(picks[id]) : null;
-    const actual = koSlotActualWinner(code, i, data);
-    const slot = (tm) => {
-      if (!tm) return <div className="pb-s tba" key={Math.random()}>—</div>;
-      const isPick = pick && sameTeam(tm, pick);
-      let cls = "pb-s";
-      if (isPick) cls += actual ? (sameTeam(pick, actual) ? " ok" : " bad") : " sel";
-      else cls += " out";
-      return <div className={cls} key={tm}><span className="pb-fl">{flagOf(tm)}</span>{code3(tm)}</div>;
-    };
-    return <div className="pb-m" key={id}>{slot(a)}{slot(b)}</div>;
-  };
-  const colCells = (code, from, to) => { const out = []; for (let i = from; i < to; i++) out.push(cell(code, i)); return out; };
-  const champ = picks[KO_FINAL_ID] ? canonTeam(picks[KO_FINAL_ID]) : null;
-  const champActual = koSlotActualWinner("F", 0, data);
-  const champCls = "pb-champ-pill" + (champ && champActual ? (sameTeam(champ, champActual) ? " ok" : " bad") : "");
-  return (
-    <div className="pbrk-scroll">
-      <div className="pbrk">
-        <div className="pb-col">{colCells("R32", 0, 8)}</div>
-        <div className="pb-col">{colCells("R16", 0, 4)}</div>
-        <div className="pb-col">{colCells("QF", 0, 2)}</div>
-        <div className="pb-col">{colCells("SF", 0, 1)}</div>
-        <div className="pb-col pb-center">
-          <div className="pb-trophy">🏆</div>
-          {cell("F", 0)}
-          <div className="pb-flabel">{t("r_F")}</div>
-          {champ ? <span className={champCls}><span className="pb-fl">{flagOf(champ)}</span>{champ}</span> : <span className="pb-champ-pill tba">👑 —</span>}
-        </div>
-        <div className="pb-col">{colCells("SF", 1, 2)}</div>
-        <div className="pb-col">{colCells("QF", 2, 4)}</div>
-        <div className="pb-col">{colCells("R16", 4, 8)}</div>
-        <div className="pb-col">{colCells("R32", 8, 16)}</div>
-      </div>
-    </div>
-  );
-}
-// The real tournament bracket: the full fixed draw (all rounds R32→Final), filled
-// from live results. Round of 32 always shows the 16 set ties; later rounds show
-// the advancing teams once played, TBD until then. Same template layout as the
-// player bracket so the whole structure is always visible.
-function ResultsBracket({ data, t }) {
-  const res = {};
-  for (const [code, n] of KO_SEQ) for (let i = 0; i < n; i++) { const w = koSlotActualWinner(code, i, data); if (w) res[koSlotId(code, i)] = w; }
-  const cell = (code, i) => {
-    const [a, b] = koSlotContenders(res, code, i).map((x) => (x ? canonTeam(x) : null));
-    const winner = res[koSlotId(code, i)] ? canonTeam(res[koSlotId(code, i)]) : null;
-    const slot = (tm) => {
-      if (!tm) return <div className="pb-s tba" key={Math.random()}>—</div>;
-      const cls = "pb-s" + (winner ? (sameTeam(tm, winner) ? " ok" : " out") : "");
-      return <div className={cls} key={tm}><span className="pb-fl">{flagOf(tm)}</span>{code3(tm)}</div>;
-    };
-    return <div className="pb-m" key={code + i}>{slot(a)}{slot(b)}</div>;
-  };
-  const col = (code, from, to) => { const o = []; for (let i = from; i < to; i++) o.push(cell(code, i)); return o; };
-  const champ = res[KO_FINAL_ID] ? canonTeam(res[KO_FINAL_ID]) : null;
-  return (
-    <div className="pbrk-scroll">
-      <div className="pbrk">
-        <div className="pb-col">{col("R32", 0, 8)}</div>
-        <div className="pb-col">{col("R16", 0, 4)}</div>
-        <div className="pb-col">{col("QF", 0, 2)}</div>
-        <div className="pb-col">{col("SF", 0, 1)}</div>
-        <div className="pb-col pb-center">
-          <div className="pb-trophy">🏆</div>
-          {cell("F", 0)}
-          <div className="pb-flabel">{t("r_F")}</div>
-          {champ ? <span className="pb-champ-pill ok"><span className="pb-fl">{flagOf(champ)}</span>{champ}</span> : <span className="pb-champ-pill tba">👑 —</span>}
-        </div>
-        <div className="pb-col">{col("SF", 1, 2)}</div>
-        <div className="pb-col">{col("QF", 2, 4)}</div>
-        <div className="pb-col">{col("R16", 4, 8)}</div>
-        <div className="pb-col">{col("R32", 8, 16)}</div>
-      </div>
-    </div>
-  );
-}
+// ---- Knockout bracket renderer (canvas) -------------------------------
+// One renderer for both the on-screen bracket (scales to fit the screen, so the
+// whole diagram is always visible) and the shareable PNG. Draws boxes, 3-letter
+// codes, real connector lines, the trophy/champion and (for share) a points line.
 function rrPath(x, px, py, w, h, r) { x.beginPath(); x.moveTo(px + r, py); x.arcTo(px + w, py, px + w, py + h, r); x.arcTo(px + w, py + h, px, py + h, r); x.arcTo(px, py + h, px, py, r); x.arcTo(px, py, px + w, py, r); x.closePath(); }
-// Render a player's bracket to a PNG canvas (for sharing on WhatsApp). Self-
-// contained: draws boxes, codes, connector lines, champion + points — no deps.
-function playerBracketCanvas(name, picks, data, koPts, totalPts, t) {
-  const S = 2, W = 1180, H = 840;
-  const c = document.createElement("canvas"); c.width = W * S; c.height = H * S;
-  const x = c.getContext("2d"); x.scale(S, S);
+function drawBracket(canvas, opts) {
+  const { data, t } = opts, header = !!opts.header, S = 2, W = 1120, H = header ? 800 : 600;
+  canvas.width = W * S; canvas.height = H * S;
+  const x = canvas.getContext("2d"); x.setTransform(S, 0, 0, S, 0, 0);
   x.fillStyle = "#f7f8fa"; x.fillRect(0, 0, W, H);
-  x.textAlign = "center"; x.textBaseline = "middle";
-  x.fillStyle = "#0e2a47"; x.font = "800 25px Arial, sans-serif"; x.fillText("2026 FIFA WORLD CUP · KNOCKOUT", W / 2, 32);
-  x.fillStyle = "#c2143b"; x.font = "800 17px Arial, sans-serif"; x.fillText("— " + name + " —", W / 2, 60);
-  const top = 92, bottom = H - 64, areaH = bottom - top;
-  const boxW = 96, boxH = 36, colGap = 20, step = boxW + colGap;
-  const lx = [16, 16 + step, 16 + 2 * step, 16 + 3 * step];
+  if (header) {
+    x.textAlign = "center"; x.textBaseline = "middle";
+    x.fillStyle = "#0e2a47"; x.font = "800 25px Arial, sans-serif"; x.fillText("2026 FIFA WORLD CUP · KNOCKOUT", W / 2, 32);
+    x.fillStyle = "#c2143b"; x.font = "800 17px Arial, sans-serif"; x.fillText("— " + (opts.name || "") + " —", W / 2, 60);
+  }
+  let res = null;
+  if (opts.mode === "results") { res = {}; for (const [code, n] of KO_SEQ) for (let i = 0; i < n; i++) { const w = koSlotActualWinner(code, i, data); if (w) res[koSlotId(code, i)] = w; } }
+  const slotInfo = (code, i) => {
+    const id = koSlotId(code, i);
+    if (opts.mode === "results") {
+      const [a, b] = koSlotContenders(res, code, i).map((tt) => tt ? canonTeam(tt) : null);
+      const w = res[id] ? canonTeam(res[id]) : null;
+      return { a, b, winner: w, status: w ? "correct" : null };
+    }
+    const [a, b] = koSlotContenders(opts.picks, code, i).map((tt) => tt ? canonTeam(tt) : null);
+    const pick = opts.picks[id] ? canonTeam(opts.picks[id]) : null;
+    const actual = koSlotActualWinner(code, i, data);
+    const status = !pick ? null : actual ? (sameTeam(pick, actual) ? "correct" : "wrong") : "pending";
+    return { a, b, winner: pick, status };
+  };
+  const top = header ? 92 : 18, bottom = H - (header ? 60 : 18), areaH = bottom - top;
+  const boxW = 92, boxH = 34, colGap = 18, stepX = boxW + colGap;
+  const lx = [14, 14 + stepX, 14 + 2 * stepX, 14 + 3 * stepX];
   const rx = lx.map((v) => W - boxW - v);
-  const cx = W / 2 - boxW / 2;
-  const spacing = areaH / 8;
+  const cxx = W / 2 - boxW / 2, spacing = areaH / 8;
   const yOf = (r, i) => top + spacing * Math.pow(2, r) * (i + 0.5);
-  const drawMatch = (px, cy, a, b, winner) => {
+  const COL = { correct: ["#e6f4ea", "#137a3b"], wrong: ["#fdecea", "#b71c1c"], pending: ["#eef1f4", "#16324f"] };
+  const drawMatch = (px, cy, info) => {
     rrPath(x, px, cy - boxH / 2, boxW, boxH, 7); x.fillStyle = "#fff"; x.fill(); x.strokeStyle = "#d3d9e0"; x.lineWidth = 1; x.stroke();
     x.beginPath(); x.moveTo(px, cy); x.lineTo(px + boxW, cy); x.strokeStyle = "#eef2f6"; x.stroke();
     const slot = (tm, sy) => {
-      const isW = winner && tm && sameTeam(tm, winner);
-      if (isW) { x.fillStyle = "#e6f4ea"; rrPath(x, px + 1, sy - 8, boxW - 2, 16, 4); x.fill(); }
+      const isW = info.winner && tm && sameTeam(tm, info.winner);
+      if (isW && info.status) { x.fillStyle = COL[info.status][0]; rrPath(x, px + 1, sy - 8, boxW - 2, 16, 4); x.fill(); }
       x.textAlign = "left"; x.font = "800 12px Arial, sans-serif";
-      x.fillStyle = !tm ? "#9aa6b2" : isW ? "#137a3b" : (winner ? "#aab4bf" : "#16324f");
+      x.fillStyle = !tm ? "#9aa6b2" : (isW && info.status) ? COL[info.status][1] : (info.winner ? "#aab4bf" : "#16324f");
       const label = tm ? code3(tm) : "—";
       x.fillText(label, px + 9, sy + 1);
-      if (winner && tm && !isW) { const tw = x.measureText(label).width; x.strokeStyle = "#aab4bf"; x.beginPath(); x.moveTo(px + 9, sy + 1); x.lineTo(px + 9 + tw, sy + 1); x.stroke(); }
+      if (info.winner && tm && !isW) { const tw = x.measureText(label).width; x.strokeStyle = "#aab4bf"; x.beginPath(); x.moveTo(px + 9, sy + 1); x.lineTo(px + 9 + tw, sy + 1); x.stroke(); }
     };
-    slot(a, cy - 9); slot(b, cy + 9);
+    slot(info.a, cy - 9); slot(info.b, cy + 9);
   };
-  const winOf = (code, i) => { const w = picks[koSlotId(code, i)]; return w ? canonTeam(w) : null; };
-  const conn = (cols, r, side) => { // draw connectors feeding round r+1 from round r
-    const parents = 8 / Math.pow(2, r + 1);
-    x.strokeStyle = "#cdd5de"; x.lineWidth = 1;
+  const connector = (cols, r, side) => {
+    const parents = 8 / Math.pow(2, r + 1); x.strokeStyle = "#cdd5de"; x.lineWidth = 1;
     for (let i = 0; i < parents; i++) {
       const c1 = yOf(r, 2 * i), c2 = yOf(r, 2 * i + 1), py = yOf(r + 1, i);
       const edge = side === "L" ? cols[r] + boxW : cols[r];
       const mid = side === "L" ? cols[r] + boxW + colGap / 2 : cols[r] - colGap / 2;
       const pedge = side === "L" ? cols[r + 1] : cols[r + 1] + boxW;
-      x.beginPath();
-      x.moveTo(edge, c1); x.lineTo(mid, c1); x.moveTo(edge, c2); x.lineTo(mid, c2);
-      x.moveTo(mid, c1); x.lineTo(mid, c2); x.moveTo(mid, py); x.lineTo(pedge, py); x.stroke();
+      x.beginPath(); x.moveTo(edge, c1); x.lineTo(mid, c1); x.moveTo(edge, c2); x.lineTo(mid, c2); x.moveTo(mid, c1); x.lineTo(mid, c2); x.moveTo(mid, py); x.lineTo(pedge, py); x.stroke();
     }
   };
-  const seq = [["R32", 8], ["R16", 4], ["QF", 2], ["SF", 1]];
-  // left half
-  seq.forEach(([code, n], r) => { for (let i = 0; i < n; i++) { const [a, b] = koSlotContenders(picks, code, i).map((tt) => tt ? canonTeam(tt) : null); drawMatch(lx[r], yOf(r, i), a, b, winOf(code, i)); } });
-  [0, 1, 2].forEach((r) => conn(lx, r, "L"));
-  // SF(left) -> final
-  x.strokeStyle = "#cdd5de"; x.beginPath(); x.moveTo(lx[3] + boxW, yOf(3, 0)); x.lineTo(cx, H / 2 - 30); x.stroke();
-  // right half (slot indices offset)
-  seq.forEach(([code, n], r) => { for (let i = 0; i < n; i++) { const gi = (code === "R32" ? 8 : code === "R16" ? 4 : code === "QF" ? 2 : 1) + i; const [a, b] = koSlotContenders(picks, code, gi).map((tt) => tt ? canonTeam(tt) : null); drawMatch(rx[r], yOf(r, i), a, b, winOf(code, gi)); } });
-  [0, 1, 2].forEach((r) => { const parents = 8 / Math.pow(2, r + 1); x.strokeStyle = "#cdd5de"; for (let i = 0; i < parents; i++) { const c1 = yOf(r, 2 * i), c2 = yOf(r, 2 * i + 1), py = yOf(r + 1, i); const edge = rx[r]; const mid = rx[r] - colGap / 2; const pedge = rx[r + 1] + boxW; x.beginPath(); x.moveTo(edge, c1); x.lineTo(mid, c1); x.moveTo(edge, c2); x.lineTo(mid, c2); x.moveTo(mid, c1); x.lineTo(mid, c2); x.moveTo(mid, py); x.lineTo(pedge, py); x.stroke(); } });
-  x.strokeStyle = "#cdd5de"; x.beginPath(); x.moveTo(rx[3], yOf(3, 0)); x.lineTo(cx + boxW, H / 2 - 30); x.stroke();
-  // center: trophy, final, champion, points
-  const [fa, fb] = koSlotContenders(picks, "F", 0).map((tt) => tt ? canonTeam(tt) : null);
-  drawMatch(cx, H / 2 - 30, fa, fb, winOf("F", 0));
-  x.textAlign = "center"; x.fillStyle = "#6b7a8d"; x.font = "700 11px Arial, sans-serif"; x.fillText("FINAL", W / 2, H / 2 + 2);
-  x.font = "30px Arial, sans-serif"; x.fillText("🏆", W / 2, H / 2 - 78);
-  const champ = winOf("F", 0);
-  rrPath(x, cx - 12, H / 2 + 16, boxW + 24, 30, 8); x.fillStyle = "#f5c451"; x.fill(); x.strokeStyle = "#caa033"; x.stroke();
-  x.fillStyle = "#241c00"; x.font = "800 14px Arial, sans-serif"; x.fillText(champ ? champ : "—", W / 2, H / 2 + 32);
-  // points footer
-  x.fillStyle = "#0e2a47"; x.font = "800 14px Arial, sans-serif";
-  x.fillText(`${koPts} ${t("knockout")} pts · ${totalPts} ${t("pts")}`, W / 2, H - 34);
-  return c;
+  const seq = [["R32", 8], ["R16", 4], ["QF", 2], ["SF", 1]], off = { R32: 8, R16: 4, QF: 2, SF: 1 };
+  seq.forEach(([code, n], r) => { for (let i = 0; i < n; i++) drawMatch(lx[r], yOf(r, i), slotInfo(code, i)); });
+  [0, 1, 2].forEach((r) => connector(lx, r, "L"));
+  x.strokeStyle = "#cdd5de"; x.beginPath(); x.moveTo(lx[3] + boxW, yOf(3, 0)); x.lineTo(cxx, H / 2 - 30); x.stroke();
+  seq.forEach(([code, n], r) => { for (let i = 0; i < n; i++) drawMatch(rx[r], yOf(r, i), slotInfo(code, off[code] + i)); });
+  [0, 1, 2].forEach((r) => connector(rx, r, "R"));
+  x.strokeStyle = "#cdd5de"; x.beginPath(); x.moveTo(rx[3], yOf(3, 0)); x.lineTo(cxx + boxW, H / 2 - 30); x.stroke();
+  drawMatch(cxx, H / 2 - 30, slotInfo("F", 0));
+  x.textAlign = "center"; x.fillStyle = "#6b7a8d"; x.font = "700 11px Arial, sans-serif"; x.fillText((t("r_F") || "Final").toUpperCase(), W / 2, H / 2 + 2);
+  x.font = "28px Arial, sans-serif"; x.fillText("🏆", W / 2, H / 2 - 76);
+  const ci = slotInfo("F", 0), champ = ci.winner;
+  rrPath(x, cxx - 10, H / 2 + 16, boxW + 20, 28, 8);
+  if (champ && ci.status) { x.fillStyle = COL[ci.status][0]; x.fill(); x.strokeStyle = COL[ci.status][1]; } else { x.fillStyle = "#f5c451"; x.fill(); x.strokeStyle = "#caa033"; }
+  x.stroke();
+  x.fillStyle = champ && ci.status ? COL[ci.status][1] : "#241c00"; x.font = "800 13px Arial, sans-serif"; x.fillText("👑 " + (champ || "—"), W / 2, H / 2 + 31);
+  if (header) { x.fillStyle = "#0e2a47"; x.font = "800 14px Arial, sans-serif"; x.fillText(`${opts.koPts} ${t("knockout")} pts · ${opts.totalPts} ${t("pts")}`, W / 2, H - 32); }
+}
+function makeBracketCanvas(opts) { const c = document.createElement("canvas"); drawBracket(c, opts); return c; }
+function BracketCanvas({ data, picks, mode, t, onTap }) {
+  const ref = useRef(null);
+  useEffect(() => { if (ref.current) drawBracket(ref.current, { data, picks: picks || {}, mode: mode || "player", header: false, t }); }, [data, picks, mode, t]);
+  return <div className="brkimg-wrap"><canvas ref={ref} className="brkimg" onClick={onTap} style={onTap ? { cursor: "zoom-in" } : null} /></div>;
 }
 async function shareBracketImage(name, picks, data, koPts, totalPts, t) {
-  const canvas = playerBracketCanvas(name, picks, data, koPts, totalPts, t);
+  const canvas = makeBracketCanvas({ data, picks, mode: "player", header: true, name, koPts, totalPts, t });
   await new Promise((res) => canvas.toBlob(async (blob) => {
     if (!blob) return res();
     const fname = `bracket-${name.replace(/\s+/g, "_")}.png`;
@@ -1489,14 +1423,14 @@ function BracketView({ data, lb, t, lang, name, setName }) {
             <span className="brk-pt ko">{sel.knockout} {t("knockout")} {t("pts")}</span>
             <span className="brk-pt tot">{sel.total} {t("pts")}</span>
           </div>
-          <p className="hint block">{t("brkOverlayHint")}</p>
-          <PlayerBracket data={data} picks={picks} t={t} />
+          <p className="hint block">{t("brkOverlayHint")} {t("brkTapZoom")}</p>
+          <BracketCanvas data={data} picks={picks} mode="player" t={t} onTap={() => shareBracketImage(sel.name, picks, data, sel.knockout, sel.total, t)} />
         </div>
       )}
       <div className="card">
         <h3 className="cardh">🗺️ {t("koFixtures")}{projected && <span className="gc-proj-total" style={{ marginInlineStart: 8 }}>· {t("brkProjected")}</span>}</h3>
         <p className="hint block">{hasReal ? t("brkLive") : t("brkIllustrative")}</p>
-        <ResultsBracket data={data} t={t} />
+        <BracketCanvas data={data} mode="results" t={t} />
       </div>
     </div>
   );
@@ -4280,6 +4214,9 @@ border-radius:18px;padding:16px 14px;margin:10px 0;color:#fff;background:linear-
 .brk-pts{display:flex;gap:8px;flex-wrap:wrap;margin:6px 0 2px}
 .brk-pt{font-size:12px;font-weight:800;padding:3px 10px;border-radius:999px;background:var(--soft);color:var(--ink)}
 .brk-pt.ko{background:#e6f4ea;color:#137a3b}.brk-pt.tot{background:var(--pitch);color:#fff}
+/* canvas bracket: scales to the card width so the whole diagram is always visible */
+.brkimg-wrap{margin-top:8px;border:1px solid var(--border);border-radius:12px;overflow:hidden;background:#f7f8fa}
+.brkimg{display:block;width:100%;height:auto}
 .app[data-theme="dark"] .brk-pt.ko{background:rgba(25,195,125,.18)}
 .r16cand{margin-top:10px}.kotie.r16 .r16cands{flex-direction:column;align-items:flex-start;gap:2px}
 .r16num{font-size:10.5px;letter-spacing:.03em;text-transform:uppercase;color:var(--muted)}

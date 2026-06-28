@@ -4119,7 +4119,10 @@ border-radius:18px;padding:16px 14px;margin:10px 0;color:#fff;background:linear-
 .kochip{background:var(--gold);color:#241c00;font-weight:800;font-size:11px;padding:1px 7px;border-radius:999px;margin-left:4px}
 /* player predicted bracket (template layout) */
 .pbrk-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;padding:4px 0 8px}
-.pbrk{display:flex;align-items:stretch;gap:6px;min-width:780px}
+/* width:max-content keeps the bracket at its natural size (never stretches to
+   fill a wide card, which would spread the columns and clip a half); margin auto
+   centres it when it fits and it scrolls horizontally when it doesn't. */
+.pbrk{display:flex;align-items:stretch;gap:6px;width:max-content;margin:0 auto}
 .pb-col{display:flex;flex-direction:column;justify-content:space-around;gap:5px}
 .pb-col.pb-center{justify-content:center;align-items:center;gap:7px;min-width:92px}
 .pb-trophy{font-size:30px;line-height:1}
@@ -4201,7 +4204,8 @@ border-radius:18px;padding:16px 14px;margin:10px 0;color:#fff;background:linear-
   .view:not(.md)>.card:has(.aglist),.view:not(.md)>.card:has(.cbars),
   .view:not(.md)>.card:has(.cwgrid),.view:not(.md)>.card:has(.cwbars),
   .view:not(.md)>.card.slim,.view:not(.md)>.card:has(.phow),
-  .view:not(.md)>.card:has(.psel-strip),.view:not(.md)>.card:has(.eq-pending){grid-column:1 / -1}
+  .view:not(.md)>.card:has(.psel-strip),.view:not(.md)>.card:has(.eq-pending),
+  .view:not(.md)>.card:has(.pbrk-scroll){grid-column:1 / -1}
   .gwrap{grid-template-columns:repeat(3,1fr)}
   /* dense lists use the extra width as two columns */
   .lb,.ptboard{display:grid;grid-template-columns:1fr 1fr;gap:8px}

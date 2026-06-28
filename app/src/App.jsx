@@ -105,6 +105,7 @@ const I18N = {
     groupPredHint: "Order each group 1–4. Open until your league admin sets a deadline.", groupLockedHint: "Group predictions are locked.", groupLockAuto: "Auto-locks at the first group match", groupLock: "Group predictions lock", groupLockOpen: "Open — set a time to close entry (e.g. the first group kickoff)",
     koPicks: "Knockout picks", koOpensWhen: "Knockout picks open once the group stage finishes.", koLockHint: "Each pick locks 4 hours before its kickoff.", koProjected: "Projected from the current standings — pick now; matchups may still shift until the groups finish. Each pick locks 4h before kickoff.", koPreview: "Preview projected from the current standings. Picks open once the knockout fixtures are confirmed; each pick will lock 4h before its kickoff.", koLockBy: "locks 4h before kickoff", pickWinner: "Pick the winner", koTba: "Awaiting earlier results", koTba2: "TBD", koVs: "v",
     r16CandHint: "The Round-of-16 bracket is fixed. For each tie, pick the winner from its possible teams now — scored against the real result. Locks at the champion deadline.", r16TieFrom: "from",
+    brkOverlayHint: "Picks turn green when correct, red when wrong, as results come in. Scroll to see the whole bracket.",
     koBracket: "Knockout bracket", koBracketHint: "Pick a winner in every tie from the Round of 32 to the Final — winners advance, and your Final winner is your champion. Locks at the champion deadline; each correct pick scores +1.", koBracketLocked: "Bracket locked. ✓ = correct, ✕ = wrong, as results come in.",
     resultsEditor: "Results editor", resultsHint: "Enter a score to mark a match finished — standings, points and the bracket update instantly.", setChampion: "Set champion",
     entryFee: "Entry fee", currency: "Currency", distribution: "Prize distribution", winnerTakes: "Winner takes all", topTwo: "Split top 2", topThree: "Split top 3", deadline: "Predictions deadline", lockPicks: "Lock predictions", prizePool: "Prize pool",
@@ -175,6 +176,7 @@ const I18N = {
     groupPredHint: "رتّب كل مجموعة من 1 إلى 4. مفتوح حتى يحدّد المشرف موعداً للإغلاق.", groupLockedHint: "توقّعات المجموعات مغلقة.", groupLockAuto: "يُغلق تلقائياً عند أول مباراة في المجموعات", groupLock: "إغلاق توقّعات المجموعات", groupLockOpen: "مفتوح — حدّد وقتاً لإغلاق الإدخال (مثلاً أول مباراة في المجموعات)",
     koPicks: "توقّعات الأدوار الإقصائية", koOpensWhen: "تُفتح توقّعات الأدوار الإقصائية بعد انتهاء دور المجموعات.", koLockHint: "يُغلق كل اختيار قبل 4 ساعات من موعد المباراة.", koProjected: "متوقّعة من الترتيب الحالي — اختر الآن؛ قد تتغيّر المواجهات حتى انتهاء المجموعات. يُغلق كل اختيار قبل 4 ساعات من المباراة.", koPreview: "معاينة متوقّعة من الترتيب الحالي. تُفتح التوقّعات بعد تأكيد مباريات الأدوار الإقصائية؛ ويُغلق كل اختيار قبل 4 ساعات من موعده.", koLockBy: "يُغلق قبل 4 ساعات من المباراة", pickWinner: "اختر الفائز", koTba: "بانتظار النتائج السابقة", koTba2: "غير محدد", koVs: "ضد",
     r16CandHint: "جدول دور الـ16 ثابت. لكل مواجهة، اختر الفائز الآن من الفرق المحتملة — وتُحتسب وفق النتيجة الفعلية. يُغلق عند موعد إغلاق توقّع البطل.", r16TieFrom: "من",
+    brkOverlayHint: "تتحوّل التوقّعات إلى الأخضر عند الصواب والأحمر عند الخطأ مع ظهور النتائج. مرّر لرؤية الجدول كاملاً.",
     koBracket: "جدول الأدوار الإقصائية", koBracketHint: "اختر الفائز في كل مواجهة من دور الـ32 حتى النهائي — يتأهّل الفائزون، والفائز بالنهائي هو بطلك. يُغلق عند موعد إغلاق البطل؛ كل توقّع صحيح يمنح نقطة.", koBracketLocked: "الجدول مُغلق. ✓ = صحيح، ✕ = خاطئ، مع ظهور النتائج.",
     resultsEditor: "محرّر النتائج", resultsHint: "أدخل النتيجة لإنهاء المباراة — يُحدّث الترتيب والنقاط والأدوار فوراً.", setChampion: "تعيين البطل",
     entryFee: "رسوم الاشتراك", currency: "العملة", distribution: "توزيع الجوائز", winnerTakes: "الفائز يأخذ الكل", topTwo: "أفضل اثنين", topThree: "أفضل ثلاثة", deadline: "موعد إغلاق التوقعات", lockPicks: "قفل التوقعات", prizePool: "مجموع الجوائز",
@@ -418,6 +420,16 @@ function koSlotActualWinner(code, i, data) {
   const m = (data.matches || []).find((x) => x.stage === "ko" && x.round === code && x.home && x.away && set.has(teamKey(x.home)) && set.has(teamKey(x.away)));
   return m ? (data.knockoutResults || {})[m.mid] || null : null;
 }
+// 3-letter codes for the compact bracket boxes (FIFA-style; falls back to first 3).
+const TEAM3 = {
+  Germany: "GER", Paraguay: "PAR", France: "FRA", Sweden: "SWE", "South Africa": "RSA", Canada: "CAN",
+  Netherlands: "NED", Morocco: "MAR", Portugal: "POR", Croatia: "CRO", Spain: "ESP", Austria: "AUT",
+  USA: "USA", "Bosnia-Herzegovina": "BIH", Belgium: "BEL", Senegal: "SEN", Brazil: "BRA", Japan: "JPN",
+  "Ivory Coast": "CIV", Norway: "NOR", Mexico: "MEX", Ecuador: "ECU", England: "ENG", "DR Congo": "COD",
+  Argentina: "ARG", "Cape Verde": "CPV", Australia: "AUS", Egypt: "EGY", Switzerland: "SUI", Algeria: "ALG",
+  Colombia: "COL", Ghana: "GHA",
+};
+const code3 = (tm) => { const c = canonTeam(tm); return c ? (TEAM3[c] || c.slice(0, 3).toUpperCase()) : ""; };
 // TheSportsDB intRound -> our round code. CONFIRMED against the live 2026 feed:
 // group matchdays are intRound 1/2/3 and the Round of 32 is intRound 32. The
 // later rounds follow the same round-of-N scheme (16/8/4/2) — they aren't in the
@@ -1281,13 +1293,75 @@ function Groups({ data, t, onOpenGroup }) {
     </div>
   );
 }
-function BracketView({ data, t, lang }) {
+// A player's full predicted bracket in the classic template layout (left half →
+// trophy → right half). Each pick is coloured green/red once its real result lands.
+function PlayerBracket({ data, picks, t }) {
+  const cell = (code, i) => {
+    const id = koSlotId(code, i);
+    const [a, b] = koSlotContenders(picks, code, i).map((x) => (x ? canonTeam(x) : null));
+    const pick = picks[id] ? canonTeam(picks[id]) : null;
+    const actual = koSlotActualWinner(code, i, data);
+    const slot = (tm) => {
+      if (!tm) return <div className="pb-s tba" key={Math.random()}>—</div>;
+      const isPick = pick && sameTeam(tm, pick);
+      let cls = "pb-s";
+      if (isPick) cls += actual ? (sameTeam(pick, actual) ? " ok" : " bad") : " sel";
+      else cls += " out";
+      return <div className={cls} key={tm}><span className="pb-fl">{flagOf(tm)}</span>{code3(tm)}</div>;
+    };
+    return <div className="pb-m" key={id}>{slot(a)}{slot(b)}</div>;
+  };
+  const colCells = (code, from, to) => { const out = []; for (let i = from; i < to; i++) out.push(cell(code, i)); return out; };
+  const champ = picks[KO_FINAL_ID] ? canonTeam(picks[KO_FINAL_ID]) : null;
+  const champActual = koSlotActualWinner("F", 0, data);
+  const champCls = "pb-champ-pill" + (champ && champActual ? (sameTeam(champ, champActual) ? " ok" : " bad") : "");
+  return (
+    <div className="pbrk-scroll">
+      <div className="pbrk">
+        <div className="pb-col">{colCells("R32", 0, 8)}</div>
+        <div className="pb-col">{colCells("R16", 0, 4)}</div>
+        <div className="pb-col">{colCells("QF", 0, 2)}</div>
+        <div className="pb-col">{colCells("SF", 0, 1)}</div>
+        <div className="pb-col pb-center">
+          <div className="pb-trophy">🏆</div>
+          {cell("F", 0)}
+          <div className="pb-flabel">{t("r_F")}</div>
+          {champ ? <span className={champCls}><span className="pb-fl">{flagOf(champ)}</span>{champ}</span> : <span className="pb-champ-pill tba">👑 —</span>}
+        </div>
+        <div className="pb-col">{colCells("SF", 1, 2)}</div>
+        <div className="pb-col">{colCells("QF", 2, 4)}</div>
+        <div className="pb-col">{colCells("R16", 4, 8)}</div>
+        <div className="pb-col">{colCells("R32", 8, 16)}</div>
+      </div>
+    </div>
+  );
+}
+function BracketView({ data, lb, t, lang, name, setName }) {
   const hasReal = (data.matches || []).some((m) => m.stage === "ko");
   const projected = !hasReal && !GROUP_KEYS.every((g) => groupComplete(g, data));
+  const sel = (lb && lb.find((r) => r.name === name)) || (lb && lb[0]) || null;
+  const picks = (sel && data.players[sel.name] && data.players[sel.name].knockout) || {};
+  const made = sel ? KO_SEQ.reduce((s, [code, n]) => { for (let i = 0; i < n; i++) if (picks[koSlotId(code, i)]) s++; return s; }, 0) : 0;
   return (
     <div className="view">
-      <div className="card slim"><h3 className="cardh">🗺️ {t("nav_bracket")}{projected && <span className="gc-proj-total" style={{ marginInlineStart: 8 }}>· {t("brkProjected")}</span>}</h3>
-        {projected && <p className="hint block">{t("brkProjNote")}</p>}
+      <div className="card slim"><h3 className="cardh">🗺️ {t("nav_bracket")}</h3>
+        {sel && (
+          <div className="psel">
+            <label className="hint">{t("selectPlayer")}</label>
+            <select className="select" value={sel.name} onChange={(e) => setName && setName(e.target.value)}>
+              {lb.map((r) => <option key={r.name} value={r.name}>{r.name} · {r.total} {t("pts")}</option>)}
+            </select>
+          </div>
+        )}
+      </div>
+      {sel && (
+        <div className="card">
+          <h3 className="cardh">🏆 {sel.name} · {t("koBracket")}</h3>
+          <p className="hint block">{made}/31 {t("picksMade").toLowerCase()} · {t("brkOverlayHint")}</p>
+          <PlayerBracket data={data} picks={picks} t={t} />
+        </div>
+      )}
+      <div className="card slim"><h3 className="cardh">📅 {t("koFixtures")}{projected && <span className="gc-proj-total" style={{ marginInlineStart: 8 }}>· {t("brkProjected")}</span>}</h3>
         <p className="hint block">{hasReal ? t("brkLive") : t("brkIllustrative")}</p>
       </div>
       <Bracket data={data} t={t} lang={lang} />
@@ -3332,7 +3406,7 @@ export default function App() {
         {view === "groups" && <Groups data={data} t={t} onOpenGroup={openGroup} />}
         {view === "groupgames" && groupSel && <GroupGames g={groupSel} data={data} lang={lang} onOpen={openMatch} t={t} onBack={() => go("groups")} />}
         {view === "team" && <TeamFixtures data={data} lang={lang} onOpen={openMatch} t={t} />}
-        {view === "bracket" && <BracketView data={data} t={t} lang={lang} />}
+        {view === "bracket" && <BracketView data={data} lb={lb} t={t} lang={lang} name={profileName} setName={selectProfile} />}
         {view === "predictions" && <Predictions data={data} lb={lb} t={t} go={go} />}
         {view === "points" && <Points data={data} lb={lb} t={t} name={profileName} setName={selectProfile} />}
         {view === "consensus" && <Consensus data={data} t={t} />}
@@ -3998,6 +4072,25 @@ border-radius:18px;padding:16px 14px;margin:10px 0;color:#fff;background:linear-
 .kotie-lk{font-size:12px}.kotie.tba{opacity:.6}.kotie-tba{font-size:12px;color:var(--muted);font-style:italic}
 .koround.preview{opacity:.85}.kotie.ro{gap:6px}.kopick.ro{cursor:default;background:var(--soft);border-style:dashed}
 .kochip{background:var(--gold);color:#241c00;font-weight:800;font-size:11px;padding:1px 7px;border-radius:999px;margin-left:4px}
+/* player predicted bracket (template layout) */
+.pbrk-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;padding:4px 0 8px}
+.pbrk{display:flex;align-items:stretch;gap:6px;min-width:780px}
+.pb-col{display:flex;flex-direction:column;justify-content:space-around;gap:5px}
+.pb-col.pb-center{justify-content:center;align-items:center;gap:7px;min-width:92px}
+.pb-trophy{font-size:30px;line-height:1}
+.pb-flabel{font-size:10px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:var(--muted)}
+.pb-m{display:flex;flex-direction:column;gap:2px;border:1px solid var(--border);border-radius:7px;overflow:hidden;background:var(--card)}
+.pb-s{display:flex;align-items:center;gap:4px;padding:3px 7px;font-size:11px;font-weight:800;white-space:nowrap;min-width:58px}
+.pb-s.sel{background:var(--soft)}
+.pb-s.ok{background:#e6f4ea;color:#137a3b}
+.pb-s.bad{background:#fdecea;color:#b71c1c}
+.pb-s.out{color:var(--muted);text-decoration:line-through;font-weight:600}
+.pb-s.tba{color:var(--muted);font-style:italic;justify-content:center}
+.pb-fl{font-size:12px}
+.pb-champ-pill{display:inline-flex;align-items:center;gap:5px;border:2px solid var(--gold-d);border-radius:9px;padding:4px 10px;font-weight:800;font-size:12px;background:var(--gold)}
+.pb-champ-pill.ok{border-color:#137a3b;background:#e6f4ea;color:#137a3b}
+.pb-champ-pill.bad{border-color:#b71c1c;background:#fdecea;color:#b71c1c}
+.pb-champ-pill.tba{background:none;color:var(--muted)}
 .r16cand{margin-top:10px}.kotie.r16 .r16cands{flex-direction:column;align-items:flex-start;gap:2px}
 .r16num{font-size:10.5px;letter-spacing:.03em;text-transform:uppercase;color:var(--muted)}
 .r16teams{font-size:12px;font-weight:600;color:var(--ink);line-height:1.35}

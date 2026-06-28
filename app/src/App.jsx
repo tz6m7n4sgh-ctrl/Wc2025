@@ -93,6 +93,7 @@ const I18N = {
     groupBreakdown: "Group-by-group breakdown", tapExpand: "tap to expand", beat: "beat", champPending: "Champion not decided yet", ifCorrect: "if correct",
     admin: "Admin", adminLogin: "Admin login", password: "Password", wrongPw: "Incorrect password", login: "Log in", demoPw: "Demo password", logout: "Log out",
     nav_settings: "Settings", nav_results: "Results", nav_playerpicks: "Player picks", nav_playerreport: "Position report", nav_audit: "Audit log", nav_backup: "Backup", nav_health: "Health", nav_sync: "Sync results", nav_repair: "Repair", nav_export: "Export", nav_champions: "Champion picks", nav_knockout: "Knockout fixtures",
+    nav_editpicks: "Edit predictions", editPicksHint: "Select a player and correct their group order or champion. Changes save immediately and override any prediction lock.", editPicksSaved: "Saved",
     koFixturesHint: "Enter the real knockout matchups and kickoff times. Seed the Round of 32 from the current standings, then correct the teams to the actual draw. Saving powers the champion lock, players' knockout picks and the results editor.", koSeedR32: "Seed R32 from standings", koSave: "Save fixtures", koSaved: "Fixtures saved", koFixtures: "Fixtures set", koFirstKick: "First kickoff", koHome: "Home", koAway: "Away", koOverrideNote: "Showing the live-synced knockout fixtures. Edits here override the feed; Save to keep them.",
     champEntryHint: "Set each player's World Cup winner pick. It scores +1 once the actual champion is decided.", champSetCount: "Picks set",
     nav_players: "Players & login", playersHint: "Set each player's phone, then tap WhatsApp to send them their personal sign-in code from your own number (free). They open the app → More → My picks and enter the code.", phonePh: "+9715xxxxxxxx", waSend: "WhatsApp", copyCode: "Copy code", champLock: "Champion pick lock", signedInAs: "Signed in as", lockBy: "You can change this until", locked: "locked",
@@ -161,6 +162,7 @@ const I18N = {
     groupBreakdown: "تفصيل لكل مجموعة", tapExpand: "اضغط للتوسيع", beat: "تغلّب على", champPending: "البطل لم يُحسم بعد", ifCorrect: "إذا صح",
     admin: "الإدارة", adminLogin: "دخول الإدارة", password: "كلمة المرور", wrongPw: "كلمة المرور غير صحيحة", login: "دخول", demoPw: "كلمة المرور التجريبية", logout: "خروج",
     nav_settings: "الإعدادات", nav_results: "النتائج", nav_playerpicks: "توقعات اللاعب", nav_playerreport: "تقرير المراكز", nav_audit: "سجل التغييرات", nav_backup: "نسخ احتياطي", nav_health: "الصحة", nav_sync: "مزامنة النتائج", nav_repair: "إصلاح", nav_export: "تصدير", nav_champions: "اختيارات البطل", nav_knockout: "مباريات الإقصائيات",
+    nav_editpicks: "تعديل التوقّعات", editPicksHint: "اختر لاعباً وعدّل ترتيب مجموعاته أو بطله. تُحفظ التغييرات فوراً وتتجاوز أي إغلاق للتوقّعات.", editPicksSaved: "تم الحفظ",
     koFixturesHint: "أدخل مواجهات الأدوار الإقصائية الحقيقية وأوقات انطلاقها. عبّئ دور الـ32 من الترتيب الحالي ثم صحّح الفرق وفق القرعة الفعلية. الحفظ يُفعّل إغلاق البطل وتوقّعات اللاعبين ومحرّر النتائج.", koSeedR32: "تعبئة دور الـ32 من الترتيب", koSave: "حفظ المباريات", koSaved: "تم حفظ المباريات", koFixtures: "المباريات المحدّدة", koFirstKick: "أول انطلاق", koHome: "المضيف", koAway: "الضيف", koOverrideNote: "تُعرض مباريات الأدوار الإقصائية المتزامنة مباشرةً. التعديلات هنا تتجاوز الخدمة؛ اضغط حفظ للإبقاء عليها.",
     champEntryHint: "حدّد توقع بطل كأس العالم لكل لاعب. يُحتسب +1 عند تحديد البطل فعلياً.", champSetCount: "اختيارات محددة",
     nav_players: "اللاعبون والدخول", playersHint: "أدخل رقم كل لاعب ثم اضغط واتساب لإرسال رمز الدخول الخاص به من رقمك (مجاناً). يفتح التطبيق ← المزيد ← توقعاتي ويُدخل الرمز.", phonePh: "+9715xxxxxxxx", waSend: "واتساب", copyCode: "نسخ الرمز", champLock: "إغلاق اختيار البطل", signedInAs: "مسجّل الدخول باسم", lockBy: "يمكنك التغيير حتى", locked: "مغلق",
@@ -2443,7 +2445,7 @@ function realKoRounds(data) {
 }
 // One group's 1–4 order editor: four position selects, each excluding teams
 // already chosen in the group's other positions so a team can't be duplicated.
-function GroupPredEditor({ g, pred, locked, onSet, t }) {
+function GroupPredEditor({ g, pred, locked, onSet, t, allowSwap }) {
   const teams = GROUPS[g];
   const cur = [0, 1, 2, 3].map((i) => canonTeam(pred[i]) || "");
   if (locked) {
@@ -2472,7 +2474,9 @@ function GroupPredEditor({ g, pred, locked, onSet, t }) {
             <option value="">—</option>
             {teams.map((tm) => {
               const usedElsewhere = cur.some((x, j) => j !== i && x && sameTeam(x, tm));
-              return <option key={tm} value={tm} disabled={usedElsewhere}>{tm}</option>;
+              // allowSwap: keep used teams selectable — picking one swaps the two
+              // positions (setPos handles it). Otherwise they're disabled.
+              return <option key={tm} value={tm} disabled={!allowSwap && usedElsewhere}>{tm}{allowSwap && usedElsewhere ? " ⇄" : ""}</option>;
             })}
           </select>
         </div>
@@ -2982,6 +2986,51 @@ function PlayerPicks({ data, lb, t, name, setName }) {
     </div>
   );
 }
+// Admin: pick any player and edit their group-order predictions (and champion).
+// Unlike the self-service editor this ignores locks — the admin can correct a
+// pick at any time. Every change saves immediately to the shared blob.
+function AdminEditPicks({ data, setData, t, name, setName }) {
+  const players = Object.keys(data.players);
+  const sel = players.includes(name) ? name : players[0];
+  const p = (sel && data.players[sel]) || {};
+  const allTeams = useMemo(() => GROUP_KEYS.flatMap((g) => GROUPS[g]).slice().sort((a, b) => a.localeCompare(b)), []);
+  const [saved, setSaved] = useState(0);
+  const flashSaved = () => setSaved(Date.now());
+  const setGroupPred = (g, arr) => setData((d) => {
+    const cur = (d.players[sel] && d.players[sel].groupPreds) || {};
+    const nd = { ...d, players: { ...d.players, [sel]: { ...d.players[sel], groupPreds: { ...cur, [g]: arr } } },
+      auditLog: [{ ts: Date.now(), msg: `${t("nav_editpicks")} (admin): ${sel} ${g} → ${arr.map((x) => x || "—").join(", ")}` }, ...(d.auditLog || [])].slice(0, 80) };
+    persistLive(nd); return nd;
+  });
+  const setChamp = (team) => setData((d) => {
+    const nd = { ...d, players: { ...d.players, [sel]: { ...d.players[sel], champion: team || null } },
+      auditLog: [{ ts: Date.now(), msg: `${t("champPick")} (admin): ${sel} → ${team || "—"}` }, ...(d.auditLog || [])].slice(0, 80) };
+    persistLive(nd); return nd;
+  });
+  if (!sel) return <div className="view"><div className="card slim"><h3 className="cardh"><Ico name="edit" size={18} /> {t("nav_editpicks")}</h3><p className="hint block">{t("noPlayers") || "—"}</p></div></div>;
+  return (
+    <div className="view">
+      <div className="card slim"><h3 className="cardh"><Ico name="edit" size={18} /> {t("nav_editpicks")}{saved ? <span className="coll-lock"> · {t("editPicksSaved")} ✓</span> : null}</h3>
+        <p className="hint block">{t("editPicksHint")}</p>
+        <select className="select" value={sel} onChange={(e) => setName(e.target.value)}>{players.map((n) => <option key={n} value={n}>{n}</option>)}</select>
+      </div>
+      <div className="card">
+        <div className="mypick-body"><span className="mypick-lbl">👑 {t("champPick")}</span>
+          <select className="select champsel" value={canonTeam(p.champion) || ""} onChange={(e) => { setChamp(e.target.value); flashSaved(); }}>
+            <option value="">— {t("champPick")} —</option>
+            {allTeams.map((tm) => <option key={tm} value={tm}>{tm}</option>)}
+          </select>
+        </div>
+      </div>
+      <div className="card">
+        <h3 className="cardh">📋 {t("nav_predictions")}</h3>
+        {GROUP_KEYS.map((g) => (
+          <GroupPredEditor key={g} g={g} pred={playerGroupPred(p, g)} locked={false} allowSwap onSet={(arr) => { setGroupPred(g, arr); flashSaved(); }} t={t} />
+        ))}
+      </div>
+    </div>
+  );
+}
 function PlayerReport({ data, lb, t }) {
   return (
     <div className="view">
@@ -3028,6 +3077,7 @@ const ADMIN_ITEMS = [
   { id: "knockout", ic: "bracket", key: "nav_knockout" },
   { id: "players", ic: "prediction", key: "nav_players" },
   { id: "champions", ic: "trophy", key: "nav_champions" },
+  { id: "editpicks", ic: "edit", key: "nav_editpicks" },
   { id: "playerpicks", ic: "bracket", key: "nav_playerpicks" },
   { id: "playerreport", ic: "chart", key: "nav_playerreport" },
   { id: "audit", ic: "search", key: "nav_audit" },
@@ -3319,6 +3369,7 @@ export default function App() {
         {view === "audit" && isAdmin && <AuditLog data={data} t={t} />}
         {view === "repair" && isAdmin && <Repair data={data} setData={setData} t={t} />}
         {view === "syncresults" && isAdmin && <SyncResults data={data} setData={setData} t={t} />}
+        {view === "editpicks" && isAdmin && <AdminEditPicks data={data} setData={setData} t={t} name={profileName} setName={setProfileName} />}
         {view === "playerpicks" && isAdmin && <PlayerPicks data={data} lb={lb} t={t} name={profileName} setName={setProfileName} />}
         {view === "playerreport" && isAdmin && <PlayerReport data={data} lb={lb} t={t} />}
       </main>

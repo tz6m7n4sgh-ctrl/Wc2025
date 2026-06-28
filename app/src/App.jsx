@@ -130,7 +130,7 @@ const I18N = {
     p_howAdd: "How your points add up", p_correct: "correct", p_of: "of",
     p_winner_t: "Match winners", p_winner_d: "+1 each time your higher-ranked team wins its group match",
     p_pos_t: "Group standings", p_pos_d: "+1 for each team you place in its exact final position",
-    p_ko_t: "Knockout winners", p_ko_d: "+1 for each knockout tie where you pick the winner (R16, QF, SF, Final)",
+    p_ko_t: "Knockout winners", p_ko_d: "+1 for each knockout tie where you pick the winner (R32, R16, QF, SF, Final)",
     p_champ_t: "Champion", p_champ_d: "+1 for correctly picking the World Cup winner",
     p_exact: "exact", p_ingrp: "in group", p_yes: "correct", p_no: "missed",
     inProgress: "in progress", gcHint: "Your prediction next to the actual standings, with the points each pick earned.", gcProj: "Live: +1 for each team in its exact final position. Rises/falls as results come in, locks once the group finishes.",
@@ -197,7 +197,7 @@ const I18N = {
     p_howAdd: "كيف تتكوّن نقاطك", p_correct: "صحيحة", p_of: "من",
     p_winner_t: "الفائز بالمباراة", p_winner_d: "+1 كلما فاز فريقك الأعلى ترتيباً في مباراة المجموعة",
     p_pos_t: "ترتيب المجموعة", p_pos_d: "+1 لكل فريق تضعه في مركزه النهائي الصحيح",
-    p_ko_t: "الأدوار الإقصائية", p_ko_d: "+1 لكل مواجهة إقصائية تختار فائزها (دور 16، الربع، النصف، النهائي)",
+    p_ko_t: "الأدوار الإقصائية", p_ko_d: "+1 لكل مواجهة إقصائية تختار فائزها (دور 32، دور 16، الربع، النصف، النهائي)",
     p_champ_t: "البطل", p_champ_d: "+1 لاختيار بطل كأس العالم بشكل صحيح",
     p_exact: "صحيح", p_ingrp: "في المجموعة", p_yes: "صحيح", p_no: "خطأ",
     inProgress: "قيد اللعب", gcHint: "توقعك بجانب الترتيب الفعلي، مع النقاط التي حققها كل اختيار.", gcProj: "مباشر: +1 لكل فريق في مركزه النهائي الصحيح. يتغيّر مع النتائج ويُثبَّت عند انتهاء المجموعة.",
@@ -335,7 +335,7 @@ function calcPlayerPoints(p, data) {
   for (const mid in kr) {
     const actualW = kr[mid]; if (!actualW) continue;
     const round = (mid.split("_")[0] || "").toUpperCase();
-    if (!KO_PREDICT_ROUNDS.has(round)) continue; // Round of 32 isn't predicted, so it isn't scored
+    if (!KO_PREDICT_ROUNDS.has(round)) continue; // only scored knockout rounds
     const got = kp[mid] && sameTeam(kp[mid], actualW) ? SCORING.knockout[round] || 0 : 0;
     ko += got;
     detail.knockout.push({ mid, round, predW: kp[mid] || null, actualW, got });
@@ -359,9 +359,8 @@ function completedCount(data) { let n = 0; for (const g of GROUP_KEYS) for (let 
 
 /* ---------------- 4. Bracket derivation -------------------------------- */
 const KO_ROUNDS = [["R32", 16], ["R16", 8], ["QF", 4], ["SF", 2], ["F", 1]];
-// Rounds players actually predict & are scored on — the Round of 32 (play-in) is
-// excluded, so it's hidden from the pick UI and never awards points.
-const KO_PREDICT_ROUNDS = new Set(["R16", "QF", "SF", "F"]);
+// Knockout rounds players predict & are scored on (all of them, incl. R32).
+const KO_PREDICT_ROUNDS = new Set(["R32", "R16", "QF", "SF", "F"]);
 // TheSportsDB intRound -> our round code. CONFIRMED against the live 2026 feed:
 // group matchdays are intRound 1/2/3 and the Round of 32 is intRound 32. The
 // later rounds follow the same round-of-N scheme (16/8/4/2) — they aren't in the

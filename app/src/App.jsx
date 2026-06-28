@@ -70,7 +70,7 @@ const TEAM_FLAGS = {
 const I18N = {
   en: {
     brand: "World Cup 2026", dir: "ltr",
-    nav_home: "Home", nav_table: "Table", nav_groups: "Groups", nav_bracket: "Bracket", nav_profile: "Profile",
+    nav_home: "Home", nav_table: "Table", nav_groups: "Groups", nav_bracket: "Brackets", nav_profile: "Profile",
     nav_team: "Teams", teamFixtures: "Team fixtures", matchesLabel: "Matches", pickTeam: "Select a team", viewMatches: "View matches",
     leader: "Current leader", phase_group: "Group stage", phase_ko: "Knockout stage", phase_done: "Complete", phase_pre: "Pre-tournament",
     matchesDone: "Group matches played", pts: "pts", rank: "Rank", player: "Player", points: "Points",
@@ -3042,13 +3042,13 @@ const NAV = [
   { id: "today", ic: "calendar", key: "nav_today" },
   { id: "table", ic: "trophy", key: "nav_table" },
   { id: "groups", ic: "groups", key: "nav_groups" },
+  { id: "bracket", ic: "bracket", key: "nav_bracket" },
   { id: "more", ic: "menu", key: "nav_more" },
 ];
 const MORE_ITEMS = [
   { id: "mypicks", ic: "prediction", key: "nav_mypicks" },
   { id: "team", ic: "users", key: "nav_team" },
   { id: "points", ic: "prediction", key: "nav_points" },
-  { id: "bracket", ic: "bracket", key: "nav_bracket" },
   { id: "profile", ic: "profile", key: "nav_profile" },
   { id: "predictions", ic: "prediction", key: "nav_predictions" },
   { id: "consensus", ic: "users", key: "nav_consensus" },

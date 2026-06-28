@@ -11,7 +11,7 @@ const src = fs.readFileSync(path.join(root, "src/App.jsx"), "utf8");
 const entry = path.join(root, "audit", "_engine_entry.jsx");
 fs.writeFileSync(entry,
   src +
-  "\nexport { buildSampleData, recomputeLive, buildLeaderboard, calcPlayerPoints, computeGroupTable, matchResult, GROUPS, GROUP_KEYS, RR, SCORING, R16_BRACKET, KO_PREDICT_ROUNDS, canonTeam, teamKey, sameTeam, setLiveMode };\n");
+  "\nexport { buildSampleData, recomputeLive, buildLeaderboard, calcPlayerPoints, computeGroupTable, matchResult, GROUPS, GROUP_KEYS, RR, SCORING, R32_TIES, KO_SEQ, KO_SPAN, koSlotId, koSlotLeaves, koSlotContenders, koSlotActualWinner, koPrune, canonTeam, teamKey, sameTeam, setLiveMode };\n");
 
 const stub = (names, extra = "") => ({
   contents: extra + names.map((n) => `export const ${n} = ${/URL$/.test(n) ? '""' : "(()=>{})"};`).join("\n"),

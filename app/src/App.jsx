@@ -1338,6 +1338,46 @@ function PlayerBracket({ data, picks, t }) {
     </div>
   );
 }
+// The real tournament bracket: the full fixed draw (all rounds R32→Final), filled
+// from live results. Round of 32 always shows the 16 set ties; later rounds show
+// the advancing teams once played, TBD until then. Same template layout as the
+// player bracket so the whole structure is always visible.
+function ResultsBracket({ data, t }) {
+  const res = {};
+  for (const [code, n] of KO_SEQ) for (let i = 0; i < n; i++) { const w = koSlotActualWinner(code, i, data); if (w) res[koSlotId(code, i)] = w; }
+  const cell = (code, i) => {
+    const [a, b] = koSlotContenders(res, code, i).map((x) => (x ? canonTeam(x) : null));
+    const winner = res[koSlotId(code, i)] ? canonTeam(res[koSlotId(code, i)]) : null;
+    const slot = (tm) => {
+      if (!tm) return <div className="pb-s tba" key={Math.random()}>—</div>;
+      const cls = "pb-s" + (winner ? (sameTeam(tm, winner) ? " ok" : " out") : "");
+      return <div className={cls} key={tm}><span className="pb-fl">{flagOf(tm)}</span>{code3(tm)}</div>;
+    };
+    return <div className="pb-m" key={code + i}>{slot(a)}{slot(b)}</div>;
+  };
+  const col = (code, from, to) => { const o = []; for (let i = from; i < to; i++) o.push(cell(code, i)); return o; };
+  const champ = res[KO_FINAL_ID] ? canonTeam(res[KO_FINAL_ID]) : null;
+  return (
+    <div className="pbrk-scroll">
+      <div className="pbrk">
+        <div className="pb-col">{col("R32", 0, 8)}</div>
+        <div className="pb-col">{col("R16", 0, 4)}</div>
+        <div className="pb-col">{col("QF", 0, 2)}</div>
+        <div className="pb-col">{col("SF", 0, 1)}</div>
+        <div className="pb-col pb-center">
+          <div className="pb-trophy">🏆</div>
+          {cell("F", 0)}
+          <div className="pb-flabel">{t("r_F")}</div>
+          {champ ? <span className="pb-champ-pill ok"><span className="pb-fl">{flagOf(champ)}</span>{champ}</span> : <span className="pb-champ-pill tba">👑 —</span>}
+        </div>
+        <div className="pb-col">{col("SF", 1, 2)}</div>
+        <div className="pb-col">{col("QF", 2, 4)}</div>
+        <div className="pb-col">{col("R16", 4, 8)}</div>
+        <div className="pb-col">{col("R32", 8, 16)}</div>
+      </div>
+    </div>
+  );
+}
 function BracketView({ data, lb, t, lang, name, setName }) {
   const hasReal = (data.matches || []).some((m) => m.stage === "ko");
   const projected = !hasReal && !GROUP_KEYS.every((g) => groupComplete(g, data));
@@ -1363,10 +1403,11 @@ function BracketView({ data, lb, t, lang, name, setName }) {
           <PlayerBracket data={data} picks={picks} t={t} />
         </div>
       )}
-      <div className="card slim"><h3 className="cardh">📅 {t("koFixtures")}{projected && <span className="gc-proj-total" style={{ marginInlineStart: 8 }}>· {t("brkProjected")}</span>}</h3>
+      <div className="card">
+        <h3 className="cardh">🗺️ {t("koFixtures")}{projected && <span className="gc-proj-total" style={{ marginInlineStart: 8 }}>· {t("brkProjected")}</span>}</h3>
         <p className="hint block">{hasReal ? t("brkLive") : t("brkIllustrative")}</p>
+        <ResultsBracket data={data} t={t} />
       </div>
-      <Bracket data={data} t={t} lang={lang} />
     </div>
   );
 }

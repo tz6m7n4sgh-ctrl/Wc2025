@@ -106,7 +106,7 @@ const I18N = {
     groupPredHint: "Order each group 1–4. Open until your league admin sets a deadline.", groupLockedHint: "Group predictions are locked.", groupLockAuto: "Auto-locks at the first group match", groupLock: "Group predictions lock", groupLockOpen: "Open — set a time to close entry (e.g. the first group kickoff)",
     koPicks: "Knockout picks", koOpensWhen: "Knockout picks open once the group stage finishes.", koLockHint: "Each pick locks 4 hours before its kickoff.", koProjected: "Projected from the current standings — pick now; matchups may still shift until the groups finish. Each pick locks 4h before kickoff.", koPreview: "Preview projected from the current standings. Picks open once the knockout fixtures are confirmed; each pick will lock 4h before its kickoff.", koLockBy: "locks 4h before kickoff", pickWinner: "Pick the winner", koTba: "Awaiting earlier results", koTba2: "TBD", koVs: "v",
     r16CandHint: "The Round-of-16 bracket is fixed. For each tie, pick the winner from its possible teams now — scored against the real result. Locks at the champion deadline.", r16TieFrom: "from",
-    brkOverlayHint: "Picks turn green when correct, red when wrong, as results come in. Scroll to see the whole bracket.",
+    brkOverlayHint: "Picks turn green when correct, red when wrong, as results come in. Scroll to see the whole bracket.", shareBracket: "Share image",
     koBracket: "Knockout bracket", koBracketHint: "Pick a winner in every tie from the Round of 32 to the Final — winners advance, and your Final winner is your champion. Locks at the champion deadline; each correct pick scores +1.", koBracketLocked: "Bracket locked. ✓ = correct, ✕ = wrong, as results come in.",
     resultsEditor: "Results editor", resultsHint: "Enter a score to mark a match finished — standings, points and the bracket update instantly.", setChampion: "Set champion",
     entryFee: "Entry fee", currency: "Currency", distribution: "Prize distribution", winnerTakes: "Winner takes all", topTwo: "Split top 2", topThree: "Split top 3", deadline: "Predictions deadline", lockPicks: "Lock predictions", prizePool: "Prize pool",
@@ -178,7 +178,7 @@ const I18N = {
     groupPredHint: "رتّب كل مجموعة من 1 إلى 4. مفتوح حتى يحدّد المشرف موعداً للإغلاق.", groupLockedHint: "توقّعات المجموعات مغلقة.", groupLockAuto: "يُغلق تلقائياً عند أول مباراة في المجموعات", groupLock: "إغلاق توقّعات المجموعات", groupLockOpen: "مفتوح — حدّد وقتاً لإغلاق الإدخال (مثلاً أول مباراة في المجموعات)",
     koPicks: "توقّعات الأدوار الإقصائية", koOpensWhen: "تُفتح توقّعات الأدوار الإقصائية بعد انتهاء دور المجموعات.", koLockHint: "يُغلق كل اختيار قبل 4 ساعات من موعد المباراة.", koProjected: "متوقّعة من الترتيب الحالي — اختر الآن؛ قد تتغيّر المواجهات حتى انتهاء المجموعات. يُغلق كل اختيار قبل 4 ساعات من المباراة.", koPreview: "معاينة متوقّعة من الترتيب الحالي. تُفتح التوقّعات بعد تأكيد مباريات الأدوار الإقصائية؛ ويُغلق كل اختيار قبل 4 ساعات من موعده.", koLockBy: "يُغلق قبل 4 ساعات من المباراة", pickWinner: "اختر الفائز", koTba: "بانتظار النتائج السابقة", koTba2: "غير محدد", koVs: "ضد",
     r16CandHint: "جدول دور الـ16 ثابت. لكل مواجهة، اختر الفائز الآن من الفرق المحتملة — وتُحتسب وفق النتيجة الفعلية. يُغلق عند موعد إغلاق توقّع البطل.", r16TieFrom: "من",
-    brkOverlayHint: "تتحوّل التوقّعات إلى الأخضر عند الصواب والأحمر عند الخطأ مع ظهور النتائج. مرّر لرؤية الجدول كاملاً.",
+    brkOverlayHint: "تتحوّل التوقّعات إلى الأخضر عند الصواب والأحمر عند الخطأ مع ظهور النتائج. مرّر لرؤية الجدول كاملاً.", shareBracket: "مشاركة صورة",
     koBracket: "جدول الأدوار الإقصائية", koBracketHint: "اختر الفائز في كل مواجهة من دور الـ32 حتى النهائي — يتأهّل الفائزون، والفائز بالنهائي هو بطلك. يُغلق عند موعد إغلاق البطل؛ كل توقّع صحيح يمنح نقطة.", koBracketLocked: "الجدول مُغلق. ✓ = صحيح، ✕ = خاطئ، مع ظهور النتائج.",
     resultsEditor: "محرّر النتائج", resultsHint: "أدخل النتيجة لإنهاء المباراة — يُحدّث الترتيب والنقاط والأدوار فوراً.", setChampion: "تعيين البطل",
     entryFee: "رسوم الاشتراك", currency: "العملة", distribution: "توزيع الجوائز", winnerTakes: "الفائز يأخذ الكل", topTwo: "أفضل اثنين", topThree: "أفضل ثلاثة", deadline: "موعد إغلاق التوقعات", lockPicks: "قفل التوقعات", prizePool: "مجموع الجوائز",
@@ -1378,6 +1378,88 @@ function ResultsBracket({ data, t }) {
     </div>
   );
 }
+function rrPath(x, px, py, w, h, r) { x.beginPath(); x.moveTo(px + r, py); x.arcTo(px + w, py, px + w, py + h, r); x.arcTo(px + w, py + h, px, py + h, r); x.arcTo(px, py + h, px, py, r); x.arcTo(px, py, px + w, py, r); x.closePath(); }
+// Render a player's bracket to a PNG canvas (for sharing on WhatsApp). Self-
+// contained: draws boxes, codes, connector lines, champion + points — no deps.
+function playerBracketCanvas(name, picks, data, koPts, totalPts, t) {
+  const S = 2, W = 1180, H = 840;
+  const c = document.createElement("canvas"); c.width = W * S; c.height = H * S;
+  const x = c.getContext("2d"); x.scale(S, S);
+  x.fillStyle = "#f7f8fa"; x.fillRect(0, 0, W, H);
+  x.textAlign = "center"; x.textBaseline = "middle";
+  x.fillStyle = "#0e2a47"; x.font = "800 25px Arial, sans-serif"; x.fillText("2026 FIFA WORLD CUP · KNOCKOUT", W / 2, 32);
+  x.fillStyle = "#c2143b"; x.font = "800 17px Arial, sans-serif"; x.fillText("— " + name + " —", W / 2, 60);
+  const top = 92, bottom = H - 64, areaH = bottom - top;
+  const boxW = 96, boxH = 36, colGap = 20, step = boxW + colGap;
+  const lx = [16, 16 + step, 16 + 2 * step, 16 + 3 * step];
+  const rx = lx.map((v) => W - boxW - v);
+  const cx = W / 2 - boxW / 2;
+  const spacing = areaH / 8;
+  const yOf = (r, i) => top + spacing * Math.pow(2, r) * (i + 0.5);
+  const drawMatch = (px, cy, a, b, winner) => {
+    rrPath(x, px, cy - boxH / 2, boxW, boxH, 7); x.fillStyle = "#fff"; x.fill(); x.strokeStyle = "#d3d9e0"; x.lineWidth = 1; x.stroke();
+    x.beginPath(); x.moveTo(px, cy); x.lineTo(px + boxW, cy); x.strokeStyle = "#eef2f6"; x.stroke();
+    const slot = (tm, sy) => {
+      const isW = winner && tm && sameTeam(tm, winner);
+      if (isW) { x.fillStyle = "#e6f4ea"; rrPath(x, px + 1, sy - 8, boxW - 2, 16, 4); x.fill(); }
+      x.textAlign = "left"; x.font = "800 12px Arial, sans-serif";
+      x.fillStyle = !tm ? "#9aa6b2" : isW ? "#137a3b" : (winner ? "#aab4bf" : "#16324f");
+      const label = tm ? code3(tm) : "—";
+      x.fillText(label, px + 9, sy + 1);
+      if (winner && tm && !isW) { const tw = x.measureText(label).width; x.strokeStyle = "#aab4bf"; x.beginPath(); x.moveTo(px + 9, sy + 1); x.lineTo(px + 9 + tw, sy + 1); x.stroke(); }
+    };
+    slot(a, cy - 9); slot(b, cy + 9);
+  };
+  const winOf = (code, i) => { const w = picks[koSlotId(code, i)]; return w ? canonTeam(w) : null; };
+  const conn = (cols, r, side) => { // draw connectors feeding round r+1 from round r
+    const parents = 8 / Math.pow(2, r + 1);
+    x.strokeStyle = "#cdd5de"; x.lineWidth = 1;
+    for (let i = 0; i < parents; i++) {
+      const c1 = yOf(r, 2 * i), c2 = yOf(r, 2 * i + 1), py = yOf(r + 1, i);
+      const edge = side === "L" ? cols[r] + boxW : cols[r];
+      const mid = side === "L" ? cols[r] + boxW + colGap / 2 : cols[r] - colGap / 2;
+      const pedge = side === "L" ? cols[r + 1] : cols[r + 1] + boxW;
+      x.beginPath();
+      x.moveTo(edge, c1); x.lineTo(mid, c1); x.moveTo(edge, c2); x.lineTo(mid, c2);
+      x.moveTo(mid, c1); x.lineTo(mid, c2); x.moveTo(mid, py); x.lineTo(pedge, py); x.stroke();
+    }
+  };
+  const seq = [["R32", 8], ["R16", 4], ["QF", 2], ["SF", 1]];
+  // left half
+  seq.forEach(([code, n], r) => { for (let i = 0; i < n; i++) { const [a, b] = koSlotContenders(picks, code, i).map((tt) => tt ? canonTeam(tt) : null); drawMatch(lx[r], yOf(r, i), a, b, winOf(code, i)); } });
+  [0, 1, 2].forEach((r) => conn(lx, r, "L"));
+  // SF(left) -> final
+  x.strokeStyle = "#cdd5de"; x.beginPath(); x.moveTo(lx[3] + boxW, yOf(3, 0)); x.lineTo(cx, H / 2 - 30); x.stroke();
+  // right half (slot indices offset)
+  seq.forEach(([code, n], r) => { for (let i = 0; i < n; i++) { const gi = (code === "R32" ? 8 : code === "R16" ? 4 : code === "QF" ? 2 : 1) + i; const [a, b] = koSlotContenders(picks, code, gi).map((tt) => tt ? canonTeam(tt) : null); drawMatch(rx[r], yOf(r, i), a, b, winOf(code, gi)); } });
+  [0, 1, 2].forEach((r) => { const parents = 8 / Math.pow(2, r + 1); x.strokeStyle = "#cdd5de"; for (let i = 0; i < parents; i++) { const c1 = yOf(r, 2 * i), c2 = yOf(r, 2 * i + 1), py = yOf(r + 1, i); const edge = rx[r]; const mid = rx[r] - colGap / 2; const pedge = rx[r + 1] + boxW; x.beginPath(); x.moveTo(edge, c1); x.lineTo(mid, c1); x.moveTo(edge, c2); x.lineTo(mid, c2); x.moveTo(mid, c1); x.lineTo(mid, c2); x.moveTo(mid, py); x.lineTo(pedge, py); x.stroke(); } });
+  x.strokeStyle = "#cdd5de"; x.beginPath(); x.moveTo(rx[3], yOf(3, 0)); x.lineTo(cx + boxW, H / 2 - 30); x.stroke();
+  // center: trophy, final, champion, points
+  const [fa, fb] = koSlotContenders(picks, "F", 0).map((tt) => tt ? canonTeam(tt) : null);
+  drawMatch(cx, H / 2 - 30, fa, fb, winOf("F", 0));
+  x.textAlign = "center"; x.fillStyle = "#6b7a8d"; x.font = "700 11px Arial, sans-serif"; x.fillText("FINAL", W / 2, H / 2 + 2);
+  x.font = "30px Arial, sans-serif"; x.fillText("🏆", W / 2, H / 2 - 78);
+  const champ = winOf("F", 0);
+  rrPath(x, cx - 12, H / 2 + 16, boxW + 24, 30, 8); x.fillStyle = "#f5c451"; x.fill(); x.strokeStyle = "#caa033"; x.stroke();
+  x.fillStyle = "#241c00"; x.font = "800 14px Arial, sans-serif"; x.fillText(champ ? champ : "—", W / 2, H / 2 + 32);
+  // points footer
+  x.fillStyle = "#0e2a47"; x.font = "800 14px Arial, sans-serif";
+  x.fillText(`${koPts} ${t("knockout")} pts · ${totalPts} ${t("pts")}`, W / 2, H - 34);
+  return c;
+}
+async function shareBracketImage(name, picks, data, koPts, totalPts, t) {
+  const canvas = playerBracketCanvas(name, picks, data, koPts, totalPts, t);
+  await new Promise((res) => canvas.toBlob(async (blob) => {
+    if (!blob) return res();
+    const fname = `bracket-${name.replace(/\s+/g, "_")}.png`;
+    try {
+      const file = new File([blob], fname, { type: "image/png" });
+      if (navigator.canShare && navigator.canShare({ files: [file] })) { await navigator.share({ files: [file], title: `${name} · Knockout bracket` }); return res(); }
+    } catch (e) { /* fall through to download */ }
+    const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = fname; document.body.appendChild(a); a.click(); a.remove();
+    res();
+  }, "image/png"));
+}
 function BracketView({ data, lb, t, lang, name, setName }) {
   const hasReal = (data.matches || []).some((m) => m.stage === "ko");
   const projected = !hasReal && !GROUP_KEYS.every((g) => groupComplete(g, data));
@@ -1398,8 +1480,16 @@ function BracketView({ data, lb, t, lang, name, setName }) {
       </div>
       {sel && (
         <div className="card">
-          <h3 className="cardh">🏆 {sel.name} · {t("koBracket")}</h3>
-          <p className="hint block">{made}/31 {t("picksMade").toLowerCase()} · {t("brkOverlayHint")}</p>
+          <div className="brk-head">
+            <h3 className="cardh">🏆 {sel.name} · {t("koBracket")}</h3>
+            <button className="seeall" onClick={() => shareBracketImage(sel.name, picks, data, sel.knockout, sel.total, t)}>📷 {t("shareBracket")}</button>
+          </div>
+          <div className="brk-pts">
+            <span className="brk-pt">{made}/31 {t("picksMade").toLowerCase()}</span>
+            <span className="brk-pt ko">{sel.knockout} {t("knockout")} {t("pts")}</span>
+            <span className="brk-pt tot">{sel.total} {t("pts")}</span>
+          </div>
+          <p className="hint block">{t("brkOverlayHint")}</p>
           <PlayerBracket data={data} picks={picks} t={t} />
         </div>
       )}
@@ -4180,6 +4270,17 @@ border-radius:18px;padding:16px 14px;margin:10px 0;color:#fff;background:linear-
 .pb-champ-pill.ok{border-color:#137a3b;background:#e6f4ea;color:#137a3b}
 .pb-champ-pill.bad{border-color:#b71c1c;background:#fdecea;color:#b71c1c}
 .pb-champ-pill.tba{background:none;color:var(--muted)}
+/* connector stubs between rounds (left half advances right, right half left) */
+.pbrk{gap:16px}.pb-m{position:relative}
+.pbrk .pb-col:nth-child(1) .pb-m::after,.pbrk .pb-col:nth-child(2) .pb-m::after,.pbrk .pb-col:nth-child(3) .pb-m::after,.pbrk .pb-col:nth-child(4) .pb-m::after{content:"";position:absolute;left:100%;top:50%;width:8px;height:1px;background:var(--border)}
+.pbrk .pb-col:nth-child(2) .pb-m::before,.pbrk .pb-col:nth-child(3) .pb-m::before,.pbrk .pb-col:nth-child(4) .pb-m::before{content:"";position:absolute;right:100%;top:50%;width:8px;height:1px;background:var(--border)}
+.pbrk .pb-col:nth-child(6) .pb-m::after,.pbrk .pb-col:nth-child(7) .pb-m::after,.pbrk .pb-col:nth-child(8) .pb-m::after,.pbrk .pb-col:nth-child(9) .pb-m::after{content:"";position:absolute;right:100%;top:50%;width:8px;height:1px;background:var(--border)}
+.pbrk .pb-col:nth-child(6) .pb-m::before,.pbrk .pb-col:nth-child(7) .pb-m::before,.pbrk .pb-col:nth-child(8) .pb-m::before{content:"";position:absolute;left:100%;top:50%;width:8px;height:1px;background:var(--border)}
+.brk-head{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.brk-pts{display:flex;gap:8px;flex-wrap:wrap;margin:6px 0 2px}
+.brk-pt{font-size:12px;font-weight:800;padding:3px 10px;border-radius:999px;background:var(--soft);color:var(--ink)}
+.brk-pt.ko{background:#e6f4ea;color:#137a3b}.brk-pt.tot{background:var(--pitch);color:#fff}
+.app[data-theme="dark"] .brk-pt.ko{background:rgba(25,195,125,.18)}
 .r16cand{margin-top:10px}.kotie.r16 .r16cands{flex-direction:column;align-items:flex-start;gap:2px}
 .r16num{font-size:10.5px;letter-spacing:.03em;text-transform:uppercase;color:var(--muted)}
 .r16teams{font-size:12px;font-weight:600;color:var(--ink);line-height:1.35}

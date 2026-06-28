@@ -93,7 +93,8 @@ const I18N = {
     groupBreakdown: "Group-by-group breakdown", tapExpand: "tap to expand", beat: "beat", champPending: "Champion not decided yet", ifCorrect: "if correct",
     admin: "Admin", adminLogin: "Admin login", password: "Password", wrongPw: "Incorrect password", login: "Log in", demoPw: "Demo password", logout: "Log out",
     nav_settings: "Settings", nav_results: "Results", nav_playerpicks: "Player picks", nav_playerreport: "Position report", nav_audit: "Audit log", nav_backup: "Backup", nav_health: "Health", nav_sync: "Sync results", nav_repair: "Repair", nav_export: "Export", nav_champions: "Champion picks", nav_knockout: "Knockout fixtures",
-    nav_editpicks: "Edit predictions", editPicksHint: "Select a player and correct their group order or champion. Changes save immediately and override any prediction lock.", editPicksSaved: "Saved",
+    nav_editpicks: "Edit predictions", editPicksHint: "Select a player and correct their group order, champion or knockout bracket. Changes save immediately and override any prediction lock.", editPicksSaved: "Saved",
+    importBrackets: "Import brackets", importHint: "Paste JSON mapping each player to their knockout slots, e.g. {\"Dani Haddad\":{\"R32#0\":\"Germany\",...}}. Slots: R32#0–15, R16#0–7, QF#0–3, SF#0–1, F#0. Applies to matching players and saves.", importApply: "Apply import", importBad: "Invalid JSON — check and try again.",
     koFixturesHint: "Enter the real knockout matchups and kickoff times. Seed the Round of 32 from the current standings, then correct the teams to the actual draw. Saving powers the champion lock, players' knockout picks and the results editor.", koSeedR32: "Seed R32 from standings", koSave: "Save fixtures", koSaved: "Fixtures saved", koFixtures: "Fixtures set", koFirstKick: "First kickoff", koHome: "Home", koAway: "Away", koOverrideNote: "Showing the live-synced knockout fixtures. Edits here override the feed; Save to keep them.",
     champEntryHint: "Set each player's World Cup winner pick. It scores +1 once the actual champion is decided.", champSetCount: "Picks set",
     nav_players: "Players & login", playersHint: "Set each player's phone, then tap WhatsApp to send them their personal sign-in code from your own number (free). They open the app → More → My picks and enter the code.", phonePh: "+9715xxxxxxxx", waSend: "WhatsApp", copyCode: "Copy code", champLock: "Champion pick lock", signedInAs: "Signed in as", lockBy: "You can change this until", locked: "locked",
@@ -164,7 +165,8 @@ const I18N = {
     groupBreakdown: "تفصيل لكل مجموعة", tapExpand: "اضغط للتوسيع", beat: "تغلّب على", champPending: "البطل لم يُحسم بعد", ifCorrect: "إذا صح",
     admin: "الإدارة", adminLogin: "دخول الإدارة", password: "كلمة المرور", wrongPw: "كلمة المرور غير صحيحة", login: "دخول", demoPw: "كلمة المرور التجريبية", logout: "خروج",
     nav_settings: "الإعدادات", nav_results: "النتائج", nav_playerpicks: "توقعات اللاعب", nav_playerreport: "تقرير المراكز", nav_audit: "سجل التغييرات", nav_backup: "نسخ احتياطي", nav_health: "الصحة", nav_sync: "مزامنة النتائج", nav_repair: "إصلاح", nav_export: "تصدير", nav_champions: "اختيارات البطل", nav_knockout: "مباريات الإقصائيات",
-    nav_editpicks: "تعديل التوقّعات", editPicksHint: "اختر لاعباً وعدّل ترتيب مجموعاته أو بطله. تُحفظ التغييرات فوراً وتتجاوز أي إغلاق للتوقّعات.", editPicksSaved: "تم الحفظ",
+    nav_editpicks: "تعديل التوقّعات", editPicksHint: "اختر لاعباً وعدّل ترتيب مجموعاته أو بطله أو جدوله الإقصائي. تُحفظ التغييرات فوراً وتتجاوز أي إغلاق.", editPicksSaved: "تم الحفظ",
+    importBrackets: "استيراد الجداول", importHint: "ألصق JSON يربط كل لاعب بخاناته الإقصائية. الخانات: R32#0–15, R16#0–7, QF#0–3, SF#0–1, F#0. يُطبَّق على اللاعبين المطابقين ويُحفظ.", importApply: "تطبيق الاستيراد", importBad: "JSON غير صالح — تحقّق وحاول مجدداً.",
     koFixturesHint: "أدخل مواجهات الأدوار الإقصائية الحقيقية وأوقات انطلاقها. عبّئ دور الـ32 من الترتيب الحالي ثم صحّح الفرق وفق القرعة الفعلية. الحفظ يُفعّل إغلاق البطل وتوقّعات اللاعبين ومحرّر النتائج.", koSeedR32: "تعبئة دور الـ32 من الترتيب", koSave: "حفظ المباريات", koSaved: "تم حفظ المباريات", koFixtures: "المباريات المحدّدة", koFirstKick: "أول انطلاق", koHome: "المضيف", koAway: "الضيف", koOverrideNote: "تُعرض مباريات الأدوار الإقصائية المتزامنة مباشرةً. التعديلات هنا تتجاوز الخدمة؛ اضغط حفظ للإبقاء عليها.",
     champEntryHint: "حدّد توقع بطل كأس العالم لكل لاعب. يُحتسب +1 عند تحديد البطل فعلياً.", champSetCount: "اختيارات محددة",
     nav_players: "اللاعبون والدخول", playersHint: "أدخل رقم كل لاعب ثم اضغط واتساب لإرسال رمز الدخول الخاص به من رقمك (مجاناً). يفتح التطبيق ← المزيد ← توقعاتي ويُدخل الرمز.", phonePh: "+9715xxxxxxxx", waSend: "واتساب", copyCode: "نسخ الرمز", champLock: "إغلاق اختيار البطل", signedInAs: "مسجّل الدخول باسم", lockBy: "يمكنك التغيير حتى", locked: "مغلق",
@@ -2574,6 +2576,41 @@ function GroupPredEditor({ g, pred, locked, onSet, t, allowSwap }) {
     </div>
   );
 }
+// Reusable propagating knockout-bracket picker (R32→Final). Used by both the
+// player self-service view and the admin Edit-predictions screen.
+function BracketPicker({ data, picks, onPick, t, locked }) {
+  return (
+    <div className="mypick-ko">
+      <span className="mypick-lbl">🏆 {t("koBracket")}</span>
+      <p className="hint block">{locked ? t("koBracketLocked") : t("koBracketHint")}</p>
+      {KO_SEQ.map(([code, n]) => (
+        <div className="koround" key={code}>
+          <div className="koround-h">{t("r_" + code)}</div>
+          {Array.from({ length: n }, (_, i) => {
+            const id = koSlotId(code, i);
+            const [a, b] = koSlotContenders(picks, code, i).map((x) => (x ? canonTeam(x) : null));
+            const pick = picks[id] ? canonTeam(picks[id]) : null;
+            const actualW = koSlotActualWinner(code, i, data);
+            const slotLocked = locked || !!actualW;
+            if (!a || !b) return <div className="kotie tba" key={id}><span className="kotie-tba">{(a || t("koTba2")) + " " + t("koVs") + " " + (b || t("koTba2"))}</span></div>;
+            return (
+              <div className="kotie" key={id}>
+                <span className="kotie-match"><Team t={a} /> <span className="kovs">{t("koVs")}</span> <Team t={b} />{code === "F" && pick ? <span className="kochip">👑 {pick}</span> : null}</span>
+                {slotLocked
+                  ? <span className="kotie-lk">{pick || "—"}{actualW ? (sameTeam(pick, actualW) ? " ✓" : " ✕") : " 🔒"}</span>
+                  : <select className="select kosel" value={pick || ""} onChange={(e) => onPick(id, e.target.value)}>
+                      <option value="">— {t("pickWinner")} —</option>
+                      <option value={a}>{a}</option>
+                      <option value={b}>{b}</option>
+                    </select>}
+              </div>
+            );
+          })}
+        </div>
+      ))}
+    </div>
+  );
+}
 // Self-service: the signed-in player sets their own group order, champion + knockout winners (until lock).
 function MyPickCard({ data, setData, player, t, logout, persist }) {
   const save = persist || persistLive; // secure gateway when provided, else blob
@@ -2677,37 +2714,7 @@ function MyPickCard({ data, setData, player, t, logout, persist }) {
       </div>
       {cl.at && !locked && <p className="hint block">{t("lockBy")} {new Date(cl.at).toLocaleString()}{cl.auto ? ` · ${t("lockAuto")}` : ""}</p>}
 
-      <div className="mypick-ko">
-        <span className="mypick-lbl">🏆 {t("koBracket")}</span>
-        <p className="hint block">{locked ? t("koBracketLocked") : t("koBracketHint")}</p>
-        {KO_SEQ.map(([code, n]) => (
-          <div className="koround" key={code}>
-            <div className="koround-h">{t("r_" + code)}</div>
-            {Array.from({ length: n }, (_, i) => {
-              const id = koSlotId(code, i);
-              const [a, b] = koSlotContenders(myKo, code, i).map((x) => (x ? canonTeam(x) : null));
-              const pick = myKo[id] ? canonTeam(myKo[id]) : null;
-              const actualW = koSlotActualWinner(code, i, data);
-              const slotLocked = locked || !!actualW;
-              if (!a || !b) return (
-                <div className="kotie tba" key={id}><span className="kotie-tba">{(a || t("koTba2")) + " " + t("koVs") + " " + (b || t("koTba2"))}</span></div>
-              );
-              return (
-                <div className="kotie" key={id}>
-                  <span className="kotie-match"><Team t={a} /> <span className="kovs">{t("koVs")}</span> <Team t={b} />{code === "F" && pick ? <span className="kochip">👑 {pick}</span> : null}</span>
-                  {slotLocked
-                    ? <span className="kotie-lk">{pick || "—"}{actualW ? (sameTeam(pick, actualW) ? " ✓" : " ✕") : " 🔒"}</span>
-                    : <select className="select kosel" value={pick || ""} onChange={(e) => setKo(id, e.target.value)}>
-                        <option value="">— {t("pickWinner")} —</option>
-                        <option value={a}>{a}</option>
-                        <option value={b}>{b}</option>
-                      </select>}
-                </div>
-              );
-            })}
-          </div>
-        ))}
-      </div>
+      <BracketPicker data={data} picks={myKo} onPick={setKo} t={t} locked={locked} />
     </div>
   );
 }
@@ -3065,6 +3072,34 @@ function AdminEditPicks({ data, setData, t, name, setName }) {
       auditLog: [{ ts: Date.now(), msg: `${t("champPick")} (admin): ${sel} → ${team || "—"}` }, ...(d.auditLog || [])].slice(0, 80) };
     persistLive(nd); return nd;
   });
+  const setKo = (slotId, team) => setData((d) => {
+    const cur = { ...((d.players[sel] && d.players[sel].knockout) || {}) };
+    if (team) cur[slotId] = canonTeam(team); else delete cur[slotId];
+    koPrune(cur);
+    const champ = slotId === KO_FINAL_ID ? (cur[KO_FINAL_ID] || null) : (d.players[sel] && d.players[sel].champion) || null;
+    const nd = { ...d, players: { ...d.players, [sel]: { ...d.players[sel], knockout: cur, champion: champ } },
+      auditLog: [{ ts: Date.now(), msg: `${t("koBracket")} (admin): ${sel} ${slotId} → ${team || "—"}` }, ...(d.auditLog || [])].slice(0, 80) };
+    persistLive(nd); return nd;
+  });
+  // Bulk import: paste { "Player Name": { "R32#0": "Germany", ... }, ... }.
+  const [imp, setImp] = useState("");
+  const [impMsg, setImpMsg] = useState("");
+  const applyImport = () => {
+    let obj; try { obj = JSON.parse(imp); } catch (e) { setImpMsg(t("importBad")); return; }
+    setData((d) => {
+      const players = { ...d.players }; let n = 0, hit = 0, miss = [];
+      for (const name in obj) {
+        if (!players[name]) { miss.push(name); continue; }
+        hit++;
+        const ko = { ...(players[name].knockout || {}) };
+        for (const slot in obj[name]) { const tm = canonTeam(obj[name][slot]); if (tm) { ko[slot] = tm; n++; } }
+        koPrune(ko);
+        players[name] = { ...players[name], knockout: ko, champion: ko[KO_FINAL_ID] || players[name].champion || null };
+      }
+      const nd = { ...d, players, auditLog: [{ ts: Date.now(), msg: `${t("nav_editpicks")} (admin import): ${hit} ${t("expPlayersN")}, ${n} picks` }, ...(d.auditLog || [])].slice(0, 80) };
+      persistLive(nd); setImpMsg(`${t("editPicksSaved")}: ${hit} · ${n} picks${miss.length ? " · ?: " + miss.join(", ") : ""}`); return nd;
+    });
+  };
   if (!sel) return <div className="view"><div className="card slim"><h3 className="cardh"><Ico name="edit" size={18} /> {t("nav_editpicks")}</h3><p className="hint block">{t("noPlayers") || "—"}</p></div></div>;
   return (
     <div className="view">
@@ -3085,6 +3120,16 @@ function AdminEditPicks({ data, setData, t, name, setName }) {
         {GROUP_KEYS.map((g) => (
           <GroupPredEditor key={g} g={g} pred={playerGroupPred(p, g)} locked={false} allowSwap onSet={(arr) => { setGroupPred(g, arr); flashSaved(); }} t={t} />
         ))}
+      </div>
+      <div className="card">
+        <BracketPicker data={data} picks={(p && p.knockout) || {}} onPick={(id, team) => { setKo(id, team); flashSaved(); }} t={t} locked={false} />
+      </div>
+      <div className="card">
+        <h3 className="cardh">📥 {t("importBrackets")}</h3>
+        <p className="hint block">{t("importHint")}</p>
+        <textarea className="select" rows={5} style={{ fontFamily: "monospace", fontSize: 12 }} value={imp} placeholder={'{ "Dani Haddad": { "R32#0": "Germany", "F#0": "Argentina" } }'} onChange={(e) => { setImp(e.target.value); setImpMsg(""); }} />
+        <button className="btn" style={{ marginTop: 8 }} onClick={applyImport} disabled={!imp.trim()}>{t("importApply")}</button>
+        {impMsg && <p className="hint block" style={{ marginTop: 6 }}>{impMsg}</p>}
       </div>
     </div>
   );

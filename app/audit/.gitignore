@@ -1,2 +1,5 @@
 engine.mjs
 _engine_entry.jsx
+
+# real league exports (personal data) — keep out of git
+*.csv

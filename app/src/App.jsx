@@ -108,7 +108,7 @@ const I18N = {
     r16CandHint: "The Round-of-16 bracket is fixed. For each tie, pick the winner from its possible teams now — scored against the real result. Locks at the champion deadline.", r16TieFrom: "from",
     brkOverlayHint: "Picks turn green when correct, red when wrong, as results come in. Scroll to see the whole bracket.", shareBracket: "Share image", brkTapZoom: "Tap the bracket for a full-size image to save or share.", gkoSwipe: "Swipe to change round", gkoTapTeam: "Tap a team to trace their run", gkoTracing: "Tracing — tap anywhere to clear", yourChampion: "Your champion",
     brkTabLive: "Current state", brkTabPred: "Prediction", brkAlive: "alive", brkDecided: "decided",
-    brkDiagram: "Diagram", brkList: "List", bdgTapTeam: "Tap a team for its path to the final · pinch to zoom", bdgPath: "path to the final",
+    brkDiagram: "Diagram", brkList: "List", bdgTapTeam: "Tap a team for its path to the final · pinch to zoom", bdgPath: "path to the final", bdgRotate: "Rotate your phone to view the bracket — or switch to List",
     koBracket: "Knockout bracket", koBracketHint: "Pick a winner in every tie from the Round of 32 to the Final — winners advance, and your Final winner is your champion. Locks at the champion deadline; each correct pick scores +1.", koBracketLocked: "Bracket locked. ✓ = correct, ✕ = wrong, as results come in.",
     resultsEditor: "Results editor", resultsHint: "Enter a score to mark a match finished — standings, points and the bracket update instantly.", setChampion: "Set champion",
     entryFee: "Entry fee", currency: "Currency", distribution: "Prize distribution", winnerTakes: "Winner takes all", topTwo: "Split top 2", topThree: "Split top 3", deadline: "Predictions deadline", lockPicks: "Lock predictions", prizePool: "Prize pool",
@@ -188,7 +188,7 @@ const I18N = {
     r16CandHint: "جدول دور الـ16 ثابت. لكل مواجهة، اختر الفائز الآن من الفرق المحتملة — وتُحتسب وفق النتيجة الفعلية. يُغلق عند موعد إغلاق توقّع البطل.", r16TieFrom: "من",
     brkOverlayHint: "تتحوّل التوقّعات إلى الأخضر عند الصواب والأحمر عند الخطأ مع ظهور النتائج. مرّر لرؤية الجدول كاملاً.", shareBracket: "مشاركة صورة", brkTapZoom: "اضغط على الجدول للحصول على صورة كاملة للحفظ أو المشاركة.", gkoSwipe: "مرّر لتغيير الدور", gkoTapTeam: "اضغط على فريق لتتبّع مشواره", gkoTracing: "تتبّع — اضغط أي مكان للإلغاء", yourChampion: "بطلك",
     brkTabLive: "الوضع الحالي", brkTabPred: "التوقّع", brkAlive: "ما زال قائماً", brkDecided: "محسومة",
-    brkDiagram: "المخطط", brkList: "قائمة", bdgTapTeam: "اضغط فريقاً لعرض طريقه إلى النهائي · قرّب بإصبعين", bdgPath: "الطريق إلى النهائي",
+    brkDiagram: "المخطط", brkList: "قائمة", bdgTapTeam: "اضغط فريقاً لعرض طريقه إلى النهائي · قرّب بإصبعين", bdgPath: "الطريق إلى النهائي", bdgRotate: "أدِر هاتفك لعرض المخطط — أو بدّل إلى القائمة",
     koBracket: "جدول الأدوار الإقصائية", koBracketHint: "اختر الفائز في كل مواجهة من دور الـ32 حتى النهائي — يتأهّل الفائزون، والفائز بالنهائي هو بطلك. يُغلق عند موعد إغلاق البطل؛ كل توقّع صحيح يمنح نقطة.", koBracketLocked: "الجدول مُغلق. ✓ = صحيح، ✕ = خاطئ، مع ظهور النتائج.",
     resultsEditor: "محرّر النتائج", resultsHint: "أدخل النتيجة لإنهاء المباراة — يُحدّث الترتيب والنقاط والأدوار فوراً.", setChampion: "تعيين البطل",
     entryFee: "رسوم الاشتراك", currency: "العملة", distribution: "توزيع الجوائز", winnerTakes: "الفائز يأخذ الكل", topTwo: "أفضل اثنين", topThree: "أفضل ثلاثة", deadline: "موعد إغلاق التوقعات", lockPicks: "قفل التوقعات", prizePool: "مجموع الجوائز",
@@ -1559,6 +1559,15 @@ function BracketDiagram({ data, picks, mode, t }) {
   const canRef = useRef(null), vpRef = useRef(null), stRef = useRef(null);
   const hitsRef = useRef([]);
   const [trace, setTrace] = useState(null);
+  // Portrait → show the wide bracket rotated 90° (big) and prompt to turn the
+  // phone; landscape → upright, interactive (zoom/pan/tap-to-trace).
+  const [portrait, setPortrait] = useState(() => (typeof window !== "undefined" ? window.matchMedia("(orientation: portrait)").matches : true));
+  useEffect(() => {
+    const mq = window.matchMedia("(orientation: portrait)");
+    const on = () => setPortrait(mq.matches);
+    mq.addEventListener ? mq.addEventListener("change", on) : mq.addListener(on);
+    return () => (mq.removeEventListener ? mq.removeEventListener("change", on) : mq.removeListener(on));
+  }, []);
   const tf = useRef({ s: 1, x: 0, y: 0 });
   const pts = useRef(new Map());
   const pinch = useRef(null);
@@ -1569,7 +1578,8 @@ function BracketDiagram({ data, picks, mode, t }) {
     const hits = [];
     drawBracket(c, { data, picks: picks || {}, mode: mode || "player", header: false, t, trace, hits });
     hitsRef.current = hits;
-  }, [data, picks, mode, t, trace]);
+    if (!portrait) { tf.current = { s: 1, x: 0, y: 0 }; apply(); }
+  }, [data, picks, mode, t, trace, portrait]);
   const clampS = (s) => Math.max(1, Math.min(4.5, s));
   const reset = () => { tf.current = { s: 1, x: 0, y: 0 }; apply(); };
   const zoomAt = (factor, cx, cy) => {
@@ -1604,6 +1614,15 @@ function BracketDiagram({ data, picks, mode, t }) {
   const onUp = (e) => { const tap = !moved.current && pts.current.size === 1; pts.current.delete(e.pointerId); if (pts.current.size < 2) pinch.current = null; if (tap) hitTest(e.clientX, e.clientY); };
   const onWheel = (e) => { e.preventDefault(); zoomAt(e.deltaY < 0 ? 1.12 : 0.89, e.clientX, e.clientY); };
   const onDbl = (e) => { e.preventDefault(); if (tf.current.s > 1.2) reset(); else zoomAt(2.4, e.clientX, e.clientY); };
+  if (portrait) {
+    // Rotated big view + a friendly prompt to turn the phone to landscape.
+    return (
+      <div className="bdg">
+        <div className="bdg-bar"><span className="bdg-hint bdg-rotate">🔄 {t("bdgRotate")}</span></div>
+        <div className="bdg-rotwrap"><canvas ref={canRef} className="bdg-rotcanvas" /></div>
+      </div>
+    );
+  }
   return (
     <div className="bdg">
       <div className="bdg-bar">
@@ -4638,6 +4657,10 @@ border-radius:18px;padding:16px 14px;margin:10px 0;color:#fff;background:linear-
 .bdg-vp:active{cursor:grabbing}
 .bdg-stage{transform-origin:0 0;will-change:transform}
 .bdg-canvas{display:block;width:100%;height:auto}
+/* portrait: rotate the wide bracket 90° so it's big; prompt to turn the phone */
+.bdg-rotate{font-weight:700;color:var(--ink)}
+.bdg-rotwrap{display:flex;align-items:center;justify-content:center;overflow:hidden;height:74vh;max-height:680px;border:1px solid var(--border);border-radius:14px;background:#f7f8fa}
+.bdg-rotcanvas{flex:none;width:min(74vh,660px);height:auto;transform:rotate(90deg)}
 /* canvas bracket: scales to the card width so the whole diagram is always visible */
 .brkimg-wrap{margin-top:8px;border:1px solid var(--border);border-radius:12px;overflow:hidden;background:#f7f8fa}
 .brkimg{display:block;width:100%;height:auto}

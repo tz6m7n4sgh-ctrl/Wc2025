@@ -113,7 +113,7 @@ const I18N = {
     r16CandHint: "The Round-of-16 bracket is fixed. For each tie, pick the winner from its possible teams now — scored against the real result. Locks at the champion deadline.", r16TieFrom: "from",
     brkOverlayHint: "Picks turn green when correct, red when wrong, as results come in. Scroll to see the whole bracket.", shareBracket: "Share image", brkTapZoom: "Tap the bracket for a full-size image to save or share.", gkoSwipe: "Swipe to change round", gkoTapTeam: "Tap a team to trace their run", gkoTracing: "Tracing — tap anywhere to clear", yourChampion: "Your champion",
     brkTabLive: "Current state", brkTabPred: "Prediction", brkAlive: "alive", brkDecided: "decided",
-    brkDiagram: "Diagram", brkList: "List", bdgTapTeam: "Tap a team for its path · scroll to explore · pinch or +/− to zoom", bdgTurn: "turn phone for more width", bdgPath: "path to the final", bdgRotate: "Rotate your phone to view the bracket — or switch to List",
+    brkDiagram: "Diagram", brkList: "List", bdgTapTeam: "tap a team for its path · pinch or +/− to zoom", bdgTurn: "Turn phone to read", bdgPath: "path to the final", bdgRotate: "Rotate your phone to view the bracket — or switch to List",
     koBracket: "Knockout bracket", koBracketHint: "Pick a winner in every tie from the Round of 32 to the Final — winners advance, and your Final winner is your champion. Locks at the champion deadline; each correct pick scores +1.", koBracketLocked: "Bracket locked. ✓ = correct, ✕ = wrong, as results come in.",
     resultsEditor: "Results editor", resultsHint: "Enter a score to mark a match finished — standings, points and the bracket update instantly.", setChampion: "Set champion",
     entryFee: "Entry fee", currency: "Currency", distribution: "Prize distribution", winnerTakes: "Winner takes all", topTwo: "Split top 2", topThree: "Split top 3", deadline: "Predictions deadline", lockPicks: "Lock predictions", prizePool: "Prize pool",
@@ -194,7 +194,7 @@ const I18N = {
     r16CandHint: "جدول دور الـ16 ثابت. لكل مواجهة، اختر الفائز الآن من الفرق المحتملة — وتُحتسب وفق النتيجة الفعلية. يُغلق عند موعد إغلاق توقّع البطل.", r16TieFrom: "من",
     brkOverlayHint: "تتحوّل التوقّعات إلى الأخضر عند الصواب والأحمر عند الخطأ مع ظهور النتائج. مرّر لرؤية الجدول كاملاً.", shareBracket: "مشاركة صورة", brkTapZoom: "اضغط على الجدول للحصول على صورة كاملة للحفظ أو المشاركة.", gkoSwipe: "مرّر لتغيير الدور", gkoTapTeam: "اضغط على فريق لتتبّع مشواره", gkoTracing: "تتبّع — اضغط أي مكان للإلغاء", yourChampion: "بطلك",
     brkTabLive: "الوضع الحالي", brkTabPred: "التوقّع", brkAlive: "ما زال قائماً", brkDecided: "محسومة",
-    brkDiagram: "المخطط", brkList: "قائمة", bdgTapTeam: "اضغط فريقاً لعرض طريقه · مرّر للتنقّل · قرّب بإصبعين أو +/−", bdgTurn: "أدِر الهاتف لمساحة أوسع", bdgPath: "الطريق إلى النهائي", bdgRotate: "أدِر هاتفك لعرض المخطط — أو بدّل إلى القائمة",
+    brkDiagram: "المخطط", brkList: "قائمة", bdgTapTeam: "اضغط فريقاً لعرض طريقه · قرّب بإصبعين أو +/−", bdgTurn: "أدِر الهاتف للقراءة", bdgPath: "الطريق إلى النهائي", bdgRotate: "أدِر هاتفك لعرض المخطط — أو بدّل إلى القائمة",
     koBracket: "جدول الأدوار الإقصائية", koBracketHint: "اختر الفائز في كل مواجهة من دور الـ32 حتى النهائي — يتأهّل الفائزون، والفائز بالنهائي هو بطلك. يُغلق عند موعد إغلاق البطل؛ كل توقّع صحيح يمنح نقطة.", koBracketLocked: "الجدول مُغلق. ✓ = صحيح، ✕ = خاطئ، مع ظهور النتائج.",
     resultsEditor: "محرّر النتائج", resultsHint: "أدخل النتيجة لإنهاء المباراة — يُحدّث الترتيب والنقاط والأدوار فوراً.", setChampion: "تعيين البطل",
     entryFee: "رسوم الاشتراك", currency: "العملة", distribution: "توزيع الجوائز", winnerTakes: "الفائز يأخذ الكل", topTwo: "أفضل اثنين", topThree: "أفضل ثلاثة", deadline: "موعد إغلاق التوقعات", lockPicks: "قفل التوقعات", prizePool: "مجموع الجوائز",
@@ -1602,13 +1602,24 @@ function BracketDiagram({ data, picks, mode, t }) {
   const [trace, setTrace] = useState(null);
   const [z, setZ] = useState(1);
   const zRef = useRef(1);
+  // Rotated 90° in portrait (turn the phone), upright in landscape.
+  const [portrait, setPortrait] = useState(() => (typeof window !== "undefined" ? window.matchMedia("(orientation: portrait)").matches : true));
+  const portRef = useRef(portrait); portRef.current = portrait;
+  useEffect(() => {
+    const mq = window.matchMedia("(orientation: portrait)");
+    const on = () => setPortrait(mq.matches);
+    mq.addEventListener ? mq.addEventListener("change", on) : mq.addListener(on);
+    return () => (mq.removeEventListener ? mq.removeEventListener("change", on) : mq.removeListener(on));
+  }, []);
+  const stageW = (zz) => (portRef.current ? BR.H : BR.W) * zz;
+  const stageH = (zz) => (portRef.current ? BR.W : BR.H) * zz;
   const setZoom = (nz, ax, ay) => {
     const vp = vpRef.current; if (!vp) return;
-    nz = Math.max(0.55, Math.min(2.2, nz));
+    nz = Math.max(0.55, Math.min(2.4, nz));
     const oz = zRef.current, px = ax == null ? vp.clientWidth / 2 : ax, py = ay == null ? vp.clientHeight / 2 : ay;
-    const cx = (vp.scrollLeft + px) / oz, cy = (vp.scrollTop + py) / oz;
+    const fx = (vp.scrollLeft + px) / Math.max(1, stageW(oz)), fy = (vp.scrollTop + py) / Math.max(1, stageH(oz));
     zRef.current = nz; setZ(nz);
-    requestAnimationFrame(() => { vp.scrollLeft = cx * nz - px; vp.scrollTop = cy * nz - py; });
+    requestAnimationFrame(() => { vp.scrollLeft = fx * stageW(nz) - px; vp.scrollTop = fy * stageH(nz) - py; });
   };
   // pinch-to-zoom (and ctrl-wheel) via non-passive listeners; single-finger pans natively
   useEffect(() => {
@@ -1665,19 +1676,17 @@ function BracketDiagram({ data, picks, mode, t }) {
   if (pathSet.size) { const pp = []; for (const [code, n] of KO_SEQ) { for (let i = 0; i < n; i++) if (pathSet.has(koSlotId(code, i))) { pp.push(brBoxCenter(code, i)); break; } } goldD = pp.map((p, k) => (k ? "L" : "M") + p.cx + " " + p.cy).join(" "); }
   // champion
   const ci = slotInfo("F", 0), champ = ci.winner, champStatus = ci.status;
-  // centre the scroll on the Final on mount (after layout)
-  useEffect(() => {
-    let raf = requestAnimationFrame(() => {
-      const vp = vpRef.current; if (!vp) return;
-      vp.scrollLeft = Math.max(0, (brFinalX + BR.BW / 2) * zRef.current - vp.clientWidth / 2);
-      vp.scrollTop = Math.max(0, brFinalY * zRef.current - vp.clientHeight / 2);
-    });
-    return () => cancelAnimationFrame(raf);
-  }, [mode]);
-  const recenter = () => {
+  // centre the scroll on the Final (rotation-aware)
+  const centerFinal = (smooth) => {
     const vp = vpRef.current; if (!vp) return;
-    vp.scrollTo({ left: Math.max(0, (brFinalX + BR.BW / 2) * zRef.current - vp.clientWidth / 2), top: Math.max(0, brFinalY * zRef.current - vp.clientHeight / 2), behavior: "smooth" });
+    const fcx = brFinalX + BR.BW / 2, fcy = brFinalY;
+    const fx = portRef.current ? (BR.H - fcy) / BR.H : fcx / BR.W;
+    const fy = portRef.current ? fcx / BR.W : fcy / BR.H;
+    const l = Math.max(0, fx * stageW(zRef.current) - vp.clientWidth / 2), tp = Math.max(0, fy * stageH(zRef.current) - vp.clientHeight / 2);
+    if (smooth) vp.scrollTo({ left: l, top: tp, behavior: "smooth" }); else { vp.scrollLeft = l; vp.scrollTop = tp; }
   };
+  useEffect(() => { const raf = requestAnimationFrame(() => centerFinal(false)); return () => cancelAnimationFrame(raf); }, [mode, portrait]);
+  const recenter = () => centerFinal(true);
   const tapTeam = (tm) => (e) => { e.stopPropagation(); if (!tm) return; setTrace((p) => (p && sameTeam(p, tm) ? null : tm)); };
   const Box = ({ c }) => {
     const v = slotInfo(c.code, c.idx), id = koSlotId(c.code, c.idx);
@@ -1695,10 +1704,11 @@ function BracketDiagram({ data, picks, mode, t }) {
     };
     return <div className={"domb-box" + (onPath ? " on" : "") + (c.code === "F" ? " fin" : "")} style={{ left: c.x, top: c.y }}>{row(v.a)}{row(v.b)}</div>;
   };
+  const rot = portrait ? `translateX(${BR.H * z}px) rotate(90deg) scale(${z})` : `scale(${z})`;
   return (
     <div className={"domb" + (trace ? " tracing" : "")}>
       <div className="bdg-bar">
-        <span className="bdg-hint">{trace ? <><span className="bdg-dot" /> {trace} · {t("bdgPath")}</> : t("bdgTapTeam")}</span>
+        <span className="bdg-hint">{trace ? <><span className="bdg-dot" /> {trace} · {t("bdgPath")}</> : <>{portrait ? <>↻ {t("bdgTurn")} · </> : null}{t("bdgTapTeam")}</>}</span>
         <div className="bdg-btns">
           {trace && <button className="bdg-b" onClick={() => setTrace(null)} aria-label={t("hide")}>✕</button>}
           <button className="bdg-b" onClick={() => setZoom(zRef.current * 0.8)} aria-label="zoom out">－</button>
@@ -1707,8 +1717,8 @@ function BracketDiagram({ data, picks, mode, t }) {
         </div>
       </div>
       <div className="domb-vp" ref={vpRef}>
-        <div className="domb-stage" style={{ width: BR.W * z, height: BR.H * z }}>
-          <div className="domb-rot" style={{ width: BR.W, height: BR.H, transform: `scale(${z})`, transformOrigin: "0 0" }}>
+        <div className="domb-stage" style={{ width: stageW(z), height: stageH(z) }}>
+          <div className="domb-rot" style={{ width: BR.W, height: BR.H, transform: rot, transformOrigin: "0 0" }}>
             <svg className="domb-svg" width={BR.W} height={BR.H} viewBox={`0 0 ${BR.W} ${BR.H}`}>
               {conns.map((d, k) => <path key={k} d={d} className="domb-conn" />)}
               {goldD ? <path key={"g" + trace} d={goldD} className="domb-gold" pathLength="1" /> : null}

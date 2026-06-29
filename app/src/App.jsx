@@ -2187,11 +2187,13 @@ function Points({ data, lb, t, name, setName }) {
       <PointsHow row={row} t={t} />
       {pending.pts > 0 && <div className="card slim"><div className="eq-pending">⚡ {t("pendingLive")}: <b>+{pending.pts}</b> {t("fromLive")}</div></div>}
 
-      {/* prediction vs actual, side by side, per group */}
-      <div className="card slim"><h3 className="cardh">📂 {t("groupBreakdown")}</h3><p className="hint block">{t("gcHint")}</p></div>
-      {GROUP_KEYS.map((g) => <GroupCompare key={g} g={g} p={data.players[row.name]} data={data} t={t} name={row.name} />)}
-
-      {/* knockout + champion */}
+      {/* champion + knockout first (the headline picks), then the groups */}
+      <div className="card">
+        <h3 className="cardh">🏆 {t("champion")} · +{row.champ}</h3>
+        {row.detail.champion ? (
+          <div className="koaudit"><span className="kopick"><Team t={row.detail.champion.pick} /></span><span className="agarrow">vs</span><span className="koact">{t("actual")}: <Team t={row.detail.champion.actual} /></span><span className={"agpt " + ptClass(row.detail.champion.got)}>{row.detail.champion.got > 0 ? "+" + row.detail.champion.got : "0"}</span></div>
+        ) : <div className="empty sm">{t("champPending")} (+{SCORING.champion} {t("ifCorrect")})</div>}
+      </div>
       <div className="card">
         <h3 className="cardh">🗺️ {t("knockout")} · +{row.knockout}</h3>
         {row.detail.knockout.length === 0 && <div className="empty sm">—</div>}
@@ -2205,12 +2207,10 @@ function Points({ data, lb, t, name, setName }) {
           </div>
         ))}
       </div>
-      <div className="card">
-        <h3 className="cardh">🏆 {t("champion")} · +{row.champ}</h3>
-        {row.detail.champion ? (
-          <div className="koaudit"><span className="kopick"><Team t={row.detail.champion.pick} /></span><span className="agarrow">vs</span><span className="koact">{t("actual")}: <Team t={row.detail.champion.actual} /></span><span className={"agpt " + ptClass(row.detail.champion.got)}>{row.detail.champion.got > 0 ? "+" + row.detail.champion.got : "0"}</span></div>
-        ) : <div className="empty sm">{t("champPending")} (+{SCORING.champion} {t("ifCorrect")})</div>}
-      </div>
+
+      {/* prediction vs actual, side by side, per group */}
+      <div className="card slim"><h3 className="cardh">📂 {t("groupBreakdown")}</h3><p className="hint block">{t("gcHint")}</p></div>
+      {GROUP_KEYS.map((g) => <GroupCompare key={g} g={g} p={data.players[row.name]} data={data} t={t} name={row.name} />)}
     </div>
   );
 }

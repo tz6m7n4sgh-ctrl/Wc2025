@@ -1411,6 +1411,65 @@ async function shareBracketImage(name, picks, data, koPts, totalPts, t) {
     res();
   }, "image/png"));
 }
+// The live feed match for a bracket slot (both its teams in the slot's set).
+function koMatchForSlot(code, i, data) {
+  const set = new Set(koSlotLeaves(code, i).map(teamKey));
+  return (data.matches || []).find((x) => x.stage === "ko" && x.round === code && x.home && x.away && set.has(teamKey(x.home)) && set.has(teamKey(x.away))) || null;
+}
+// Google-style knockout view: round tabs, readable match cards (flag, name, date,
+// score), and bracket connectors from the selected round to the next.
+function KnockoutBracketG({ data, t, lang }) {
+  const [r, setR] = useState(0);
+  const res = {};
+  for (const [code, n] of KO_SEQ) for (let i = 0; i < n; i++) { const w = koSlotActualWinner(code, i, data); if (w) res[koSlotId(code, i)] = w; }
+  const view = (code, i) => {
+    const m = koMatchForSlot(code, i, data);
+    let a, b;
+    if (code === "R32") { [a, b] = R32_TIES[i]; } else { const c = koSlotContenders(res, code, i); a = c[0]; b = c[1]; }
+    if (m) { a = m.home || a; b = m.away || b; }
+    const winner = res[koSlotId(code, i)] || (m && (data.knockoutResults || {})[m.mid]) || null;
+    const hs = m ? (m.finalH != null ? m.finalH : m.hs) : null;
+    const as = m ? (m.finalA != null ? m.finalA : m.as) : null;
+    return { a: a ? canonTeam(a) : null, b: b ? canonTeam(b) : null, winner: winner ? canonTeam(winner) : null, hs, as, ko: m ? m.ko : null, status: m ? m.status : null };
+  };
+  const row = (tm, score, win) => (
+    <div className={"gko-row" + (win ? " win" : "")}>
+      {tm ? <span className="gko-fl">{flagOf(tm)}</span> : <span className="gko-fl gko-tbd">🛡️</span>}
+      <span className={"gko-tn" + (tm ? "" : " dim")}>{tm || t("koTba2")}</span>
+      <span className="gko-sc">{score != null ? score : ""}</span>
+      {win ? <span className="gko-adv">◄</span> : null}
+    </div>
+  );
+  const Card = ({ v }) => (
+    <div className="gko-card">
+      <div className="gko-when">{v.ko ? `${fmtDay(v.ko, lang)} · ${fmtTime(v.ko, lang)}` : "—"}{v.status === "finished" ? <span className="gko-badge">FT</span> : v.status === "live" ? <span className="gko-badge live">LIVE</span> : null}</div>
+      {row(v.a, v.hs, v.winner && v.a && sameTeam(v.a, v.winner))}
+      {row(v.b, v.as, v.winner && v.b && sameTeam(v.b, v.winner))}
+    </div>
+  );
+  const [code, n] = KO_SEQ[r], last = r === KO_SEQ.length - 1;
+  const champ = res[KO_FINAL_ID] ? canonTeam(res[KO_FINAL_ID]) : null;
+  return (
+    <div className="gko">
+      <div className="gko-tabs">{KO_SEQ.map(([c], ri) => <button key={c} className={"gko-tab" + (ri === r ? " on" : "")} onClick={() => setR(ri)}>{t("r_" + c)}</button>)}</div>
+      <div className="gko-scroll">
+        {!last ? (
+          <div className="gko-pairs">
+            {Array.from({ length: KO_SEQ[r + 1][1] }, (_, pi) => (
+              <div className="gko-pair" key={pi}>
+                <div className="gko-children"><Card v={view(code, 2 * pi)} /><Card v={view(code, 2 * pi + 1)} /></div>
+                <div className="gko-conn" />
+                <div className="gko-parent"><Card v={view(KO_SEQ[r + 1][0], pi)} /></div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="gko-finalwrap"><Card v={view("F", 0)} /><div className="gko-champ">🏆 {champ || t("koTba2")}</div></div>
+        )}
+      </div>
+    </div>
+  );
+}
 function BracketView({ data, lb, t, lang, name, setName }) {
   const hasReal = (data.matches || []).some((m) => m.stage === "ko");
   const projected = !hasReal && !GROUP_KEYS.every((g) => groupComplete(g, data));
@@ -1447,7 +1506,7 @@ function BracketView({ data, lb, t, lang, name, setName }) {
       <div className="card">
         <h3 className="cardh">🗺️ {t("koFixtures")}{projected && <span className="gc-proj-total" style={{ marginInlineStart: 8 }}>· {t("brkProjected")}</span>}</h3>
         <p className="hint block">{hasReal ? t("brkLive") : t("brkIllustrative")}</p>
-        <BracketCanvas data={data} mode="results" t={t} />
+        <KnockoutBracketG data={data} t={t} lang={lang} />
       </div>
     </div>
   );
@@ -4241,6 +4300,31 @@ border-radius:18px;padding:16px 14px;margin:10px 0;color:#fff;background:linear-
 /* canvas bracket: scales to the card width so the whole diagram is always visible */
 .brkimg-wrap{margin-top:8px;border:1px solid var(--border);border-radius:12px;overflow:hidden;background:#f7f8fa}
 .brkimg{display:block;width:100%;height:auto}
+/* Google-style knockout view: round tabs + cards + bracket connectors */
+.gko-tabs{display:flex;gap:8px;overflow-x:auto;-webkit-overflow-scrolling:touch;padding:2px 0 10px;margin:4px 0 2px}
+.gko-tab{flex:0 0 auto;border:1px solid var(--border);background:var(--card);color:var(--muted);font-family:inherit;font-weight:800;font-size:12.5px;padding:7px 12px;border-radius:999px;cursor:pointer}
+.gko-tab.on{background:var(--pitch);color:#fff;border-color:var(--pitch)}
+.gko-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:6px}
+.gko-pairs{display:flex;flex-direction:column;gap:18px;min-width:max-content}
+.gko-pair{display:flex;align-items:center}
+.gko-children{display:flex;flex-direction:column;gap:14px}
+.gko-card{min-width:172px;border:1px solid var(--border);border-radius:12px;background:var(--card);padding:7px 9px;position:relative}
+.gko-when{font-size:10.5px;font-weight:700;color:var(--muted);margin-bottom:5px;display:flex;align-items:center;gap:6px}
+.gko-badge{font-size:9px;font-weight:800;background:var(--soft);color:var(--muted);padding:1px 5px;border-radius:5px}
+.gko-badge.live{background:#fdecea;color:#b71c1c}
+.gko-row{display:flex;align-items:center;gap:7px;padding:3px 0;font-size:13.5px;font-weight:600;color:var(--ink)}
+.gko-row.win{font-weight:800}
+.gko-fl{font-size:16px;width:20px;text-align:center;flex:none}.gko-tbd{opacity:.5}
+.gko-tn{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.gko-tn.dim{color:var(--muted)}
+.gko-sc{font-weight:800;font-variant-numeric:tabular-nums;color:var(--ink)}
+.gko-adv{color:var(--grass-d);font-size:11px;margin-inline-start:2px}
+/* connector: vertical line linking the two children, horizontal stub to parent */
+.gko-conn{width:22px;align-self:stretch;position:relative;flex:none}
+.gko-conn::before{content:"";position:absolute;left:11px;top:22%;bottom:22%;border-left:2px solid var(--border)}
+.gko-conn::after{content:"";position:absolute;left:11px;right:0;top:50%;border-top:2px solid var(--border)}
+.gko-children .gko-card::after{content:"";position:absolute;left:100%;top:50%;width:11px;border-top:2px solid var(--border)}
+.gko-finalwrap{display:flex;flex-direction:column;align-items:center;gap:12px;padding:8px 0}
+.gko-champ{border:2px solid var(--gold-d);background:var(--gold);color:#241c00;font-weight:800;border-radius:10px;padding:7px 16px;font-size:15px}
 .app[data-theme="dark"] .brk-pt.ko{background:rgba(25,195,125,.18)}
 .r16cand{margin-top:10px}.kotie.r16 .r16cands{flex-direction:column;align-items:flex-start;gap:2px}
 .r16num{font-size:10.5px;letter-spacing:.03em;text-transform:uppercase;color:var(--muted)}

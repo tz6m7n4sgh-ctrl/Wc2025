@@ -1577,15 +1577,22 @@ function drawBracket(canvas, opts) {
   if (header) { x.fillStyle = "#0e2a47"; x.font = "800 14px Arial, sans-serif"; x.fillText(`${opts.koPts} ${t("knockout")} pts · ${opts.totalPts} ${t("pts")}`, W / 2, H - 32); }
 }
 function makeBracketCanvas(opts) { const c = document.createElement("canvas"); drawBracket(c, opts); return c; }
-// Interactive two-sided bracket diagram (left ▸ trophy ◂ right), like the template.
-// Fit-to-width by default; pinch / wheel to zoom, drag to pan, double-tap to toggle
-// zoom, and tap a team to light up its "path to win" (gold route to the Final).
+// Crisp DOM two-sided bracket (left ▸ trophy ◂ right). Rotated 90° in portrait
+// (turn the phone for the big overview), upright in landscape; scroll to roam.
+// Tap a team to light up its animated gold "path to win".
+const BR = { BW: 152, BH: 54, stepX: 182, rowH: 72, VPAD: 20, W: 1620, H: 616 };
+function brYOf(r, i) { return BR.VPAD + BR.rowH * Math.pow(2, r) * (i + 0.5); }
+const brLX = [0, BR.stepX, 2 * BR.stepX, 3 * BR.stepX];
+const brRX = brLX.map((v) => BR.W - BR.BW - v);
+const brFinalX = (BR.W - BR.BW) / 2, brFinalY = BR.H / 2;
+function brBoxCenter(code, i) {
+  if (code === "F") return { cx: brFinalX + BR.BW / 2, cy: brFinalY };
+  const r = { R32: 0, R16: 1, QF: 2, SF: 3 }[code], n = [8, 4, 2, 1][r], right = i >= n, li = right ? i - n : i;
+  return { cx: (right ? brRX[r] : brLX[r]) + BR.BW / 2, cy: brYOf(r, li) };
+}
 function BracketDiagram({ data, picks, mode, t }) {
-  const canRef = useRef(null), vpRef = useRef(null), stRef = useRef(null);
-  const hitsRef = useRef([]);
+  const vpRef = useRef(null);
   const [trace, setTrace] = useState(null);
-  // Portrait → show the wide bracket rotated 90° (big) and prompt to turn the
-  // phone; landscape → upright, interactive (zoom/pan/tap-to-trace).
   const [portrait, setPortrait] = useState(() => (typeof window !== "undefined" ? window.matchMedia("(orientation: portrait)").matches : true));
   useEffect(() => {
     const mq = window.matchMedia("(orientation: portrait)");
@@ -1593,81 +1600,109 @@ function BracketDiagram({ data, picks, mode, t }) {
     mq.addEventListener ? mq.addEventListener("change", on) : mq.addListener(on);
     return () => (mq.removeEventListener ? mq.removeEventListener("change", on) : mq.removeListener(on));
   }, []);
-  const tf = useRef({ s: 1, x: 0, y: 0 });
-  const pts = useRef(new Map());
-  const pinch = useRef(null);
-  const moved = useRef(false);
-  const CW = 1720, CH = 900; // must match drawBracket's on-screen W/H
-  const apply = () => { if (stRef.current) stRef.current.style.transform = `translate(${tf.current.x}px,${tf.current.y}px) scale(${tf.current.s})`; };
-  const drawNow = (prog) => {
-    const c = canRef.current; if (!c) return;
-    const hits = [];
-    drawBracket(c, { data, picks: picks || {}, mode: mode || "player", header: false, t, trace, hits, traceProgress: prog });
-    hitsRef.current = hits;
+  const player = mode === "player";
+  const res = {};
+  for (const [code, n] of KO_SEQ) for (let i = 0; i < n; i++) { const w = koSlotActualWinner(code, i, data); if (w) res[koSlotId(code, i)] = w; }
+  const source = player ? (picks || {}) : res;
+  const slotInfo = (code, i) => {
+    const id = koSlotId(code, i);
+    let a, b;
+    if (code === "R32") { [a, b] = R32_TIES[i]; } else { const c = koSlotContenders(source, code, i); a = c[0]; b = c[1]; }
+    const actual = koSlotActualWinner(code, i, data);
+    const pick = player ? (picks && picks[id]) || null : res[id] || null;
+    let status = null;
+    if (pick) status = player ? (actual ? (sameTeam(pick, actual) ? "correct" : "wrong") : "pick") : "won";
+    return { a: a ? canonTeam(a) : null, b: b ? canonTeam(b) : null, winner: pick ? canonTeam(pick) : null, status };
   };
+  // the traced team's road (its slot each round up to elimination / the frontier)
+  const traceK = trace ? teamKey(trace) : null;
+  const pathSet = new Set();
+  if (traceK) for (const [code, n] of KO_SEQ) {
+    let si = -1; for (let i = 0; i < n; i++) if (koSlotLeaves(code, i).some((tt) => teamKey(tt) === traceK)) { si = i; break; }
+    if (si < 0) break; const id = koSlotId(code, si); pathSet.add(id); const w = source[id]; if (!w || teamKey(w) !== traceK) break;
+  }
+  // cards
+  const seq = [["R32", 8], ["R16", 4], ["QF", 2], ["SF", 1]], off = { R32: 8, R16: 4, QF: 2, SF: 1 };
+  const cards = [];
+  seq.forEach(([code, n], r) => { for (let i = 0; i < n; i++) cards.push({ code, idx: i, x: brLX[r], y: brYOf(r, i) - BR.BH / 2 }); });
+  seq.forEach(([code, n], r) => { for (let i = 0; i < n; i++) cards.push({ code, idx: off[code] + i, x: brRX[r], y: brYOf(r, i) - BR.BH / 2 }); });
+  cards.push({ code: "F", idx: 0, x: brFinalX, y: brFinalY - BR.BH / 2 });
+  // connectors
+  const conns = [];
+  for (let r = 0; r < 3; r++) { const parents = [4, 2, 1][r]; for (let j = 0; j < parents; j++) {
+    const c1 = brYOf(r, 2 * j), c2 = brYOf(r, 2 * j + 1), py = brYOf(r + 1, j);
+    const le = brLX[r] + BR.BW, lm = le + 15, lp = brLX[r + 1];
+    conns.push(`M${le} ${c1} H${lm} M${le} ${c2} H${lm} M${lm} ${c1} V${c2} M${lm} ${py} H${lp}`);
+    const re = brRX[r], rm = re - 15, rp = brRX[r + 1] + BR.BW;
+    conns.push(`M${re} ${c1} H${rm} M${re} ${c2} H${rm} M${rm} ${c1} V${c2} M${rm} ${py} H${rp}`);
+  } }
+  conns.push(`M${brLX[3] + BR.BW} ${brYOf(3, 0)} H${brFinalX}`);
+  conns.push(`M${brRX[3]} ${brYOf(3, 0)} H${brFinalX + BR.BW}`);
+  // gold path
+  let goldD = "";
+  if (pathSet.size) { const pp = []; for (const [code, n] of KO_SEQ) { for (let i = 0; i < n; i++) if (pathSet.has(koSlotId(code, i))) { pp.push(brBoxCenter(code, i)); break; } } goldD = pp.map((p, k) => (k ? "L" : "M") + p.cx + " " + p.cy).join(" "); }
+  // champion
+  const ci = slotInfo("F", 0), champ = ci.winner, champStatus = ci.status;
+  // centre the scroll on the Final on mount / orientation change (after layout)
   useEffect(() => {
-    if (!trace) { drawNow(1); return; }
-    let raf, start = null; const dur = 560;
-    const step = (ts) => { if (start == null) start = ts; const p = Math.min(1, (ts - start) / dur); drawNow(p); if (p < 1) raf = requestAnimationFrame(step); };
-    raf = requestAnimationFrame(step);
+    let raf = requestAnimationFrame(() => {
+      const vp = vpRef.current; if (!vp) return;
+      const cx = brFinalX + BR.BW / 2, cy = brFinalY;
+      const sx = portrait ? BR.H - cy : cx, sy = portrait ? cx : cy;
+      vp.scrollLeft = Math.max(0, sx - vp.clientWidth / 2);
+      vp.scrollTop = Math.max(0, sy - vp.clientHeight / 2);
+    });
     return () => cancelAnimationFrame(raf);
-  }, [data, picks, mode, t, trace]);
-  const clampS = (s) => Math.max(1, Math.min(5, s));
-  // default: a readable zoom centred on the Final (text legible; drag to explore)
-  const fitReadable = () => {
-    const vp = vpRef.current; if (!vp) return; const r = vp.getBoundingClientRect(); if (!r.width) return;
-    const baseH = r.width * (CH / CW), s = Math.max(1.6, Math.min(4.5, 152 / ((r.width / CW) * 176)));
-    tf.current = { s, x: r.width / 2 - 0.5 * r.width * s, y: r.height / 2 - ((CH / 2 - 30) / CH) * baseH * s };
-    apply();
+  }, [portrait, mode]);
+  const recenter = () => {
+    const vp = vpRef.current; if (!vp) return;
+    const cx = brFinalX + BR.BW / 2, cy = brFinalY;
+    const sx = portrait ? BR.H - cy : cx, sy = portrait ? cx : cy;
+    vp.scrollTo({ left: Math.max(0, sx - vp.clientWidth / 2), top: Math.max(0, sy - vp.clientHeight / 2), behavior: "smooth" });
   };
-  const fitAll = () => { const vp = vpRef.current; if (!vp) return; const r = vp.getBoundingClientRect(); const baseH = r.width * (CH / CW); tf.current = { s: 1, x: 0, y: Math.max(0, (r.height - baseH) / 2) }; apply(); };
-  useEffect(() => { fitReadable(); const on = () => fitReadable(); window.addEventListener("resize", on); return () => window.removeEventListener("resize", on); }, [portrait]);
-  const reset = () => fitAll();
-  const zoomAt = (factor, cx, cy) => {
-    const vp = vpRef.current.getBoundingClientRect();
-    const lx = (cx - vp.left - tf.current.x) / tf.current.s, ly = (cy - vp.top - tf.current.y) / tf.current.s;
-    const ns = clampS(tf.current.s * factor);
-    tf.current.x = cx - vp.left - lx * ns; tf.current.y = cy - vp.top - ly * ns; tf.current.s = ns; apply();
+  const tapTeam = (tm) => (e) => { e.stopPropagation(); if (!tm) return; setTrace((p) => (p && sameTeam(p, tm) ? null : tm)); };
+  const Box = ({ c }) => {
+    const v = slotInfo(c.code, c.idx), id = koSlotId(c.code, c.idx);
+    const onPath = pathSet.has(id);
+    const row = (tm) => {
+      const isW = v.winner && tm && sameTeam(tm, v.winner);
+      const cls = "domb-row" + (isW && v.status ? " win " + v.status : "") + (v.winner && tm && !isW ? " out" : "");
+      return (
+        <div className={cls} onClick={tapTeam(tm)}>
+          {tm ? <span className="domb-fl">{flagOf(tm)}</span> : <span className="domb-fl domb-tbd">🛡️</span>}
+          <span className="domb-nm">{tm || t("koTba2")}</span>
+          {isW && v.status === "correct" ? <span className="domb-mk ok">✓</span> : isW && v.status === "wrong" ? <span className="domb-mk no">✗</span> : null}
+        </div>
+      );
+    };
+    return <div className={"domb-box" + (onPath ? " on" : "") + (c.code === "F" ? " fin" : "")} style={{ left: c.x, top: c.y }}>{row(v.a)}{row(v.b)}</div>;
   };
-  const zoomBtn = (f) => { const r = vpRef.current.getBoundingClientRect(); zoomAt(f, r.left + r.width / 2, r.top + r.height / 2); };
-  const hitTest = (cx, cy) => {
-    const c = canRef.current; if (!c) return;
-    const rect = c.getBoundingClientRect();
-    const bx = (cx - rect.left) / rect.width * CW, by = (cy - rect.top) / rect.height * CH;
-    const hit = hitsRef.current.find((h) => bx >= h.x && bx <= h.x + h.w && by >= h.y && by <= h.y + h.h);
-    if (!hit) { setTrace(null); return; }
-    const tm = by < hit.y + hit.h / 2 ? hit.a : hit.b;
-    setTrace((prev) => (tm && prev && sameTeam(prev, tm) ? null : tm || null));
-  };
-  const onDown = (e) => { vpRef.current.setPointerCapture(e.pointerId); pts.current.set(e.pointerId, { x: e.clientX, y: e.clientY }); moved.current = false; if (pts.current.size === 2) { const [a, b] = [...pts.current.values()]; pinch.current = { d: Math.hypot(a.x - b.x, a.y - b.y) }; } };
-  const onMove = (e) => {
-    if (!pts.current.has(e.pointerId)) return;
-    const prev = pts.current.get(e.pointerId), cur = { x: e.clientX, y: e.clientY }; pts.current.set(e.pointerId, cur);
-    if (pts.current.size === 2 && pinch.current) {
-      const [a, b] = [...pts.current.values()], d = Math.hypot(a.x - b.x, a.y - b.y);
-      if (pinch.current.d) zoomAt(d / pinch.current.d, (a.x + b.x) / 2, (a.y + b.y) / 2);
-      pinch.current.d = d; moved.current = true;
-    } else if (pts.current.size === 1) {
-      tf.current.x += cur.x - prev.x; tf.current.y += cur.y - prev.y; apply();
-      if (Math.abs(cur.x - prev.x) + Math.abs(cur.y - prev.y) > 3) moved.current = true;
-    }
-  };
-  const onUp = (e) => { const tap = !moved.current && pts.current.size === 1; pts.current.delete(e.pointerId); if (pts.current.size < 2) pinch.current = null; if (tap) hitTest(e.clientX, e.clientY); };
-  const onWheel = (e) => { e.preventDefault(); zoomAt(e.deltaY < 0 ? 1.12 : 0.89, e.clientX, e.clientY); };
-  const onDbl = (e) => { e.preventDefault(); if (tf.current.s > 1.2) reset(); else zoomAt(2.4, e.clientX, e.clientY); };
+  const stageW = portrait ? BR.H : BR.W, stageH = portrait ? BR.W : BR.H;
+  const rotStyle = portrait ? { transform: `translateX(${BR.H}px) rotate(90deg)`, transformOrigin: "0 0" } : null;
   return (
-    <div className="bdg">
+    <div className={"domb" + (trace ? " tracing" : "")}>
       <div className="bdg-bar">
         <span className="bdg-hint">{trace ? <><span className="bdg-dot" /> {trace} · {t("bdgPath")}</> : <>{t("bdgTapTeam")}{portrait ? <> · {t("bdgTurn")}</> : null}</>}</span>
         <div className="bdg-btns">
           {trace && <button className="bdg-b" onClick={() => setTrace(null)} aria-label={t("hide")}>✕</button>}
-          <button className="bdg-b" onClick={() => zoomBtn(0.82)} aria-label="zoom out">－</button>
-          <button className="bdg-b" onClick={() => zoomBtn(1.22)} aria-label="zoom in">＋</button>
-          <button className="bdg-b" onClick={fitAll} aria-label="fit all" title="fit all">⤢</button>
+          <button className="bdg-b" onClick={recenter} aria-label="centre" title="centre">⤢</button>
         </div>
       </div>
-      <div className="bdg-vp" ref={vpRef} onPointerDown={onDown} onPointerMove={onMove} onPointerUp={onUp} onPointerCancel={onUp} onWheel={onWheel} onDoubleClick={onDbl}>
-        <div className="bdg-stage" ref={stRef}><canvas ref={canRef} className="bdg-canvas" /></div>
+      <div className="domb-vp" ref={vpRef} onClick={() => trace && setTrace(null)}>
+        <div className="domb-stage" style={{ width: stageW, height: stageH }}>
+          <div className="domb-rot" style={{ width: BR.W, height: BR.H, ...(rotStyle || {}) }}>
+            <svg className="domb-svg" width={BR.W} height={BR.H} viewBox={`0 0 ${BR.W} ${BR.H}`}>
+              {conns.map((d, k) => <path key={k} d={d} className="domb-conn" />)}
+              {goldD ? <path key={"g" + trace} d={goldD} className="domb-gold" pathLength="1" /> : null}
+            </svg>
+            <div className="domb-trophy" style={{ left: brFinalX + BR.BW / 2, top: brFinalY - 58 }}>🏆</div>
+            {cards.map((c, k) => <Box key={k} c={c} />)}
+            <div className={"domb-champ" + (champStatus ? " " + champStatus : "")} style={{ left: brFinalX - 8, top: brFinalY + BR.BH / 2 + 16 }}>
+              <span className="domb-champ-cap">👑</span>
+              <span className="domb-champ-nm">{champ ? <><span className="domb-fl">{flagOf(champ)}</span>{champ}</> : "—"}</span>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -4704,6 +4739,33 @@ border-radius:18px;padding:16px 14px;margin:10px 0;color:#fff;background:linear-
 .bdg-rotate{font-weight:700;color:var(--ink)}
 .bdg-rotwrap{display:flex;align-items:center;justify-content:center;overflow:hidden;height:74vh;max-height:680px;border:1px solid var(--border);border-radius:14px;background:#f7f8fa;animation:bdgIn .34s cubic-bezier(.22,.61,.36,1)}
 .bdg-rotcanvas{flex:none;width:min(74vh,660px);height:auto;transform:rotate(90deg)}
+/* DOM two-sided bracket (rotated in portrait) */
+.domb{margin-top:2px}
+.domb-vp{position:relative;overflow:auto;height:64vh;max-height:580px;min-height:300px;border-radius:16px;background:radial-gradient(120% 80% at 50% 42%,rgba(245,196,81,.10),transparent 60%),linear-gradient(180deg,#0d2a1e,#081912);-webkit-overflow-scrolling:touch;animation:bdgIn .34s cubic-bezier(.22,.61,.36,1)}
+.domb-stage{position:relative}
+.domb-rot{position:absolute;top:0;left:0}
+.domb-svg{position:absolute;top:0;left:0;overflow:visible}
+.domb-conn{fill:none;stroke:rgba(255,255,255,.2);stroke-width:1.6}
+.domb-gold{fill:none;stroke:#ffd84d;stroke-width:5;stroke-linecap:round;stroke-linejoin:round;filter:drop-shadow(0 0 5px rgba(255,216,77,.9));stroke-dasharray:1;animation:dombDraw .6s ease forwards}
+@keyframes dombDraw{from{stroke-dashoffset:1}to{stroke-dashoffset:0}}
+.domb-box{position:absolute;width:152px;height:54px;background:#fff;border-radius:11px;box-shadow:0 4px 12px rgba(0,0,0,.34);display:flex;flex-direction:column;overflow:hidden;transition:opacity .25s,box-shadow .25s}
+.domb-box.fin{box-shadow:0 6px 18px rgba(0,0,0,.4)}
+.domb-box.on{box-shadow:0 0 0 2.5px #e6a31e,0 6px 20px rgba(230,163,30,.45)}
+.domb.tracing .domb-box:not(.on){opacity:.34}
+.domb-row{flex:1;display:flex;align-items:center;gap:7px;padding:0 9px;font-size:15px;font-weight:700;color:#16324f;min-width:0;cursor:pointer}
+.domb-row+.domb-row{border-top:1px solid #eef2f6}
+.domb-row.out{color:#9aa6b2}.domb-row.out .domb-nm{text-decoration:line-through}
+.domb-row.win.correct,.domb-row.win.won{background:#e6f4ea;color:#137a3b}
+.domb-row.win.wrong{background:#fdecea;color:#b71c1c}
+.domb-row.win.pick{background:#eef1f4}
+.domb-fl{font-size:18px;flex:none;width:22px;text-align:center}.domb-tbd{opacity:.5}
+.domb-nm{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.domb-mk{font-weight:900;flex:none}.domb-mk.ok{color:#137a3b}.domb-mk.no{color:#b71c1c}
+.domb-trophy{position:absolute;transform:translateX(-50%);font-size:34px;filter:drop-shadow(0 0 16px rgba(245,196,81,.85))}
+.domb-champ{position:absolute;width:168px;height:40px;display:flex;align-items:center;gap:7px;padding:0 11px;border-radius:11px;background:linear-gradient(180deg,#ffd970,#f0b429);box-shadow:0 6px 18px rgba(202,160,51,.5);font-weight:800;color:#3a2c00;font-size:15px}
+.domb-champ.correct{background:linear-gradient(180deg,#9ff0bf,#1fc379);color:#0c3d22}
+.domb-champ.wrong{background:linear-gradient(180deg,#f7a6a6,#e2574c);color:#5a0d0d}
+.domb-champ-cap{flex:none}.domb-champ-nm{display:flex;align-items:center;gap:6px;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 /* canvas bracket: scales to the card width so the whole diagram is always visible */
 .brkimg-wrap{margin-top:8px;border:1px solid var(--border);border-radius:12px;overflow:hidden;background:#f7f8fa}
 .brkimg{display:block;width:100%;height:auto}

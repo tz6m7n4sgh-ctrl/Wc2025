@@ -108,6 +108,7 @@ const I18N = {
     r16CandHint: "The Round-of-16 bracket is fixed. For each tie, pick the winner from its possible teams now — scored against the real result. Locks at the champion deadline.", r16TieFrom: "from",
     brkOverlayHint: "Picks turn green when correct, red when wrong, as results come in. Scroll to see the whole bracket.", shareBracket: "Share image", brkTapZoom: "Tap the bracket for a full-size image to save or share.", gkoSwipe: "Swipe to change round", gkoTapTeam: "Tap a team to trace their run", gkoTracing: "Tracing — tap anywhere to clear", yourChampion: "Your champion",
     brkTabLive: "Current state", brkTabPred: "Prediction", brkAlive: "alive", brkDecided: "decided",
+    brkDiagram: "Diagram", brkList: "List", bdgTapTeam: "Tap a team for its path to the final · pinch to zoom", bdgPath: "path to the final",
     koBracket: "Knockout bracket", koBracketHint: "Pick a winner in every tie from the Round of 32 to the Final — winners advance, and your Final winner is your champion. Locks at the champion deadline; each correct pick scores +1.", koBracketLocked: "Bracket locked. ✓ = correct, ✕ = wrong, as results come in.",
     resultsEditor: "Results editor", resultsHint: "Enter a score to mark a match finished — standings, points and the bracket update instantly.", setChampion: "Set champion",
     entryFee: "Entry fee", currency: "Currency", distribution: "Prize distribution", winnerTakes: "Winner takes all", topTwo: "Split top 2", topThree: "Split top 3", deadline: "Predictions deadline", lockPicks: "Lock predictions", prizePool: "Prize pool",
@@ -187,6 +188,7 @@ const I18N = {
     r16CandHint: "جدول دور الـ16 ثابت. لكل مواجهة، اختر الفائز الآن من الفرق المحتملة — وتُحتسب وفق النتيجة الفعلية. يُغلق عند موعد إغلاق توقّع البطل.", r16TieFrom: "من",
     brkOverlayHint: "تتحوّل التوقّعات إلى الأخضر عند الصواب والأحمر عند الخطأ مع ظهور النتائج. مرّر لرؤية الجدول كاملاً.", shareBracket: "مشاركة صورة", brkTapZoom: "اضغط على الجدول للحصول على صورة كاملة للحفظ أو المشاركة.", gkoSwipe: "مرّر لتغيير الدور", gkoTapTeam: "اضغط على فريق لتتبّع مشواره", gkoTracing: "تتبّع — اضغط أي مكان للإلغاء", yourChampion: "بطلك",
     brkTabLive: "الوضع الحالي", brkTabPred: "التوقّع", brkAlive: "ما زال قائماً", brkDecided: "محسومة",
+    brkDiagram: "المخطط", brkList: "قائمة", bdgTapTeam: "اضغط فريقاً لعرض طريقه إلى النهائي · قرّب بإصبعين", bdgPath: "الطريق إلى النهائي",
     koBracket: "جدول الأدوار الإقصائية", koBracketHint: "اختر الفائز في كل مواجهة من دور الـ32 حتى النهائي — يتأهّل الفائزون، والفائز بالنهائي هو بطلك. يُغلق عند موعد إغلاق البطل؛ كل توقّع صحيح يمنح نقطة.", koBracketLocked: "الجدول مُغلق. ✓ = صحيح، ✕ = خاطئ، مع ظهور النتائج.",
     resultsEditor: "محرّر النتائج", resultsHint: "أدخل النتيجة لإنهاء المباراة — يُحدّث الترتيب والنقاط والأدوار فوراً.", setChampion: "تعيين البطل",
     entryFee: "رسوم الاشتراك", currency: "العملة", distribution: "توزيع الجوائز", winnerTakes: "الفائز يأخذ الكل", topTwo: "أفضل اثنين", topThree: "أفضل ثلاثة", deadline: "موعد إغلاق التوقعات", lockPicks: "قفل التوقعات", prizePool: "مجموع الجوائز",
@@ -1469,16 +1471,40 @@ function drawBracket(canvas, opts) {
     const status = !pick ? null : actual ? (sameTeam(pick, actual) ? "correct" : "wrong") : "pending";
     return { a, b, winner: pick, status };
   };
+  // "path to win" trace: highlight the slots a tapped team wins through.
+  const traceK = opts.trace ? teamKey(opts.trace) : null;
+  const src = opts.mode === "results" ? res : opts.picks;
+  const pathSet = new Set();
+  if (traceK) {
+    // walk the team's road: its slot each round, stopping where it's eliminated
+    // or the result is undecided (the frontier) — so a tap always shows a path.
+    for (const [code, n] of KO_SEQ) {
+      let si = -1;
+      for (let i = 0; i < n; i++) if (koSlotLeaves(code, i).some((tt) => teamKey(tt) === traceK)) { si = i; break; }
+      if (si < 0) break;
+      const id = koSlotId(code, si); pathSet.add(id);
+      const w = src && src[id];
+      if (!w || teamKey(w) !== traceK) break;
+    }
+  }
   const top = header ? 92 : 18, bottom = H - (header ? 60 : 18), areaH = bottom - top;
   const boxW = 92, boxH = 34, colGap = 18, stepX = boxW + colGap;
   const lx = [14, 14 + stepX, 14 + 2 * stepX, 14 + 3 * stepX];
   const rx = lx.map((v) => W - boxW - v);
   const cxx = W / 2 - boxW / 2, spacing = areaH / 8;
   const yOf = (r, i) => top + spacing * Math.pow(2, r) * (i + 0.5);
+  const boxCenter = (code, i) => {
+    if (code === "F") return { cx: cxx + boxW / 2, cy: H / 2 - 30 };
+    const rIdx = { R32: 0, R16: 1, QF: 2, SF: 3 }[code], n = [8, 4, 2, 1][rIdx], right = i >= n, li = right ? i - n : i;
+    return { cx: (right ? rx[rIdx] : lx[rIdx]) + boxW / 2, cy: yOf(rIdx, li) };
+  };
   const COL = { correct: ["#e6f4ea", "#137a3b"], wrong: ["#fdecea", "#b71c1c"], pending: ["#eef1f4", "#16324f"] };
-  const drawMatch = (px, cy, info) => {
-    rrPath(x, px, cy - boxH / 2, boxW, boxH, 7); x.fillStyle = "#fff"; x.fill(); x.strokeStyle = "#d3d9e0"; x.lineWidth = 1; x.stroke();
-    x.beginPath(); x.moveTo(px, cy); x.lineTo(px + boxW, cy); x.strokeStyle = "#eef2f6"; x.stroke();
+  const drawMatch = (px, cy, info, slotId) => {
+    if (opts.hits) opts.hits.push({ x: px, y: cy - boxH / 2, w: boxW, h: boxH, a: info.a, b: info.b });
+    const onPath = slotId && pathSet.has(slotId), dim = traceK && !onPath;
+    x.save(); if (dim) x.globalAlpha = 0.3;
+    rrPath(x, px, cy - boxH / 2, boxW, boxH, 7); x.fillStyle = "#fff"; x.fill(); x.strokeStyle = onPath ? "#e0a31e" : "#d3d9e0"; x.lineWidth = onPath ? 2.5 : 1; x.stroke();
+    x.beginPath(); x.moveTo(px, cy); x.lineTo(px + boxW, cy); x.strokeStyle = "#eef2f6"; x.lineWidth = 1; x.stroke();
     const slot = (tm, sy) => {
       const isW = info.winner && tm && sameTeam(tm, info.winner);
       if (isW && info.status) { x.fillStyle = COL[info.status][0]; rrPath(x, px + 1, sy - 8, boxW - 2, 16, 4); x.fill(); }
@@ -1489,6 +1515,7 @@ function drawBracket(canvas, opts) {
       if (info.winner && tm && !isW) { const tw = x.measureText(label).width; x.strokeStyle = "#aab4bf"; x.beginPath(); x.moveTo(px + 9, sy + 1); x.lineTo(px + 9 + tw, sy + 1); x.stroke(); }
     };
     slot(info.a, cy - 9); slot(info.b, cy + 9);
+    x.restore();
   };
   const connector = (cols, r, side) => {
     const parents = 8 / Math.pow(2, r + 1); x.strokeStyle = "#cdd5de"; x.lineWidth = 1;
@@ -1501,13 +1528,20 @@ function drawBracket(canvas, opts) {
     }
   };
   const seq = [["R32", 8], ["R16", 4], ["QF", 2], ["SF", 1]], off = { R32: 8, R16: 4, QF: 2, SF: 1 };
-  seq.forEach(([code, n], r) => { for (let i = 0; i < n; i++) drawMatch(lx[r], yOf(r, i), slotInfo(code, i)); });
+  // gold "path to win" first, so the boxes overlay it and it shows in the gaps
+  if (traceK && pathSet.size) {
+    x.save(); x.strokeStyle = "#e6a31e"; x.lineWidth = 4; x.lineCap = "round"; x.lineJoin = "round"; x.beginPath();
+    let prev = null;
+    for (const [code, n] of KO_SEQ) { let ci = -1; for (let i = 0; i < n; i++) if (pathSet.has(koSlotId(code, i))) { ci = i; break; } if (ci < 0) continue; const c = boxCenter(code, ci); if (prev) { x.moveTo(prev.cx, prev.cy); x.lineTo(c.cx, c.cy); } prev = c; }
+    x.stroke(); x.restore();
+  }
   [0, 1, 2].forEach((r) => connector(lx, r, "L"));
   x.strokeStyle = "#cdd5de"; x.beginPath(); x.moveTo(lx[3] + boxW, yOf(3, 0)); x.lineTo(cxx, H / 2 - 30); x.stroke();
-  seq.forEach(([code, n], r) => { for (let i = 0; i < n; i++) drawMatch(rx[r], yOf(r, i), slotInfo(code, off[code] + i)); });
   [0, 1, 2].forEach((r) => connector(rx, r, "R"));
   x.strokeStyle = "#cdd5de"; x.beginPath(); x.moveTo(rx[3], yOf(3, 0)); x.lineTo(cxx + boxW, H / 2 - 30); x.stroke();
-  drawMatch(cxx, H / 2 - 30, slotInfo("F", 0));
+  seq.forEach(([code, n], r) => { for (let i = 0; i < n; i++) drawMatch(lx[r], yOf(r, i), slotInfo(code, i), koSlotId(code, i)); });
+  seq.forEach(([code, n], r) => { for (let i = 0; i < n; i++) drawMatch(rx[r], yOf(r, i), slotInfo(code, off[code] + i), koSlotId(code, off[code] + i)); });
+  drawMatch(cxx, H / 2 - 30, slotInfo("F", 0), "F#0");
   x.textAlign = "center"; x.fillStyle = "#6b7a8d"; x.font = "700 11px Arial, sans-serif"; x.fillText((t("r_F") || "Final").toUpperCase(), W / 2, H / 2 + 2);
   x.font = "28px Arial, sans-serif"; x.fillText("🏆", W / 2, H / 2 - 76);
   const ci = slotInfo("F", 0), champ = ci.winner;
@@ -1518,10 +1552,74 @@ function drawBracket(canvas, opts) {
   if (header) { x.fillStyle = "#0e2a47"; x.font = "800 14px Arial, sans-serif"; x.fillText(`${opts.koPts} ${t("knockout")} pts · ${opts.totalPts} ${t("pts")}`, W / 2, H - 32); }
 }
 function makeBracketCanvas(opts) { const c = document.createElement("canvas"); drawBracket(c, opts); return c; }
-function BracketCanvas({ data, picks, mode, t, onTap }) {
-  const ref = useRef(null);
-  useEffect(() => { if (ref.current) drawBracket(ref.current, { data, picks: picks || {}, mode: mode || "player", header: false, t }); }, [data, picks, mode, t]);
-  return <div className="brkimg-wrap"><canvas ref={ref} className="brkimg" onClick={onTap} style={onTap ? { cursor: "zoom-in" } : null} /></div>;
+// Interactive two-sided bracket diagram (left ▸ trophy ◂ right), like the template.
+// Fit-to-width by default; pinch / wheel to zoom, drag to pan, double-tap to toggle
+// zoom, and tap a team to light up its "path to win" (gold route to the Final).
+function BracketDiagram({ data, picks, mode, t }) {
+  const canRef = useRef(null), vpRef = useRef(null), stRef = useRef(null);
+  const hitsRef = useRef([]);
+  const [trace, setTrace] = useState(null);
+  const tf = useRef({ s: 1, x: 0, y: 0 });
+  const pts = useRef(new Map());
+  const pinch = useRef(null);
+  const moved = useRef(false);
+  const apply = () => { if (stRef.current) stRef.current.style.transform = `translate(${tf.current.x}px,${tf.current.y}px) scale(${tf.current.s})`; };
+  useEffect(() => {
+    const c = canRef.current; if (!c) return;
+    const hits = [];
+    drawBracket(c, { data, picks: picks || {}, mode: mode || "player", header: false, t, trace, hits });
+    hitsRef.current = hits;
+  }, [data, picks, mode, t, trace]);
+  const clampS = (s) => Math.max(1, Math.min(4.5, s));
+  const reset = () => { tf.current = { s: 1, x: 0, y: 0 }; apply(); };
+  const zoomAt = (factor, cx, cy) => {
+    const vp = vpRef.current.getBoundingClientRect();
+    const lx = (cx - vp.left - tf.current.x) / tf.current.s, ly = (cy - vp.top - tf.current.y) / tf.current.s;
+    const ns = clampS(tf.current.s * factor);
+    tf.current.x = cx - vp.left - lx * ns; tf.current.y = cy - vp.top - ly * ns; tf.current.s = ns; apply();
+  };
+  const zoomBtn = (f) => { const r = vpRef.current.getBoundingClientRect(); zoomAt(f, r.left + r.width / 2, r.top + r.height / 2); };
+  const hitTest = (cx, cy) => {
+    const c = canRef.current; if (!c) return;
+    const rect = c.getBoundingClientRect();
+    const bx = (cx - rect.left) / rect.width * 1120, by = (cy - rect.top) / rect.height * 600;
+    const hit = hitsRef.current.find((h) => bx >= h.x && bx <= h.x + h.w && by >= h.y && by <= h.y + h.h);
+    if (!hit) { setTrace(null); return; }
+    const tm = by < hit.y + hit.h / 2 ? hit.a : hit.b;
+    setTrace((prev) => (tm && prev && sameTeam(prev, tm) ? null : tm || null));
+  };
+  const onDown = (e) => { vpRef.current.setPointerCapture(e.pointerId); pts.current.set(e.pointerId, { x: e.clientX, y: e.clientY }); moved.current = false; if (pts.current.size === 2) { const [a, b] = [...pts.current.values()]; pinch.current = { d: Math.hypot(a.x - b.x, a.y - b.y) }; } };
+  const onMove = (e) => {
+    if (!pts.current.has(e.pointerId)) return;
+    const prev = pts.current.get(e.pointerId), cur = { x: e.clientX, y: e.clientY }; pts.current.set(e.pointerId, cur);
+    if (pts.current.size === 2 && pinch.current) {
+      const [a, b] = [...pts.current.values()], d = Math.hypot(a.x - b.x, a.y - b.y);
+      if (pinch.current.d) zoomAt(d / pinch.current.d, (a.x + b.x) / 2, (a.y + b.y) / 2);
+      pinch.current.d = d; moved.current = true;
+    } else if (pts.current.size === 1) {
+      tf.current.x += cur.x - prev.x; tf.current.y += cur.y - prev.y; apply();
+      if (Math.abs(cur.x - prev.x) + Math.abs(cur.y - prev.y) > 3) moved.current = true;
+    }
+  };
+  const onUp = (e) => { const tap = !moved.current && pts.current.size === 1; pts.current.delete(e.pointerId); if (pts.current.size < 2) pinch.current = null; if (tap) hitTest(e.clientX, e.clientY); };
+  const onWheel = (e) => { e.preventDefault(); zoomAt(e.deltaY < 0 ? 1.12 : 0.89, e.clientX, e.clientY); };
+  const onDbl = (e) => { e.preventDefault(); if (tf.current.s > 1.2) reset(); else zoomAt(2.4, e.clientX, e.clientY); };
+  return (
+    <div className="bdg">
+      <div className="bdg-bar">
+        <span className="bdg-hint">{trace ? <><span className="bdg-dot" /> {trace} · {t("bdgPath")}</> : t("bdgTapTeam")}</span>
+        <div className="bdg-btns">
+          {trace && <button className="bdg-b" onClick={() => setTrace(null)} aria-label={t("hide")}>✕</button>}
+          <button className="bdg-b" onClick={() => zoomBtn(0.8)} aria-label="zoom out">－</button>
+          <button className="bdg-b" onClick={() => zoomBtn(1.25)} aria-label="zoom in">＋</button>
+          <button className="bdg-b" onClick={reset} aria-label="fit">⤢</button>
+        </div>
+      </div>
+      <div className="bdg-vp" ref={vpRef} onPointerDown={onDown} onPointerMove={onMove} onPointerUp={onUp} onPointerCancel={onUp} onWheel={onWheel} onDoubleClick={onDbl}>
+        <div className="bdg-stage" ref={stRef}><canvas ref={canRef} className="bdg-canvas" /></div>
+      </div>
+    </div>
+  );
 }
 async function shareBracketImage(name, picks, data, koPts, totalPts, t) {
   const canvas = makeBracketCanvas({ data, picks, mode: "player", header: true, name, koPts, totalPts, t });
@@ -1650,6 +1748,13 @@ function KnockoutBracketG({ data, t, lang, picks, mode = "results" }) {
 }
 function BracketView({ data, lb, t, lang, name, setName, go }) {
   const [tab, setTab] = useState("live"); // "live" = actual bracket · "player" = a player's prediction
+  const [look, setLook] = useState("diagram"); // "diagram" = two-sided map · "list" = per-round list
+  const LookToggle = () => (
+    <div className="brk-look">
+      <button className={"brk-lk" + (look === "diagram" ? " on" : "")} onClick={() => setLook("diagram")}>🗺️ {t("brkDiagram")}</button>
+      <button className={"brk-lk" + (look === "list" ? " on" : "")} onClick={() => setLook("list")}>☰ {t("brkList")}</button>
+    </div>
+  );
   const hasReal = (data.matches || []).some((m) => m.stage === "ko");
   const projected = !hasReal && !GROUP_KEYS.every((g) => groupComplete(g, data));
   const sel = (lb && lb.find((r) => r.name === name)) || (lb && lb[0]) || null;
@@ -1687,7 +1792,8 @@ function BracketView({ data, lb, t, lang, name, setName, go }) {
 
       {tab === "live" ? (
         <div className="card">
-          <KnockoutBracketG data={data} t={t} lang={lang} />
+          <LookToggle />
+          {look === "diagram" ? <BracketDiagram data={data} mode="results" t={t} /> : <KnockoutBracketG data={data} t={t} lang={lang} />}
         </div>
       ) : sel ? (
         <div className="card">
@@ -1706,7 +1812,8 @@ function BracketView({ data, lb, t, lang, name, setName, go }) {
             <span className="brk-pt">{made}/31 {t("picksMade").toLowerCase()}</span>
             <span className="brk-pt alive">{alive} {t("brkAlive")}</span>
           </div>
-          <KnockoutBracketG data={data} picks={picks} mode="player" t={t} lang={lang} />
+          <LookToggle />
+          {look === "diagram" ? <BracketDiagram data={data} picks={picks} mode="player" t={t} /> : <KnockoutBracketG data={data} picks={picks} mode="player" t={t} lang={lang} />}
         </div>
       ) : null}
     </div>
@@ -4516,6 +4623,21 @@ border-radius:18px;padding:16px 14px;margin:10px 0;color:#fff;background:linear-
 .brk-tabs{display:flex;gap:5px;margin-bottom:12px;background:var(--soft);border:1px solid var(--border);border-radius:13px;padding:4px}
 .brk-tab{flex:1;padding:10px 8px;border:none;background:none;border-radius:9px;font-family:inherit;font-weight:800;font-size:13.5px;color:var(--muted);cursor:pointer;transition:background .15s,color .15s}
 .brk-tab.on{background:var(--card);color:var(--ink);box-shadow:0 1px 4px rgba(7,21,16,.12)}
+/* diagram / list look toggle */
+.brk-look{display:inline-flex;gap:3px;background:var(--soft);border:1px solid var(--border);border-radius:10px;padding:3px;margin-bottom:10px}
+.brk-lk{padding:6px 12px;border:none;background:none;border-radius:8px;font-family:inherit;font-weight:800;font-size:12.5px;color:var(--muted);cursor:pointer}
+.brk-lk.on{background:var(--card);color:var(--ink);box-shadow:0 1px 3px rgba(7,21,16,.1)}
+/* interactive two-sided bracket diagram */
+.bdg{margin-top:2px}
+.bdg-bar{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.bdg-hint{flex:1;min-width:0;font-size:11.5px;color:var(--muted);display:flex;align-items:center;gap:6px}
+.bdg-dot{width:9px;height:9px;border-radius:50%;background:#e6a31e;flex:none;box-shadow:0 0 0 3px rgba(230,163,30,.2)}
+.bdg-btns{display:flex;gap:5px;flex:none}
+.bdg-b{width:32px;height:32px;border:1px solid var(--border);background:var(--card);border-radius:9px;font-size:15px;font-weight:800;color:var(--ink);cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1}
+.bdg-vp{position:relative;overflow:hidden;border:1px solid var(--border);border-radius:14px;background:#f7f8fa;touch-action:none;-webkit-user-select:none;user-select:none;cursor:grab}
+.bdg-vp:active{cursor:grabbing}
+.bdg-stage{transform-origin:0 0;will-change:transform}
+.bdg-canvas{display:block;width:100%;height:auto}
 /* canvas bracket: scales to the card width so the whole diagram is always visible */
 .brkimg-wrap{margin-top:8px;border:1px solid var(--border);border-radius:12px;overflow:hidden;background:#f7f8fa}
 .brkimg{display:block;width:100%;height:auto}

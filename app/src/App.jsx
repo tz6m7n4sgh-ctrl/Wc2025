@@ -3225,12 +3225,12 @@ const NAV = [
   { id: "home", ic: "home", key: "nav_home" },
   { id: "today", ic: "calendar", key: "nav_today" },
   { id: "table", ic: "trophy", key: "nav_table" },
-  { id: "groups", ic: "groups", key: "nav_groups" },
   { id: "bracket", ic: "bracket", key: "nav_bracket" },
   { id: "more", ic: "menu", key: "nav_more" },
 ];
 const MORE_ITEMS = [
   { id: "mypicks", ic: "prediction", key: "nav_mypicks" },
+  { id: "groups", ic: "groups", key: "nav_groups" },
   { id: "team", ic: "users", key: "nav_team" },
   { id: "points", ic: "prediction", key: "nav_points" },
   { id: "profile", ic: "profile", key: "nav_profile" },
@@ -3593,7 +3593,7 @@ export default function App() {
       <nav className="bottom">
         {NAV.map((n) => {
           const adminViews = ADMIN_ITEMS.map((a) => a.id).concat("adminlogin");
-          const active = view === n.id || (n.id === "today" && view === "match") || (n.id === "groups" && view === "groupgames") || (n.id === "more" && (sheet || MORE_ITEMS.some((m) => m.id === view) || adminViews.includes(view)));
+          const active = view === n.id || (n.id === "today" && view === "match") || (n.id === "more" && (sheet || view === "groupgames" || MORE_ITEMS.some((m) => m.id === view) || adminViews.includes(view)));
           return (
             <button key={n.id} className={"navbtn" + (active ? " on" : "")} onClick={() => go(n.id)}>
               <span className="navi"><Ico name={n.ic} size={22} /></span><span className="navl">{t(n.key)}</span>

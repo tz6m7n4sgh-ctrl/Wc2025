@@ -1468,19 +1468,44 @@ function KnockoutBracketG({ data, t, lang, picks, mode = "results" }) {
   const champ = champPick ? canonTeam(champPick) : null;
   const champActual = koSlotActualWinner("F", 0, data);
   const champStatus = champ ? (player ? (champActual ? (sameTeam(champ, champActual) ? "correct" : "wrong") : "pick") : "won") : null;
-  // swipe / drag left↔right to change round (same as the tabs); keep the active tab in view
-  const tabsRef = useRef(null), sx = useRef(null);
-  useEffect(() => { const el = tabsRef.current && tabsRef.current.querySelector(".gko-tab.on"); if (el) el.scrollIntoView({ inline: "center", block: "nearest" }); }, [r]);
-  const go = (dir) => setR((v) => Math.max(0, Math.min(KO_SEQ.length - 1, v + dir)));
-  const dragEnd = (x) => { if (sx.current == null) return; const dx = x - sx.current; sx.current = null; if (Math.abs(dx) > 45) go(dx < 0 ? 1 : -1); };
+  // swipe / drag left↔right to change round (same as the tabs); keep the active
+  // tab centred WITHIN its own scroll bar — never scrollIntoView (that scrolls
+  // the whole page, landing the view in the middle on mount).
+  const [dir, setDir] = useState(1); // slide direction for the round transition
+  const tabsRef = useRef(null), stageRef = useRef(null), sx = useRef(null), drag = useRef(false);
+  useEffect(() => {
+    const bar = tabsRef.current; if (!bar) return;
+    const el = bar.querySelector(".gko-tab.on"); if (!el) return;
+    bar.scrollTo({ left: el.offsetLeft - bar.clientWidth / 2 + el.offsetWidth / 2, behavior: "smooth" });
+  }, [r]);
+  const toRound = (ri) => { const v = Math.max(0, Math.min(KO_SEQ.length - 1, ri)); if (v === r) return; setDir(v > r ? 1 : -1); setR(v); };
+  const go = (d) => toRound(r + d);
+  const dragMove = (x) => {
+    if (sx.current == null || !stageRef.current) return;
+    const dx = x - sx.current;
+    if (!drag.current && Math.abs(dx) < 6) return; // ignore taps
+    drag.current = true;
+    const max = (d) => (d < 0 ? r < KO_SEQ.length - 1 : r > 0); // resist at the ends
+    const damp = max(dx) ? 0.85 : 0.28;
+    stageRef.current.style.transition = "none";
+    stageRef.current.style.transform = `translateX(${dx * damp}px)`;
+    stageRef.current.style.opacity = String(Math.max(0.4, 1 - Math.abs(dx) / 520));
+  };
+  const dragEnd = (x) => {
+    const st = stageRef.current;
+    if (st) { st.style.transition = ""; st.style.transform = ""; st.style.opacity = ""; }
+    if (sx.current == null) { drag.current = false; return; }
+    const dx = x - sx.current; sx.current = null; const moved = drag.current; drag.current = false;
+    if (moved && Math.abs(dx) > 45) go(dx < 0 ? 1 : -1);
+  };
   return (
     <div className={"gko" + (hi ? " tracing" : "")} onClick={() => hi && setHi(null)}>
-      <div className="gko-tabs" ref={tabsRef}>{KO_SEQ.map(([c], ri) => <button key={c} className={"gko-tab" + (ri === r ? " on" : "")} onClick={(e) => { e.stopPropagation(); setR(ri); }}>{t("r_" + c)}</button>)}</div>
+      <div className="gko-tabs" ref={tabsRef}>{KO_SEQ.map(([c], ri) => <button key={c} className={"gko-tab" + (ri === r ? " on" : "")} onClick={(e) => { e.stopPropagation(); toRound(ri); }}>{t("r_" + c)}</button>)}</div>
       <p className="gko-hint">{hi ? <>👆 {t("gkoTracing")}</> : last ? <>{t("gkoTapTeam")}</> : <>← {t("gkoSwipe")} →</>}</p>
       <div className="gko-scroll"
-        onTouchStart={(e) => { sx.current = e.touches[0].clientX; }} onTouchEnd={(e) => dragEnd(e.changedTouches[0].clientX)}
-        onPointerDown={(e) => { if (e.pointerType === "mouse") sx.current = e.clientX; }} onPointerUp={(e) => { if (e.pointerType === "mouse") dragEnd(e.clientX); }}>
-        <div className="gko-stage" key={r}>
+        onTouchStart={(e) => { sx.current = e.touches[0].clientX; drag.current = false; }} onTouchMove={(e) => dragMove(e.touches[0].clientX)} onTouchEnd={(e) => dragEnd(e.changedTouches[0].clientX)}
+        onPointerDown={(e) => { if (e.pointerType === "mouse") { sx.current = e.clientX; drag.current = false; } }} onPointerMove={(e) => { if (e.pointerType === "mouse" && sx.current != null) dragMove(e.clientX); }} onPointerUp={(e) => { if (e.pointerType === "mouse") dragEnd(e.clientX); }} onPointerLeave={(e) => { if (e.pointerType === "mouse" && sx.current != null) dragEnd(e.clientX); }}>
+        <div className={"gko-stage " + (dir > 0 ? "fromR" : "fromL")} key={r} ref={stageRef}>
         {!last ? (
           <div className="gko-pairs">
             {Array.from({ length: KO_SEQ[r + 1][1] }, (_, pi) => (
@@ -4339,9 +4364,13 @@ border-radius:18px;padding:16px 14px;margin:10px 0;color:#fff;background:linear-
 .gko-tabs{display:flex;gap:8px;overflow-x:auto;-webkit-overflow-scrolling:touch;padding:2px 0 10px;margin:4px 0 2px}
 .gko-tab{flex:0 0 auto;border:1px solid var(--border);background:var(--card);color:var(--muted);font-family:inherit;font-weight:800;font-size:12.5px;padding:7px 12px;border-radius:999px;cursor:pointer}
 .gko-tab.on{background:var(--pitch);color:#fff;border-color:var(--pitch)}
-.gko-scroll{overflow:hidden;padding-bottom:8px;touch-action:pan-y;cursor:grab}
-.gko-stage{animation:gkoSlide .24s ease}
-@keyframes gkoSlide{from{opacity:.25;transform:translateX(14px)}to{opacity:1;transform:none}}
+.gko-scroll{overflow:hidden;padding-bottom:8px;touch-action:pan-y;cursor:grab;user-select:none;-webkit-user-select:none}
+.gko-scroll:active{cursor:grabbing}
+.gko-stage{will-change:transform,opacity}
+.gko-stage.fromR{animation:gkoSlideR .28s cubic-bezier(.22,.61,.36,1)}
+.gko-stage.fromL{animation:gkoSlideL .28s cubic-bezier(.22,.61,.36,1)}
+@keyframes gkoSlideR{from{opacity:.2;transform:translateX(34px)}to{opacity:1;transform:none}}
+@keyframes gkoSlideL{from{opacity:.2;transform:translateX(-34px)}to{opacity:1;transform:none}}
 .gko-hint{font-size:11.5px;color:var(--muted);margin:0 0 8px;display:flex;align-items:center;gap:5px}
 .gko-pairs{display:flex;flex-direction:column;gap:18px;min-width:max-content}
 .gko-pair{display:flex;align-items:center}

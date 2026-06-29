@@ -1241,6 +1241,7 @@ function Dashboard({ data, lb, lang, onOpen, t, go }) {
 function Leaderboard({ data, lb, prevRanks, name, setName, t, go }) {
   const top3 = lb.slice(0, 3), order = [top3[1], top3[0], top3[2]];
   const sel = lb.find((r) => r.name === name) || lb[0];
+  const [grpOpen, setGrpOpen] = useState(false);
   const detRef = useRef();
   const pick = (n) => { setName(n); setTimeout(() => detRef.current && detRef.current.scrollIntoView({ behavior: "smooth", block: "start" }), 70); };
   return (
@@ -1268,8 +1269,14 @@ function Leaderboard({ data, lb, prevRanks, name, setName, t, go }) {
             <button className="seeall" onClick={() => go("profile", sel.name)}>{t("nav_profile")} ›</button>
           </div>
           <PointsHow row={sel} t={t} />
-          <div className="card slim"><h3 className="cardh">📂 {t("groupBreakdown")}</h3><p className="hint block">{t("gcHint")}</p></div>
-          {GROUP_KEYS.map((g) => <GroupCompare key={g} g={g} p={data.players[sel.name]} data={data} t={t} name={sel.name} />)}
+          <div className="card slim">
+            <button className="mypick-lbl collapse" onClick={() => setGrpOpen((v) => !v)} aria-expanded={grpOpen}>
+              <span>📂 {t("groupBreakdown")}{!grpOpen && <span className="coll-lock"> · {t("tapExpand")}</span>}</span>
+              <span className="coll-chev">{grpOpen ? "▾" : "▸"}</span>
+            </button>
+            {grpOpen && <p className="hint block">{t("gcHint")}</p>}
+          </div>
+          {grpOpen && GROUP_KEYS.map((g) => <GroupCompare key={g} g={g} p={data.players[sel.name]} data={data} t={t} name={sel.name} />)}
         </>
       )}
     </div>

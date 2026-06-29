@@ -107,6 +107,7 @@ const I18N = {
     koPicks: "Knockout picks", koOpensWhen: "Knockout picks open once the group stage finishes.", koLockHint: "Each pick locks 4 hours before its kickoff.", koProjected: "Projected from the current standings — pick now; matchups may still shift until the groups finish. Each pick locks 4h before kickoff.", koPreview: "Preview projected from the current standings. Picks open once the knockout fixtures are confirmed; each pick will lock 4h before its kickoff.", koLockBy: "locks 4h before kickoff", pickWinner: "Pick the winner", koTba: "Awaiting earlier results", koTba2: "TBD", koVs: "v",
     r16CandHint: "The Round-of-16 bracket is fixed. For each tie, pick the winner from its possible teams now — scored against the real result. Locks at the champion deadline.", r16TieFrom: "from",
     brkOverlayHint: "Picks turn green when correct, red when wrong, as results come in. Scroll to see the whole bracket.", shareBracket: "Share image", brkTapZoom: "Tap the bracket for a full-size image to save or share.", gkoSwipe: "Swipe to change round", gkoTapTeam: "Tap a team to trace their run", gkoTracing: "Tracing — tap anywhere to clear", yourChampion: "Your champion",
+    brkTabLive: "Current state", brkTabPred: "Prediction", brkAlive: "alive",
     koBracket: "Knockout bracket", koBracketHint: "Pick a winner in every tie from the Round of 32 to the Final — winners advance, and your Final winner is your champion. Locks at the champion deadline; each correct pick scores +1.", koBracketLocked: "Bracket locked. ✓ = correct, ✕ = wrong, as results come in.",
     resultsEditor: "Results editor", resultsHint: "Enter a score to mark a match finished — standings, points and the bracket update instantly.", setChampion: "Set champion",
     entryFee: "Entry fee", currency: "Currency", distribution: "Prize distribution", winnerTakes: "Winner takes all", topTwo: "Split top 2", topThree: "Split top 3", deadline: "Predictions deadline", lockPicks: "Lock predictions", prizePool: "Prize pool",
@@ -185,6 +186,7 @@ const I18N = {
     koPicks: "توقّعات الأدوار الإقصائية", koOpensWhen: "تُفتح توقّعات الأدوار الإقصائية بعد انتهاء دور المجموعات.", koLockHint: "يُغلق كل اختيار قبل 4 ساعات من موعد المباراة.", koProjected: "متوقّعة من الترتيب الحالي — اختر الآن؛ قد تتغيّر المواجهات حتى انتهاء المجموعات. يُغلق كل اختيار قبل 4 ساعات من المباراة.", koPreview: "معاينة متوقّعة من الترتيب الحالي. تُفتح التوقّعات بعد تأكيد مباريات الأدوار الإقصائية؛ ويُغلق كل اختيار قبل 4 ساعات من موعده.", koLockBy: "يُغلق قبل 4 ساعات من المباراة", pickWinner: "اختر الفائز", koTba: "بانتظار النتائج السابقة", koTba2: "غير محدد", koVs: "ضد",
     r16CandHint: "جدول دور الـ16 ثابت. لكل مواجهة، اختر الفائز الآن من الفرق المحتملة — وتُحتسب وفق النتيجة الفعلية. يُغلق عند موعد إغلاق توقّع البطل.", r16TieFrom: "من",
     brkOverlayHint: "تتحوّل التوقّعات إلى الأخضر عند الصواب والأحمر عند الخطأ مع ظهور النتائج. مرّر لرؤية الجدول كاملاً.", shareBracket: "مشاركة صورة", brkTapZoom: "اضغط على الجدول للحصول على صورة كاملة للحفظ أو المشاركة.", gkoSwipe: "مرّر لتغيير الدور", gkoTapTeam: "اضغط على فريق لتتبّع مشواره", gkoTracing: "تتبّع — اضغط أي مكان للإلغاء", yourChampion: "بطلك",
+    brkTabLive: "الوضع الحالي", brkTabPred: "التوقّع", brkAlive: "ما زال قائماً",
     koBracket: "جدول الأدوار الإقصائية", koBracketHint: "اختر الفائز في كل مواجهة من دور الـ32 حتى النهائي — يتأهّل الفائزون، والفائز بالنهائي هو بطلك. يُغلق عند موعد إغلاق البطل؛ كل توقّع صحيح يمنح نقطة.", koBracketLocked: "الجدول مُغلق. ✓ = صحيح، ✕ = خاطئ، مع ظهور النتائج.",
     resultsEditor: "محرّر النتائج", resultsHint: "أدخل النتيجة لإنهاء المباراة — يُحدّث الترتيب والنقاط والأدوار فوراً.", setChampion: "تعيين البطل",
     entryFee: "رسوم الاشتراك", currency: "العملة", distribution: "توزيع الجوائز", winnerTakes: "الفائز يأخذ الكل", topTwo: "أفضل اثنين", topThree: "أفضل ثلاثة", deadline: "موعد إغلاق التوقعات", lockPicks: "قفل التوقعات", prizePool: "مجموع الجوائز",
@@ -1653,44 +1655,67 @@ function KnockoutBracketG({ data, t, lang, picks, mode = "results" }) {
     </div>
   );
 }
-function BracketView({ data, lb, t, lang, name, setName }) {
+function BracketView({ data, lb, t, lang, name, setName, go }) {
+  const [tab, setTab] = useState("live"); // "live" = actual bracket · "player" = a player's prediction
   const hasReal = (data.matches || []).some((m) => m.stage === "ko");
   const projected = !hasReal && !GROUP_KEYS.every((g) => groupComplete(g, data));
   const sel = (lb && lb.find((r) => r.name === name)) || (lb && lb[0]) || null;
   const picks = (sel && data.players[sel.name] && data.players[sel.name].knockout) || {};
   const made = sel ? KO_SEQ.reduce((s, [code, n]) => { for (let i = 0; i < n; i++) if (picks[koSlotId(code, i)]) s++; return s; }, 0) : 0;
+  // How many of this player's still-possible picks remain alive (not yet eliminated).
+  const alive = useMemo(() => {
+    if (!sel) return 0; let n = 0;
+    for (const [code, cnt] of KO_SEQ) for (let i = 0; i < cnt; i++) {
+      const pk = picks[koSlotId(code, i)]; if (!pk) continue;
+      const actual = koSlotActualWinner(code, i, data);
+      if (!actual || sameTeam(pk, actual)) n++;
+    }
+    return n;
+  }, [sel, picks, data]);
   return (
     <div className="view">
-      <div className="card slim"><h3 className="cardh">🗺️ {t("nav_bracket")}</h3>
-        {sel && (
-          <div className="psel">
-            <label className="hint">{t("selectPlayer")}</label>
-            <select className="select" value={sel.name} onChange={(e) => setName && setName(e.target.value)}>
+      {/* top: player + total points + profile */}
+      <div className="card brk-top">
+        <div className="brk-top-row">
+          {sel && (
+            <select className="select brk-sel" value={sel.name} onChange={(e) => setName && setName(e.target.value)} aria-label={t("selectPlayer")}>
               {lb.map((r) => <option key={r.name} value={r.name}>{r.name} · {r.total} {t("pts")}</option>)}
             </select>
+          )}
+          {sel && go && <button className="seeall brk-prof" onClick={() => go("profile", sel.name)}>{t("nav_profile")} ›</button>}
+        </div>
+        {sel && (
+          <div className="brk-pts">
+            <span className="brk-pt tot">{sel.total} {t("pts")}</span>
+            <span className="brk-pt ko">{sel.knockout} {t("knockout")}</span>
+            <span className="brk-pt">{made}/31 {t("picksMade").toLowerCase()}</span>
+            <span className="brk-pt alive">{alive} {t("brkAlive")}</span>
           </div>
         )}
       </div>
-      {sel && (
+
+      {/* tabs */}
+      <div className="brk-tabs" role="tablist">
+        <button role="tab" className={"brk-tab" + (tab === "live" ? " on" : "")} onClick={() => setTab("live")}>🗺️ {t("brkTabLive")}</button>
+        <button role="tab" className={"brk-tab" + (tab === "player" ? " on" : "")} onClick={() => setTab("player")}>🎯 {t("brkTabPred")}</button>
+      </div>
+
+      {tab === "live" ? (
+        <div className="card">
+          <h3 className="cardh">🗺️ {t("koFixtures")}{projected && <span className="gc-proj-total" style={{ marginInlineStart: 8 }}>· {t("brkProjected")}</span>}</h3>
+          <p className="hint block">{hasReal ? t("brkLive") : t("brkIllustrative")}</p>
+          <KnockoutBracketG data={data} t={t} lang={lang} />
+        </div>
+      ) : sel ? (
         <div className="card">
           <div className="brk-head">
-            <h3 className="cardh">🏆 {sel.name} · {t("koBracket")}</h3>
+            <h3 className="cardh">🏆 {sel.name}</h3>
             <button className="seeall" onClick={() => shareBracketImage(sel.name, picks, data, sel.knockout, sel.total, t)}>📷 {t("shareBracket")}</button>
-          </div>
-          <div className="brk-pts">
-            <span className="brk-pt">{made}/31 {t("picksMade").toLowerCase()}</span>
-            <span className="brk-pt ko">{sel.knockout} {t("knockout")} {t("pts")}</span>
-            <span className="brk-pt tot">{sel.total} {t("pts")}</span>
           </div>
           <p className="hint block">{t("brkOverlayHint")}</p>
           <KnockoutBracketG data={data} picks={picks} mode="player" t={t} lang={lang} />
         </div>
-      )}
-      <div className="card">
-        <h3 className="cardh">🗺️ {t("koFixtures")}{projected && <span className="gc-proj-total" style={{ marginInlineStart: 8 }}>· {t("brkProjected")}</span>}</h3>
-        <p className="hint block">{hasReal ? t("brkLive") : t("brkIllustrative")}</p>
-        <KnockoutBracketG data={data} t={t} lang={lang} />
-      </div>
+      ) : null}
     </div>
   );
 }
@@ -3781,7 +3806,7 @@ export default function App() {
         {view === "groups" && <Groups data={data} t={t} lang={lang} onOpenGroup={openGroup} />}
         {view === "groupgames" && groupSel && <GroupGames g={groupSel} data={data} lang={lang} onOpen={openMatch} t={t} onBack={() => go("groups")} />}
         {view === "team" && <TeamFixtures data={data} lang={lang} onOpen={openMatch} t={t} />}
-        {view === "bracket" && <BracketView data={data} lb={lb} t={t} lang={lang} name={profileName} setName={selectProfile} />}
+        {view === "bracket" && <BracketView data={data} lb={lb} t={t} lang={lang} name={profileName} setName={selectProfile} go={go} />}
         {view === "predictions" && <Predictions data={data} lb={lb} t={t} go={go} />}
         {view === "points" && <Points data={data} lb={lb} t={t} name={profileName} setName={selectProfile} />}
         {view === "consensus" && <Consensus data={data} t={t} />}
@@ -4479,6 +4504,15 @@ border-radius:18px;padding:16px 14px;margin:10px 0;color:#fff;background:linear-
 .brk-pts{display:flex;gap:8px;flex-wrap:wrap;margin:6px 0 2px}
 .brk-pt{font-size:12px;font-weight:800;padding:3px 10px;border-radius:999px;background:var(--soft);color:var(--ink)}
 .brk-pt.ko{background:#e6f4ea;color:#137a3b}.brk-pt.tot{background:var(--pitch);color:#fff}
+.brk-pt.alive{background:rgba(245,196,81,.18);color:var(--gold-d)}
+.app[data-theme="dark"] .brk-pt.alive{background:rgba(245,196,81,.16)}
+.brk-top{padding:13px 14px}
+.brk-top-row{display:flex;align-items:center;gap:10px}
+.brk-sel{flex:1;min-width:0}
+.brk-prof{flex:none;white-space:nowrap}
+.brk-tabs{display:flex;gap:5px;margin-bottom:12px;background:var(--soft);border:1px solid var(--border);border-radius:13px;padding:4px}
+.brk-tab{flex:1;padding:10px 8px;border:none;background:none;border-radius:9px;font-family:inherit;font-weight:800;font-size:13.5px;color:var(--muted);cursor:pointer;transition:background .15s,color .15s}
+.brk-tab.on{background:var(--card);color:var(--ink);box-shadow:0 1px 4px rgba(7,21,16,.12)}
 /* canvas bracket: scales to the card width so the whole diagram is always visible */
 .brkimg-wrap{margin-top:8px;border:1px solid var(--border);border-radius:12px;overflow:hidden;background:#f7f8fa}
 .brkimg{display:block;width:100%;height:auto}

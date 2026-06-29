@@ -38,6 +38,11 @@ const SCORING = {
   champion: 1,
   knockout: { R32: 1, R16: 1, QF: 1, SF: 1, F: 1 },
 };
+// Admin-configurable points override (stored in data.settings); falls back to the
+// defaults above. Lets the league set how much each correct knockout round (and
+// the champion) is worth.
+function koPointsFor(data) { const c = data && data.settings && data.settings.koPoints; return c ? { ...SCORING.knockout, ...c } : SCORING.knockout; }
+function champPointsFor(data) { const c = data && data.settings ? data.settings.champPoints : null; return c == null ? SCORING.champion : Number(c); }
 const TEAM_ALIASES = {
   "Bosnia-Herzegovina": ["bosnia and herzegovina", "bosnia", "bosnia herzegovina"],
   USA: ["united states", "us", "america", "usmnt"],
@@ -133,6 +138,7 @@ const I18N = {
     syncHint2: "Pull finished scores from TheSportsDB and save them to the database so everyone sees them.",
     syncing: "Syncing…", feedReach: "Feed reachable", feedEvents: "Events fetched", feedCompleted: "Completed found", feedSaved: "Saved to DB", feedKo: "Knockout fixtures synced", feedCleared: "Phantom results cleared", feedMissing: "Still missing a score",
     timezone: "Display timezone", tzCheck: "Timezone check", tzApp: "App timezone", tzAppNow: "App time now", tzDevice: "Device timezone", tzDeviceNow: "Device time now", tzNote: "Times are shown in the app timezone above, not the device's — change it here if needed.",
+    scoringTitle: "Points per correct prediction", scoringHint: "Set how many points each correct knockout-round winner (and the champion) is worth. Applies instantly to every player's total.", scoringReset: "Reset to default",
     noDetail: "No detailed data for this match yet (timelines/lineups can be missing or delayed).",
     p_howAdd: "How your points add up", p_correct: "correct", p_of: "of",
     p_winner_t: "Match winners", p_winner_d: "+1 each time your higher-ranked team wins its group match",
@@ -213,6 +219,7 @@ const I18N = {
     syncHint2: "اجلب نتائج المباريات المنتهية من TheSportsDB واحفظها في قاعدة البيانات ليراها الجميع.",
     syncing: "جارٍ المزامنة…", feedReach: "وصول الخدمة", feedEvents: "الأحداث المجلوبة", feedCompleted: "المنتهية الموجودة", feedSaved: "حُفظت في القاعدة", feedKo: "مباريات إقصائية تمت مزامنتها", feedCleared: "نتائج وهمية أُزيلت", feedMissing: "بلا نتيجة بعد",
     timezone: "المنطقة الزمنية للعرض", tzCheck: "فحص المنطقة الزمنية", tzApp: "منطقة التطبيق", tzAppNow: "وقت التطبيق الآن", tzDevice: "منطقة الجهاز", tzDeviceNow: "وقت الجهاز الآن", tzNote: "تُعرض الأوقات بمنطقة التطبيق أعلاه وليس بمنطقة الجهاز — غيّرها هنا إذا لزم.",
+    scoringTitle: "نقاط كل توقّع صحيح", scoringHint: "حدّد عدد النقاط لكل فائز صحيح في الأدوار الإقصائية (والبطل). يُطبَّق فوراً على مجموع كل لاعب.", scoringReset: "إعادة للافتراضي",
     noDetail: "لا تتوفر بيانات تفصيلية بعد (قد تتأخر التشكيلات والأحداث).",
     p_howAdd: "كيف تتكوّن نقاطك", p_correct: "صحيحة", p_of: "من",
     p_winner_t: "الفائز بالمباراة", p_winner_d: "+1 كلما فاز فريقك الأعلى ترتيباً في مباراة المجموعة",
@@ -359,17 +366,17 @@ function calcPlayerPoints(p, data) {
   }
   // Full-bracket scoring: every slot (R32→F) is reconciled to the real result by
   // team membership, so a pick scores even if an earlier round was wrong.
-  const kp = (p && p.knockout) || {};
+  const kp = (p && p.knockout) || {}, koPts = koPointsFor(data);
   for (const [code, n] of KO_SEQ) {
     for (let i = 0; i < n; i++) {
       const pick = kp[koSlotId(code, i)]; if (!pick) continue;
       const actualW = koSlotActualWinner(code, i, data); if (!actualW) continue;
-      const got = sameTeam(pick, actualW) ? (SCORING.knockout[code] || 0) : 0;
+      const got = sameTeam(pick, actualW) ? (koPts[code] || 0) : 0;
       ko += got;
       detail.knockout.push({ mid: koSlotId(code, i), round: code, predW: pick, actualW, got });
     }
   }
-  if (data.champion) { const got = p && sameTeam(p.champion, data.champion) ? SCORING.champion : 0; champ = got; detail.champion = { pick: p && p.champion, actual: data.champion, got }; }
+  if (data.champion) { const got = p && sameTeam(p.champion, data.champion) ? champPointsFor(data) : 0; champ = got; detail.champion = { pick: p && p.champion, actual: data.champion, got }; }
   return { total: gMatch + gRank + ko + champ, groupMatch: gMatch, groupRank: gRank, knockout: ko, champ, detail };
 }
 function buildLeaderboard(data) {
@@ -626,7 +633,7 @@ function matchPredictionTally(data, m) {
     } else {
       const pk = (p.knockout && (p.knockout[slotId] || p.knockout[m.mid])) || null; // slot pick (fallback to legacy mid)
       backed = pk ? canonTeam(pk) : null;
-      if (m.status === "finished") { const w = data.knockoutResults[m.mid]; got = backed && w && sameTeam(backed, w) ? SCORING.knockout[m.round] || 0 : 0; }
+      if (m.status === "finished") { const w = data.knockoutResults[m.mid]; got = backed && w && sameTeam(backed, w) ? koPointsFor(data)[m.round] || 0 : 0; }
     }
     return { name, backed, got };
   });
@@ -643,7 +650,7 @@ function livePendingPoints(data, p) {
       if (e.status === "ok" && sameTeam(e.edge, leader)) { pts += SCORING.edgeCorrect; items.push({ m, pick: e.edge, val: SCORING.edgeCorrect }); }
     } else {
       const pick = p.knockout[m.mid];
-      if (pick && sameTeam(pick, leader)) { const v = SCORING.knockout[m.round] || 0; pts += v; items.push({ m, pick, val: v }); }
+      if (pick && sameTeam(pick, leader)) { const v = koPointsFor(data)[m.round] || 0; pts += v; items.push({ m, pick, val: v }); }
     }
   });
   return { pts, items };
@@ -1960,9 +1967,10 @@ function Profile({ data, lb, name, setName, t }) {
     </div>
   );
 }
-function Help({ t }) {
+function Help({ t, data }) {
+  const koPts = koPointsFor(data || {});
   const rules = [
-    { e: "🎯", k: "rule_exact", p: "+1" }, { e: "🗺️", k: "rule_ko", p: "+1" }, { e: "🏆", k: "rule_champ", p: "+1" },
+    { e: "🎯", k: "rule_exact", p: "+1" }, { e: "🗺️", k: "rule_ko", p: "+" + (koPts.R32 || 0) }, { e: "🏆", k: "rule_champ", p: "+" + champPointsFor(data || {}) },
   ];
   return (
     <div className="view">
@@ -1971,7 +1979,7 @@ function Help({ t }) {
       </div>
       <div className="card"><h3 className="cardh">{t("knockout")}</h3>
         <div className="korules">
-          {Object.entries(SCORING.knockout).map(([k, v]) => <div className="korule" key={k}><span>{t("r_" + k)}</span><b className="num">+{v}</b></div>)}
+          {KO_SEQ.map(([k]) => <div className="korule" key={k}><span>{t("r_" + k)}</span><b className="num">+{koPts[k] || 0}</b></div>)}
         </div>
       </div>
     </div>
@@ -2673,7 +2681,7 @@ function Points({ data, lb, t, name, setName }) {
         <h3 className="cardh">🏆 {t("champion")} · +{row.champ}</h3>
         {row.detail.champion ? (
           <div className="koaudit"><span className="kopick"><Team t={row.detail.champion.pick} /></span><span className="agarrow">vs</span><span className="koact">{t("actual")}: <Team t={row.detail.champion.actual} /></span><span className={"agpt " + ptClass(row.detail.champion.got)}>{row.detail.champion.got > 0 ? "+" + row.detail.champion.got : "0"}</span></div>
-        ) : <div className="empty sm">{t("champPending")} (+{SCORING.champion} {t("ifCorrect")})</div>}
+        ) : <div className="empty sm">{t("champPending")} (+{champPointsFor(data)} {t("ifCorrect")})</div>}
       </div>
       <div className="card">
         <h3 className="cardh">🗺️ {t("knockout")} · +{row.knockout}</h3>
@@ -2798,6 +2806,10 @@ function AdminSettings({ data, setData, t }) {
   const set = (k, v) => setData((d) => { const nd = { ...d, settings: { ...d.settings, [k]: v } }; if (k === "tz") setAppTz(v); persistLive(nd); return nd; });
   const pool = (Object.keys(data.players).length) * (Number(s.entryFeeAED) || 0);
   const tz = s.tz || "Asia/Dubai";
+  const koPts = koPointsFor(data), champPts = champPointsFor(data);
+  const num = (e) => Math.max(0, parseInt(String(e.target.value).replace(/\D/g, "")) || 0);
+  const setKo = (round, v) => setData((d) => { const cur = (d.settings && d.settings.koPoints) || SCORING.knockout; const nd = { ...d, settings: { ...d.settings, koPoints: { ...SCORING.knockout, ...cur, [round]: v } } }; persistLive(nd); return nd; });
+  const resetScoring = () => setData((d) => { const ns = { ...d.settings }; delete ns.koPoints; delete ns.champPoints; const nd = { ...d, settings: ns }; persistLive(nd); return nd; });
   return (
     <div className="view">
       <div className="card"><h3 className="cardh"><Ico name="settings" size={18} /> {t("nav_settings")}</h3>
@@ -2815,6 +2827,14 @@ function AdminSettings({ data, setData, t }) {
         </label>
         <label className="frow"><span>{t("deadline")}</span><input className="select sm" type="date" value={s.deadline || ""} onChange={(e) => set("deadline", e.target.value)} /></label>
         <label className="frow"><span>{t("lockPicks")}</span><input type="checkbox" checked={!!s.locked} onChange={(e) => set("locked", e.target.checked)} /></label>
+      </div>
+      <div className="card">
+        <div className="brk-head"><h3 className="cardh">🎯 {t("scoringTitle")}</h3><button className="seeall" onClick={resetScoring}>{t("scoringReset")}</button></div>
+        <p className="hint block">{t("scoringHint")}</p>
+        {KO_SEQ.map(([code]) => (
+          <label className="frow" key={code}><span>{t("r_" + code)}</span><input className="select sm" inputMode="numeric" value={koPts[code] ?? 0} onChange={(e) => setKo(code, num(e))} /></label>
+        ))}
+        <label className="frow"><span>🏆 {t("champion")}</span><input className="select sm" inputMode="numeric" value={champPts} onChange={(e) => set("champPoints", num(e))} /></label>
       </div>
       <TimezoneCheck tz={tz} t={t} />
       <div className="card poolcard"><div className="hint">{t("prizePool")}</div><div className="poolv num">{pool.toLocaleString("en-US")} {s.currency || "AED"}</div></div>
@@ -4009,7 +4029,7 @@ export default function App() {
         {view === "trends" && <Trends data={data} lb={lb} t={t} />}
         {view === "scorers" && <Scorers data={data} t={t} />}
         {view === "profile" && <Profile data={data} lb={lb} name={profileName} setName={selectProfile} t={t} />}
-        {view === "help" && <Help t={t} />}
+        {view === "help" && <Help t={t} data={data} />}
         {/* admin */}
         {view === "adminlogin" && <AdminLogin onAuth={() => { setIsAdmin(true); trackEvent("admin_login_success", {}); go("results"); }} t={t} />}
         {view === "results" && (isAdmin ? <Results data={data} setData={setData} t={t} lang={lang} /> : <AdminLogin onAuth={() => { setIsAdmin(true); trackEvent("admin_login_success", {}); go("results"); }} t={t} />)}

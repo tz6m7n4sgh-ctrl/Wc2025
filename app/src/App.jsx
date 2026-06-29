@@ -139,6 +139,11 @@ const I18N = {
     p_champ_t: "Champion", p_champ_d: "+1 for correctly picking the World Cup winner",
     p_exact: "exact", p_ingrp: "in group", p_yes: "correct", p_no: "missed",
     inProgress: "in progress", gcHint: "Your prediction next to the actual standings, with the points each pick earned.", gcProj: "Live: +1 for each team in its exact final position. Rises/falls as results come in, locks once the group finishes.",
+    nav_overview: "Dashboard", ovBeta: "Preview", ovBetaNote: "A new home-screen concept — preview only. The current Home is unchanged. Tell us if you'd like to make this the default.",
+    ovProgress: "Tournament progress", ovMatches: "matches", ovPlayed: "played", ovOf: "of", ovComplete: "complete", ovGroupStage: "Group stage", ovKnockout: "Knockout", ovLeftToPlay: "left to play",
+    ovLeader: "Leading", ovLeads: "leads by", ovTied: "Tied at the top", ovChasing: "chasing", ovPodium: "Top of the table", ovFullTable: "Full table",
+    ovStats: "Tournament stats", ovGoals: "Goals scored", ovPerMatch: "per match", ovBiggestWin: "Biggest win", ovTopChamp: "Crowd's champion", ovTopChampN: "of players", ovNoChamp: "No clear favourite yet",
+    ovLiveTitle: "Happening now", ovUpNext: "Up next", ovNothingLive: "No live matches right now.", ovYourRank: "Your position", ovSignInSee: "Sign in to see your standing.", ovViewBracket: "View bracket", ovNoData: "Data fills in as matches are played.",
   },
   ar: {
     brand: "كأس العالم 2026", dir: "rtl",
@@ -211,6 +216,11 @@ const I18N = {
     p_champ_t: "البطل", p_champ_d: "+1 لاختيار بطل كأس العالم بشكل صحيح",
     p_exact: "صحيح", p_ingrp: "في المجموعة", p_yes: "صحيح", p_no: "خطأ",
     inProgress: "قيد اللعب", gcHint: "توقعك بجانب الترتيب الفعلي، مع النقاط التي حققها كل اختيار.", gcProj: "مباشر: +1 لكل فريق في مركزه النهائي الصحيح. يتغيّر مع النتائج ويُثبَّت عند انتهاء المجموعة.",
+    nav_overview: "اللوحة", ovBeta: "معاينة", ovBetaNote: "تصميم جديد للصفحة الرئيسية — للمعاينة فقط. الصفحة الحالية لم تتغيّر. أخبرنا إن أردت اعتماده.",
+    ovProgress: "تقدّم البطولة", ovMatches: "مباراة", ovPlayed: "لُعبت", ovOf: "من", ovComplete: "مكتملة", ovGroupStage: "دور المجموعات", ovKnockout: "الأدوار الإقصائية", ovLeftToPlay: "متبقية",
+    ovLeader: "المتصدّر", ovLeads: "يتقدّم بفارق", ovTied: "تعادل في الصدارة", ovChasing: "يطارد", ovPodium: "صدارة الترتيب", ovFullTable: "الترتيب الكامل",
+    ovStats: "إحصاءات البطولة", ovGoals: "الأهداف", ovPerMatch: "لكل مباراة", ovBiggestWin: "أكبر فوز", ovTopChamp: "بطل الجمهور", ovTopChampN: "من اللاعبين", ovNoChamp: "لا مرشّح واضح بعد",
+    ovLiveTitle: "يحدث الآن", ovUpNext: "التالي", ovNothingLive: "لا مباريات مباشرة الآن.", ovYourRank: "مركزك", ovSignInSee: "سجّل الدخول لرؤية ترتيبك.", ovViewBracket: "عرض الأدوار", ovNoData: "تُملأ البيانات مع لعب المباريات.",
   },
 };
 
@@ -1248,6 +1258,144 @@ function Dashboard({ data, lb, lang, onOpen, t, go }) {
     </div>
   );
 }
+// Circular SVG progress ring used by the Overview dashboard.
+function ProgressRing({ pct, size = 132, stroke = 12, children }) {
+  const r = (size - stroke) / 2, c = 2 * Math.PI * r, off = c * (1 - Math.max(0, Math.min(1, pct / 100)));
+  return (
+    <div className="ov-ring" style={{ width: size, height: size }}>
+      <svg width={size} height={size}>
+        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="var(--border)" strokeWidth={stroke} />
+        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="var(--grass)" strokeWidth={stroke} strokeLinecap="round"
+          strokeDasharray={c} strokeDashoffset={off} transform={`rotate(-90 ${size / 2} ${size / 2})`} style={{ transition: "stroke-dashoffset 1s ease" }} />
+      </svg>
+      <div className="ov-ring-in">{children}</div>
+    </div>
+  );
+}
+// TEMPORARY preview dashboard (lives in the More menu). A status-at-a-glance
+// home concept: tournament progress, who's winning, what's live, and key stats.
+// The current Home is unchanged; this is opt-in until confirmed.
+function Overview({ data, lb, lang, onOpen, t, go, player }) {
+  const phase = currentPhase(data);
+  const all = data.matches || [];
+  const done = all.filter((m) => m.status === "finished");
+  const liveNow = all.filter((m) => m.status === "live");
+  const total = all.length || 1;
+  const pct = Math.round((done.length / total) * 100);
+  const grp = all.filter((m) => m.stage === "group");
+  const grpDone = grp.filter((m) => m.status === "finished").length;
+  const ko = all.filter((m) => m.stage !== "group");
+  const koDone = ko.filter((m) => m.status === "finished").length;
+  const goals = done.reduce((s, m) => s + (Number(m.finalH) || 0) + (Number(m.finalA) || 0), 0);
+  const gpm = done.length ? (goals / done.length).toFixed(1) : "—";
+  let big = null;
+  done.forEach((m) => { const d = Math.abs((Number(m.finalH) || 0) - (Number(m.finalA) || 0)); if (d > 0 && (!big || d > big.d)) big = { d, m }; });
+  const nPlayers = Object.keys(data.players || {}).length || 1;
+  const champCount = {};
+  Object.values(data.players || {}).forEach((p) => { const c = p.champion && canonTeam(p.champion); if (c) champCount[c] = (champCount[c] || 0) + 1; });
+  const topChamp = Object.entries(champCount).sort((a, b) => b[1] - a[1])[0];
+  const leader = lb[0], second = lb[1];
+  const lead = leader && second ? leader.total - second.total : 0;
+  const next = liveNow.length ? null : all.filter((m) => m.status === "scheduled").sort((a, b) => a.ko - b.ko)[0];
+  const me = player ? lb.find((r) => r.name === player) : null;
+  const dt = new Intl.DateTimeFormat(lang === "ar" ? "ar" : "en-GB", { weekday: "long", day: "numeric", month: "long", timeZone: getAppTz() }).format(new Date(nowMs()));
+  return (
+    <div className="view">
+      <div className="ov-beta">
+        <span className="ov-beta-tag">✦ {t("ovBeta")}</span>
+        <span className="ov-beta-tx">{t("ovBetaNote")}</span>
+      </div>
+
+      {/* progress + leader hero */}
+      <div className="ov-hero card">
+        <div className="ov-hero-top"><span className="ts-dot" /> {t(phase)} · <b>{dt}</b></div>
+        <div className="ov-hero-grid">
+          <ProgressRing pct={pct}>
+            <div className="ov-ring-pct num">{pct}<span>%</span></div>
+            <div className="ov-ring-lbl">{t("ovComplete")}</div>
+          </ProgressRing>
+          <div className="ov-hero-info">
+            <div className="ov-hero-kpi"><b className="num">{done.length}</b><span>{t("ovOf")} {total} {t("ovMatches")} {t("ovPlayed")}</span></div>
+            <div className="ov-bars">
+              <div className="ov-bar-row"><span className="ov-bar-lbl">{t("ovGroupStage")}</span><div className="ov-bar"><span style={{ width: `${(grpDone / (grp.length || 1)) * 100}%` }} /></div><span className="ov-bar-n num">{grpDone}/{grp.length}</span></div>
+              <div className="ov-bar-row"><span className="ov-bar-lbl">{t("ovKnockout")}</span><div className="ov-bar"><span className="ko" style={{ width: `${(koDone / (ko.length || 1)) * 100}%` }} /></div><span className="ov-bar-n num">{koDone}/{ko.length}</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* who's winning */}
+      {leader && (
+        <button className="ov-leader card" onClick={() => go("table")}>
+          <div className="ov-leader-crown">👑</div>
+          <Avatar name={leader.name} />
+          <div className="ov-leader-tx">
+            <span className="ov-leader-cap">{lead > 0 ? t("ovLeader") : t("ovTied")}</span>
+            <b className="ov-leader-name">{leader.name}</b>
+            <span className="ov-leader-sub">{lead > 0 ? <>{t("ovLeads")} <b className="num">{lead}</b> {t("pts")}{second ? <> · {t("ovChasing")}: {second.name}</> : null}</> : second ? <>= {second.name}</> : null}</span>
+          </div>
+          <div className="ov-leader-pts"><b className="num">{leader.total}</b><span>{t("pts")}</span><span className="ov-go">{t("ovFullTable")} ›</span></div>
+        </button>
+      )}
+
+      {/* live / next */}
+      <div className="card">
+        <h3 className="cardh">{liveNow.length ? <><span className="livedot" /> {t("ovLiveTitle")}</> : <>⏭️ {t("ovUpNext")}</>}</h3>
+        {liveNow.length > 0 ? liveNow.map((m) => <MatchRow key={m.id} m={m} data={data} lang={lang} onOpen={onOpen} />)
+          : next ? (
+            <button className="nextcard" onClick={() => onOpen(next)}>
+              <div className="nc-bg" />
+              <div className="nc-label">{t("nextMatch")}</div>
+              <div className="nc-fix">
+                <div className="nc-team"><span className="nc-fl">{flagOf(next.home)}</span><span className="nc-tn">{canonTeam(next.home)}</span></div>
+                <div className="nc-mid"><NextCountdown ko={next.ko} t={t} /><span className="nc-when">{fmtDay(next.ko, lang)} {fmtTime(next.ko, lang)}</span></div>
+                <div className="nc-team"><span className="nc-fl">{flagOf(next.away)}</span><span className="nc-tn">{canonTeam(next.away)}</span></div>
+              </div>
+              <div className="nc-stage">{next.stage === "group" ? `${t("group")} ${next.group}` : t("r_" + next.round)}</div>
+            </button>
+          ) : <div className="empty sm">{t("ovNothingLive")}</div>}
+      </div>
+
+      {/* tournament stats */}
+      <div className="card">
+        <h3 className="cardh">📊 {t("ovStats")}</h3>
+        <div className="ov-stats">
+          <div className="ov-stat"><span className="ov-stat-v num">{goals}</span><span className="ov-stat-k">{t("ovGoals")}</span></div>
+          <div className="ov-stat"><span className="ov-stat-v num">{gpm}</span><span className="ov-stat-k">{t("ovPerMatch")}</span></div>
+          <div className="ov-stat ov-stat-wide">
+            <span className="ov-stat-k">🏟️ {t("ovBiggestWin")}</span>
+            {big ? <span className="ov-stat-big">{flagOf(big.m.finalH > big.m.finalA ? big.m.home : big.m.away)} {canonTeam(big.m.finalH > big.m.finalA ? big.m.home : big.m.away)} <b className="num">{Math.max(big.m.finalH, big.m.finalA)}–{Math.min(big.m.finalH, big.m.finalA)}</b> {canonTeam(big.m.finalH > big.m.finalA ? big.m.away : big.m.home)}</span> : <span className="ov-stat-big dim">{t("ovNoData")}</span>}
+          </div>
+          <div className="ov-stat ov-stat-wide">
+            <span className="ov-stat-k">👑 {t("ovTopChamp")}</span>
+            {topChamp ? <span className="ov-stat-big">{flagOf(topChamp[0])} {topChamp[0]} <b className="num">{topChamp[1]}</b>/{nPlayers} {t("ovTopChampN")}</span> : <span className="ov-stat-big dim">{t("ovNoChamp")}</span>}
+          </div>
+        </div>
+      </div>
+
+      {/* podium mini */}
+      <div className="card">
+        <h3 className="cardh">🏅 {t("ovPodium")} <button className="seeall" onClick={() => go("table")}>{t("seeAll")}</button></h3>
+        {lb.slice(0, 5).map((r, i) => (
+          <button key={r.name} className="ov-rankrow" onClick={() => go("table")}>
+            <span className={"ov-rk num" + (i === 0 ? " gold" : "")}>{i + 1}</span>
+            <Avatar name={r.name} />
+            <span className="ov-rk-name">{r.name}</span>
+            <span className="ov-rk-pts num">{r.total}</span>
+          </button>
+        ))}
+      </div>
+
+      {/* your position */}
+      {me ? (
+        <button className="ov-you card" onClick={() => go("bracket")}>
+          <div className="ov-you-tx"><span className="ov-leader-cap">{t("ovYourRank")}</span><b>#{me.rank} · {me.name}</b></div>
+          <div className="ov-you-pts"><b className="num">{me.total}</b> {t("pts")} <span className="ov-go">{t("ovViewBracket")} ›</span></div>
+        </button>
+      ) : <button className="ov-you card sub" onClick={() => go("mypicks")}><span className="hint">{t("ovSignInSee")}</span></button>}
+    </div>
+  );
+}
 function Leaderboard({ data, lb, prevRanks, name, setName, t, go }) {
   const top3 = lb.slice(0, 3), order = [top3[1], top3[0], top3[2]];
   const sel = lb.find((r) => r.name === name) || lb[0];
@@ -1292,7 +1440,7 @@ function Leaderboard({ data, lb, prevRanks, name, setName, t, go }) {
     </div>
   );
 }
-function Groups({ data, t, onOpenGroup }) {
+function Groups({ data, t, lang, onOpenGroup }) {
   return (
     <div className="view">
       <div className="card slim glegend">
@@ -1308,6 +1456,10 @@ function Groups({ data, t, onOpenGroup }) {
       </div>
       <div className="gwrap">
         {GROUP_KEYS.map((g, i) => <GroupCard g={g} data={data} t={t} key={g} delay={i * 40} onOpenGroup={onOpenGroup} />)}
+      </div>
+      <div className="card">
+        <h3 className="cardh">🏆 {t("koBracket")}</h3>
+        <KnockoutBracketG data={data} t={t} lang={lang} />
       </div>
     </div>
   );
@@ -3372,6 +3524,7 @@ const NAV = [
   { id: "more", ic: "menu", key: "nav_more" },
 ];
 const MORE_ITEMS = [
+  { id: "overview", ic: "chart", key: "nav_overview" },
   { id: "mypicks", ic: "prediction", key: "nav_mypicks" },
   { id: "groups", ic: "groups", key: "nav_groups" },
   { id: "team", ic: "users", key: "nav_team" },
@@ -3653,10 +3806,11 @@ export default function App() {
           ? <MyPickCard data={data} setData={setData} player={player} t={t} logout={logout} persist={persistMyPicks} />
           : <div className="view"><div className="card empty"><p className="block">{t("mypicksSignIn")}</p><button className="btn" onClick={() => setCodeOpen(true)}>🔑 {t("codeGo")}</button></div></div>)}
         {view === "home" && <Dashboard data={data} lb={lb} lang={lang} onOpen={openMatch} t={t} go={go} />}
+        {view === "overview" && <Overview data={data} lb={lb} lang={lang} onOpen={openMatch} t={t} go={go} player={player} />}
         {view === "today" && <MatchCenter data={data} lang={lang} onOpen={openMatch} t={t} />}
         {view === "match" && match && <MatchDetail m={(data.matches || []).find((x) => x.id === match.id) || match} data={data} lang={lang} t={t} onBack={() => go("today")} />}
         {view === "table" && <Leaderboard data={data} lb={lb} prevRanks={prevRanks} name={profileName} setName={selectProfile} t={t} go={go} />}
-        {view === "groups" && <Groups data={data} t={t} onOpenGroup={openGroup} />}
+        {view === "groups" && <Groups data={data} t={t} lang={lang} onOpenGroup={openGroup} />}
         {view === "groupgames" && groupSel && <GroupGames g={groupSel} data={data} lang={lang} onOpen={openMatch} t={t} onBack={() => go("groups")} />}
         {view === "team" && <TeamFixtures data={data} lang={lang} onOpen={openMatch} t={t} />}
         {view === "bracket" && <BracketView data={data} lb={lb} t={t} lang={lang} name={profileName} setName={selectProfile} />}
@@ -4415,6 +4569,46 @@ border-radius:18px;padding:16px 14px;margin:10px 0;color:#fff;background:linear-
 .r16cand{margin-top:10px}.kotie.r16 .r16cands{flex-direction:column;align-items:flex-start;gap:2px}
 .r16num{font-size:10.5px;letter-spacing:.03em;text-transform:uppercase;color:var(--muted)}
 .r16teams{font-size:12px;font-weight:600;color:var(--ink);line-height:1.35}
+
+/* overview / dashboard (preview) */
+.ov-beta{display:flex;align-items:center;gap:10px;margin-bottom:12px;padding:10px 13px;border-radius:13px;background:linear-gradient(120deg,rgba(245,196,81,.16),rgba(25,195,125,.12));border:1px solid rgba(245,196,81,.4)}
+.ov-beta-tag{flex:none;font-size:11px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--gold-d);background:var(--card);border:1px solid rgba(245,196,81,.5);border-radius:99px;padding:3px 9px}
+.ov-beta-tx{font-size:12px;color:var(--muted);line-height:1.35}
+.ov-hero{padding:16px}
+.ov-hero-top{font-size:12.5px;color:var(--muted);display:flex;align-items:center;gap:6px;margin-bottom:14px}.ov-hero-top .ts-dot{width:8px;height:8px;border-radius:50%;background:var(--grass)}
+.ov-hero-grid{display:flex;align-items:center;gap:18px}
+.ov-ring{position:relative;flex:none}.ov-ring-in{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.ov-ring-pct{font-size:30px;font-weight:900;color:var(--ink);line-height:1}.ov-ring-pct span{font-size:15px;margin-inline-start:1px}
+.ov-ring-lbl{font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin-top:3px}
+.ov-hero-info{flex:1;min-width:0}
+.ov-hero-kpi{display:flex;flex-direction:column;margin-bottom:12px}.ov-hero-kpi b{font-size:26px;font-weight:900;color:var(--ink);line-height:1}.ov-hero-kpi span{font-size:12px;color:var(--muted)}
+.ov-bars{display:flex;flex-direction:column;gap:8px}
+.ov-bar-row{display:flex;align-items:center;gap:8px}.ov-bar-lbl{font-size:11px;color:var(--muted);width:74px;flex:none}
+.ov-bar{flex:1;height:8px;border-radius:99px;background:var(--border);overflow:hidden}.ov-bar span{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,var(--grass-d),var(--grass));transition:width 1s cubic-bezier(.2,.8,.2,1)}.ov-bar span.ko{background:linear-gradient(90deg,var(--gold-d),var(--gold))}
+.ov-bar-n{font-size:11px;font-weight:700;color:var(--muted);width:42px;text-align:end;flex:none}
+.ov-leader{display:flex;align-items:center;gap:12px;width:100%;text-align:start;cursor:pointer;padding:14px}
+.ov-leader-crown{font-size:22px;flex:none}
+.ov-leader-tx{flex:1;min-width:0;display:flex;flex-direction:column}
+.ov-leader-cap{font-size:10.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--gold-d)}
+.ov-leader-name{font-size:17px;font-weight:800;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ov-leader-sub{font-size:11.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ov-leader-pts{flex:none;display:flex;flex-direction:column;align-items:flex-end}.ov-leader-pts b{font-size:24px;font-weight:900;color:var(--gold-d);line-height:1}.ov-leader-pts span{font-size:10px;color:var(--muted)}
+.ov-go{font-size:10.5px;font-weight:800;color:var(--grass-d);margin-top:4px}
+.ov-stats{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.ov-stat{background:var(--soft);border:1px solid var(--border);border-radius:12px;padding:11px 13px;display:flex;flex-direction:column;gap:3px}
+.ov-stat-wide{grid-column:1 / -1}
+.ov-stat-v{font-size:24px;font-weight:900;color:var(--ink);line-height:1}
+.ov-stat-k{font-size:11px;color:var(--muted)}
+.ov-stat-big{font-size:13px;font-weight:700;color:var(--ink)}.ov-stat-big.dim{font-weight:500;color:var(--muted)}.ov-stat-big b{color:var(--grass-d)}
+.ov-rankrow{display:flex;align-items:center;gap:10px;width:100%;text-align:start;padding:7px 4px;background:none;border:none;border-bottom:1px solid var(--border);cursor:pointer}
+.ov-rankrow:last-child{border-bottom:none}
+.ov-rk{width:22px;flex:none;text-align:center;font-weight:800;color:var(--muted)}.ov-rk.gold{color:var(--gold-d)}
+.ov-rk-name{flex:1;min-width:0;font-weight:600;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ov-rk-pts{flex:none;font-weight:800;color:var(--grass-d)}
+.ov-you{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;text-align:start;cursor:pointer;padding:13px 14px;background:linear-gradient(120deg,var(--card),rgba(25,195,125,.07))}
+.ov-you.sub{justify-content:center}
+.ov-you-tx{display:flex;flex-direction:column}.ov-you-tx b{font-size:15px;color:var(--ink)}
+.ov-you-pts{font-size:13px;color:var(--muted);text-align:end}.ov-you-pts b{font-size:18px;color:var(--grass-d)}
 
 /* admin: results editor */
 .bucketstrip{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:12px}

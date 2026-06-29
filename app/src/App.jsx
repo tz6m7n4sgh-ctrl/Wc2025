@@ -1447,7 +1447,7 @@ function Groups({ data, t, lang, onOpenGroup }) {
 // codes, real connector lines, the trophy/champion and (for share) a points line.
 function rrPath(x, px, py, w, h, r) { x.beginPath(); x.moveTo(px + r, py); x.arcTo(px + w, py, px + w, py + h, r); x.arcTo(px + w, py + h, px, py + h, r); x.arcTo(px, py + h, px, py, r); x.arcTo(px, py, px + w, py, r); x.closePath(); }
 function drawBracket(canvas, opts) {
-  const { data, t } = opts, header = !!opts.header, S = 2, W = 1120, H = header ? 800 : 600;
+  const { data, t } = opts, header = !!opts.header, S = 2, W = 1620, H = header ? 1060 : 840;
   canvas.width = W * S; canvas.height = H * S;
   const x = canvas.getContext("2d"); x.setTransform(S, 0, 0, S, 0, 0);
   x.fillStyle = "#f7f8fa"; x.fillRect(0, 0, W, H);
@@ -1487,8 +1487,8 @@ function drawBracket(canvas, opts) {
       if (!w || teamKey(w) !== traceK) break;
     }
   }
-  const top = header ? 92 : 18, bottom = H - (header ? 60 : 18), areaH = bottom - top;
-  const boxW = 92, boxH = 34, colGap = 18, stepX = boxW + colGap;
+  const top = header ? 96 : 20, bottom = H - (header ? 64 : 20), areaH = bottom - top;
+  const boxW = 158, boxH = 46, colGap = 16, stepX = boxW + colGap;
   const lx = [14, 14 + stepX, 14 + 2 * stepX, 14 + 3 * stepX];
   const rx = lx.map((v) => W - boxW - v);
   const cxx = W / 2 - boxW / 2, spacing = areaH / 8;
@@ -1499,22 +1499,26 @@ function drawBracket(canvas, opts) {
     return { cx: (right ? rx[rIdx] : lx[rIdx]) + boxW / 2, cy: yOf(rIdx, li) };
   };
   const COL = { correct: ["#e6f4ea", "#137a3b"], wrong: ["#fdecea", "#b71c1c"], pending: ["#eef1f4", "#16324f"] };
+  const fit = (str, maxW) => { if (x.measureText(str).width <= maxW) return str; let s = str; while (s.length > 1 && x.measureText(s + "…").width > maxW) s = s.slice(0, -1); return s + "…"; };
   const drawMatch = (px, cy, info, slotId) => {
     if (opts.hits) opts.hits.push({ x: px, y: cy - boxH / 2, w: boxW, h: boxH, a: info.a, b: info.b });
     const onPath = slotId && pathSet.has(slotId), dim = traceK && !onPath;
-    x.save(); if (dim) x.globalAlpha = 0.3;
-    rrPath(x, px, cy - boxH / 2, boxW, boxH, 7); x.fillStyle = "#fff"; x.fill(); x.strokeStyle = onPath ? "#e0a31e" : "#d3d9e0"; x.lineWidth = onPath ? 2.5 : 1; x.stroke();
-    x.beginPath(); x.moveTo(px, cy); x.lineTo(px + boxW, cy); x.strokeStyle = "#eef2f6"; x.lineWidth = 1; x.stroke();
+    x.save(); if (dim) x.globalAlpha = 0.28;
+    rrPath(x, px, cy - boxH / 2, boxW, boxH, 9); x.fillStyle = "#fff"; x.fill(); x.strokeStyle = onPath ? "#e0a31e" : "#d3d9e0"; x.lineWidth = onPath ? 2.5 : 1; x.stroke();
+    x.beginPath(); x.moveTo(px + 6, cy); x.lineTo(px + boxW - 6, cy); x.strokeStyle = "#eef2f6"; x.lineWidth = 1; x.stroke();
+    x.textBaseline = "middle";
     const slot = (tm, sy) => {
       const isW = info.winner && tm && sameTeam(tm, info.winner);
-      if (isW && info.status) { x.fillStyle = COL[info.status][0]; rrPath(x, px + 1, sy - 8, boxW - 2, 16, 4); x.fill(); }
-      x.textAlign = "left"; x.font = "800 12px Arial, sans-serif";
+      if (isW && info.status) { x.fillStyle = COL[info.status][0]; rrPath(x, px + 2, sy - 11, boxW - 4, 22, 6); x.fill(); }
+      x.textAlign = "left"; x.font = "17px Arial, sans-serif";
+      if (tm) x.fillText(flagOf(tm), px + 9, sy + 1);
+      x.font = "700 14px Arial, sans-serif";
       x.fillStyle = !tm ? "#9aa6b2" : (isW && info.status) ? COL[info.status][1] : (info.winner ? "#aab4bf" : "#16324f");
-      const label = tm ? code3(tm) : "—";
-      x.fillText(label, px + 9, sy + 1);
-      if (info.winner && tm && !isW) { const tw = x.measureText(label).width; x.strokeStyle = "#aab4bf"; x.beginPath(); x.moveTo(px + 9, sy + 1); x.lineTo(px + 9 + tw, sy + 1); x.stroke(); }
+      const label = tm ? fit(canonTeam(tm), boxW - 46) : "—";
+      x.fillText(label, px + 34, sy + 1);
+      if (info.winner && tm && !isW) { const tw = x.measureText(label).width; x.strokeStyle = "#aab4bf"; x.lineWidth = 1; x.beginPath(); x.moveTo(px + 34, sy + 1); x.lineTo(px + 34 + tw, sy + 1); x.stroke(); }
     };
-    slot(info.a, cy - 9); slot(info.b, cy + 9);
+    slot(info.a, cy - 12); slot(info.b, cy + 12);
     x.restore();
   };
   const connector = (cols, r, side) => {
@@ -1528,11 +1532,19 @@ function drawBracket(canvas, opts) {
     }
   };
   const seq = [["R32", 8], ["R16", 4], ["QF", 2], ["SF", 1]], off = { R32: 8, R16: 4, QF: 2, SF: 1 };
-  // gold "path to win" first, so the boxes overlay it and it shows in the gaps
+  // gold "path to win", drawn first so boxes overlay it (shows in the gaps);
+  // animates on (traceProgress 0→1) when a team is tapped.
   if (traceK && pathSet.size) {
-    x.save(); x.strokeStyle = "#e6a31e"; x.lineWidth = 4; x.lineCap = "round"; x.lineJoin = "round"; x.beginPath();
-    let prev = null;
-    for (const [code, n] of KO_SEQ) { let ci = -1; for (let i = 0; i < n; i++) if (pathSet.has(koSlotId(code, i))) { ci = i; break; } if (ci < 0) continue; const c = boxCenter(code, ci); if (prev) { x.moveTo(prev.cx, prev.cy); x.lineTo(c.cx, c.cy); } prev = c; }
+    const pp = [];
+    for (const [code, n] of KO_SEQ) { let ci = -1; for (let i = 0; i < n; i++) if (pathSet.has(koSlotId(code, i))) { ci = i; break; } if (ci >= 0) pp.push(boxCenter(code, ci)); }
+    const segs = []; let total = 0;
+    for (let i = 1; i < pp.length; i++) { const d = Math.hypot(pp[i].cx - pp[i - 1].cx, pp[i].cy - pp[i - 1].cy); segs.push(d); total += d; }
+    let draw = total * (opts.traceProgress == null ? 1 : opts.traceProgress);
+    x.save(); x.strokeStyle = "#e6a31e"; x.lineWidth = 5; x.lineCap = "round"; x.lineJoin = "round"; x.shadowColor = "rgba(230,163,30,.55)"; x.shadowBlur = 8; x.beginPath();
+    if (pp.length) {
+      x.moveTo(pp[0].cx, pp[0].cy);
+      for (let i = 1; i < pp.length; i++) { const seg = segs[i - 1]; if (draw >= seg) { x.lineTo(pp[i].cx, pp[i].cy); draw -= seg; } else { const f = seg ? draw / seg : 0; x.lineTo(pp[i - 1].cx + (pp[i].cx - pp[i - 1].cx) * f, pp[i - 1].cy + (pp[i].cy - pp[i - 1].cy) * f); draw = 0; break; } }
+    }
     x.stroke(); x.restore();
   }
   [0, 1, 2].forEach((r) => connector(lx, r, "L"));
@@ -1548,7 +1560,7 @@ function drawBracket(canvas, opts) {
   rrPath(x, cxx - 10, H / 2 + 16, boxW + 20, 28, 8);
   if (champ && ci.status) { x.fillStyle = COL[ci.status][0]; x.fill(); x.strokeStyle = COL[ci.status][1]; } else { x.fillStyle = "#f5c451"; x.fill(); x.strokeStyle = "#caa033"; }
   x.stroke();
-  x.fillStyle = champ && ci.status ? COL[ci.status][1] : "#241c00"; x.font = "800 13px Arial, sans-serif"; x.fillText("👑 " + (champ || "—"), W / 2, H / 2 + 31);
+  x.fillStyle = champ && ci.status ? COL[ci.status][1] : "#241c00"; x.font = "800 14px Arial, sans-serif"; x.textBaseline = "alphabetic"; x.fillText("👑 " + (champ ? fit(champ, boxW + 4) : "—"), W / 2, H / 2 + 31);
   if (header) { x.fillStyle = "#0e2a47"; x.font = "800 14px Arial, sans-serif"; x.fillText(`${opts.koPts} ${t("knockout")} pts · ${opts.totalPts} ${t("pts")}`, W / 2, H - 32); }
 }
 function makeBracketCanvas(opts) { const c = document.createElement("canvas"); drawBracket(c, opts); return c; }
@@ -1573,12 +1585,19 @@ function BracketDiagram({ data, picks, mode, t }) {
   const pinch = useRef(null);
   const moved = useRef(false);
   const apply = () => { if (stRef.current) stRef.current.style.transform = `translate(${tf.current.x}px,${tf.current.y}px) scale(${tf.current.s})`; };
-  useEffect(() => {
+  const drawNow = (prog) => {
     const c = canRef.current; if (!c) return;
     const hits = [];
-    drawBracket(c, { data, picks: picks || {}, mode: mode || "player", header: false, t, trace, hits });
+    drawBracket(c, { data, picks: picks || {}, mode: mode || "player", header: false, t, trace, hits, traceProgress: prog });
     hitsRef.current = hits;
+  };
+  useEffect(() => {
     if (!portrait) { tf.current = { s: 1, x: 0, y: 0 }; apply(); }
+    if (!trace) { drawNow(1); return; }
+    let raf, start = null; const dur = 520;
+    const step = (ts) => { if (start == null) start = ts; const p = Math.min(1, (ts - start) / dur); drawNow(p); if (p < 1) raf = requestAnimationFrame(step); };
+    raf = requestAnimationFrame(step);
+    return () => cancelAnimationFrame(raf);
   }, [data, picks, mode, t, trace, portrait]);
   const clampS = (s) => Math.max(1, Math.min(4.5, s));
   const reset = () => { tf.current = { s: 1, x: 0, y: 0 }; apply(); };
@@ -1757,9 +1776,19 @@ function KnockoutBracketG({ data, t, lang, picks, mode = "results" }) {
         onTouchStart={(e) => { sx.current = e.touches[0].clientX; drag.current = false; }} onTouchMove={(e) => dragMove(e.touches[0].clientX)} onTouchEnd={(e) => dragEnd(e.changedTouches[0].clientX)}
         onPointerDown={(e) => { if (e.pointerType === "mouse") { sx.current = e.clientX; drag.current = false; } }} onPointerMove={(e) => { if (e.pointerType === "mouse" && sx.current != null) dragMove(e.clientX); }} onPointerUp={(e) => { if (e.pointerType === "mouse") dragEnd(e.clientX); }} onPointerLeave={(e) => { if (e.pointerType === "mouse" && sx.current != null) dragEnd(e.clientX); }}>
         <div className={"gko-stage " + (dir > 0 ? "fromR" : "fromL")} key={r} ref={stageRef}>
-          <div className="gko-list">
-            {Array.from({ length: n }, (_, i) => <Card v={view(code, i)} key={i} />)}
-          </div>
+          {!last ? (
+            <div className="gko-pairs">
+              {Array.from({ length: KO_SEQ[r + 1][1] }, (_, pi) => (
+                <div className="gko-pair" key={pi}>
+                  <div className="gko-children"><Card v={view(code, 2 * pi)} /><Card v={view(code, 2 * pi + 1)} /></div>
+                  <div className="gko-conn" />
+                  <div className="gko-parent"><Card v={view(KO_SEQ[r + 1][0], pi)} /></div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="gko-finalwrap"><Card v={view("F", 0)} /></div>
+          )}
         </div>
       </div>
     </div>
@@ -1767,7 +1796,7 @@ function KnockoutBracketG({ data, t, lang, picks, mode = "results" }) {
 }
 function BracketView({ data, lb, t, lang, name, setName, go }) {
   const [tab, setTab] = useState("live"); // "live" = actual bracket · "player" = a player's prediction
-  const [look, setLook] = useState("diagram"); // "diagram" = two-sided map · "list" = per-round list
+  const [look, setLook] = useState("list"); // "list" = per-round connector tree (default) · "diagram" = two-sided map
   const LookToggle = () => (
     <div className="brk-look">
       <button className={"brk-lk" + (look === "diagram" ? " on" : "")} onClick={() => setLook("diagram")}>🗺️ {t("brkDiagram")}</button>
@@ -4653,13 +4682,14 @@ border-radius:18px;padding:16px 14px;margin:10px 0;color:#fff;background:linear-
 .bdg-dot{width:9px;height:9px;border-radius:50%;background:#e6a31e;flex:none;box-shadow:0 0 0 3px rgba(230,163,30,.2)}
 .bdg-btns{display:flex;gap:5px;flex:none}
 .bdg-b{width:32px;height:32px;border:1px solid var(--border);background:var(--card);border-radius:9px;font-size:15px;font-weight:800;color:var(--ink);cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1}
-.bdg-vp{position:relative;overflow:hidden;border:1px solid var(--border);border-radius:14px;background:#f7f8fa;touch-action:none;-webkit-user-select:none;user-select:none;cursor:grab}
+.bdg-vp{position:relative;overflow:hidden;border:1px solid var(--border);border-radius:14px;background:#f7f8fa;touch-action:none;-webkit-user-select:none;user-select:none;cursor:grab;animation:bdgIn .34s cubic-bezier(.22,.61,.36,1)}
+@keyframes bdgIn{from{opacity:0;transform:scale(.98)}to{opacity:1;transform:none}}
 .bdg-vp:active{cursor:grabbing}
 .bdg-stage{transform-origin:0 0;will-change:transform}
 .bdg-canvas{display:block;width:100%;height:auto}
 /* portrait: rotate the wide bracket 90° so it's big; prompt to turn the phone */
 .bdg-rotate{font-weight:700;color:var(--ink)}
-.bdg-rotwrap{display:flex;align-items:center;justify-content:center;overflow:hidden;height:74vh;max-height:680px;border:1px solid var(--border);border-radius:14px;background:#f7f8fa}
+.bdg-rotwrap{display:flex;align-items:center;justify-content:center;overflow:hidden;height:74vh;max-height:680px;border:1px solid var(--border);border-radius:14px;background:#f7f8fa;animation:bdgIn .34s cubic-bezier(.22,.61,.36,1)}
 .bdg-rotcanvas{flex:none;width:min(74vh,660px);height:auto;transform:rotate(90deg)}
 /* canvas bracket: scales to the card width so the whole diagram is always visible */
 .brkimg-wrap{margin-top:8px;border:1px solid var(--border);border-radius:12px;overflow:hidden;background:#f7f8fa}

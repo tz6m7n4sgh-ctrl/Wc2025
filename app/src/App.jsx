@@ -143,6 +143,7 @@ const I18N = {
     ovProgress: "Tournament progress", ovMatches: "matches", ovPlayed: "played", ovOf: "of", ovComplete: "complete", ovGroupStage: "Group stage", ovKnockout: "Knockout", ovLeftToPlay: "left to play",
     ovLeader: "Leading", ovLeads: "leads by", ovTied: "Tied at the top", ovChasing: "chasing", ovPodium: "Top of the table", ovFullTable: "Full table",
     ovStats: "Tournament stats", ovGoals: "Goals scored", ovPerMatch: "per match", ovBiggestWin: "Biggest win", ovTopChamp: "Crowd's champion", ovTopChampN: "of players", ovNoChamp: "No clear favourite yet",
+    ovResultsCalled: "Latest results — who called it", ovBacked: "backed", ovDrawNoCall: "Draw — no pick scored", ovBackingNext: "Who the league is backing", ovPulse: "League prediction pulse", ovAvgPts: "Avg points / player", ovHitRate: "Correct-call rate",
     ovLiveTitle: "Happening now", ovUpNext: "Up next", ovNothingLive: "No live matches right now.", ovYourRank: "Your position", ovSignInSee: "Sign in to see your standing.", ovViewBracket: "View bracket", ovNoData: "Data fills in as matches are played.",
   },
   ar: {
@@ -220,6 +221,7 @@ const I18N = {
     ovProgress: "تقدّم البطولة", ovMatches: "مباراة", ovPlayed: "لُعبت", ovOf: "من", ovComplete: "مكتملة", ovGroupStage: "دور المجموعات", ovKnockout: "الأدوار الإقصائية", ovLeftToPlay: "متبقية",
     ovLeader: "المتصدّر", ovLeads: "يتقدّم بفارق", ovTied: "تعادل في الصدارة", ovChasing: "يطارد", ovPodium: "صدارة الترتيب", ovFullTable: "الترتيب الكامل",
     ovStats: "إحصاءات البطولة", ovGoals: "الأهداف", ovPerMatch: "لكل مباراة", ovBiggestWin: "أكبر فوز", ovTopChamp: "بطل الجمهور", ovTopChampN: "من اللاعبين", ovNoChamp: "لا مرشّح واضح بعد",
+    ovResultsCalled: "آخر النتائج — مَن توقّعها", ovBacked: "توقّعوا", ovDrawNoCall: "تعادل — لا نقاط", ovBackingNext: "مَن يدعمه اللاعبون", ovPulse: "نبض التوقّعات", ovAvgPts: "متوسط النقاط / لاعب", ovHitRate: "نسبة التوقّع الصحيح",
     ovLiveTitle: "يحدث الآن", ovUpNext: "التالي", ovNothingLive: "لا مباريات مباشرة الآن.", ovYourRank: "مركزك", ovSignInSee: "سجّل الدخول لرؤية ترتيبك.", ovViewBracket: "عرض الأدوار", ovNoData: "تُملأ البيانات مع لعب المباريات.",
   },
 };
@@ -1286,17 +1288,26 @@ function Overview({ data, lb, lang, onOpen, t, go, player }) {
   const grpDone = grp.filter((m) => m.status === "finished").length;
   const ko = all.filter((m) => m.stage !== "group");
   const koDone = ko.filter((m) => m.status === "finished").length;
-  const goals = done.reduce((s, m) => s + (Number(m.finalH) || 0) + (Number(m.finalA) || 0), 0);
-  const gpm = done.length ? (goals / done.length).toFixed(1) : "—";
-  let big = null;
-  done.forEach((m) => { const d = Math.abs((Number(m.finalH) || 0) - (Number(m.finalA) || 0)); if (d > 0 && (!big || d > big.d)) big = { d, m }; });
   const nPlayers = Object.keys(data.players || {}).length || 1;
+  const winnerOf = (m) => (m.finalH > m.finalA ? m.home : m.finalA > m.finalH ? m.away : null);
+  // Results ↔ predictions: how the league called each finished match.
+  const recentCalled = useMemo(() => recentResults(data, 5).map((m) => {
+    const tl = matchPredictionTally(data, m), w = winnerOf(m);
+    return { m, w, hits: tl.rows.filter((r) => r.got > 0).length, backed: tl.rows.filter((r) => r.backed).length };
+  }), [data]);
+  const pulse = useMemo(() => {
+    let correct = 0, called = 0;
+    done.forEach((m) => { const tl = matchPredictionTally(data, m); correct += tl.rows.filter((r) => r.got > 0).length; if (winnerOf(m)) called += tl.rows.filter((r) => r.backed).length; });
+    const avg = Math.round((lb.reduce((s, r) => s + r.total, 0) / nPlayers) * 10) / 10;
+    return { correct, hitRate: called ? Math.round((correct / called) * 100) : 0, avg };
+  }, [data, done.length, lb, nPlayers]);
   const champCount = {};
   Object.values(data.players || {}).forEach((p) => { const c = p.champion && canonTeam(p.champion); if (c) champCount[c] = (champCount[c] || 0) + 1; });
   const topChamp = Object.entries(champCount).sort((a, b) => b[1] - a[1])[0];
   const leader = lb[0], second = lb[1];
   const lead = leader && second ? leader.total - second.total : 0;
   const next = liveNow.length ? null : all.filter((m) => m.status === "scheduled").sort((a, b) => a.ko - b.ko)[0];
+  const nextTally = useMemo(() => (next ? matchPredictionTally(data, next) : null), [data, next && next.id]);
   const me = player ? lb.find((r) => r.name === player) : null;
   const dt = new Intl.DateTimeFormat(lang === "ar" ? "ar" : "en-GB", { weekday: "long", day: "numeric", month: "long", timeZone: getAppTz() }).format(new Date(nowMs()));
   return (
@@ -1338,34 +1349,61 @@ function Overview({ data, lb, lang, onOpen, t, go, player }) {
         </button>
       )}
 
-      {/* live / next */}
+      {/* live now / up next — with who the league is backing */}
       <div className="card">
         <h3 className="cardh">{liveNow.length ? <><span className="livedot" /> {t("ovLiveTitle")}</> : <>⏭️ {t("ovUpNext")}</>}</h3>
         {liveNow.length > 0 ? liveNow.map((m) => <MatchRow key={m.id} m={m} data={data} lang={lang} onOpen={onOpen} />)
           : next ? (
-            <button className="nextcard" onClick={() => onOpen(next)}>
-              <div className="nc-bg" />
-              <div className="nc-label">{t("nextMatch")}</div>
-              <div className="nc-fix">
-                <div className="nc-team"><span className="nc-fl">{flagOf(next.home)}</span><span className="nc-tn">{canonTeam(next.home)}</span></div>
-                <div className="nc-mid"><NextCountdown ko={next.ko} t={t} /><span className="nc-when">{fmtDay(next.ko, lang)} {fmtTime(next.ko, lang)}</span></div>
-                <div className="nc-team"><span className="nc-fl">{flagOf(next.away)}</span><span className="nc-tn">{canonTeam(next.away)}</span></div>
-              </div>
-              <div className="nc-stage">{next.stage === "group" ? `${t("group")} ${next.group}` : t("r_" + next.round)}</div>
-            </button>
+            <>
+              <button className="nextcard" onClick={() => onOpen(next)}>
+                <div className="nc-bg" />
+                <div className="nc-label">{t("nextMatch")}</div>
+                <div className="nc-fix">
+                  <div className="nc-team"><span className="nc-fl">{flagOf(next.home)}</span><span className="nc-tn">{canonTeam(next.home)}</span></div>
+                  <div className="nc-mid"><NextCountdown ko={next.ko} t={t} /><span className="nc-when">{fmtDay(next.ko, lang)} {fmtTime(next.ko, lang)}</span></div>
+                  <div className="nc-team"><span className="nc-fl">{flagOf(next.away)}</span><span className="nc-tn">{canonTeam(next.away)}</span></div>
+                </div>
+                <div className="nc-stage">{next.stage === "group" ? `${t("group")} ${next.group}` : t("r_" + next.round)}</div>
+              </button>
+              {nextTally && nextTally.home + nextTally.away > 0 && (
+                <div className="ov-back">
+                  <span className="ov-back-h">{t("ovBackingNext")}</span>
+                  <div className="ov-back-bar">
+                    <span className="ov-back-side"><b className="num">{nextTally.home}</b> {canonTeam(next.home)}</span>
+                    <span className="mpbar"><span className="mpfill h" style={{ width: `${(nextTally.home / (nextTally.home + nextTally.away)) * 100}%` }} /><span className="mpfill a" style={{ width: `${(nextTally.away / (nextTally.home + nextTally.away)) * 100}%` }} /></span>
+                    <span className="ov-back-side end">{canonTeam(next.away)} <b className="num">{nextTally.away}</b></span>
+                  </div>
+                </div>
+              )}
+            </>
           ) : <div className="empty sm">{t("ovNothingLive")}</div>}
       </div>
 
-      {/* tournament stats */}
+      {/* latest results — who in the league called them */}
       <div className="card">
-        <h3 className="cardh">📊 {t("ovStats")}</h3>
+        <h3 className="cardh">📋 {t("ovResultsCalled")} <button className="seeall" onClick={() => go("today")}>{t("seeAll")}</button></h3>
+        {recentCalled.length === 0 && <div className="empty sm">{t("ovNoData")}</div>}
+        {recentCalled.map(({ m, w, hits, backed }) => (
+          <button key={m.id} className="ov-res" onClick={() => onOpen(m)}>
+            <div className="ov-res-fix">
+              <span className="ov-res-side"><span className="fl">{flagOf(m.home)}</span><span className="ov-res-tn">{canonTeam(m.home)}</span></span>
+              <span className="ov-res-sc num">{m.finalH}–{m.finalA}</span>
+              <span className="ov-res-side end"><span className="ov-res-tn">{canonTeam(m.away)}</span><span className="fl">{flagOf(m.away)}</span></span>
+            </div>
+            <div className="ov-res-call">
+              {w ? <><span className={"ov-call-pill" + (hits > (backed || nPlayers) / 2 ? " hot" : "")}>{hits}/{backed || nPlayers}</span> {t("ovBacked")} <b>{canonTeam(w)}</b></>
+                : <span className="ov-call-draw">🤝 {t("ovDrawNoCall")}</span>}
+            </div>
+          </button>
+        ))}
+      </div>
+
+      {/* league prediction pulse */}
+      <div className="card">
+        <h3 className="cardh">🎯 {t("ovPulse")}</h3>
         <div className="ov-stats">
-          <div className="ov-stat"><span className="ov-stat-v num">{goals}</span><span className="ov-stat-k">{t("ovGoals")}</span></div>
-          <div className="ov-stat"><span className="ov-stat-v num">{gpm}</span><span className="ov-stat-k">{t("ovPerMatch")}</span></div>
-          <div className="ov-stat ov-stat-wide">
-            <span className="ov-stat-k">🏟️ {t("ovBiggestWin")}</span>
-            {big ? <span className="ov-stat-big">{flagOf(big.m.finalH > big.m.finalA ? big.m.home : big.m.away)} {canonTeam(big.m.finalH > big.m.finalA ? big.m.home : big.m.away)} <b className="num">{Math.max(big.m.finalH, big.m.finalA)}–{Math.min(big.m.finalH, big.m.finalA)}</b> {canonTeam(big.m.finalH > big.m.finalA ? big.m.away : big.m.home)}</span> : <span className="ov-stat-big dim">{t("ovNoData")}</span>}
-          </div>
+          <div className="ov-stat"><span className="ov-stat-v num">{pulse.avg}</span><span className="ov-stat-k">{t("ovAvgPts")}</span></div>
+          <div className="ov-stat"><span className="ov-stat-v num">{pulse.hitRate}%</span><span className="ov-stat-k">{t("ovHitRate")}</span></div>
           <div className="ov-stat ov-stat-wide">
             <span className="ov-stat-k">👑 {t("ovTopChamp")}</span>
             {topChamp ? <span className="ov-stat-big">{flagOf(topChamp[0])} {topChamp[0]} <b className="num">{topChamp[1]}</b>/{nPlayers} {t("ovTopChampN")}</span> : <span className="ov-stat-big dim">{t("ovNoChamp")}</span>}
@@ -4594,6 +4632,22 @@ border-radius:18px;padding:16px 14px;margin:10px 0;color:#fff;background:linear-
 .ov-leader-sub{font-size:11.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .ov-leader-pts{flex:none;display:flex;flex-direction:column;align-items:flex-end}.ov-leader-pts b{font-size:24px;font-weight:900;color:var(--gold-d);line-height:1}.ov-leader-pts span{font-size:10px;color:var(--muted)}
 .ov-go{font-size:10.5px;font-weight:800;color:var(--grass-d);margin-top:4px}
+.ov-back{margin-top:10px;padding:10px 12px;border-radius:12px;background:var(--soft);border:1px solid var(--border)}
+.ov-back-h{display:block;font-size:11px;font-weight:700;color:var(--muted);margin-bottom:7px}
+.ov-back-bar{display:flex;align-items:center;gap:8px}
+.ov-back-side{flex:none;font-size:11.5px;color:var(--ink);white-space:nowrap}.ov-back-side b{color:var(--grass-d)}.ov-back-side.end{text-align:end}
+.ov-back-bar .mpbar{flex:1}
+.ov-res{display:flex;flex-direction:column;gap:6px;width:100%;text-align:start;padding:9px 4px;background:none;border:none;border-bottom:1px solid var(--border);cursor:pointer}
+.ov-res:last-child{border-bottom:none}
+.ov-res-fix{display:flex;align-items:center;gap:8px}
+.ov-res-side{display:flex;align-items:center;gap:6px;flex:1;min-width:0;font-size:13px;font-weight:600;color:var(--ink)}
+.ov-res-side.end{justify-content:flex-end}.ov-res-side .fl{font-size:17px;flex:none}
+.ov-res-tn{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ov-res-sc{flex:none;font-weight:900;font-size:15px;color:var(--ink);padding:1px 9px;background:var(--soft);border-radius:7px}
+.ov-res-call{font-size:11.5px;color:var(--muted)}.ov-res-call b{color:var(--ink)}
+.ov-call-pill{display:inline-block;font-weight:800;font-size:11px;color:var(--muted);background:var(--soft);border:1px solid var(--border);border-radius:99px;padding:1px 8px;margin-inline-end:3px}
+.ov-call-pill.hot{color:var(--grass-d);background:rgba(25,195,125,.12);border-color:rgba(25,195,125,.35)}
+.ov-call-draw{font-style:italic}
 .ov-stats{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .ov-stat{background:var(--soft);border:1px solid var(--border);border-radius:12px;padding:11px 13px;display:flex;flex-direction:column;gap:3px}
 .ov-stat-wide{grid-column:1 / -1}

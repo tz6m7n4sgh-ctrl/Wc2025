@@ -587,7 +587,16 @@ const matchesOnDay = (data, d) => (data.matches || []).filter((m) => dayKey(m.ko
 const matchDays = (data) => [...new Set((data.matches || []).map((m) => dayKey(m.ko)))].sort((a, b) => a - b);
 const liveMatches = (data) => (data.matches || []).filter((m) => m.status === "live");
 const recentResults = (data, n = 6) => (data.matches || []).filter((m) => m.status === "finished").sort((a, b) => b.ko - a.ko).slice(0, n);
+// The bracket slot id for a real knockout match (both its teams fall in the slot's
+// reachable set). Players' bracket picks are keyed by slot, not the feed mid.
+function koSlotForMatch(m) {
+  if (!m || !m.home || !m.away) return null;
+  const hk = teamKey(m.home), ak = teamKey(m.away), n = KO_SPAN[m.round] ? 16 / KO_SPAN[m.round] : 0;
+  for (let i = 0; i < n; i++) { const set = new Set(koSlotLeaves(m.round, i).map(teamKey)); if (set.has(hk) && set.has(ak)) return koSlotId(m.round, i); }
+  return null;
+}
 function matchPredictionTally(data, m) {
+  const slotId = m.stage === "group" ? null : koSlotForMatch(m);
   const rows = Object.keys(data.players).map((name) => {
     const p = data.players[name];
     let backed = null, got = 0;
@@ -599,7 +608,8 @@ function matchPredictionTally(data, m) {
         got = winner && backed && sameTeam(backed, winner) ? SCORING.edgeCorrect : 0;
       }
     } else {
-      backed = p.knockout[m.mid] || null;
+      const pk = (p.knockout && (p.knockout[slotId] || p.knockout[m.mid])) || null; // slot pick (fallback to legacy mid)
+      backed = pk ? canonTeam(pk) : null;
       if (m.status === "finished") { const w = data.knockoutResults[m.mid]; got = backed && w && sameTeam(backed, w) ? SCORING.knockout[m.round] || 0 : 0; }
     }
     return { name, backed, got };
@@ -2147,6 +2157,7 @@ function PointsHow({ row, t }) {
 }
 function Points({ data, lb, t, name, setName }) {
   const row = lb.find((r) => r.name === name) || lb[0];
+  const [grpOpen, setGrpOpen] = useState(false);
   const pending = useMemo(() => livePendingPoints(data, data.players[row.name]), [data, row.name]);
   const cats = [
     { k: "groupRank", c: "var(--grass-d)" },
@@ -2215,9 +2226,15 @@ function Points({ data, lb, t, name, setName }) {
         ))}
       </div>
 
-      {/* prediction vs actual, side by side, per group */}
-      <div className="card slim"><h3 className="cardh">📂 {t("groupBreakdown")}</h3><p className="hint block">{t("gcHint")}</p></div>
-      {GROUP_KEYS.map((g) => <GroupCompare key={g} g={g} p={data.players[row.name]} data={data} t={t} name={row.name} />)}
+      {/* prediction vs actual, side by side, per group (collapsed by default) */}
+      <div className="card slim">
+        <button className="mypick-lbl collapse" onClick={() => setGrpOpen((v) => !v)} aria-expanded={grpOpen}>
+          <span>📂 {t("groupBreakdown")}{!grpOpen && <span className="coll-lock"> · {t("tapExpand")}</span>}</span>
+          <span className="coll-chev">{grpOpen ? "▾" : "▸"}</span>
+        </button>
+        {grpOpen && <p className="hint block">{t("gcHint")}</p>}
+      </div>
+      {grpOpen && GROUP_KEYS.map((g) => <GroupCompare key={g} g={g} p={data.players[row.name]} data={data} t={t} name={row.name} />)}
     </div>
   );
 }

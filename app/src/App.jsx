@@ -108,7 +108,7 @@ const I18N = {
     r16CandHint: "The Round-of-16 bracket is fixed. For each tie, pick the winner from its possible teams now — scored against the real result. Locks at the champion deadline.", r16TieFrom: "from",
     brkOverlayHint: "Picks turn green when correct, red when wrong, as results come in. Scroll to see the whole bracket.", shareBracket: "Share image", brkTapZoom: "Tap the bracket for a full-size image to save or share.", gkoSwipe: "Swipe to change round", gkoTapTeam: "Tap a team to trace their run", gkoTracing: "Tracing — tap anywhere to clear", yourChampion: "Your champion",
     brkTabLive: "Current state", brkTabPred: "Prediction", brkAlive: "alive", brkDecided: "decided",
-    brkDiagram: "Diagram", brkList: "List", bdgTapTeam: "Tap a team for its path to the final · pinch to zoom", bdgPath: "path to the final", bdgRotate: "Rotate your phone to view the bracket — or switch to List",
+    brkDiagram: "Diagram", brkList: "List", bdgTapTeam: "Tap a team for its path · drag to explore · pinch to zoom", bdgTurn: "turn phone for more width", bdgPath: "path to the final", bdgRotate: "Rotate your phone to view the bracket — or switch to List",
     koBracket: "Knockout bracket", koBracketHint: "Pick a winner in every tie from the Round of 32 to the Final — winners advance, and your Final winner is your champion. Locks at the champion deadline; each correct pick scores +1.", koBracketLocked: "Bracket locked. ✓ = correct, ✕ = wrong, as results come in.",
     resultsEditor: "Results editor", resultsHint: "Enter a score to mark a match finished — standings, points and the bracket update instantly.", setChampion: "Set champion",
     entryFee: "Entry fee", currency: "Currency", distribution: "Prize distribution", winnerTakes: "Winner takes all", topTwo: "Split top 2", topThree: "Split top 3", deadline: "Predictions deadline", lockPicks: "Lock predictions", prizePool: "Prize pool",
@@ -188,7 +188,7 @@ const I18N = {
     r16CandHint: "جدول دور الـ16 ثابت. لكل مواجهة، اختر الفائز الآن من الفرق المحتملة — وتُحتسب وفق النتيجة الفعلية. يُغلق عند موعد إغلاق توقّع البطل.", r16TieFrom: "من",
     brkOverlayHint: "تتحوّل التوقّعات إلى الأخضر عند الصواب والأحمر عند الخطأ مع ظهور النتائج. مرّر لرؤية الجدول كاملاً.", shareBracket: "مشاركة صورة", brkTapZoom: "اضغط على الجدول للحصول على صورة كاملة للحفظ أو المشاركة.", gkoSwipe: "مرّر لتغيير الدور", gkoTapTeam: "اضغط على فريق لتتبّع مشواره", gkoTracing: "تتبّع — اضغط أي مكان للإلغاء", yourChampion: "بطلك",
     brkTabLive: "الوضع الحالي", brkTabPred: "التوقّع", brkAlive: "ما زال قائماً", brkDecided: "محسومة",
-    brkDiagram: "المخطط", brkList: "قائمة", bdgTapTeam: "اضغط فريقاً لعرض طريقه إلى النهائي · قرّب بإصبعين", bdgPath: "الطريق إلى النهائي", bdgRotate: "أدِر هاتفك لعرض المخطط — أو بدّل إلى القائمة",
+    brkDiagram: "المخطط", brkList: "قائمة", bdgTapTeam: "اضغط فريقاً لعرض طريقه · اسحب للتنقّل · قرّب بإصبعين", bdgTurn: "أدِر الهاتف لمساحة أوسع", bdgPath: "الطريق إلى النهائي", bdgRotate: "أدِر هاتفك لعرض المخطط — أو بدّل إلى القائمة",
     koBracket: "جدول الأدوار الإقصائية", koBracketHint: "اختر الفائز في كل مواجهة من دور الـ32 حتى النهائي — يتأهّل الفائزون، والفائز بالنهائي هو بطلك. يُغلق عند موعد إغلاق البطل؛ كل توقّع صحيح يمنح نقطة.", koBracketLocked: "الجدول مُغلق. ✓ = صحيح، ✕ = خاطئ، مع ظهور النتائج.",
     resultsEditor: "محرّر النتائج", resultsHint: "أدخل النتيجة لإنهاء المباراة — يُحدّث الترتيب والنقاط والأدوار فوراً.", setChampion: "تعيين البطل",
     entryFee: "رسوم الاشتراك", currency: "العملة", distribution: "توزيع الجوائز", winnerTakes: "الفائز يأخذ الكل", topTwo: "أفضل اثنين", topThree: "أفضل ثلاثة", deadline: "موعد إغلاق التوقعات", lockPicks: "قفل التوقعات", prizePool: "مجموع الجوائز",
@@ -1447,15 +1447,22 @@ function Groups({ data, t, lang, onOpenGroup }) {
 // codes, real connector lines, the trophy/champion and (for share) a points line.
 function rrPath(x, px, py, w, h, r) { x.beginPath(); x.moveTo(px + r, py); x.arcTo(px + w, py, px + w, py + h, r); x.arcTo(px + w, py + h, px, py + h, r); x.arcTo(px, py + h, px, py, r); x.arcTo(px, py, px + w, py, r); x.closePath(); }
 function drawBracket(canvas, opts) {
-  const { data, t } = opts, header = !!opts.header, S = 2, W = 1620, H = header ? 1060 : 840;
+  const { data, t } = opts, header = !!opts.header, S = 2, W = 1720, H = header ? 1140 : 900;
+  const dark = !header; // on-screen diagram gets a premium dark backdrop; share image stays light
   canvas.width = W * S; canvas.height = H * S;
   const x = canvas.getContext("2d"); x.setTransform(S, 0, 0, S, 0, 0);
-  x.fillStyle = "#f7f8fa"; x.fillRect(0, 0, W, H);
+  if (dark) {
+    const g = x.createLinearGradient(0, 0, 0, H); g.addColorStop(0, "#0d2a1e"); g.addColorStop(.5, "#0a2017"); g.addColorStop(1, "#081912");
+    x.fillStyle = g; x.fillRect(0, 0, W, H);
+    const rg = x.createRadialGradient(W / 2, H / 2 - 40, 12, W / 2, H / 2 - 40, 320); rg.addColorStop(0, "rgba(245,196,81,.16)"); rg.addColorStop(1, "rgba(245,196,81,0)");
+    x.fillStyle = rg; x.fillRect(0, 0, W, H);
+  } else { x.fillStyle = "#f7f8fa"; x.fillRect(0, 0, W, H); }
   if (header) {
     x.textAlign = "center"; x.textBaseline = "middle";
     x.fillStyle = "#0e2a47"; x.font = "800 25px Arial, sans-serif"; x.fillText("2026 FIFA WORLD CUP · KNOCKOUT", W / 2, 32);
     x.fillStyle = "#c2143b"; x.font = "800 17px Arial, sans-serif"; x.fillText("— " + (opts.name || "") + " —", W / 2, 60);
   }
+  const connCol = dark ? "rgba(255,255,255,.22)" : "#cdd5de";
   let res = null;
   if (opts.mode === "results") { res = {}; for (const [code, n] of KO_SEQ) for (let i = 0; i < n; i++) { const w = koSlotActualWinner(code, i, data); if (w) res[koSlotId(code, i)] = w; } }
   const slotInfo = (code, i) => {
@@ -1487,8 +1494,8 @@ function drawBracket(canvas, opts) {
       if (!w || teamKey(w) !== traceK) break;
     }
   }
-  const top = header ? 96 : 20, bottom = H - (header ? 64 : 20), areaH = bottom - top;
-  const boxW = 158, boxH = 46, colGap = 16, stepX = boxW + colGap;
+  const top = header ? 96 : 24, bottom = H - (header ? 64 : 24), areaH = bottom - top;
+  const boxW = 176, boxH = 56, colGap = 18, stepX = boxW + colGap;
   const lx = [14, 14 + stepX, 14 + 2 * stepX, 14 + 3 * stepX];
   const rx = lx.map((v) => W - boxW - v);
   const cxx = W / 2 - boxW / 2, spacing = areaH / 8;
@@ -1503,26 +1510,29 @@ function drawBracket(canvas, opts) {
   const drawMatch = (px, cy, info, slotId) => {
     if (opts.hits) opts.hits.push({ x: px, y: cy - boxH / 2, w: boxW, h: boxH, a: info.a, b: info.b });
     const onPath = slotId && pathSet.has(slotId), dim = traceK && !onPath;
-    x.save(); if (dim) x.globalAlpha = 0.28;
-    rrPath(x, px, cy - boxH / 2, boxW, boxH, 9); x.fillStyle = "#fff"; x.fill(); x.strokeStyle = onPath ? "#e0a31e" : "#d3d9e0"; x.lineWidth = onPath ? 2.5 : 1; x.stroke();
-    x.beginPath(); x.moveTo(px + 6, cy); x.lineTo(px + boxW - 6, cy); x.strokeStyle = "#eef2f6"; x.lineWidth = 1; x.stroke();
+    x.save(); if (dim) x.globalAlpha = 0.22;
+    rrPath(x, px, cy - boxH / 2, boxW, boxH, 11);
+    if (dark) { x.shadowColor = onPath ? "rgba(245,196,81,.55)" : "rgba(0,0,0,.35)"; x.shadowBlur = onPath ? 16 : 9; x.shadowOffsetY = 3; }
+    x.fillStyle = "#fff"; x.fill(); x.shadowColor = "transparent"; x.shadowBlur = 0; x.shadowOffsetY = 0;
+    x.strokeStyle = onPath ? "#e6a31e" : (dark ? "#e6ecea" : "#d3d9e0"); x.lineWidth = onPath ? 3 : 1; x.stroke();
+    x.beginPath(); x.moveTo(px + 8, cy); x.lineTo(px + boxW - 8, cy); x.strokeStyle = "#eef2f6"; x.lineWidth = 1; x.stroke();
     x.textBaseline = "middle";
     const slot = (tm, sy) => {
       const isW = info.winner && tm && sameTeam(tm, info.winner);
-      if (isW && info.status) { x.fillStyle = COL[info.status][0]; rrPath(x, px + 2, sy - 11, boxW - 4, 22, 6); x.fill(); }
-      x.textAlign = "left"; x.font = "17px Arial, sans-serif";
-      if (tm) x.fillText(flagOf(tm), px + 9, sy + 1);
-      x.font = "700 14px Arial, sans-serif";
-      x.fillStyle = !tm ? "#9aa6b2" : (isW && info.status) ? COL[info.status][1] : (info.winner ? "#aab4bf" : "#16324f");
-      const label = tm ? fit(canonTeam(tm), boxW - 46) : "—";
-      x.fillText(label, px + 34, sy + 1);
-      if (info.winner && tm && !isW) { const tw = x.measureText(label).width; x.strokeStyle = "#aab4bf"; x.lineWidth = 1; x.beginPath(); x.moveTo(px + 34, sy + 1); x.lineTo(px + 34 + tw, sy + 1); x.stroke(); }
+      if (isW && info.status) { x.fillStyle = COL[info.status][0]; rrPath(x, px + 3, sy - 13, boxW - 6, 26, 7); x.fill(); }
+      x.textAlign = "left"; x.font = "20px Arial, sans-serif";
+      if (tm) x.fillText(flagOf(tm), px + 11, sy + 1);
+      x.font = "700 16px Arial, sans-serif";
+      x.fillStyle = !tm ? "#9aa6b2" : (isW && info.status) ? COL[info.status][1] : (info.winner ? "#9aa6b2" : "#16324f");
+      const label = tm ? fit(canonTeam(tm), boxW - 52) : "—";
+      x.fillText(label, px + 40, sy + 1);
+      if (info.winner && tm && !isW) { const tw = x.measureText(label).width; x.strokeStyle = "#b3bdc6"; x.lineWidth = 1.2; x.beginPath(); x.moveTo(px + 40, sy + 1); x.lineTo(px + 40 + tw, sy + 1); x.stroke(); }
     };
-    slot(info.a, cy - 12); slot(info.b, cy + 12);
+    slot(info.a, cy - 14); slot(info.b, cy + 14);
     x.restore();
   };
   const connector = (cols, r, side) => {
-    const parents = 8 / Math.pow(2, r + 1); x.strokeStyle = "#cdd5de"; x.lineWidth = 1;
+    const parents = 8 / Math.pow(2, r + 1); x.strokeStyle = connCol; x.lineWidth = 1.4;
     for (let i = 0; i < parents; i++) {
       const c1 = yOf(r, 2 * i), c2 = yOf(r, 2 * i + 1), py = yOf(r + 1, i);
       const edge = side === "L" ? cols[r] + boxW : cols[r];
@@ -1540,27 +1550,30 @@ function drawBracket(canvas, opts) {
     const segs = []; let total = 0;
     for (let i = 1; i < pp.length; i++) { const d = Math.hypot(pp[i].cx - pp[i - 1].cx, pp[i].cy - pp[i - 1].cy); segs.push(d); total += d; }
     let draw = total * (opts.traceProgress == null ? 1 : opts.traceProgress);
-    x.save(); x.strokeStyle = "#e6a31e"; x.lineWidth = 5; x.lineCap = "round"; x.lineJoin = "round"; x.shadowColor = "rgba(230,163,30,.55)"; x.shadowBlur = 8; x.beginPath();
+    // soft glow underlay then the bright core line
+    x.save(); x.lineCap = "round"; x.lineJoin = "round"; x.strokeStyle = "rgba(255,210,70,.85)"; x.lineWidth = 9; x.shadowColor = "rgba(255,200,60,.9)"; x.shadowBlur = 22; x.beginPath();
     if (pp.length) {
       x.moveTo(pp[0].cx, pp[0].cy);
       for (let i = 1; i < pp.length; i++) { const seg = segs[i - 1]; if (draw >= seg) { x.lineTo(pp[i].cx, pp[i].cy); draw -= seg; } else { const f = seg ? draw / seg : 0; x.lineTo(pp[i - 1].cx + (pp[i].cx - pp[i - 1].cx) * f, pp[i - 1].cy + (pp[i].cy - pp[i - 1].cy) * f); draw = 0; break; } }
     }
-    x.stroke(); x.restore();
+    x.stroke();
+    x.strokeStyle = "#ffd84d"; x.lineWidth = 4.5; x.shadowBlur = 0; x.stroke();
+    x.restore();
   }
   [0, 1, 2].forEach((r) => connector(lx, r, "L"));
-  x.strokeStyle = "#cdd5de"; x.beginPath(); x.moveTo(lx[3] + boxW, yOf(3, 0)); x.lineTo(cxx, H / 2 - 30); x.stroke();
+  x.strokeStyle = connCol; x.lineWidth = 1.4; x.beginPath(); x.moveTo(lx[3] + boxW, yOf(3, 0)); x.lineTo(cxx, H / 2 - 30); x.stroke();
   [0, 1, 2].forEach((r) => connector(rx, r, "R"));
-  x.strokeStyle = "#cdd5de"; x.beginPath(); x.moveTo(rx[3], yOf(3, 0)); x.lineTo(cxx + boxW, H / 2 - 30); x.stroke();
+  x.strokeStyle = connCol; x.lineWidth = 1.4; x.beginPath(); x.moveTo(rx[3], yOf(3, 0)); x.lineTo(cxx + boxW, H / 2 - 30); x.stroke();
   seq.forEach(([code, n], r) => { for (let i = 0; i < n; i++) drawMatch(lx[r], yOf(r, i), slotInfo(code, i), koSlotId(code, i)); });
   seq.forEach(([code, n], r) => { for (let i = 0; i < n; i++) drawMatch(rx[r], yOf(r, i), slotInfo(code, off[code] + i), koSlotId(code, off[code] + i)); });
   drawMatch(cxx, H / 2 - 30, slotInfo("F", 0), "F#0");
-  x.textAlign = "center"; x.fillStyle = "#6b7a8d"; x.font = "700 11px Arial, sans-serif"; x.fillText((t("r_F") || "Final").toUpperCase(), W / 2, H / 2 + 2);
-  x.font = "28px Arial, sans-serif"; x.fillText("🏆", W / 2, H / 2 - 76);
+  x.textAlign = "center"; x.textBaseline = "alphabetic"; x.fillStyle = dark ? "rgba(255,255,255,.55)" : "#6b7a8d"; x.font = "800 12px Arial, sans-serif"; x.fillText((t("r_F") || "Final").toUpperCase(), W / 2, H / 2 + 4);
+  x.font = "40px Arial, sans-serif"; x.save(); if (dark) { x.shadowColor = "rgba(245,196,81,.9)"; x.shadowBlur = 26; } x.fillText("🏆", W / 2, H / 2 - 84); x.restore();
   const ci = slotInfo("F", 0), champ = ci.winner;
-  rrPath(x, cxx - 10, H / 2 + 16, boxW + 20, 28, 8);
-  if (champ && ci.status) { x.fillStyle = COL[ci.status][0]; x.fill(); x.strokeStyle = COL[ci.status][1]; } else { x.fillStyle = "#f5c451"; x.fill(); x.strokeStyle = "#caa033"; }
-  x.stroke();
-  x.fillStyle = champ && ci.status ? COL[ci.status][1] : "#241c00"; x.font = "800 14px Arial, sans-serif"; x.textBaseline = "alphabetic"; x.fillText("👑 " + (champ ? fit(champ, boxW + 4) : "—"), W / 2, H / 2 + 31);
+  rrPath(x, cxx - 14, H / 2 + 18, boxW + 28, 34, 10);
+  if (champ && ci.status && ci.status !== "pending") { x.fillStyle = COL[ci.status][0]; x.fill(); x.strokeStyle = COL[ci.status][1]; } else { const cg = x.createLinearGradient(0, H / 2 + 18, 0, H / 2 + 52); cg.addColorStop(0, "#ffd970"); cg.addColorStop(1, "#f0b429"); x.fillStyle = cg; x.fill(); x.strokeStyle = "#caa033"; }
+  x.lineWidth = 1.5; x.stroke();
+  x.fillStyle = champ && ci.status && ci.status !== "pending" ? COL[ci.status][1] : "#3a2c00"; x.font = "800 17px Arial, sans-serif"; x.fillText("👑 " + (champ ? fit(champ, boxW + 8) : "—"), W / 2, H / 2 + 41);
   if (header) { x.fillStyle = "#0e2a47"; x.font = "800 14px Arial, sans-serif"; x.fillText(`${opts.koPts} ${t("knockout")} pts · ${opts.totalPts} ${t("pts")}`, W / 2, H - 32); }
 }
 function makeBracketCanvas(opts) { const c = document.createElement("canvas"); drawBracket(c, opts); return c; }
@@ -1584,6 +1597,7 @@ function BracketDiagram({ data, picks, mode, t }) {
   const pts = useRef(new Map());
   const pinch = useRef(null);
   const moved = useRef(false);
+  const CW = 1720, CH = 900; // must match drawBracket's on-screen W/H
   const apply = () => { if (stRef.current) stRef.current.style.transform = `translate(${tf.current.x}px,${tf.current.y}px) scale(${tf.current.s})`; };
   const drawNow = (prog) => {
     const c = canRef.current; if (!c) return;
@@ -1592,15 +1606,23 @@ function BracketDiagram({ data, picks, mode, t }) {
     hitsRef.current = hits;
   };
   useEffect(() => {
-    if (!portrait) { tf.current = { s: 1, x: 0, y: 0 }; apply(); }
     if (!trace) { drawNow(1); return; }
-    let raf, start = null; const dur = 520;
+    let raf, start = null; const dur = 560;
     const step = (ts) => { if (start == null) start = ts; const p = Math.min(1, (ts - start) / dur); drawNow(p); if (p < 1) raf = requestAnimationFrame(step); };
     raf = requestAnimationFrame(step);
     return () => cancelAnimationFrame(raf);
-  }, [data, picks, mode, t, trace, portrait]);
-  const clampS = (s) => Math.max(1, Math.min(4.5, s));
-  const reset = () => { tf.current = { s: 1, x: 0, y: 0 }; apply(); };
+  }, [data, picks, mode, t, trace]);
+  const clampS = (s) => Math.max(1, Math.min(5, s));
+  // default: a readable zoom centred on the Final (text legible; drag to explore)
+  const fitReadable = () => {
+    const vp = vpRef.current; if (!vp) return; const r = vp.getBoundingClientRect(); if (!r.width) return;
+    const baseH = r.width * (CH / CW), s = Math.max(1.6, Math.min(4.5, 152 / ((r.width / CW) * 176)));
+    tf.current = { s, x: r.width / 2 - 0.5 * r.width * s, y: r.height / 2 - ((CH / 2 - 30) / CH) * baseH * s };
+    apply();
+  };
+  const fitAll = () => { const vp = vpRef.current; if (!vp) return; const r = vp.getBoundingClientRect(); const baseH = r.width * (CH / CW); tf.current = { s: 1, x: 0, y: Math.max(0, (r.height - baseH) / 2) }; apply(); };
+  useEffect(() => { fitReadable(); const on = () => fitReadable(); window.addEventListener("resize", on); return () => window.removeEventListener("resize", on); }, [portrait]);
+  const reset = () => fitAll();
   const zoomAt = (factor, cx, cy) => {
     const vp = vpRef.current.getBoundingClientRect();
     const lx = (cx - vp.left - tf.current.x) / tf.current.s, ly = (cy - vp.top - tf.current.y) / tf.current.s;
@@ -1611,7 +1633,7 @@ function BracketDiagram({ data, picks, mode, t }) {
   const hitTest = (cx, cy) => {
     const c = canRef.current; if (!c) return;
     const rect = c.getBoundingClientRect();
-    const bx = (cx - rect.left) / rect.width * 1120, by = (cy - rect.top) / rect.height * 600;
+    const bx = (cx - rect.left) / rect.width * CW, by = (cy - rect.top) / rect.height * CH;
     const hit = hitsRef.current.find((h) => bx >= h.x && bx <= h.x + h.w && by >= h.y && by <= h.y + h.h);
     if (!hit) { setTrace(null); return; }
     const tm = by < hit.y + hit.h / 2 ? hit.a : hit.b;
@@ -1633,24 +1655,15 @@ function BracketDiagram({ data, picks, mode, t }) {
   const onUp = (e) => { const tap = !moved.current && pts.current.size === 1; pts.current.delete(e.pointerId); if (pts.current.size < 2) pinch.current = null; if (tap) hitTest(e.clientX, e.clientY); };
   const onWheel = (e) => { e.preventDefault(); zoomAt(e.deltaY < 0 ? 1.12 : 0.89, e.clientX, e.clientY); };
   const onDbl = (e) => { e.preventDefault(); if (tf.current.s > 1.2) reset(); else zoomAt(2.4, e.clientX, e.clientY); };
-  if (portrait) {
-    // Rotated big view + a friendly prompt to turn the phone to landscape.
-    return (
-      <div className="bdg">
-        <div className="bdg-bar"><span className="bdg-hint bdg-rotate">🔄 {t("bdgRotate")}</span></div>
-        <div className="bdg-rotwrap"><canvas ref={canRef} className="bdg-rotcanvas" /></div>
-      </div>
-    );
-  }
   return (
     <div className="bdg">
       <div className="bdg-bar">
-        <span className="bdg-hint">{trace ? <><span className="bdg-dot" /> {trace} · {t("bdgPath")}</> : t("bdgTapTeam")}</span>
+        <span className="bdg-hint">{trace ? <><span className="bdg-dot" /> {trace} · {t("bdgPath")}</> : <>{t("bdgTapTeam")}{portrait ? <> · {t("bdgTurn")}</> : null}</>}</span>
         <div className="bdg-btns">
           {trace && <button className="bdg-b" onClick={() => setTrace(null)} aria-label={t("hide")}>✕</button>}
-          <button className="bdg-b" onClick={() => zoomBtn(0.8)} aria-label="zoom out">－</button>
-          <button className="bdg-b" onClick={() => zoomBtn(1.25)} aria-label="zoom in">＋</button>
-          <button className="bdg-b" onClick={reset} aria-label="fit">⤢</button>
+          <button className="bdg-b" onClick={() => zoomBtn(0.82)} aria-label="zoom out">－</button>
+          <button className="bdg-b" onClick={() => zoomBtn(1.22)} aria-label="zoom in">＋</button>
+          <button className="bdg-b" onClick={fitAll} aria-label="fit all" title="fit all">⤢</button>
         </div>
       </div>
       <div className="bdg-vp" ref={vpRef} onPointerDown={onDown} onPointerMove={onMove} onPointerUp={onUp} onPointerCancel={onUp} onWheel={onWheel} onDoubleClick={onDbl}>
@@ -4682,7 +4695,7 @@ border-radius:18px;padding:16px 14px;margin:10px 0;color:#fff;background:linear-
 .bdg-dot{width:9px;height:9px;border-radius:50%;background:#e6a31e;flex:none;box-shadow:0 0 0 3px rgba(230,163,30,.2)}
 .bdg-btns{display:flex;gap:5px;flex:none}
 .bdg-b{width:32px;height:32px;border:1px solid var(--border);background:var(--card);border-radius:9px;font-size:15px;font-weight:800;color:var(--ink);cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1}
-.bdg-vp{position:relative;overflow:hidden;border:1px solid var(--border);border-radius:14px;background:#f7f8fa;touch-action:none;-webkit-user-select:none;user-select:none;cursor:grab;animation:bdgIn .34s cubic-bezier(.22,.61,.36,1)}
+.bdg-vp{position:relative;overflow:hidden;height:62vh;max-height:560px;min-height:380px;border:1px solid #14342600;border-radius:16px;background:linear-gradient(180deg,#0d2a1e,#081912);box-shadow:inset 0 0 0 1px rgba(255,255,255,.05);touch-action:none;-webkit-user-select:none;user-select:none;cursor:grab;animation:bdgIn .34s cubic-bezier(.22,.61,.36,1)}
 @keyframes bdgIn{from{opacity:0;transform:scale(.98)}to{opacity:1;transform:none}}
 .bdg-vp:active{cursor:grabbing}
 .bdg-stage{transform-origin:0 0;will-change:transform}

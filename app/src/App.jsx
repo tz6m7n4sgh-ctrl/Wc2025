@@ -1672,24 +1672,18 @@ function BracketView({ data, lb, t, lang, name, setName, go }) {
     }
     return n;
   }, [sel, picks, data]);
+  const koAll = (data.matches || []).filter((m) => m.stage !== "group");
+  const koDone = koAll.filter((m) => m.status === "finished").length;
   return (
     <div className="view">
-      {/* top: player + total points + profile */}
-      <div className="card brk-top">
-        <div className="brk-top-row">
-          {sel && (
-            <select className="select brk-sel" value={sel.name} onChange={(e) => setName && setName(e.target.value)} aria-label={t("selectPlayer")}>
-              {lb.map((r) => <option key={r.name} value={r.name}>{r.name} · {r.total} {t("pts")}</option>)}
-            </select>
-          )}
-          {sel && go && <button className="seeall brk-prof" onClick={() => go("profile", sel.name)}>{t("nav_profile")} ›</button>}
-        </div>
-        {sel && (
-          <div className="brk-pts">
-            <span className="brk-pt tot">{sel.total} {t("pts")}</span>
-            <span className="brk-pt ko">{sel.knockout} {t("knockout")}</span>
-            <span className="brk-pt">{made}/31 {t("picksMade").toLowerCase()}</span>
-            <span className="brk-pt alive">{alive} {t("brkAlive")}</span>
+      {/* header — knockout-stage style, like the home page */}
+      <div className="card brk-header">
+        <div className="ov-hero-top"><span className="ts-dot" /> {t("koBracket")}{koAll.length > 0 && <> · <b>{koDone}/{koAll.length} {t("ovKnockout").toLowerCase()}</b></>}{projected && <> · {t("brkProjected")}</>}</div>
+        <h3 className="cardh brk-h">🗺️ {t("nav_bracket")}</h3>
+        {koAll.length > 0 && (
+          <div className="ov-bar-row brk-prog">
+            <div className="ov-bar"><span className="ko" style={{ width: `${(koDone / koAll.length) * 100}%` }} /></div>
+            <span className="ov-bar-n num">{koDone}/{koAll.length}</span>
           </div>
         )}
       </div>
@@ -1702,17 +1696,28 @@ function BracketView({ data, lb, t, lang, name, setName, go }) {
 
       {tab === "live" ? (
         <div className="card">
-          <h3 className="cardh">🗺️ {t("koFixtures")}{projected && <span className="gc-proj-total" style={{ marginInlineStart: 8 }}>· {t("brkProjected")}</span>}</h3>
           <p className="hint block">{hasReal ? t("brkLive") : t("brkIllustrative")}</p>
           <KnockoutBracketG data={data} t={t} lang={lang} />
         </div>
       ) : sel ? (
         <div className="card">
+          {/* player selector lives inside the prediction tab */}
+          <div className="brk-top-row">
+            <select className="select brk-sel" value={sel.name} onChange={(e) => setName && setName(e.target.value)} aria-label={t("selectPlayer")}>
+              {lb.map((r) => <option key={r.name} value={r.name}>{r.name} · {r.total} {t("pts")}</option>)}
+            </select>
+            {go && <button className="seeall brk-prof" onClick={() => go("profile", sel.name)}>{t("nav_profile")} ›</button>}
+          </div>
+          <div className="brk-pts">
+            <span className="brk-pt tot">{sel.total} {t("pts")}</span>
+            <span className="brk-pt ko">{sel.knockout} {t("knockout")}</span>
+            <span className="brk-pt">{made}/31 {t("picksMade").toLowerCase()}</span>
+            <span className="brk-pt alive">{alive} {t("brkAlive")}</span>
+          </div>
           <div className="brk-head">
-            <h3 className="cardh">🏆 {sel.name}</h3>
+            <p className="hint block" style={{ margin: 0 }}>{t("brkOverlayHint")}</p>
             <button className="seeall" onClick={() => shareBracketImage(sel.name, picks, data, sel.knockout, sel.total, t)}>📷 {t("shareBracket")}</button>
           </div>
-          <p className="hint block">{t("brkOverlayHint")}</p>
           <KnockoutBracketG data={data} picks={picks} mode="player" t={t} lang={lang} />
         </div>
       ) : null}
@@ -4500,14 +4505,20 @@ border-radius:18px;padding:16px 14px;margin:10px 0;color:#fff;background:linear-
 .pbrk .pb-col:nth-child(2) .pb-m::before,.pbrk .pb-col:nth-child(3) .pb-m::before,.pbrk .pb-col:nth-child(4) .pb-m::before{content:"";position:absolute;right:100%;top:50%;width:8px;height:1px;background:var(--border)}
 .pbrk .pb-col:nth-child(6) .pb-m::after,.pbrk .pb-col:nth-child(7) .pb-m::after,.pbrk .pb-col:nth-child(8) .pb-m::after,.pbrk .pb-col:nth-child(9) .pb-m::after{content:"";position:absolute;right:100%;top:50%;width:8px;height:1px;background:var(--border)}
 .pbrk .pb-col:nth-child(6) .pb-m::before,.pbrk .pb-col:nth-child(7) .pb-m::before,.pbrk .pb-col:nth-child(8) .pb-m::before{content:"";position:absolute;left:100%;top:50%;width:8px;height:1px;background:var(--border)}
-.brk-head{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.brk-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:8px 0 2px}
+.brk-head .hint{flex:1;min-width:0}
+.brk-head .seeall{flex:none;white-space:nowrap}
 .brk-pts{display:flex;gap:8px;flex-wrap:wrap;margin:6px 0 2px}
 .brk-pt{font-size:12px;font-weight:800;padding:3px 10px;border-radius:999px;background:var(--soft);color:var(--ink)}
 .brk-pt.ko{background:#e6f4ea;color:#137a3b}.brk-pt.tot{background:var(--pitch);color:#fff}
 .brk-pt.alive{background:rgba(245,196,81,.18);color:var(--gold-d)}
 .app[data-theme="dark"] .brk-pt.alive{background:rgba(245,196,81,.16)}
+.brk-header{padding:14px 15px}
+.brk-header .ov-hero-top{margin-bottom:6px}
+.brk-h{margin:0}
+.brk-prog{margin-top:11px}.brk-prog .ov-bar{flex:1}
 .brk-top{padding:13px 14px}
-.brk-top-row{display:flex;align-items:center;gap:10px}
+.brk-top-row{display:flex;align-items:center;gap:10px;margin-bottom:8px}
 .brk-sel{flex:1;min-width:0}
 .brk-prof{flex:none;white-space:nowrap}
 .brk-tabs{display:flex;gap:5px;margin-bottom:12px;background:var(--soft);border:1px solid var(--border);border-radius:13px;padding:4px}

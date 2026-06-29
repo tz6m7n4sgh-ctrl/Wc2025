@@ -106,7 +106,7 @@ const I18N = {
     groupPredHint: "Order each group 1–4. Open until your league admin sets a deadline.", groupLockedHint: "Group predictions are locked.", groupLockAuto: "Auto-locks at the first group match", groupLock: "Group predictions lock", groupLockOpen: "Open — set a time to close entry (e.g. the first group kickoff)",
     koPicks: "Knockout picks", koOpensWhen: "Knockout picks open once the group stage finishes.", koLockHint: "Each pick locks 4 hours before its kickoff.", koProjected: "Projected from the current standings — pick now; matchups may still shift until the groups finish. Each pick locks 4h before kickoff.", koPreview: "Preview projected from the current standings. Picks open once the knockout fixtures are confirmed; each pick will lock 4h before its kickoff.", koLockBy: "locks 4h before kickoff", pickWinner: "Pick the winner", koTba: "Awaiting earlier results", koTba2: "TBD", koVs: "v",
     r16CandHint: "The Round-of-16 bracket is fixed. For each tie, pick the winner from its possible teams now — scored against the real result. Locks at the champion deadline.", r16TieFrom: "from",
-    brkOverlayHint: "Picks turn green when correct, red when wrong, as results come in. Scroll to see the whole bracket.", shareBracket: "Share image", brkTapZoom: "Tap the bracket for a full-size image to save or share.", gkoSwipe: "Swipe across to see the next round",
+    brkOverlayHint: "Picks turn green when correct, red when wrong, as results come in. Scroll to see the whole bracket.", shareBracket: "Share image", brkTapZoom: "Tap the bracket for a full-size image to save or share.", gkoSwipe: "Swipe across to see the next round", gkoTapTeam: "Tap a team to trace their run", gkoTracing: "Tracing — tap anywhere to clear", yourChampion: "Your champion",
     koBracket: "Knockout bracket", koBracketHint: "Pick a winner in every tie from the Round of 32 to the Final — winners advance, and your Final winner is your champion. Locks at the champion deadline; each correct pick scores +1.", koBracketLocked: "Bracket locked. ✓ = correct, ✕ = wrong, as results come in.",
     resultsEditor: "Results editor", resultsHint: "Enter a score to mark a match finished — standings, points and the bracket update instantly.", setChampion: "Set champion",
     entryFee: "Entry fee", currency: "Currency", distribution: "Prize distribution", winnerTakes: "Winner takes all", topTwo: "Split top 2", topThree: "Split top 3", deadline: "Predictions deadline", lockPicks: "Lock predictions", prizePool: "Prize pool",
@@ -178,7 +178,7 @@ const I18N = {
     groupPredHint: "رتّب كل مجموعة من 1 إلى 4. مفتوح حتى يحدّد المشرف موعداً للإغلاق.", groupLockedHint: "توقّعات المجموعات مغلقة.", groupLockAuto: "يُغلق تلقائياً عند أول مباراة في المجموعات", groupLock: "إغلاق توقّعات المجموعات", groupLockOpen: "مفتوح — حدّد وقتاً لإغلاق الإدخال (مثلاً أول مباراة في المجموعات)",
     koPicks: "توقّعات الأدوار الإقصائية", koOpensWhen: "تُفتح توقّعات الأدوار الإقصائية بعد انتهاء دور المجموعات.", koLockHint: "يُغلق كل اختيار قبل 4 ساعات من موعد المباراة.", koProjected: "متوقّعة من الترتيب الحالي — اختر الآن؛ قد تتغيّر المواجهات حتى انتهاء المجموعات. يُغلق كل اختيار قبل 4 ساعات من المباراة.", koPreview: "معاينة متوقّعة من الترتيب الحالي. تُفتح التوقّعات بعد تأكيد مباريات الأدوار الإقصائية؛ ويُغلق كل اختيار قبل 4 ساعات من موعده.", koLockBy: "يُغلق قبل 4 ساعات من المباراة", pickWinner: "اختر الفائز", koTba: "بانتظار النتائج السابقة", koTba2: "غير محدد", koVs: "ضد",
     r16CandHint: "جدول دور الـ16 ثابت. لكل مواجهة، اختر الفائز الآن من الفرق المحتملة — وتُحتسب وفق النتيجة الفعلية. يُغلق عند موعد إغلاق توقّع البطل.", r16TieFrom: "من",
-    brkOverlayHint: "تتحوّل التوقّعات إلى الأخضر عند الصواب والأحمر عند الخطأ مع ظهور النتائج. مرّر لرؤية الجدول كاملاً.", shareBracket: "مشاركة صورة", brkTapZoom: "اضغط على الجدول للحصول على صورة كاملة للحفظ أو المشاركة.", gkoSwipe: "مرّر أفقياً لرؤية الدور التالي",
+    brkOverlayHint: "تتحوّل التوقّعات إلى الأخضر عند الصواب والأحمر عند الخطأ مع ظهور النتائج. مرّر لرؤية الجدول كاملاً.", shareBracket: "مشاركة صورة", brkTapZoom: "اضغط على الجدول للحصول على صورة كاملة للحفظ أو المشاركة.", gkoSwipe: "مرّر أفقياً لرؤية الدور التالي", gkoTapTeam: "اضغط على فريق لتتبّع مشواره", gkoTracing: "تتبّع — اضغط أي مكان للإلغاء", yourChampion: "بطلك",
     koBracket: "جدول الأدوار الإقصائية", koBracketHint: "اختر الفائز في كل مواجهة من دور الـ32 حتى النهائي — يتأهّل الفائزون، والفائز بالنهائي هو بطلك. يُغلق عند موعد إغلاق البطل؛ كل توقّع صحيح يمنح نقطة.", koBracketLocked: "الجدول مُغلق. ✓ = صحيح، ✕ = خاطئ، مع ظهور النتائج.",
     resultsEditor: "محرّر النتائج", resultsHint: "أدخل النتيجة لإنهاء المباراة — يُحدّث الترتيب والنقاط والأدوار فوراً.", setChampion: "تعيين البطل",
     entryFee: "رسوم الاشتراك", currency: "العملة", distribution: "توزيع الجوائز", winnerTakes: "الفائز يأخذ الكل", topTwo: "أفضل اثنين", topThree: "أفضل ثلاثة", deadline: "موعد إغلاق التوقعات", lockPicks: "قفل التوقعات", prizePool: "مجموع الجوائز",
@@ -1416,43 +1416,62 @@ function koMatchForSlot(code, i, data) {
   const set = new Set(koSlotLeaves(code, i).map(teamKey));
   return (data.matches || []).find((x) => x.stage === "ko" && x.round === code && x.home && x.away && set.has(teamKey(x.home)) && set.has(teamKey(x.away))) || null;
 }
-// Google-style knockout view: round tabs, readable match cards (flag, name, date,
-// score), and bracket connectors from the selected round to the next.
-function KnockoutBracketG({ data, t, lang }) {
+// Interactive knockout diagram. Two modes:
+//   mode "results" — the live tournament bracket (actual winners).
+//   mode "player"  — a player's predicted bracket (picks), coloured by correctness.
+// Round tabs, full flag + country name cards, bracket connectors, a champion hero,
+// and tap-a-team to trace their run through the bracket.
+function KnockoutBracketG({ data, t, lang, picks, mode = "results" }) {
   const [r, setR] = useState(0);
+  const [hi, setHi] = useState(null); // highlighted team (key) to trace a run
+  const player = mode === "player";
   const res = {};
   for (const [code, n] of KO_SEQ) for (let i = 0; i < n; i++) { const w = koSlotActualWinner(code, i, data); if (w) res[koSlotId(code, i)] = w; }
+  const source = player ? (picks || {}) : res;
   const view = (code, i) => {
-    const m = koMatchForSlot(code, i, data);
+    const id = koSlotId(code, i), m = koMatchForSlot(code, i, data);
     let a, b;
-    if (code === "R32") { [a, b] = R32_TIES[i]; } else { const c = koSlotContenders(res, code, i); a = c[0]; b = c[1]; }
-    if (m) { a = m.home || a; b = m.away || b; }
-    const winner = res[koSlotId(code, i)] || (m && (data.knockoutResults || {})[m.mid]) || null;
-    const hs = m ? (m.finalH != null ? m.finalH : m.hs) : null;
-    const as = m ? (m.finalA != null ? m.finalA : m.as) : null;
-    return { a: a ? canonTeam(a) : null, b: b ? canonTeam(b) : null, winner: winner ? canonTeam(winner) : null, hs, as, ko: m ? m.ko : null, status: m ? m.status : null };
+    if (code === "R32") { [a, b] = R32_TIES[i]; } else { const c = koSlotContenders(source, code, i); a = c[0]; b = c[1]; }
+    if (!player && m) { a = m.home || a; b = m.away || b; }
+    const actual = koSlotActualWinner(code, i, data);
+    const pick = player ? (picks && picks[id]) || null : res[id] || (m && (data.knockoutResults || {})[m.mid]) || null;
+    let status = null;
+    if (pick) status = player ? (actual ? (sameTeam(pick, actual) ? "correct" : "wrong") : "pick") : "won";
+    return {
+      a: a ? canonTeam(a) : null, b: b ? canonTeam(b) : null, pick: pick ? canonTeam(pick) : null, status,
+      hs: !player && m ? (m.finalH != null ? m.finalH : m.hs) : null, as: !player && m ? (m.finalA != null ? m.finalA : m.as) : null,
+      ko: m ? m.ko : null, mstat: m ? m.status : null,
+    };
   };
-  const row = (tm, score, win) => (
-    <div className={"gko-row" + (win ? " win" : "")}>
-      {tm ? <span className="gko-fl">{flagOf(tm)}</span> : <span className="gko-fl gko-tbd">🛡️</span>}
-      <span className={"gko-tn" + (tm ? "" : " dim")}>{tm || t("koTba2")}</span>
-      <span className="gko-sc">{score != null ? score : ""}</span>
-      {win ? <span className="gko-adv">◄</span> : null}
-    </div>
-  );
+  const teamRow = (tm, score, v) => {
+    const isPick = v.pick && tm && sameTeam(tm, v.pick);
+    const mark = isPick ? (v.status === "correct" ? "✓" : v.status === "wrong" ? "✗" : "◄") : "";
+    const cls = "gko-row" + (isPick ? " pick " + v.status : "") + (hi && tm && teamKey(tm) === hi ? " hl" : "");
+    return (
+      <div className={cls} onClick={tm ? (e) => { e.stopPropagation(); setHi((h) => (h === teamKey(tm) ? null : teamKey(tm))); } : undefined}>
+        {tm ? <span className="gko-fl">{flagOf(tm)}</span> : <span className="gko-fl gko-tbd">🛡️</span>}
+        <span className={"gko-tn" + (tm ? "" : " dim")}>{tm || t("koTba2")}</span>
+        {score != null ? <span className="gko-sc">{score}</span> : null}
+        {mark ? <span className={"gko-adv " + (v.status || "")}>{mark}</span> : null}
+      </div>
+    );
+  };
   const Card = ({ v }) => (
     <div className="gko-card">
-      <div className="gko-when">{v.ko ? `${fmtDay(v.ko, lang)} · ${fmtTime(v.ko, lang)}` : "—"}{v.status === "finished" ? <span className="gko-badge">FT</span> : v.status === "live" ? <span className="gko-badge live">LIVE</span> : null}</div>
-      {row(v.a, v.hs, v.winner && v.a && sameTeam(v.a, v.winner))}
-      {row(v.b, v.as, v.winner && v.b && sameTeam(v.b, v.winner))}
+      <div className="gko-when">{v.ko ? `${fmtDay(v.ko, lang)} · ${fmtTime(v.ko, lang)}` : "—"}{v.mstat === "finished" ? <span className="gko-badge">FT</span> : v.mstat === "live" ? <span className="gko-badge live">LIVE</span> : null}</div>
+      {teamRow(v.a, v.hs, v)}
+      {teamRow(v.b, v.as, v)}
     </div>
   );
-  const [code, n] = KO_SEQ[r], last = r === KO_SEQ.length - 1;
-  const champ = res[KO_FINAL_ID] ? canonTeam(res[KO_FINAL_ID]) : null;
+  const [code] = KO_SEQ[r], last = r === KO_SEQ.length - 1;
+  const champPick = player ? (picks && picks[KO_FINAL_ID]) : res[KO_FINAL_ID];
+  const champ = champPick ? canonTeam(champPick) : null;
+  const champActual = koSlotActualWinner("F", 0, data);
+  const champStatus = champ ? (player ? (champActual ? (sameTeam(champ, champActual) ? "correct" : "wrong") : "pick") : "won") : null;
   return (
-    <div className="gko">
-      <div className="gko-tabs">{KO_SEQ.map(([c], ri) => <button key={c} className={"gko-tab" + (ri === r ? " on" : "")} onClick={() => setR(ri)}>{t("r_" + c)}</button>)}</div>
-      {!last && <p className="gko-hint">{t("gkoSwipe")} →</p>}
+    <div className={"gko" + (hi ? " tracing" : "")} onClick={() => hi && setHi(null)}>
+      <div className="gko-tabs">{KO_SEQ.map(([c], ri) => <button key={c} className={"gko-tab" + (ri === r ? " on" : "")} onClick={(e) => { e.stopPropagation(); setR(ri); }}>{t("r_" + c)}</button>)}</div>
+      <p className="gko-hint">{hi ? <>👆 {t("gkoTracing")}</> : !last ? <>{t("gkoSwipe")} →</> : <>{t("gkoTapTeam")}</>}</p>
       <div className="gko-scroll">
         {!last ? (
           <div className="gko-pairs">
@@ -1465,7 +1484,13 @@ function KnockoutBracketG({ data, t, lang }) {
             ))}
           </div>
         ) : (
-          <div className="gko-finalwrap"><Card v={view("F", 0)} /><div className="gko-champ">🏆 {champ || t("koTba2")}</div></div>
+          <div className="gko-finalwrap">
+            <Card v={view("F", 0)} />
+            <div className={"gko-hero" + (champStatus ? " " + champStatus : "")}>
+              <div className="gko-hero-cap">👑 {player ? t("yourChampion") : t("champion")}{champStatus === "correct" ? " ✓" : champStatus === "wrong" ? " ✗" : ""}</div>
+              {champ ? <div className="gko-hero-team"><span className="gko-hero-fl">{flagOf(champ)}</span> {champ}</div> : <div className="gko-hero-team dim">{t("koTba2")}</div>}
+            </div>
+          </div>
         )}
       </div>
     </div>
@@ -1500,8 +1525,8 @@ function BracketView({ data, lb, t, lang, name, setName }) {
             <span className="brk-pt ko">{sel.knockout} {t("knockout")} {t("pts")}</span>
             <span className="brk-pt tot">{sel.total} {t("pts")}</span>
           </div>
-          <p className="hint block">{t("brkOverlayHint")} {t("brkTapZoom")}</p>
-          <BracketCanvas data={data} picks={picks} mode="player" t={t} onTap={() => shareBracketImage(sel.name, picks, data, sel.knockout, sel.total, t)} />
+          <p className="hint block">{t("brkOverlayHint")}</p>
+          <KnockoutBracketG data={data} picks={picks} mode="player" t={t} lang={lang} />
         </div>
       )}
       <div className="card">
@@ -4325,8 +4350,27 @@ border-radius:18px;padding:16px 14px;margin:10px 0;color:#fff;background:linear-
 .gko-conn::before{content:"";position:absolute;left:11px;top:22%;bottom:22%;border-left:2px solid var(--border)}
 .gko-conn::after{content:"";position:absolute;left:11px;right:0;top:50%;border-top:2px solid var(--border)}
 .gko-children .gko-card::after{content:"";position:absolute;left:100%;top:50%;width:11px;border-top:2px solid var(--border)}
-.gko-finalwrap{display:flex;flex-direction:column;align-items:center;gap:12px;padding:8px 0}
-.gko-champ{border:2px solid var(--gold-d);background:var(--gold);color:#241c00;font-weight:800;border-radius:10px;padding:7px 16px;font-size:15px}
+.gko-finalwrap{display:flex;flex-direction:column;align-items:center;gap:14px;padding:8px 0}
+/* picked / winning row colouring */
+.gko-row{cursor:pointer;border-radius:8px;transition:background .15s,opacity .15s}
+.gko-row.pick{padding-inline:6px;margin-inline:-6px}
+.gko-row.pick.correct,.gko-row.pick.won{background:#e6f4ea;color:#137a3b}
+.gko-row.pick.wrong{background:#fdecea;color:#b71c1c}
+.gko-row.pick.pick{background:var(--soft)}
+.app[data-theme="dark"] .gko-row.pick.correct,.app[data-theme="dark"] .gko-row.pick.won{background:rgba(25,195,125,.18)}
+.app[data-theme="dark"] .gko-row.pick.wrong{background:rgba(183,28,28,.22)}
+.gko-adv{font-weight:900}.gko-adv.correct{color:#137a3b}.gko-adv.wrong{color:#b71c1c}.gko-adv.pick{color:var(--grass-d)}
+/* trace a team: dim everything except cards/rows featuring the team */
+.gko.tracing .gko-row{opacity:.32}
+.gko.tracing .gko-row.hl{opacity:1;outline:2px solid var(--grass);outline-offset:-2px;background:rgba(25,195,125,.12)}
+/* champion hero */
+.gko-hero{text-align:center;padding:16px 22px;border-radius:18px;color:#fff;background:linear-gradient(135deg,#0e2a47,#13854f);box-shadow:0 10px 28px rgba(7,21,16,.28);min-width:200px}
+.gko-hero.correct{background:linear-gradient(135deg,#0f7a3b,#1fc379)}
+.gko-hero.wrong{background:linear-gradient(135deg,#6e1320,#c2143b)}
+.gko-hero.pick{background:linear-gradient(135deg,#0e2a47,#3a2f6b)}
+.gko-hero-cap{font-size:11px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;opacity:.88}
+.gko-hero-team{font-size:23px;font-weight:900;margin-top:5px;display:flex;align-items:center;justify-content:center;gap:9px}
+.gko-hero-team.dim{opacity:.7;font-size:18px}.gko-hero-fl{font-size:27px}
 .app[data-theme="dark"] .brk-pt.ko{background:rgba(25,195,125,.18)}
 .r16cand{margin-top:10px}.kotie.r16 .r16cands{flex-direction:column;align-items:flex-start;gap:2px}
 .r16num{font-size:10.5px;letter-spacing:.03em;text-transform:uppercase;color:var(--muted)}

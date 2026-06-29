@@ -1198,68 +1198,6 @@ function NextCountdown({ ko, t }) {
   const h = Math.floor(diff / 36e5), m = Math.floor((diff % 36e5) / 6e4);
   return <span className="nc-time num">{h > 0 ? `${h}h ` : ""}{m}m</span>;
 }
-function Dashboard({ data, lb, lang, onOpen, t, go }) {
-  const phase = currentPhase(data);
-  const today = dayKey(nowMs());
-  const todays = useMemo(() => matchesOnDay(data, today), [data, today]);
-  const live = todays.filter((m) => m.status === "live");
-  const coming = todays.filter((m) => m.status === "scheduled");
-  const completed = todays.filter((m) => m.status === "finished").sort((a, b) => b.ko - a.ko);
-  const next = coming[0] || (data.matches || []).filter((m) => m.status === "scheduled").sort((a, b) => a.ko - b.ko)[0];
-  // Hero features a live match if one is in progress; otherwise the next kickoff.
-  const heroLive = live[0] || liveMatches(data)[0] || null;
-  const hero = heroLive || next;
-  const recent = useMemo(() => recentResults(data, 4), [data]);
-  const dt = new Intl.DateTimeFormat(lang === "ar" ? "ar" : "en-GB", { weekday: "long", day: "numeric", month: "long", timeZone: getAppTz() }).format(new Date(nowMs()));
-  const leader = lb[0];
-  return (
-    <div className="view">
-      {/* slim phase + leader bar */}
-      <div className="topstrip">
-        <div className="ts-left"><span className="ts-dot" /> {t(phase)} · <b>{dt}</b></div>
-        {leader && <button className="ts-leader" onClick={() => go("table")}>👑 {leader.name} <span className="num">{leader.total}</span></button>}
-      </div>
-
-      {/* hero: live match (with live score) or next kickoff (with countdown) */}
-      {hero && (
-        <button className={"nextcard" + (heroLive ? " islive" : "")} onClick={() => onOpen(hero)}>
-          <div className="nc-bg" />
-          <div className="nc-label">{heroLive ? <><span className="livedot" /> {t("liveNow")}</> : t("nextMatch")}</div>
-          <div className="nc-fix">
-            <div className="nc-team"><span className="nc-fl">{flagOf(hero.home)}</span><span className="nc-tn">{canonTeam(hero.home)}</span>{heroLive && <span className="nc-sc num">{hero.hs}</span>}</div>
-            <div className="nc-mid">{heroLive ? <span className="nc-live">{hero.ht ? "HT" : hero.minute + "'"}</span> : <NextCountdown ko={hero.ko} t={t} />}<span className="nc-when">{fmtDay(hero.ko, lang)} {fmtTime(hero.ko, lang)}</span></div>
-            <div className="nc-team"><span className="nc-fl">{flagOf(hero.away)}</span><span className="nc-tn">{canonTeam(hero.away)}</span>{heroLive && <span className="nc-sc num">{hero.as}</span>}</div>
-          </div>
-          <div className="nc-stage">{hero.stage === "group" ? `${t("group")} ${hero.group}` : t("r_" + hero.round)}</div>
-        </button>
-      )}
-
-      {live.length > 0 && (
-        <div className="card livecard">
-          <h3 className="cardh"><span className="livedot" /> {t("liveNow")} · {live.length}</h3>
-          {live.map((m) => <MatchRow key={m.id} m={m} data={data} lang={lang} onOpen={onOpen} />)}
-        </div>
-      )}
-
-      <div className="card">
-        <h3 className="cardh">⏳ {t("todayComing")} {coming.length > 0 && <span className="hint">· {coming.length}</span>}</h3>
-        {coming.length === 0 && <div className="empty sm">{t("noComing")}</div>}
-        {coming.map((m) => <MatchRow key={m.id} m={m} data={data} lang={lang} onOpen={onOpen} />)}
-      </div>
-
-      <div className="card">
-        <h3 className="cardh">✅ {t("todayDone")} {completed.length > 0 && <span className="hint">· {completed.length}</span>}</h3>
-        {completed.length === 0 && <div className="empty sm">{t("noDone")}</div>}
-        {completed.map((m) => <MatchRow key={m.id} m={m} data={data} lang={lang} onOpen={onOpen} />)}
-      </div>
-
-      <div className="card">
-        <h3 className="cardh">📋 {t("latestResults")} <button className="seeall" onClick={() => go("today")}>{t("seeAll")}</button></h3>
-        {recent.map((m) => <MatchRow key={m.id} m={m} data={data} lang={lang} onOpen={onOpen} />)}
-      </div>
-    </div>
-  );
-}
 // Circular SVG progress ring used by the Overview dashboard.
 function ProgressRing({ pct, size = 132, stroke = 12, children }) {
   const r = (size - stroke) / 2, c = 2 * Math.PI * r, off = c * (1 - Math.max(0, Math.min(1, pct / 100)));
@@ -1274,9 +1212,9 @@ function ProgressRing({ pct, size = 132, stroke = 12, children }) {
     </div>
   );
 }
-// TEMPORARY preview dashboard (lives in the More menu). A status-at-a-glance
-// home concept: tournament progress, who's winning, what's live, and key stats.
-// The current Home is unchanged; this is opt-in until confirmed.
+// The Home dashboard — a status-at-a-glance view for a prediction league:
+// tournament progress, who's winning, what's live/next with the league's
+// backing, recent results and who called them, and the prediction pulse.
 function Overview({ data, lb, lang, onOpen, t, go, player }) {
   const phase = currentPhase(data);
   const all = data.matches || [];
@@ -1312,11 +1250,6 @@ function Overview({ data, lb, lang, onOpen, t, go, player }) {
   const dt = new Intl.DateTimeFormat(lang === "ar" ? "ar" : "en-GB", { weekday: "long", day: "numeric", month: "long", timeZone: getAppTz() }).format(new Date(nowMs()));
   return (
     <div className="view">
-      <div className="ov-beta">
-        <span className="ov-beta-tag">✦ {t("ovBeta")}</span>
-        <span className="ov-beta-tx">{t("ovBetaNote")}</span>
-      </div>
-
       {/* progress + leader hero */}
       <div className="ov-hero card">
         <div className="ov-hero-top"><span className="ts-dot" /> {t(phase)} · <b>{dt}</b></div>
@@ -3562,8 +3495,6 @@ const NAV = [
   { id: "more", ic: "menu", key: "nav_more" },
 ];
 const MORE_ITEMS = [
-  { id: "overview", ic: "chart", key: "nav_overview" },
-  { id: "mypicks", ic: "prediction", key: "nav_mypicks" },
   { id: "groups", ic: "groups", key: "nav_groups" },
   { id: "team", ic: "users", key: "nav_team" },
   { id: "points", ic: "prediction", key: "nav_points" },
@@ -3843,8 +3774,7 @@ export default function App() {
         {view === "mypicks" && (player && data.players[player]
           ? <MyPickCard data={data} setData={setData} player={player} t={t} logout={logout} persist={persistMyPicks} />
           : <div className="view"><div className="card empty"><p className="block">{t("mypicksSignIn")}</p><button className="btn" onClick={() => setCodeOpen(true)}>🔑 {t("codeGo")}</button></div></div>)}
-        {view === "home" && <Dashboard data={data} lb={lb} lang={lang} onOpen={openMatch} t={t} go={go} />}
-        {view === "overview" && <Overview data={data} lb={lb} lang={lang} onOpen={openMatch} t={t} go={go} player={player} />}
+        {view === "home" && <Overview data={data} lb={lb} lang={lang} onOpen={openMatch} t={t} go={go} player={player} />}
         {view === "today" && <MatchCenter data={data} lang={lang} onOpen={openMatch} t={t} />}
         {view === "match" && match && <MatchDetail m={(data.matches || []).find((x) => x.id === match.id) || match} data={data} lang={lang} t={t} onBack={() => go("today")} />}
         {view === "table" && <Leaderboard data={data} lb={lb} prevRanks={prevRanks} name={profileName} setName={selectProfile} t={t} go={go} />}

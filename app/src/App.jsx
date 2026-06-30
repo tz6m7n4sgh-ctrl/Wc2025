@@ -2034,6 +2034,7 @@ function BracketView({ data, lb, t, lang, name, setName, go }) {
 function Profile({ data, lb, name, setName, t }) {
   const row = lb.find((r) => r.name === name) || lb[0];
   const p = data.players[row.name];
+  const [tab, setTab] = useState("group"); // "group" | "ko"
   return (
     <div className="view">
       <div className="card">
@@ -2052,26 +2053,34 @@ function Profile({ data, lb, name, setName, t }) {
       <div className="card"><h3 className="cardh">🎯 {t("breakdown")}</h3><Breakdown row={row} t={t} /></div>
       <PointsHow row={row} t={t} />
       <div className="card">
-        <h3 className="cardh">📋 {t("predicted")} · {t("groupRank")}</h3>
-        <div className="ppreds">
-          {GROUP_KEYS.map((g) => {
-            const pred = playerGroupPred(p, g), table = computeGroupTable(g, data);
-            return (
-              <div className="ppred" key={g}>
-                <div className="ppredg">{t("group")} {g}</div>
-                {pred.map((tm, pos) => {
-                  const actual = table[pos]?.team;
-                  const exact = actual && sameTeam(tm, actual);
-                  const inGroup = table.some((r) => sameTeam(r.team, tm));
-                  return <div className={"ppline " + (exact ? "exact" : inGroup ? "ingrp" : "miss")} key={pos}>
-                    <span className="ppos num">{pos + 1}</span><Team t={tm} />
-                    {exact && <span className="ppt">+3</span>}{!exact && inGroup && <span className="ppt sm">+1</span>}
-                  </div>;
-                })}
-              </div>
-            );
-          })}
+        <h3 className="cardh">📋 {t("predicted")}</h3>
+        <div className="brk-tabs" role="tablist">
+          <button role="tab" className={"brk-tab" + (tab === "group" ? " on" : "")} onClick={() => setTab("group")}>📊 {t("groupRank")}</button>
+          <button role="tab" className={"brk-tab" + (tab === "ko" ? " on" : "")} onClick={() => setTab("ko")}>🏆 {t("knockout")}</button>
         </div>
+        {tab === "group" ? (
+          <div className="ppreds">
+            {GROUP_KEYS.map((g) => {
+              const pred = playerGroupPred(p, g), table = computeGroupTable(g, data);
+              return (
+                <div className="ppred" key={g}>
+                  <div className="ppredg">{t("group")} {g}</div>
+                  {pred.map((tm, pos) => {
+                    const actual = table[pos]?.team;
+                    const exact = actual && sameTeam(tm, actual);
+                    const inGroup = table.some((r) => sameTeam(r.team, tm));
+                    return <div className={"ppline " + (exact ? "exact" : inGroup ? "ingrp" : "miss")} key={pos}>
+                      <span className="ppos num">{pos + 1}</span><Team t={tm} />
+                      {exact && <span className="ppt">+3</span>}{!exact && inGroup && <span className="ppt sm">+1</span>}
+                    </div>;
+                  })}
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          <KnockoutCompare p={p} data={data} t={t} name={row.name} embedded />
+        )}
       </div>
     </div>
   );
@@ -2842,7 +2851,7 @@ function GroupCompare({ g, p, data, t, name }) {
 // Collapsible per-player knockout-bracket prediction: champion + every round's
 // winner picks vs the real result, with points. Mirrors GroupCompare's layout so
 // it slots into the Table view next to the group breakdown.
-function KnockoutCompare({ p, data, t, name }) {
+function KnockoutCompare({ p, data, t, name, embedded }) {
   const [open, setOpen] = useState(false);
   const kp = (p && p.knockout) || {};
   const koPts = koPointsFor(data);
@@ -2861,6 +2870,29 @@ function KnockoutCompare({ p, data, t, name }) {
   const champPick = p && p.champion, champActual = data.champion;
   const champHit = !!(champPick && champActual && sameTeam(champPick, champActual));
   const total = (champHit ? champPointsFor(data) : 0) + rounds.reduce((s, r) => s + r.rows.reduce((a, x) => a + x.got, 0), 0);
+  const body = (
+    <>
+      <div className="gc-colh"><span className="gc-colh-name">{name || t("predicted")}</span><span className="gc-colh-mid">{t("points")}</span><span>{t("actual")}</span></div>
+      <div className={"gc-row " + (champActual ? (champHit ? "exact" : "miss") : "pend")}>
+        <span className="gc-side pick"><span className="gc-pos">👑</span><Team t={champPick} dim={!champPick} /></span>
+        <span className={"gc-pt " + (champHit ? "exact" : "miss")}>{champHit ? "+" + champPointsFor(data) : "·"}</span>
+        <span className="gc-side act"><Team t={champActual} dim={!champActual} /></span>
+      </div>
+      {rounds.map((r) => (
+        <React.Fragment key={r.code}>
+          <div className="hint" style={{ margin: "8px 2px 2px", fontWeight: 600 }}>{t("r_" + r.code)}</div>
+          {r.rows.map((x) => (
+            <div className={"gc-row " + x.kind} key={x.i}>
+              <span className="gc-side pick"><Team t={x.pick} dim={!x.pick} /></span>
+              <span className={"gc-pt " + (x.got > 0 ? "exact" : "miss")}>{x.got > 0 ? "+" + x.got : "·"}</span>
+              <span className="gc-side act"><Team t={x.actual} dim={!x.actual} /></span>
+            </div>
+          ))}
+        </React.Fragment>
+      ))}
+    </>
+  );
+  if (embedded) return <div className="ko-cmp-embed">{body}</div>;
   return (
     <div className="card gc-card">
       <button className="gc-head" onClick={() => setOpen((o) => !o)} aria-expanded={open}>
@@ -2870,28 +2902,7 @@ function KnockoutCompare({ p, data, t, name }) {
         {!open && <span className="hint" style={{ marginInlineStart: 8 }}>{t("seeAll")}</span>}
         <span className="ag-chev">{open ? "▾" : "▸"}</span>
       </button>
-      {open && (
-        <>
-          <div className="gc-colh"><span className="gc-colh-name">{name || t("predicted")}</span><span className="gc-colh-mid">{t("points")}</span><span>{t("actual")}</span></div>
-          <div className={"gc-row " + (champActual ? (champHit ? "exact" : "miss") : "pend")}>
-            <span className="gc-side pick"><span className="gc-pos">👑</span><Team t={champPick} dim={!champPick} /></span>
-            <span className={"gc-pt " + (champHit ? "exact" : "miss")}>{champHit ? "+" + champPointsFor(data) : "·"}</span>
-            <span className="gc-side act"><Team t={champActual} dim={!champActual} /></span>
-          </div>
-          {rounds.map((r) => (
-            <React.Fragment key={r.code}>
-              <div className="hint" style={{ margin: "8px 2px 2px", fontWeight: 600 }}>{t("r_" + r.code)}</div>
-              {r.rows.map((x) => (
-                <div className={"gc-row " + x.kind} key={x.i}>
-                  <span className="gc-side pick"><Team t={x.pick} dim={!x.pick} /></span>
-                  <span className={"gc-pt " + (x.got > 0 ? "exact" : "miss")}>{x.got > 0 ? "+" + x.got : "·"}</span>
-                  <span className="gc-side act"><Team t={x.actual} dim={!x.actual} /></span>
-                </div>
-              ))}
-            </React.Fragment>
-          ))}
-        </>
-      )}
+      {open && body}
     </div>
   );
 }

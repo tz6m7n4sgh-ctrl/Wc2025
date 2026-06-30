@@ -1252,6 +1252,7 @@ function Overview({ data, lb, lang, onOpen, t, go, player }) {
   }), [data]);
   const timeline = useMemo(() => pointsTimeline(data), [data]);
   const trendTop = lb.slice(0, 5).map((r) => r.name);
+  const comp = useMemo(() => lb.slice(0, 6).map((r) => ({ name: r.name, group: (r.groupMatch || 0) + (r.groupRank || 0), knockout: r.knockout || 0, champion: r.champ || 0 })), [lb]);
   const pulse = useMemo(() => {
     let correct = 0, called = 0;
     done.forEach((m) => { const tl = matchPredictionTally(data, m); correct += tl.rows.filter((r) => r.got > 0).length; if (winnerOf(m)) called += tl.rows.filter((r) => r.backed).length; });
@@ -1394,6 +1395,23 @@ function Overview({ data, lb, lang, onOpen, t, go, player }) {
           </ResponsiveContainer>
         </div>
       )}
+
+      {/* where points come from */}
+      <div className="card">
+        <h3 className="cardh">🧱 {t("trComp")} <button className="seeall" onClick={() => go("trends")}>{t("seeAll")}</button></h3>
+        <ResponsiveContainer width="100%" height={Math.max(180, comp.length * 34)}>
+          <BarChart layout="vertical" data={comp} margin={{ top: 4, right: 12, left: 4, bottom: 0 }}>
+            <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" horizontal={false} />
+            <XAxis type="number" tick={{ fontSize: 10, fill: "var(--muted)" }} />
+            <YAxis type="category" dataKey="name" width={70} tick={{ fontSize: 11, fill: "var(--ink)" }} />
+            <Tooltip contentStyle={{ fontSize: 12, borderRadius: 10, border: "1px solid var(--border)", background: "var(--card)" }} cursor={{ fill: "rgba(25,195,125,.06)" }} />
+            <Legend wrapperStyle={{ fontSize: 10 }} />
+            <Bar dataKey="group" stackId="a" fill="var(--grass-d)" name={t("groupRank")} radius={[4, 0, 0, 4]} />
+            <Bar dataKey="knockout" stackId="a" fill="var(--gold)" name={t("knockout")} />
+            <Bar dataKey="champion" stackId="a" fill="var(--gold-d)" name={t("champion")} radius={[0, 4, 4, 0]} />
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
 
       {/* your position */}
       {me ? (

@@ -126,6 +126,7 @@ const I18N = {
     tab_events: "Events", tab_lineups: "Lineups", tab_stats: "Stats", tab_predictions: "Predictions", formation: "Formation", bench: "Bench",
     stat_possession: "Possession", stat_shots: "Shots", stat_sot: "Shots on target", stat_corners: "Corners", stat_fouls: "Fouls", stat_offsides: "Offsides",
     champConsensus: "Champion pick consensus", topWinners: "Most-picked group winners", predGridHint: "Predicted group winner per player — tap a row for full picks",
+    predKoTitle: "Knockout — head to head", predKoHint: "How the league split its winner pick in each knockout tie.", predKoEmpty: "Knockout ties appear here once the matchups are set.",
     predHitGroup: "Matches the actual group winner", trendsHint: "cumulative points", scorersNote: "Top scoring teams (computed from results). Player-level scorers arrive with the live data layer.",
     sample: "Sample data — engine is live",
     ht_full: "HALF-TIME", ft_full: "FULL-TIME",
@@ -207,6 +208,7 @@ const I18N = {
     tab_events: "الأحداث", tab_lineups: "التشكيلات", tab_stats: "الإحصائيات", tab_predictions: "التوقعات", formation: "الخطة", bench: "البدلاء",
     stat_possession: "الاستحواذ", stat_shots: "التسديدات", stat_sot: "على المرمى", stat_corners: "الركنيات", stat_fouls: "الأخطاء", stat_offsides: "تسلل",
     champConsensus: "إجماع توقع البطل", topWinners: "الأكثر توقعاً كمتصدر", predGridHint: "المتصدر المتوقع لكل لاعب — اضغط الصف لكل التوقعات",
+    predKoTitle: "الأدوار الإقصائية — مواجهة مباشرة", predKoHint: "كيف انقسم اللاعبون في توقّع الفائز بكل مواجهة إقصائية.", predKoEmpty: "تظهر المواجهات هنا بمجرد تحديدها.",
     predHitGroup: "يطابق المتصدر الفعلي", trendsHint: "النقاط التراكمية", scorersNote: "الفرق الأكثر تسجيلاً (محسوبة من النتائج). الهدّافون يصلون مع طبقة البيانات المباشرة.",
     sample: "بيانات تجريبية — المحرّك يعمل",
     ht_full: "نهاية الشوط الأول", ft_full: "نهاية المباراة",
@@ -1615,7 +1617,7 @@ function BracketDiagram({ data, picks, mode, t }) {
   const stageH = (zz) => (portRef.current ? BR.W : BR.H) * zz;
   const setZoom = (nz, ax, ay) => {
     const vp = vpRef.current; if (!vp) return;
-    nz = Math.max(0.55, Math.min(2.4, nz));
+    nz = Math.max(0.2, Math.min(2.4, nz));
     const oz = zRef.current, px = ax == null ? vp.clientWidth / 2 : ax, py = ay == null ? vp.clientHeight / 2 : ay;
     const fx = (vp.scrollLeft + px) / Math.max(1, stageW(oz)), fy = (vp.scrollTop + py) / Math.max(1, stageH(oz));
     zRef.current = nz; setZ(nz);
@@ -1676,17 +1678,20 @@ function BracketDiagram({ data, picks, mode, t }) {
   if (pathSet.size) { const pp = []; for (const [code, n] of KO_SEQ) { for (let i = 0; i < n; i++) if (pathSet.has(koSlotId(code, i))) { pp.push(brBoxCenter(code, i)); break; } } goldD = pp.map((p, k) => (k ? "L" : "M") + p.cx + " " + p.cy).join(" "); }
   // champion
   const ci = slotInfo("F", 0), champ = ci.winner, champStatus = ci.status;
-  // centre the scroll on the Final (rotation-aware)
-  const centerFinal = (smooth) => {
+  // fit the WHOLE bracket into the viewport (rotation-aware), then centre it
+  const fitAll = (smooth) => {
     const vp = vpRef.current; if (!vp) return;
-    const fcx = brFinalX + BR.BW / 2, fcy = brFinalY;
-    const fx = portRef.current ? (BR.H - fcy) / BR.H : fcx / BR.W;
-    const fy = portRef.current ? fcx / BR.W : fcy / BR.H;
-    const l = Math.max(0, fx * stageW(zRef.current) - vp.clientWidth / 2), tp = Math.max(0, fy * stageH(zRef.current) - vp.clientHeight / 2);
-    if (smooth) vp.scrollTo({ left: l, top: tp, behavior: "smooth" }); else { vp.scrollLeft = l; vp.scrollTop = tp; }
+    const vw = vp.clientWidth, vh = vp.clientHeight;
+    const cw = portRef.current ? BR.H : BR.W, ch = portRef.current ? BR.W : BR.H;
+    const nz = Math.max(0.2, Math.min(2.4, Math.min(vw / cw, vh / ch) * 0.98));
+    zRef.current = nz; setZ(nz);
+    requestAnimationFrame(() => {
+      const l = Math.max(0, (stageW(nz) - vw) / 2), tp = Math.max(0, (stageH(nz) - vh) / 2);
+      if (smooth) vp.scrollTo({ left: l, top: tp, behavior: "smooth" }); else { vp.scrollLeft = l; vp.scrollTop = tp; }
+    });
   };
-  useEffect(() => { const raf = requestAnimationFrame(() => centerFinal(false)); return () => cancelAnimationFrame(raf); }, [mode, portrait]);
-  const recenter = () => centerFinal(true);
+  useEffect(() => { const raf = requestAnimationFrame(() => fitAll(false)); return () => cancelAnimationFrame(raf); }, [mode, portrait]);
+  const recenter = () => fitAll(true);
   const tapTeam = (tm) => (e) => { e.stopPropagation(); if (!tm) return; setTrace((p) => (p && sameTeam(p, tm) ? null : tm)); };
   const Box = ({ c }) => {
     const v = slotInfo(c.code, c.idx), id = koSlotId(c.code, c.idx);
@@ -2410,6 +2415,33 @@ function MatchPredictions({ m, data, t }) {
 
 function Predictions({ data, lb, t, go }) {
   const order = lb.map((r) => r.name);
+  // Knockout head-to-head: for each concrete tie (R32 fixed; later rounds once
+  // the real matchup is known), how the league split its winner pick.
+  const koTies = useMemo(() => {
+    const res = {};
+    for (const [code, n] of KO_SEQ) for (let i = 0; i < n; i++) { const w = koSlotActualWinner(code, i, data); if (w) res[koSlotId(code, i)] = w; }
+    const out = [];
+    for (const [code, n] of KO_SEQ) for (let i = 0; i < n; i++) {
+      let a, b;
+      if (code === "R32") { [a, b] = R32_TIES[i]; } else { const c = koSlotContenders(res, code, i); a = c[0]; b = c[1]; }
+      if (!a || !b) continue;
+      a = canonTeam(a); b = canonTeam(b);
+      const slot = koSlotId(code, i); let ca = 0, cb = 0;
+      order.forEach((name) => { const pk = (data.players[name].knockout || {})[slot]; if (!pk) return; if (sameTeam(pk, a)) ca++; else if (sameTeam(pk, b)) cb++; });
+      out.push({ code, a, b, ca, cb });
+    }
+    return out;
+  }, [data, order]);
+  const H2H = ({ x }) => {
+    const tot = Math.max(1, x.ca + x.cb);
+    return (
+      <div className="h2h">
+        <span className="h2h-side"><span className="fl">{flagOf(x.a)}</span><span className="h2h-tn">{x.a}</span><b className="num">{x.ca}</b></span>
+        <span className="mpbar"><span className="mpfill h" style={{ width: `${(x.ca / tot) * 100}%` }} /><span className="mpfill a" style={{ width: `${(x.cb / tot) * 100}%` }} /></span>
+        <span className="h2h-side end"><b className="num">{x.cb}</b><span className="h2h-tn">{x.b}</span><span className="fl">{flagOf(x.b)}</span></span>
+      </div>
+    );
+  };
   return (
     <div className="view">
       <div className="card slim"><h3 className="cardh">📋 {t("nav_predictions")}</h3>
@@ -2441,6 +2473,22 @@ function Predictions({ data, lb, t, go }) {
           </table>
         </div>
         <div className="pglegend"><span className="pgdot hit" /> {t("predHitGroup")}</div>
+      </div>
+
+      {/* knockout head-to-head — who the league backs in each tie */}
+      <div className="card">
+        <h3 className="cardh">🗺️ {t("predKoTitle")}</h3>
+        <p className="hint block">{t("predKoHint")}</p>
+        {koTies.length === 0 ? <div className="empty sm">{t("predKoEmpty")}</div> : KO_SEQ.map(([code]) => {
+          const r = koTies.filter((x) => x.code === code);
+          if (!r.length) return null;
+          return (
+            <div className="h2h-round" key={code}>
+              <div className="h2h-rlabel">{t("r_" + code)}</div>
+              {r.map((x, k) => <H2H x={x} key={k} />)}
+            </div>
+          );
+        })}
       </div>
     </div>
   );
@@ -4394,6 +4442,17 @@ background:var(--soft);color:var(--ink);cursor:pointer;font-family:inherit}
 .pgrid .champcol{background:rgba(245,196,81,.08)}
 .pglegend{display:flex;align-items:center;gap:7px;font-size:11px;color:var(--muted);padding:10px 12px}
 .pgdot{width:11px;height:11px;border-radius:4px;display:inline-block}.pgdot.hit{background:rgba(25,195,125,.5)}
+/* knockout head-to-head */
+.h2h-round{margin-top:10px}
+.h2h-rlabel{font-size:11px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);margin:6px 0 4px}
+.h2h{display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--border)}
+.h2h:last-child{border-bottom:none}
+.h2h-side{display:flex;align-items:center;gap:6px;flex:1;min-width:0;font-size:12.5px;font-weight:600;color:var(--ink)}
+.h2h-side.end{justify-content:flex-end}
+.h2h-side .fl{font-size:16px;flex:none}
+.h2h-tn{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.h2h-side b{color:var(--ink);flex:none}
+.h2h .mpbar{flex:0 0 72px;height:7px}
 
 /* consensus bars */
 .cbars{display:flex;flex-direction:column;gap:9px}

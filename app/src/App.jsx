@@ -1486,6 +1486,7 @@ function Leaderboard({ data, lb, prevRanks, name, setName, t, go }) {
             <button className="seeall" onClick={() => go("profile", sel.name)}>{t("nav_profile")} ›</button>
           </div>
           <PointsHow row={sel} t={t} />
+          <KnockoutCompare p={data.players[sel.name]} data={data} t={t} name={sel.name} />
           <div className="card slim">
             <button className="mypick-lbl collapse" onClick={() => setGrpOpen((v) => !v)} aria-expanded={grpOpen}>
               <span>📂 {t("groupBreakdown")}{!grpOpen && <span className="coll-lock"> · {t("tapExpand")}</span>}</span>
@@ -2832,6 +2833,61 @@ function GroupCompare({ g, p, data, t, name }) {
               <span className={"gc-pt " + (r.got > 0 ? "exact" : "miss")}>{r.got > 0 ? "+" + r.got : "·"}</span>
               <span className="gc-side act"><Team t={r.actual} dim={!r.actual} /><span className="gc-pos num">{r.pos}</span></span>
             </div>
+          ))}
+        </>
+      )}
+    </div>
+  );
+}
+// Collapsible per-player knockout-bracket prediction: champion + every round's
+// winner picks vs the real result, with points. Mirrors GroupCompare's layout so
+// it slots into the Table view next to the group breakdown.
+function KnockoutCompare({ p, data, t, name }) {
+  const [open, setOpen] = useState(false);
+  const kp = (p && p.knockout) || {};
+  const koPts = koPointsFor(data);
+  const rounds = KO_SEQ.map(([code, n]) => {
+    const rows = [];
+    for (let i = 0; i < n; i++) {
+      const pick = kp[koSlotId(code, i)] || null;
+      const actual = koSlotActualWinner(code, i, data);
+      if (!pick && !actual) continue; // nothing predicted or decided for this slot
+      const hit = !!(pick && actual && sameTeam(pick, actual));
+      const got = hit ? (koPts[code] || 0) : 0;
+      rows.push({ i, pick, actual, got, kind: actual ? (hit ? "exact" : "miss") : "pend" });
+    }
+    return { code, rows };
+  }).filter((r) => r.rows.length);
+  const champPick = p && p.champion, champActual = data.champion;
+  const champHit = !!(champPick && champActual && sameTeam(champPick, champActual));
+  const total = (champHit ? champPointsFor(data) : 0) + rounds.reduce((s, r) => s + r.rows.reduce((a, x) => a + x.got, 0), 0);
+  return (
+    <div className="card gc-card">
+      <button className="gc-head" onClick={() => setOpen((o) => !o)}>
+        <span className="gbadge">🗺️ {t("knockout")}</span>
+        <span className="grow" />
+        <span className="gc-total num">+{total}</span>
+        <span className="ag-chev">{open ? "▾" : "▸"}</span>
+      </button>
+      {open && (
+        <>
+          <div className="gc-colh"><span className="gc-colh-name">{name || t("predicted")}</span><span className="gc-colh-mid">{t("points")}</span><span>{t("actual")}</span></div>
+          <div className={"gc-row " + (champActual ? (champHit ? "exact" : "miss") : "pend")}>
+            <span className="gc-side pick"><span className="gc-pos">👑</span><Team t={champPick} dim={!champPick} /></span>
+            <span className={"gc-pt " + (champHit ? "exact" : "miss")}>{champHit ? "+" + champPointsFor(data) : "·"}</span>
+            <span className="gc-side act"><Team t={champActual} dim={!champActual} /></span>
+          </div>
+          {rounds.map((r) => (
+            <React.Fragment key={r.code}>
+              <div className="hint" style={{ margin: "8px 2px 2px", fontWeight: 600 }}>{t("r_" + r.code)}</div>
+              {r.rows.map((x) => (
+                <div className={"gc-row " + x.kind} key={x.i}>
+                  <span className="gc-side pick"><Team t={x.pick} dim={!x.pick} /></span>
+                  <span className={"gc-pt " + (x.got > 0 ? "exact" : "miss")}>{x.got > 0 ? "+" + x.got : "·"}</span>
+                  <span className="gc-side act"><Team t={x.actual} dim={!x.actual} /></span>
+                </div>
+              ))}
+            </React.Fragment>
           ))}
         </>
       )}

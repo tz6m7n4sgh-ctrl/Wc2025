@@ -2863,10 +2863,11 @@ function KnockoutCompare({ p, data, t, name }) {
   const total = (champHit ? champPointsFor(data) : 0) + rounds.reduce((s, r) => s + r.rows.reduce((a, x) => a + x.got, 0), 0);
   return (
     <div className="card gc-card">
-      <button className="gc-head" onClick={() => setOpen((o) => !o)}>
+      <button className="gc-head" onClick={() => setOpen((o) => !o)} aria-expanded={open}>
         <span className="gbadge">🗺️ {t("knockout")}</span>
         <span className="grow" />
         <span className="gc-total num">+{total}</span>
+        {!open && <span className="hint" style={{ marginInlineStart: 8 }}>{t("seeAll")}</span>}
         <span className="ag-chev">{open ? "▾" : "▸"}</span>
       </button>
       {open && (

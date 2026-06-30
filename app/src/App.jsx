@@ -1959,23 +1959,21 @@ function BracketView({ data, lb, t, lang, name, setName, go }) {
           {look === "diagram" ? <BracketDiagram data={data} mode="results" t={t} /> : <KnockoutBracketG data={data} t={t} lang={lang} />}
         </div>
       ) : sel ? (
-        <div className="card">
-          {/* compact player row: avatar + selector + share + profile */}
+        <div className="card brk-pcard">
+          {/* compact player row: avatar + selector + share + profile (icons) */}
           <div className="brk-prow">
             <Avatar name={sel.name} />
             <select className="select brk-sel" value={sel.name} onChange={(e) => setName && setName(e.target.value)} aria-label={t("selectPlayer")}>
               {lb.map((r) => <option key={r.name} value={r.name}>{r.name} · {r.total} {t("pts")}</option>)}
             </select>
             <button className="brk-icon" onClick={() => shareBracketImage(sel.name, picks, data, sel.knockout, sel.total, t)} aria-label={t("shareBracket")} title={t("shareBracket")}>📷</button>
-            {go && <button className="seeall brk-prof" onClick={() => go("profile", sel.name)}>{t("nav_profile")} ›</button>}
+            {go && <button className="brk-icon" onClick={() => go("profile", sel.name)} aria-label={t("nav_profile")} title={t("nav_profile")}>👤</button>}
           </div>
-          <div className="brk-pts">
-            <span className="brk-pt tot">{sel.total} {t("pts")}</span>
-            <span className="brk-pt ko">{sel.knockout} {t("knockout")}</span>
-            <span className="brk-pt">{made}/31 {t("picksMade").toLowerCase()}</span>
-            <span className="brk-pt alive">{alive} {t("brkAlive")}</span>
+          {/* one row: compact stats line + view toggle */}
+          <div className="brk-statbar">
+            <span className="brk-statline"><b className="ko">{sel.knockout}</b> {t("knockout")} · <b>{made}/31</b> · <b className="alv">{alive}</b> {t("brkAlive")}</span>
+            <LookToggle />
           </div>
-          <LookToggle />
           {look === "diagram" ? <BracketDiagram data={data} picks={picks} mode="player" t={t} /> : <KnockoutBracketG data={data} picks={picks} mode="player" t={t} lang={lang} />}
         </div>
       ) : null}
@@ -4931,10 +4929,15 @@ border-radius:18px;padding:16px 14px;margin:10px 0;color:#fff;background:linear-
 .brk-head .hint{flex:1;min-width:0}
 .brk-head .seeall{flex:none;white-space:nowrap}
 .brk-pts{display:flex;gap:8px;flex-wrap:wrap;margin:6px 0 2px}
-.brk-pt{font-size:12px;font-weight:800;padding:3px 10px;border-radius:999px;background:var(--soft);color:var(--ink)}
+.brk-pt{font-size:11px;font-weight:800;padding:3px 9px;border-radius:999px;background:var(--soft);color:var(--ink)}
 .brk-pt.ko{background:#e6f4ea;color:#137a3b}.brk-pt.tot{background:var(--pitch);color:#fff}
 .brk-pt.alive{background:rgba(245,196,81,.18);color:var(--gold-d)}
 .app[data-theme="dark"] .brk-pt.alive{background:rgba(245,196,81,.16)}
+/* prediction tab: one compact row of stats + view toggle */
+.brk-pcard{padding-top:12px}
+.brk-statbar{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}
+.brk-statline{flex:1;min-width:0;font-size:12.5px;font-weight:600;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.brk-statline b{color:var(--ink);font-weight:800}.brk-statline b.ko{color:#137a3b}.brk-statline b.alv{color:var(--gold-d)}
 /* slim header */
 .brk-bar{margin:2px 0 12px}
 .brk-bar-row{display:flex;align-items:baseline;gap:8px}
@@ -4943,16 +4946,17 @@ border-radius:18px;padding:16px 14px;margin:10px 0;color:#fff;background:linear-
 .brk-thinbar{height:5px;border-radius:99px;background:var(--border);overflow:hidden;margin-top:7px}
 .brk-thinbar span{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,var(--gold-d),var(--gold));transition:width 1s cubic-bezier(.2,.8,.2,1)}
 /* compact player row in the prediction tab */
-.brk-prow{display:flex;align-items:center;gap:9px;margin-bottom:9px}
+.brk-prow{display:flex;align-items:center;gap:8px;margin-bottom:10px}
 .brk-sel{flex:1;min-width:0}
-.brk-icon{flex:none;width:38px;height:38px;border:1px solid var(--border);background:var(--card);border-radius:10px;font-size:17px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.brk-icon{flex:none;width:36px;height:36px;border:1px solid var(--border);background:var(--card);border-radius:10px;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center}
 .brk-prof{flex:none;white-space:nowrap}
 .brk-tabs{display:flex;gap:5px;margin-bottom:12px;background:var(--soft);border:1px solid var(--border);border-radius:13px;padding:4px}
 .brk-tab{flex:1;padding:10px 8px;border:none;background:none;border-radius:9px;font-family:inherit;font-weight:800;font-size:13.5px;color:var(--muted);cursor:pointer;transition:background .15s,color .15s}
 .brk-tab.on{background:var(--card);color:var(--ink);box-shadow:0 1px 4px rgba(7,21,16,.12)}
 /* diagram / list look toggle */
-.brk-look{display:inline-flex;gap:3px;background:var(--soft);border:1px solid var(--border);border-radius:10px;padding:3px;margin-bottom:10px}
-.brk-lk{padding:6px 12px;border:none;background:none;border-radius:8px;font-family:inherit;font-weight:800;font-size:12.5px;color:var(--muted);cursor:pointer}
+.brk-look{display:inline-flex;gap:3px;background:var(--soft);border:1px solid var(--border);border-radius:10px;padding:3px;flex:none}
+.card>.brk-look{margin-bottom:10px}
+.brk-lk{padding:5px 11px;border:none;background:none;border-radius:8px;font-family:inherit;font-weight:800;font-size:12px;color:var(--muted);cursor:pointer}
 .brk-lk.on{background:var(--card);color:var(--ink);box-shadow:0 1px 3px rgba(7,21,16,.1)}
 /* interactive two-sided bracket diagram */
 .bdg{margin-top:2px}
@@ -5020,14 +5024,14 @@ border-radius:18px;padding:16px 14px;margin:10px 0;color:#fff;background:linear-
 .gko-list .gko-card .gko-row{padding:4px 0;font-size:14.5px}
 .gko-list .gko-fl{font-size:18px;width:22px}
 /* champion headline banner */
-.gko-champ{display:flex;align-items:center;gap:10px;padding:11px 14px;border-radius:14px;margin-bottom:12px;color:#fff;background:linear-gradient(135deg,#0e2a47,#13854f);box-shadow:0 6px 18px rgba(7,21,16,.22)}
+.gko-champ{display:flex;align-items:center;gap:9px;padding:8px 13px;border-radius:12px;margin-bottom:11px;color:#fff;background:linear-gradient(135deg,#0e2a47,#13854f);box-shadow:0 4px 12px rgba(7,21,16,.2)}
 .gko-champ.correct{background:linear-gradient(135deg,#0f7a3b,#1fc379)}
 .gko-champ.wrong{background:linear-gradient(135deg,#6e1320,#c2143b)}
 .gko-champ.pick{background:linear-gradient(135deg,#0e2a47,#3a2f6b)}
-.gko-champ-cap{font-size:11px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;opacity:.85;flex:none}
-.gko-champ-team{margin-inline-start:auto;display:flex;align-items:center;gap:8px;font-size:18px;font-weight:900;text-align:end}
-.gko-champ-team.dim{opacity:.7;font-weight:700;font-size:15px}
-.gko-champ-fl{font-size:22px}.gko-champ-mk{font-size:15px}
+.gko-champ-cap{font-size:10.5px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;opacity:.85;flex:none}
+.gko-champ-team{margin-inline-start:auto;display:flex;align-items:center;gap:7px;font-size:16px;font-weight:900;text-align:end}
+.gko-champ-team.dim{opacity:.7;font-weight:700;font-size:14px}
+.gko-champ-fl{font-size:19px}.gko-champ-mk{font-size:14px}
 .gko-pairs{display:flex;flex-direction:column;gap:18px;min-width:max-content}
 .gko-pair{display:flex;align-items:center}
 .gko-children{display:flex;flex-direction:column;gap:14px}

@@ -694,13 +694,30 @@ function recomputeLive(data, now = nowMs()) {
     return { ...m, ...st, events, hs: goalsBy(events, "home"), as: goalsBy(events, "away"), stats: scaleStats(m.allStats, st.minute) };
   });
   const groupResults = {}, knockoutResults = {};
+  // Shootout inference from the data source: TheSportsDB's eventsseason marks a
+  // penalty decider as status "PEN" with the level 90/120-min score and NO winner
+  // field, so a drawn knockout tie arrives with no recorded penWinner. The bracket
+  // still reveals who advanced: the winner appears as a participant in a later-round
+  // fixture. So for an undecided draw, if exactly one of its teams shows up in a
+  // strictly-later knockout round, that team is the winner. (Ties whose next round
+  // isn't scheduled yet stay undecided — correct, the source doesn't say yet.)
+  const KO_RANK = { R32: 0, R16: 1, QF: 2, SF: 3, F: 4 };
+  const koPlayed = matches.filter((m) => m.stage === "ko" && m.home && m.away);
+  const advancedPast = (tk, rank) => koPlayed.some((m) => KO_RANK[m.round] > rank && (teamKey(m.home) === tk || teamKey(m.away) === tk));
   matches.forEach((m) => {
     if (m.status !== "finished" || m.finalH == null || m.finalA == null) return; // skip score-less "over" matches
     if (m.stage === "group") groupResults[matchKey(m.group, m.idx)] = { home: m.finalH, away: m.finalA };
     else {
       // A drawn knockout is decided on penalties: use the recorded shootout winner.
-      // With no winner recorded, leave the tie undecided rather than crediting home.
-      const w = m.finalH > m.finalA ? canonTeam(m.home) : m.finalA > m.finalH ? canonTeam(m.away) : (m.penWinner ? canonTeam(m.penWinner) : null);
+      let w = m.finalH > m.finalA ? canonTeam(m.home) : m.finalA > m.finalH ? canonTeam(m.away) : (m.penWinner ? canonTeam(m.penWinner) : null);
+      // No recorded winner on a level tie: recover it from the data source by
+      // seeing which side advanced to a later round.
+      if (!w && m.finalH === m.finalA && m.home && m.away && KO_RANK[m.round] != null) {
+        const r = KO_RANK[m.round], hk = teamKey(m.home), ak = teamKey(m.away);
+        const hAdv = advancedPast(hk, r), aAdv = advancedPast(ak, r);
+        if (hAdv && !aAdv) w = canonTeam(m.home);
+        else if (aAdv && !hAdv) w = canonTeam(m.away);
+      }
       if (w) knockoutResults[m.mid] = w;
     }
   });

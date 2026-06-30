@@ -1248,6 +1248,8 @@ function Overview({ data, lb, lang, onOpen, t, go, player }) {
     const tl = matchPredictionTally(data, m), w = winnerOf(m);
     return { m, w, hits: tl.rows.filter((r) => r.got > 0).length, backed: tl.rows.filter((r) => r.backed).length };
   }), [data]);
+  const timeline = useMemo(() => pointsTimeline(data), [data]);
+  const trendTop = lb.slice(0, 5).map((r) => r.name);
   const pulse = useMemo(() => {
     let correct = 0, called = 0;
     done.forEach((m) => { const tl = matchPredictionTally(data, m); correct += tl.rows.filter((r) => r.got > 0).length; if (winnerOf(m)) called += tl.rows.filter((r) => r.backed).length; });
@@ -1372,6 +1374,25 @@ function Overview({ data, lb, lang, onOpen, t, go, player }) {
         ))}
       </div>
 
+      {/* points trends */}
+      {timeline.length > 1 && (
+        <div className="card">
+          <h3 className="cardh">📈 {t("nav_trends")} <button className="seeall" onClick={() => go("trends")}>{t("seeAll")}</button></h3>
+          <ResponsiveContainer width="100%" height={210}>
+            <LineChart data={timeline} margin={{ top: 8, right: 10, left: -22, bottom: 0 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
+              <XAxis dataKey="stage" tick={{ fontSize: 10, fill: "var(--muted)" }} />
+              <YAxis tick={{ fontSize: 10, fill: "var(--muted)" }} width={28} />
+              <Tooltip contentStyle={{ fontSize: 12, borderRadius: 10, border: "1px solid var(--border)", background: "var(--card)" }} />
+              <Legend wrapperStyle={{ fontSize: 10 }} />
+              {trendTop.map((name, i) => (
+                <Line key={name} type="monotone" dataKey={name} stroke={LINE_COLORS[i % LINE_COLORS.length]} strokeWidth={2.5} dot={{ r: 2 }} animationDuration={1000} />
+              ))}
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
+      )}
+
       {/* your position */}
       {me ? (
         <button className="ov-you card" onClick={() => go("bracket")}>
@@ -1427,26 +1448,35 @@ function Leaderboard({ data, lb, prevRanks, name, setName, t, go }) {
   );
 }
 function Groups({ data, t, lang, onOpenGroup }) {
+  const [tab, setTab] = useState("groups"); // "groups" | "ko"
   return (
     <div className="view">
-      <div className="card slim glegend">
-        <span className="glegend-h">{t("legend")}</span>
-        <span className="glegend-i"><b>{t("P")}</b> {t("leg_P")}</span>
-        <span className="glegend-i"><b>{t("W")}</b> {t("leg_W")}</span>
-        <span className="glegend-i"><b>{t("D")}</b> {t("leg_D")}</span>
-        <span className="glegend-i"><b>{t("L")}</b> {t("leg_L")}</span>
-        <span className="glegend-i"><b>{t("GF")}</b> {t("leg_GF")}</span>
-        <span className="glegend-i"><b>{t("GA")}</b> {t("leg_GA")}</span>
-        <span className="glegend-i"><b>{t("GD")}</b> {t("leg_GD")}</span>
-        <span className="glegend-i"><b>{t("Pts")}</b> {t("leg_Pts")}</span>
+      <div className="brk-tabs" role="tablist">
+        <button role="tab" className={"brk-tab" + (tab === "groups" ? " on" : "")} onClick={() => setTab("groups")}>📊 {t("nav_groups")}</button>
+        <button role="tab" className={"brk-tab" + (tab === "ko" ? " on" : "")} onClick={() => setTab("ko")}>🏆 {t("knockout")}</button>
       </div>
-      <div className="gwrap">
-        {GROUP_KEYS.map((g, i) => <GroupCard g={g} data={data} t={t} key={g} delay={i * 40} onOpenGroup={onOpenGroup} />)}
-      </div>
-      <div className="card">
-        <h3 className="cardh">🏆 {t("koBracket")}</h3>
-        <KnockoutBracketG data={data} t={t} lang={lang} />
-      </div>
+      {tab === "groups" ? (
+        <>
+          <div className="card slim glegend">
+            <span className="glegend-h">{t("legend")}</span>
+            <span className="glegend-i"><b>{t("P")}</b> {t("leg_P")}</span>
+            <span className="glegend-i"><b>{t("W")}</b> {t("leg_W")}</span>
+            <span className="glegend-i"><b>{t("D")}</b> {t("leg_D")}</span>
+            <span className="glegend-i"><b>{t("L")}</b> {t("leg_L")}</span>
+            <span className="glegend-i"><b>{t("GF")}</b> {t("leg_GF")}</span>
+            <span className="glegend-i"><b>{t("GA")}</b> {t("leg_GA")}</span>
+            <span className="glegend-i"><b>{t("GD")}</b> {t("leg_GD")}</span>
+            <span className="glegend-i"><b>{t("Pts")}</b> {t("leg_Pts")}</span>
+          </div>
+          <div className="gwrap">
+            {GROUP_KEYS.map((g, i) => <GroupCard g={g} data={data} t={t} key={g} delay={i * 40} onOpenGroup={onOpenGroup} />)}
+          </div>
+        </>
+      ) : (
+        <div className="card">
+          <KnockoutBracketG data={data} t={t} lang={lang} />
+        </div>
+      )}
     </div>
   );
 }

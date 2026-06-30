@@ -118,7 +118,7 @@ const I18N = {
     resultsEditor: "Results editor", resultsHint: "Enter a score to mark a match finished — standings, points and the bracket update instantly.", setChampion: "Set champion",
     entryFee: "Entry fee", currency: "Currency", distribution: "Prize distribution", winnerTakes: "Winner takes all", topTwo: "Split top 2", topThree: "Split top 3", deadline: "Predictions deadline", lockPicks: "Lock predictions", prizePool: "Prize pool",
     exportData: "Export data", importData: "Import data", pasteJson: "Paste backup JSON here…", copy: "Copy", copied: "copied", loaded: "loaded", badJson: "invalid JSON", load: "Load",
-    expPreds: "Players' predictions", expResults: "Group results", expHint: "Download a snapshot of the live data. CSV opens in Excel/Sheets; JSON is a full backup.", dlCsv: "Download CSV", dlJson: "Download JSON", expPlayersN: "players", expFinishedN: "finished", expScheduledN: "scheduled", expCheck: "These exports reflect the data the app is showing right now — if the player names here look wrong, the app is on sample data and didn't load the live database.",
+    expPreds: "Players' predictions", expResults: "Group results", expKnockout: "Knockout results", expHint: "Download a snapshot of the live data. CSV opens in Excel/Sheets; JSON is a full backup.", dlCsv: "Download CSV", dlJson: "Download JSON", expPlayersN: "players", expFinishedN: "finished", expScheduledN: "scheduled", expChampDecided: "champion decided", expChampPending: "champion pending", expCheck: "These exports reflect the data the app is showing right now — if the player names here look wrong, the app is on sample data and didn't load the live database.",
     pdfTitle: "PDF report", pdfHint: "Generates a printable page — pick “Save as PDF” in the print dialog. Choose one player, or the full ranked list.", pdfPlayer: "Player PDF", pdfFull: "Full list PDF", pdfBanked: "Banked", pdfProj: "Projected", pdfLegend: "points = +1 per team in its exact current position · updates live as results come in", pdfNote: "Group columns show exact-position hits (out of 4). Knockout & champion are not scored yet.",
     hPlayers: "Players", hPreds: "All group predictions complete", hChamp: "All champion picks set", hMatches: "Matches finished", hGroups: "Groups complete", hEngine: "Engine totals reconcile",
     noChanges: "No changes yet.", repairHint: "Normalize the dataset: backfill missing fields and re-derive results.", runRepair: "Run repair", repairDone: "Dataset normalized.",
@@ -202,7 +202,7 @@ const I18N = {
     resultsEditor: "محرّر النتائج", resultsHint: "أدخل النتيجة لإنهاء المباراة — يُحدّث الترتيب والنقاط والأدوار فوراً.", setChampion: "تعيين البطل",
     entryFee: "رسوم الاشتراك", currency: "العملة", distribution: "توزيع الجوائز", winnerTakes: "الفائز يأخذ الكل", topTwo: "أفضل اثنين", topThree: "أفضل ثلاثة", deadline: "موعد إغلاق التوقعات", lockPicks: "قفل التوقعات", prizePool: "مجموع الجوائز",
     exportData: "تصدير البيانات", importData: "استيراد البيانات", pasteJson: "الصق نسخة JSON هنا…", copy: "نسخ", copied: "تم النسخ", loaded: "تم التحميل", badJson: "JSON غير صالح", load: "تحميل",
-    expPreds: "توقعات اللاعبين", expResults: "نتائج المجموعات", expHint: "نزّل نسخة من البيانات الحية. ملف CSV يفتح في Excel/Sheets، وJSON نسخة احتياطية كاملة.", dlCsv: "تنزيل CSV", dlJson: "تنزيل JSON", expPlayersN: "لاعب", expFinishedN: "منتهية", expScheduledN: "مجدولة", expCheck: "تعكس هذه الملفات البيانات المعروضة حالياً — إذا بدت أسماء اللاعبين خاطئة فالتطبيق يعمل على بيانات تجريبية ولم يحمّل قاعدة البيانات الحية.",
+    expPreds: "توقعات اللاعبين", expResults: "نتائج المجموعات", expKnockout: "نتائج الإقصائيات", expHint: "نزّل نسخة من البيانات الحية. ملف CSV يفتح في Excel/Sheets، وJSON نسخة احتياطية كاملة.", dlCsv: "تنزيل CSV", dlJson: "تنزيل JSON", expPlayersN: "لاعب", expFinishedN: "منتهية", expScheduledN: "مجدولة", expChampDecided: "تحدّد البطل", expChampPending: "البطل قيد الانتظار", expCheck: "تعكس هذه الملفات البيانات المعروضة حالياً — إذا بدت أسماء اللاعبين خاطئة فالتطبيق يعمل على بيانات تجريبية ولم يحمّل قاعدة البيانات الحية.",
     pdfTitle: "تقرير PDF", pdfHint: "ينشئ صفحة قابلة للطباعة — اختر «حفظ كـ PDF» في نافذة الطباعة. اختر لاعباً واحداً أو القائمة الكاملة.", pdfPlayer: "PDF للاعب", pdfFull: "PDF للقائمة الكاملة", pdfBanked: "محقّقة", pdfProj: "متوقعة", pdfLegend: "النقاط = +1 لكل فريق في مركزه الحالي الصحيح · تتحدّث مباشرةً مع ورود النتائج", pdfNote: "أعمدة المجموعات تعرض المراكز الصحيحة (من 4). الأدوار الإقصائية والبطل لم تُحتسب بعد.",
     hPlayers: "اللاعبون", hPreds: "اكتمال توقعات المجموعات", hChamp: "تعيين كل توقعات البطل", hMatches: "المباريات المنتهية", hGroups: "المجموعات المكتملة", hEngine: "تطابق مجاميع المحرّك",
     noChanges: "لا تغييرات بعد.", repairHint: "توحيد البيانات: استكمال الحقول الناقصة وإعادة احتساب النتائج.", runRepair: "تشغيل الإصلاح", repairDone: "تم توحيد البيانات.",
@@ -3217,6 +3217,34 @@ function Exports({ data, t }) {
     return { csv: toCsv(rows), json: JSON.stringify(json, null, 2) };
   }, [groupMatches]);
 
+  // Knockout results, keyed by canonical bracket slot (R32#0–15 … F#0) so the
+  // file lines up 1:1 with the predictions export's knockout slots. The actual
+  // contenders/winner come from whichever played KO match falls inside each
+  // slot's subtree (same membership match the scoring engine uses), plus the
+  // decided champion — the data needed to reproduce every knockout point.
+  const koData = useMemo(() => {
+    const koMatches = (data.matches || []).filter((m) => m.stage === "ko");
+    const rows = [["Round", "Slot", "Home", "Away", "HomeScore", "AwayScore", "Winner", "Status"]];
+    const json = [];
+    for (const [code, n] of KO_SEQ) {
+      for (let i = 0; i < n; i++) {
+        const set = new Set(koSlotLeaves(code, i).map(teamKey));
+        const m = koMatches.find((x) => x.round === code && x.home && x.away && set.has(teamKey(x.home)) && set.has(teamKey(x.away)));
+        const slot = koSlotId(code, i);
+        const home = m && m.home ? canonTeam(m.home) : null;
+        const away = m && m.away ? canonTeam(m.away) : null;
+        const done = !!m && m.finalH != null && m.finalA != null;
+        const winner = m ? ((data.knockoutResults || {})[m.mid] || null) : null;
+        const status = done ? "final" : (m ? "scheduled" : "tbd");
+        rows.push([code, slot, home || "", away || "", done ? m.finalH : "", done ? m.finalA : "", winner || "", status]);
+        json.push({ round: code, slot, home, away, homeScore: done ? m.finalH : null, awayScore: done ? m.finalA : null, winner, status });
+      }
+    }
+    const champion = data.champion ? canonTeam(data.champion) : null;
+    const decided = json.filter((r) => r.winner).length;
+    return { csv: toCsv(rows), json: JSON.stringify({ champion, knockout: json }, null, 2), decided, total: json.length, champion };
+  }, [data]);
+
   const stamp = new Date().toISOString().slice(0, 10);
   return (
     <div className="view">
@@ -3236,6 +3264,13 @@ function Exports({ data, t }) {
         <div className="exp-btns">
           <button className="btn" onClick={() => downloadText(`group-results-${stamp}.csv`, resData.csv, "text/csv")}>{t("dlCsv")}</button>
           <button className="btn ghost" onClick={() => downloadText(`group-results-${stamp}.json`, resData.json, "application/json")}>{t("dlJson")}</button>
+        </div>
+      </div>
+      <div className="card">
+        <h3 className="cardh"><Ico name="trophy" size={18} /> {t("expKnockout")} <span className="hint">· {koData.decided}/{koData.total} {t("expFinishedN")} · {koData.champion ? t("expChampDecided") : t("expChampPending")}</span></h3>
+        <div className="exp-btns">
+          <button className="btn" onClick={() => downloadText(`knockout-results-${stamp}.csv`, koData.csv, "text/csv")}>{t("dlCsv")}</button>
+          <button className="btn ghost" onClick={() => downloadText(`knockout-results-${stamp}.json`, koData.json, "application/json")}>{t("dlJson")}</button>
         </div>
       </div>
       <div className="card">

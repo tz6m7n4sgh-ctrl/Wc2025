@@ -6,6 +6,7 @@ const { GROUPS, GROUP_KEYS, RR, computeGroupTable, buildLeaderboard, calcPlayerP
 
 const PRED = process.argv[2];
 const RES = process.argv[3];
+const KO = process.argv[4]; // optional knockout-results export (champion + knockout[])
 const preds = JSON.parse(fs.readFileSync(PRED, "utf8"));
 const res = JSON.parse(fs.readFileSync(RES, "utf8"));
 
@@ -33,9 +34,26 @@ for (const r of res) {
   groupResults[g + "_" + idx] = { home: hs, away: as };
 }
 console.log("orientation mismatches:", orientBad, "| group results:", Object.keys(groupResults).length + "/72");
-console.log("knockout results in export: NONE (group-only export)\n");
 
-const data = { players, groupResults, knockoutResults: {}, champion: null, matches: [] };
+// knockout: rebuild synthetic ko matches keyed by slot so the engine's
+// membership-based koSlotActualWinner resolves each slot to its real winner.
+const matches = [];
+const knockoutResults = {};
+let champion = null;
+if (KO) {
+  const ko = JSON.parse(fs.readFileSync(KO, "utf8"));
+  champion = ko.champion || null;
+  let decided = 0;
+  for (const r of ko.knockout || []) {
+    if (r.home && r.away) matches.push({ stage: "ko", round: r.round, home: r.home, away: r.away, mid: r.slot });
+    if (r.winner) { knockoutResults[r.slot] = r.winner; decided++; }
+  }
+  console.log("knockout results:", decided, "decided | champion:", champion || "(pending)", "\n");
+} else {
+  console.log("knockout results in export: NONE (group-only export)\n");
+}
+
+const data = { players, groupResults, knockoutResults, champion, matches };
 
 // actual final tables
 const tables = {};

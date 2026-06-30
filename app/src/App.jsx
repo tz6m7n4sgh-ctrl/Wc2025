@@ -127,6 +127,7 @@ const I18N = {
     stat_possession: "Possession", stat_shots: "Shots", stat_sot: "Shots on target", stat_corners: "Corners", stat_fouls: "Fouls", stat_offsides: "Offsides",
     champConsensus: "Champion pick consensus", topWinners: "Most-picked group winners", predGridHint: "Predicted group winner per player — tap a row for full picks",
     predKoTitle: "Knockout — head to head", predKoHint: "How the league split its winner pick in each knockout tie.", predKoEmpty: "Knockout ties appear here once the matchups are set.",
+    predKoCompare: "Knockout comparison", predKoCompareHint: "Each player's champion, finalists and semi-finalists side by side — tap a row for their full bracket.", predHitKo: "reached that round", koFinalists: "Finalists", koSemis: "Semi-finalists",
     predHitGroup: "Matches the actual group winner", trendsHint: "cumulative points", scorersNote: "Top scoring teams (computed from results). Player-level scorers arrive with the live data layer.",
     sample: "Sample data — engine is live",
     ht_full: "HALF-TIME", ft_full: "FULL-TIME",
@@ -209,6 +210,7 @@ const I18N = {
     stat_possession: "الاستحواذ", stat_shots: "التسديدات", stat_sot: "على المرمى", stat_corners: "الركنيات", stat_fouls: "الأخطاء", stat_offsides: "تسلل",
     champConsensus: "إجماع توقع البطل", topWinners: "الأكثر توقعاً كمتصدر", predGridHint: "المتصدر المتوقع لكل لاعب — اضغط الصف لكل التوقعات",
     predKoTitle: "الأدوار الإقصائية — مواجهة مباشرة", predKoHint: "كيف انقسم اللاعبون في توقّع الفائز بكل مواجهة إقصائية.", predKoEmpty: "تظهر المواجهات هنا بمجرد تحديدها.",
+    predKoCompare: "مقارنة الأدوار الإقصائية", predKoCompareHint: "بطل كل لاعب والمتأهلون للنهائي ونصف النهائي جنباً إلى جنب — اضغط الصف لكامل جدوله.", predHitKo: "وصل لذلك الدور", koFinalists: "متأهلو النهائي", koSemis: "نصف النهائي",
     predHitGroup: "يطابق المتصدر الفعلي", trendsHint: "النقاط التراكمية", scorersNote: "الفرق الأكثر تسجيلاً (محسوبة من النتائج). الهدّافون يصلون مع طبقة البيانات المباشرة.",
     sample: "بيانات تجريبية — المحرّك يعمل",
     ht_full: "نهاية الشوط الأول", ft_full: "نهاية المباراة",
@@ -2432,6 +2434,13 @@ function Predictions({ data, lb, t, go }) {
     }
     return out;
   }, [data, order]);
+  // actual deep-round winners, for colouring the comparison table green
+  const koAct = useMemo(() => ({
+    F: koSlotActualWinner("F", 0, data),
+    SF: [0, 1].map((i) => koSlotActualWinner("SF", i, data)),
+    QF: [0, 1, 2, 3].map((i) => koSlotActualWinner("QF", i, data)),
+  }), [data]);
+  const koCell = (pick, actual, key) => <td key={key} className={pick && actual && sameTeam(pick, actual) ? "hit" : ""} title={canonTeam(pick)}>{flagOf(pick)}</td>;
   const H2H = ({ x }) => {
     const tot = Math.max(1, x.ca + x.cb);
     return (
@@ -2489,6 +2498,35 @@ function Predictions({ data, lb, t, go }) {
             </div>
           );
         })}
+      </div>
+
+      {/* knockout player comparison — each player's deep-round picks side by side */}
+      <div className="card slim"><h3 className="cardh">⚔️ {t("predKoCompare")}</h3>
+        <p className="hint block">{t("predKoCompareHint")}</p>
+      </div>
+      <div className="card nopad">
+        <div className="pgrid-scroll">
+          <table className="pgrid">
+            <thead>
+              <tr><th className="sticky">{t("player")}</th><th>🏆</th><th>🎖️</th><th>🎖️</th><th>🛡️</th><th>🛡️</th><th>🛡️</th><th>🛡️</th></tr>
+            </thead>
+            <tbody>
+              {order.map((name) => {
+                const kp = data.players[name].knockout || {};
+                const champ = kp[koSlotId("F", 0)], fin = [kp[koSlotId("SF", 0)], kp[koSlotId("SF", 1)]], sf = [0, 1, 2, 3].map((i) => kp[koSlotId("QF", i)]);
+                return (
+                  <tr key={name} onClick={() => go("profile", name)}>
+                    <td className="sticky pgname"><Avatar name={name} /><span>{name}</span></td>
+                    {koCell(champ, koAct.F, "c")}
+                    {fin.map((f, i) => koCell(f, koAct.SF[i], "f" + i))}
+                    {sf.map((s, i) => koCell(s, koAct.QF[i], "s" + i))}
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+        <div className="pglegend"><span className="pgdot hit" /> {t("predHitKo")} · 🏆 {t("champion")} · 🎖️ {t("koFinalists")} · 🛡️ {t("koSemis")}</div>
       </div>
     </div>
   );

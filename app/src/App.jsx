@@ -497,6 +497,21 @@ function koMatchObjsFromFixtures(fixtures) {
     penWinner: f.winner || null, eventId: f.eventId || null, allEvents: [], allStats: null, lineups: null,
   }));
 }
+// Fill the shootout winner on drawn knockout fixtures. The season feed flags a
+// penalty tie as status PEN with the level score but no winner; the actual
+// result lives on the per-event record (intHome/AwayScoreExtra), so look those
+// up and stamp the winner. Best-effort and premium-only — when it can't run,
+// recomputeLive's next-round inference still resolves any tie that advanced.
+async function fillKoPenWinners(koFix, key) {
+  const need = (koFix || []).filter((r) => r.home_score != null && r.away_score != null && Number(r.home_score) === Number(r.away_score) && !r.winner && r.eventId).map((r) => ({ key: r.mid, eventId: r.eventId }));
+  if (!need.length) return koFix;
+  try {
+    const pens = await fetchEventFinals(need, key);
+    const byMid = {}; pens.forEach((f) => { if (f.penWinner) byMid[f.key] = f.penWinner; });
+    koFix.forEach((r) => { if (!r.winner && byMid[r.mid]) r.winner = byMid[r.mid]; });
+  } catch (e) { /* best-effort; inference covers advanced ties */ }
+  return koFix;
+}
 function buildBracket(data) {
   // If real knockout fixtures exist (synced from the live feed or admin-entered),
   // the bracket is drawn straight from them — real matchups and real progression.
@@ -3815,6 +3830,7 @@ function SyncResults({ data, setData, t }) {
       if (rows.length) { try { await upsertResults(rows); saved = Object.keys(finalRows).length; } catch (e) { /* surfaced below */ } }
       // Knockout fixtures + results, straight from the same season feed.
       const koFix = koFixturesFromSeason(season);
+      await fillKoPenWinners(koFix, key);
       // Re-derive locally so results show immediately, and persist the blob too.
       setData((d) => {
         const gr = { ...d.groupResults };
@@ -4143,6 +4159,7 @@ export default function App() {
         // populates automatically (no manual Sync needed) as the draw fills in.
         try {
           const koFix = koFixturesFromSeason(await fetchSeasonEvents(key));
+          await fillKoPenWinners(koFix, key);
           if (koFix.length) real.matches = [...real.matches.filter((m) => m.stage !== "ko"), ...koMatchObjsFromFixtures(koFix)].sort((a, b) => (a.ko || 0) - (b.ko || 0));
         } catch (e) { /* feed KO is best-effort */ }
         if (!alive) return;
@@ -4227,6 +4244,7 @@ export default function App() {
           } catch (e) { /* best-effort */ }
           try {
             const koFix = koFixturesFromSeason(await fetchSeasonEvents(key));
+            await fillKoPenWinners(koFix, key);
             if (koFix.length) real.matches = [...real.matches.filter((m) => m.stage !== "ko"), ...koMatchObjsFromFixtures(koFix)].sort((a, b) => (a.ko || 0) - (b.ko || 0));
           } catch (e) { /* feed KO is best-effort */ }
           setData(recomputeLive(real, nowMs()));

@@ -1489,7 +1489,7 @@ function Leaderboard({ data, lb, prevRanks, name, setName, t, go }) {
           <KnockoutCompare p={data.players[sel.name]} data={data} t={t} name={sel.name} />
           <div className="card slim">
             <button className="mypick-lbl collapse" onClick={() => setGrpOpen((v) => !v)} aria-expanded={grpOpen}>
-              <span>📂 {t("groupBreakdown")}{!grpOpen && <span className="coll-lock"> · {t("tapExpand")}</span>}</span>
+              <span>📂 {t("groupBreakdown")}{!grpOpen && <span className="coll-lock"> · {t("seeAll")}</span>}</span>
               <span className="coll-chev">{grpOpen ? "▾" : "▸"}</span>
             </button>
             {grpOpen && <p className="hint block">{t("gcHint")}</p>}

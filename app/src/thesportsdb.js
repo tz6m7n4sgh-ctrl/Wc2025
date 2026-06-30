@@ -137,7 +137,16 @@ export async function fetchEventFinals(items, key) {
       if (hs == null || hs === "" || as == null || as === "") return null;
       const st = String(ev.strStatus || ev.strProgress || "").toLowerCase();
       const finished = !st || st.includes("match finished") || st === "ft" || st === "aet" || st.includes("full") || st.includes("finished") || st.includes("after") || st.includes("complete");
-      return { key: fxKey, eventId, home: ev.strHomeTeam || "", away: ev.strAwayTeam || "", homeScore: String(hs), awayScore: String(as), finished };
+      // Penalty shootout: the season feed omits it, but the per-event record
+      // carries the shootout score in intHome/AwayScoreExtra. The team with the
+      // higher penalty score is the one that advanced.
+      let penWinner = null;
+      const he = ev.intHomeScoreExtra, ae = ev.intAwayScoreExtra;
+      if (he != null && he !== "" && ae != null && ae !== "") {
+        const h = Number(he), a = Number(ae);
+        if (Number.isFinite(h) && Number.isFinite(a) && h !== a) penWinner = h > a ? (ev.strHomeTeam || "") : (ev.strAwayTeam || "");
+      }
+      return { key: fxKey, eventId, home: ev.strHomeTeam || "", away: ev.strAwayTeam || "", homeScore: String(hs), awayScore: String(as), finished, penWinner };
     } catch (e) { return null; }
   }));
   return out.filter(Boolean);

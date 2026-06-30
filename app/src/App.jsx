@@ -128,6 +128,7 @@ const I18N = {
     champConsensus: "Champion pick consensus", topWinners: "Most-picked group winners", predGridHint: "Predicted group winner per player — tap a row for full picks",
     predKoTitle: "Knockout — head to head", predKoHint: "How the league split its winner pick in each knockout tie.", predKoEmpty: "Knockout ties appear here once the matchups are set.",
     predKoCompare: "Knockout comparison", predKoCompareHint: "Each player's champion, finalists and semi-finalists side by side — tap a row for their full bracket.", predHitKo: "reached that round", koFinalists: "Finalists", koSemis: "Semi-finalists",
+    trPoints: "Points over time", trRace: "Position race", trRaceHint: "lower line = higher rank", trComp: "Where points come from", trCompHint: "group · knockout · champion", trSurv: "Bracket survival", trSurvHint: "correct knockout picks still standing each round",
     predHitGroup: "Matches the actual group winner", trendsHint: "cumulative points", scorersNote: "Top scoring teams (computed from results). Player-level scorers arrive with the live data layer.",
     sample: "Sample data — engine is live",
     ht_full: "HALF-TIME", ft_full: "FULL-TIME",
@@ -211,6 +212,7 @@ const I18N = {
     champConsensus: "إجماع توقع البطل", topWinners: "الأكثر توقعاً كمتصدر", predGridHint: "المتصدر المتوقع لكل لاعب — اضغط الصف لكل التوقعات",
     predKoTitle: "الأدوار الإقصائية — مواجهة مباشرة", predKoHint: "كيف انقسم اللاعبون في توقّع الفائز بكل مواجهة إقصائية.", predKoEmpty: "تظهر المواجهات هنا بمجرد تحديدها.",
     predKoCompare: "مقارنة الأدوار الإقصائية", predKoCompareHint: "بطل كل لاعب والمتأهلون للنهائي ونصف النهائي جنباً إلى جنب — اضغط الصف لكامل جدوله.", predHitKo: "وصل لذلك الدور", koFinalists: "متأهلو النهائي", koSemis: "نصف النهائي",
+    trPoints: "النقاط عبر الوقت", trRace: "سباق المراكز", trRaceHint: "الخط الأدنى = مركز أعلى", trComp: "مصدر النقاط", trCompHint: "المجموعات · الإقصائي · البطل", trSurv: "صمود التوقّعات", trSurvHint: "التوقّعات الإقصائية الصحيحة الباقية بكل دور",
     predHitGroup: "يطابق المتصدر الفعلي", trendsHint: "النقاط التراكمية", scorersNote: "الفرق الأكثر تسجيلاً (محسوبة من النتائج). الهدّافون يصلون مع طبقة البيانات المباشرة.",
     sample: "بيانات تجريبية — المحرّك يعمل",
     ht_full: "نهاية الشوط الأول", ft_full: "نهاية المباراة",
@@ -2607,23 +2609,84 @@ function Consensus({ data, t }) {
 function Trends({ data, lb, t }) {
   const timeline = useMemo(() => pointsTimeline(data), [data]);
   const top = lb.slice(0, 6).map((r) => r.name);
+  const nP = Object.keys(data.players || {}).length || 1;
+  const tip = { fontSize: 12, borderRadius: 10, border: "1px solid var(--border)", background: "var(--card)" };
+  // position race: each player's rank per stage (1 = top)
+  const ranks = useMemo(() => timeline.map((row) => {
+    const sorted = Object.keys(row).filter((k) => k !== "stage").sort((a, b) => row[b] - row[a]);
+    const out = { stage: row.stage }; sorted.forEach((n, i) => (out[n] = i + 1)); return out;
+  }), [timeline]);
+  // points composition (group / knockout / champion) per player
+  const comp = useMemo(() => lb.slice(0, 8).map((r) => ({ name: r.name, group: (r.groupMatch || 0) + (r.groupRank || 0), knockout: r.knockout || 0, champion: r.champ || 0 })), [lb]);
+  // bracket survival: correct knockout picks per round
+  const KOR = [["R32", 16], ["R16", 8], ["QF", 4], ["SF", 2], ["F", 1]];
+  const koAny = useMemo(() => KOR.some(([c, n]) => { for (let i = 0; i < n; i++) if (koSlotActualWinner(c, i, data)) return true; return false; }), [data]);
+  const survival = useMemo(() => KOR.map(([code, n]) => {
+    const row = { round: code };
+    top.forEach((name) => { const kp = data.players[name].knockout || {}; let cnt = 0; for (let i = 0; i < n; i++) { const a = koSlotActualWinner(code, i, data), pk = kp[koSlotId(code, i)]; if (a && pk && sameTeam(pk, a)) cnt++; } row[name] = cnt; });
+    return row;
+  }), [data, top]);
   return (
     <div className="view">
       <div className="card">
-        <h3 className="cardh">📈 {t("nav_trends")} <span className="hint">{t("trendsHint")}</span></h3>
-        <ResponsiveContainer width="100%" height={260}>
-          <LineChart data={timeline} margin={{ top: 8, right: 10, left: -20, bottom: 0 }}>
+        <h3 className="cardh">📈 {t("trPoints")} <span className="hint">{t("trendsHint")}</span></h3>
+        <ResponsiveContainer width="100%" height={250}>
+          <LineChart data={timeline} margin={{ top: 8, right: 10, left: -22, bottom: 0 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
             <XAxis dataKey="stage" tick={{ fontSize: 11, fill: "var(--muted)" }} />
-            <YAxis tick={{ fontSize: 10, fill: "var(--muted)" }} />
-            <Tooltip contentStyle={{ fontSize: 12, borderRadius: 10, border: "1px solid var(--border)", background: "var(--card)" }} />
+            <YAxis tick={{ fontSize: 10, fill: "var(--muted)" }} width={30} />
+            <Tooltip contentStyle={tip} />
             <Legend wrapperStyle={{ fontSize: 11 }} />
-            {top.map((name, i) => (
-              <Line key={name} type="monotone" dataKey={name} stroke={LINE_COLORS[i % LINE_COLORS.length]} strokeWidth={2.5} dot={{ r: 2 }} animationDuration={1100} />
-            ))}
+            {top.map((name, i) => <Line key={name} type="monotone" dataKey={name} stroke={LINE_COLORS[i % LINE_COLORS.length]} strokeWidth={2.5} dot={{ r: 2 }} animationDuration={1000} />)}
           </LineChart>
         </ResponsiveContainer>
       </div>
+
+      <div className="card">
+        <h3 className="cardh">🔀 {t("trRace")} <span className="hint">{t("trRaceHint")}</span></h3>
+        <ResponsiveContainer width="100%" height={250}>
+          <LineChart data={ranks} margin={{ top: 8, right: 10, left: -28, bottom: 0 }}>
+            <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
+            <XAxis dataKey="stage" tick={{ fontSize: 11, fill: "var(--muted)" }} />
+            <YAxis reversed allowDecimals={false} domain={[1, nP]} tick={{ fontSize: 10, fill: "var(--muted)" }} width={26} />
+            <Tooltip contentStyle={tip} />
+            <Legend wrapperStyle={{ fontSize: 11 }} />
+            {top.map((name, i) => <Line key={name} type="monotone" dataKey={name} stroke={LINE_COLORS[i % LINE_COLORS.length]} strokeWidth={2.5} dot={{ r: 3 }} animationDuration={1000} />)}
+          </LineChart>
+        </ResponsiveContainer>
+      </div>
+
+      <div className="card">
+        <h3 className="cardh">🧱 {t("trComp")} <span className="hint">{t("trCompHint")}</span></h3>
+        <ResponsiveContainer width="100%" height={Math.max(220, comp.length * 36)}>
+          <BarChart layout="vertical" data={comp} margin={{ top: 4, right: 12, left: 4, bottom: 0 }}>
+            <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" horizontal={false} />
+            <XAxis type="number" tick={{ fontSize: 10, fill: "var(--muted)" }} />
+            <YAxis type="category" dataKey="name" width={74} tick={{ fontSize: 11, fill: "var(--ink)" }} />
+            <Tooltip contentStyle={tip} cursor={{ fill: "rgba(25,195,125,.06)" }} />
+            <Legend wrapperStyle={{ fontSize: 11 }} />
+            <Bar dataKey="group" stackId="a" fill="var(--grass-d)" name={t("groupRank")} radius={[4, 0, 0, 4]} />
+            <Bar dataKey="knockout" stackId="a" fill="var(--gold)" name={t("knockout")} />
+            <Bar dataKey="champion" stackId="a" fill="var(--gold-d)" name={t("champion")} radius={[0, 4, 4, 0]} />
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
+
+      {koAny && (
+        <div className="card">
+          <h3 className="cardh">🛡️ {t("trSurv")} <span className="hint">{t("trSurvHint")}</span></h3>
+          <ResponsiveContainer width="100%" height={230}>
+            <LineChart data={survival} margin={{ top: 8, right: 10, left: -28, bottom: 0 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
+              <XAxis dataKey="round" tick={{ fontSize: 11, fill: "var(--muted)" }} />
+              <YAxis allowDecimals={false} tick={{ fontSize: 10, fill: "var(--muted)" }} width={26} />
+              <Tooltip contentStyle={tip} />
+              <Legend wrapperStyle={{ fontSize: 11 }} />
+              {top.map((name, i) => <Line key={name} type="monotone" dataKey={name} stroke={LINE_COLORS[i % LINE_COLORS.length]} strokeWidth={2.5} dot={{ r: 2 }} animationDuration={1000} />)}
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
+      )}
     </div>
   );
 }

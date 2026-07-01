@@ -114,7 +114,7 @@ const I18N = {
     brkOverlayHint: "Picks turn green when correct, red when wrong, as results come in. Scroll to see the whole bracket.", shareBracket: "Share image", brkTapZoom: "Tap the bracket for a full-size image to save or share.", gkoSwipe: "Swipe to change round", gkoTapTeam: "Tap a team to trace their run", gkoTracing: "Tracing — tap anywhere to clear", yourChampion: "Your champion",
     brkTabLive: "Current state", brkTabPred: "Prediction", brkAlive: "alive", brkDecided: "decided",
     brkDiagram: "Tree", brkList: "List", bdgTapTeam: "tap a team for its path · pinch or +/− to zoom", bdgTurn: "Turn phone to read", bdgPath: "path to the centre", bdgRotate: "Rotate your phone to view the bracket — or switch to List",
-    ktTap: "Tap any match · champion sits at the centre", ktThrough: "Through", ktLive: "Live", ktTbd: "To be decided", brVs: "vs",
+    ktTap: "Tap any match · champion sits at the centre", ktThrough: "Through", ktLive: "Live", ktTbd: "To be decided", brVs: "vs", ktTitle: "Knockout tree",
     koBracket: "Knockout bracket", koBracketHint: "Pick a winner in every tie from the Round of 32 to the Final — winners advance, and your Final winner is your champion. Locks at the champion deadline; each correct pick scores +1.", koBracketLocked: "Bracket locked. ✓ = correct, ✕ = wrong, as results come in.",
     resultsEditor: "Results editor", resultsHint: "Enter a score to mark a match finished — standings, points and the bracket update instantly.", setChampion: "Set champion",
     entryFee: "Entry fee", currency: "Currency", distribution: "Prize distribution", winnerTakes: "Winner takes all", topTwo: "Split top 2", topThree: "Split top 3", deadline: "Predictions deadline", lockPicks: "Lock predictions", prizePool: "Prize pool",
@@ -199,7 +199,7 @@ const I18N = {
     brkOverlayHint: "تتحوّل التوقّعات إلى الأخضر عند الصواب والأحمر عند الخطأ مع ظهور النتائج. مرّر لرؤية الجدول كاملاً.", shareBracket: "مشاركة صورة", brkTapZoom: "اضغط على الجدول للحصول على صورة كاملة للحفظ أو المشاركة.", gkoSwipe: "مرّر لتغيير الدور", gkoTapTeam: "اضغط على فريق لتتبّع مشواره", gkoTracing: "تتبّع — اضغط أي مكان للإلغاء", yourChampion: "بطلك",
     brkTabLive: "الوضع الحالي", brkTabPred: "التوقّع", brkAlive: "ما زال قائماً", brkDecided: "محسومة",
     brkDiagram: "الشجرة", brkList: "قائمة", bdgTapTeam: "اضغط فريقاً لعرض طريقه · قرّب بإصبعين أو +/−", bdgTurn: "أدِر الهاتف للقراءة", bdgPath: "الطريق إلى المركز", bdgRotate: "أدِر هاتفك لعرض المخطط — أو بدّل إلى القائمة",
-    ktTap: "اضغط أي مباراة · البطل في المنتصف", ktThrough: "متأهل", ktLive: "مباشر", ktTbd: "لم تُحسم", brVs: "ضد",
+    ktTap: "اضغط أي مباراة · البطل في المنتصف", ktThrough: "متأهل", ktLive: "مباشر", ktTbd: "لم تُحسم", brVs: "ضد", ktTitle: "شجرة الأدوار الإقصائية",
     koBracket: "جدول الأدوار الإقصائية", koBracketHint: "اختر الفائز في كل مواجهة من دور الـ32 حتى النهائي — يتأهّل الفائزون، والفائز بالنهائي هو بطلك. يُغلق عند موعد إغلاق البطل؛ كل توقّع صحيح يمنح نقطة.", koBracketLocked: "الجدول مُغلق. ✓ = صحيح، ✕ = خاطئ، مع ظهور النتائج.",
     resultsEditor: "محرّر النتائج", resultsHint: "أدخل النتيجة لإنهاء المباراة — يُحدّث الترتيب والنقاط والأدوار فوراً.", setChampion: "تعيين البطل",
     entryFee: "رسوم الاشتراك", currency: "العملة", distribution: "توزيع الجوائز", winnerTakes: "الفائز يأخذ الكل", topTwo: "أفضل اثنين", topThree: "أفضل ثلاثة", deadline: "موعد إغلاق التوقعات", lockPicks: "قفل التوقعات", prizePool: "مجموع الجوائز",
@@ -1447,6 +1447,12 @@ function Overview({ data, lb, lang, onOpen, t, go, player }) {
         </ResponsiveContainer>
       </div>
 
+      {/* knockout tree */}
+      <div className="card">
+        <h3 className="cardh">🗺️ {t("ktTitle")} <button className="seeall" onClick={() => go("bracket")}>{t("seeAll")}</button></h3>
+        <KnockoutTree data={data} mode="results" t={t} lang={lang} />
+      </div>
+
       {/* your position */}
       {me ? (
         <button className="ov-you card" onClick={() => go("bracket")}>
@@ -1930,10 +1936,10 @@ function KnockoutTree({ data, picks, mode, t, lang }) {
       <div className={"kt-vp" + (trace ? " tracing" : "")} ref={vpRef}>
         <div className="kt-stage" style={{ width: stageWH(z), height: stageWH(z) }}>
           <svg className="kt-svg" width={KT.size} height={KT.size} viewBox={`0 0 ${KT.size} ${KT.size}`} style={{ transform: `scale(${z})`, transformOrigin: "0 0" }} onClick={() => { setSel(null); setTrace(null); }}>
-            {[412, 335, 256, 176].map((r) => <circle key={r} cx={KT.cx} cy={KT.cy} r={r} className="kt-ring" />)}
+            {KO_SEQ.map(([code]) => <circle key={"ring" + code} cx={KT.cx} cy={KT.cy} r={KT.ring[code]} className={"kt-ring r-" + code} />)}
             {conns.map((c) => <line key={c.id} x1={c.x1} y1={c.y1} x2={c.x2} y2={c.y2} className={"kt-conn" + (c.on ? " on" : "")} />)}
             {goldPts.length > 1 && <polyline points={goldPts.join(" ")} className="kt-gold" pathLength="1" />}
-            {KO_SEQ.map(([code]) => <text key={code} x={KT.cx} y={KT.cy - KT.ring[code] - 3} className="kt-ringlbl" textAnchor="middle">{code}</text>)}
+            {KO_SEQ.map(([code]) => <text key={code} x={KT.cx} y={KT.cy - KT.ring[code] - 6} className={"kt-ringlbl r-" + code} textAnchor="middle">{code}</text>)}
             {nodes.map((nd) => {
               const v = nd.v, st = nodeState(v), onP = pathSet.has(nd.id), isSel = sel && sel.code === nd.code && sel.i === nd.i;
               const lr = KT.ring[nd.code] + 26, lx = KT.cx + lr * Math.cos(nd.ang), ly = KT.cy + lr * Math.sin(nd.ang);
@@ -5317,14 +5323,21 @@ border-radius:18px;padding:16px 14px;margin:10px 0;color:#fff;background:linear-
 .kt-lg{display:inline-flex;align-items:center;gap:6px}
 .kt-lg i{width:11px;height:11px;border-radius:50%;display:inline-block}
 .kt-lg.through i{background:#25c37d}.kt-lg.live i{background:#e5484d}.kt-lg.tbd i{background:transparent;border:2px solid #9aa}
-.kt-vp{position:relative;overflow:auto;aspect-ratio:1/1;max-height:600px;min-height:340px;border-radius:16px;background:radial-gradient(120% 80% at 50% 50%,rgba(245,196,81,.12),transparent 62%),linear-gradient(180deg,#0d2a1e,#081912);-webkit-overflow-scrolling:touch;touch-action:pan-x pan-y;animation:bdgIn .34s cubic-bezier(.22,.61,.36,1)}
+.kt-vp{position:relative;overflow:auto;aspect-ratio:1/1;max-height:600px;min-height:340px;border-radius:16px;background:radial-gradient(130% 95% at 50% 50%,rgba(245,196,81,.10),transparent 58%),linear-gradient(180deg,#132a3d,#0a1622);-webkit-overflow-scrolling:touch;touch-action:pan-x pan-y;animation:bdgIn .34s cubic-bezier(.22,.61,.36,1)}
 .kt-stage{position:relative}
 .kt-svg{position:absolute;top:0;left:0;overflow:visible;display:block}
-.kt-ring{fill:none;stroke:rgba(255,255,255,.06);stroke-width:1}
+/* one clearly-visible ring per round, tinted by round so the levels read at a glance */
+.kt-ring{fill:none;stroke-width:1.6;stroke-dasharray:2 7;stroke-linecap:round}
+.kt-ring.r-R32{stroke:rgba(125,237,172,.55)}
+.kt-ring.r-R16{stroke:rgba(120,196,255,.55)}
+.kt-ring.r-QF{stroke:rgba(196,160,255,.55)}
+.kt-ring.r-SF{stroke:rgba(255,178,120,.6)}
+.kt-ring.r-F{stroke:rgba(245,196,81,.7)}
 .kt-conn{stroke:rgba(255,255,255,.16);stroke-width:1.6}
 .kt-conn.on{stroke:rgba(255,216,77,.85);stroke-width:2.4}
 .kt-gold{fill:none;stroke:#ffd84d;stroke-width:5;stroke-linecap:round;stroke-linejoin:round;filter:drop-shadow(0 0 5px rgba(255,216,77,.9));stroke-dasharray:1;animation:dombDraw .6s ease forwards}
-.kt-ringlbl{fill:rgba(255,255,255,.5);font-size:15px;font-weight:800;letter-spacing:.06em}
+.kt-ringlbl{font-size:15px;font-weight:800;letter-spacing:.06em;paint-order:stroke;stroke:rgba(6,16,26,.9);stroke-width:3px;stroke-linejoin:round}
+.kt-ringlbl.r-R32{fill:#7bedac}.kt-ringlbl.r-R16{fill:#78c4ff}.kt-ringlbl.r-QF{fill:#c4a0ff}.kt-ringlbl.r-SF{fill:#ffb278}.kt-ringlbl.r-F{fill:#f5c451}
 .kt-node{cursor:pointer}
 .kt-node-c{fill:#fff;stroke:#c9d2cc;stroke-width:2.5;transition:stroke .2s,r .15s;filter:drop-shadow(0 2px 4px rgba(0,0,0,.35))}
 .kt-node.through .kt-node-c,.kt-node.correct .kt-node-c{stroke:#25c37d}

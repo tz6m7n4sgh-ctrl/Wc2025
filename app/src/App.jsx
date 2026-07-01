@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect, useRef } from "react";
-import { BarChart, Bar, LineChart, Line, CartesianGrid, Legend, XAxis, YAxis, Cell, ResponsiveContainer, Tooltip } from "recharts";
+import { BarChart, Bar, LineChart, Line, CartesianGrid, Legend, XAxis, YAxis, Cell, ResponsiveContainer, Tooltip, ReferenceLine } from "recharts";
 import { loadFromSupabase, saveBlob, upsertResult, upsertResults, SB_URL } from "./supabase.js";
 import { SECURE_AUTH_URL, secureAuthOn, secureLogin, secureSave, loadPlayerRows } from "./secureAuth.js";
 import { fetchLivescore, fetchCompletedResults, fetchResultsRange, fetchSeasonEvents, getFeedStatus, fetchMatchDetail, fetchEventFinals } from "./thesportsdb.js";
@@ -90,7 +90,8 @@ const I18N = {
     selectPlayer: "Select a player", group: "Group", winnerAdv: "advances",
     rule_edge: "Pick the higher-ranked team and they win the match", rule_exact: "Team finishes in the exact position you predicted",
     rule_in: "Team is in the group but in a different position", rule_ko: "Correct knockout-round winner", rule_champ: "Correct champion",
-    nav_more: "More", nav_matches: "Matches", nav_predictions: "Predictions", nav_consensus: "Consensus", nav_trends: "Trends", nav_scorers: "Goals", nav_help: "Help", nav_mypicks: "My picks", mypicksSignIn: "Open your personal sign-in link (sent on WhatsApp) to fill and edit your predictions.",
+    nav_more: "More", nav_matches: "Matches", nav_predictions: "Predictions", nav_compare: "Compare", nav_consensus: "Consensus", nav_trends: "Trends", nav_scorers: "Goals", nav_help: "Help", nav_mypicks: "My picks", mypicksSignIn: "Open your personal sign-in link (sent on WhatsApp) to fill and edit your predictions.",
+    cmpTitle: "Knockout compare", cmpHint: "Earned points plus what each player can still win — who's really in the race.", cmpSelect: "Players to compare", cmpEarned: "Earned", cmpPossible: "Still winnable", cmpCeiling: "Ceiling", cmpRange: "Points range · earned + still winnable", cmpUpside: "Where the upside is · points still winnable", cmpChampRace: "Champion picks", cmpPath: "Way forward · picks still alive", cmpAlive: "alive", cmpOut: "eliminated", cmpLeading: "Leading", cmpInRace: "Can still top the table", cmpOutRace: "Can't catch the leader", cmpBehind: "behind", cmpReached: "reached", cmpNoLive: "No picks still alive", cmpLeaderLine: "leader's score", cmpChamp: "champion", cmpRemaining: "remaining",
     nav_today: "Today", liveNow: "Live now", noMatches: "No matches on this day.", noEvents: "No data yet.", predBacking: "backing", whoBacked: "Who backed whom", back: "Back", upcoming: "Upcoming",
     liveLbl: "LIVE", liveUpdates: "Live updates", hide: "Hide", openMatch: "Open match", kickoff: "Kick-off", fullTime: "Full-time", goalEx: "GOAL!",
     nextMatch: "Next match", todayComing: "Today — coming up", todayDone: "Today — completed", noComing: "No more matches today.", noDone: "No results yet today.", latestResults: "Latest results", seeAll: "See all",
@@ -175,7 +176,8 @@ const I18N = {
     selectPlayer: "اختر لاعباً", group: "المجموعة", winnerAdv: "يتأهل",
     rule_edge: "اختر الفريق الأعلى ترتيباً ويفوز بالمباراة", rule_exact: "الفريق ينهي في المركز الذي توقعته بالضبط",
     rule_in: "الفريق في المجموعة لكن في مركز مختلف", rule_ko: "توقع الفائز الصحيح في الدور الإقصائي", rule_champ: "توقع البطل الصحيح",
-    nav_more: "المزيد", nav_matches: "المباريات", nav_predictions: "التوقعات", nav_consensus: "الإجماع", nav_trends: "التطور", nav_scorers: "الأهداف", nav_help: "المساعدة", nav_mypicks: "توقعاتي", mypicksSignIn: "افتح رابط الدخول الخاص بك (المُرسل عبر واتساب) لتعبئة توقّعاتك وتعديلها.",
+    nav_more: "المزيد", nav_matches: "المباريات", nav_predictions: "التوقعات", nav_compare: "مقارنة", nav_consensus: "الإجماع", nav_trends: "التطور", nav_scorers: "الأهداف", nav_help: "المساعدة", nav_mypicks: "توقعاتي", mypicksSignIn: "افتح رابط الدخول الخاص بك (المُرسل عبر واتساب) لتعبئة توقّعاتك وتعديلها.",
+    cmpTitle: "مقارنة الإقصائيات", cmpHint: "النقاط المكتسبة إضافةً إلى ما يمكن لكل لاعب كسبه — مَن لا يزال في السباق فعلاً.", cmpSelect: "اللاعبون للمقارنة", cmpEarned: "مكتسبة", cmpPossible: "ما زالت ممكنة", cmpCeiling: "الحد الأقصى", cmpRange: "مدى النقاط · المكتسبة + الممكنة", cmpUpside: "أين الإمكانات · نقاط ما زالت ممكنة", cmpChampRace: "اختيارات البطل", cmpPath: "الطريق للأمام · اختيارات ما زالت قائمة", cmpAlive: "قائم", cmpOut: "خرج", cmpLeading: "المتصدّر", cmpInRace: "يمكنه التصدّر", cmpOutRace: "لا يمكنه اللحاق بالمتصدّر", cmpBehind: "خلف", cmpReached: "بلغ", cmpNoLive: "لا اختيارات قائمة", cmpLeaderLine: "نقاط المتصدّر", cmpChamp: "البطل", cmpRemaining: "متبقٍّ",
     nav_today: "اليوم", liveNow: "مباشر الآن", noMatches: "لا مباريات في هذا اليوم.", noEvents: "لا توجد بيانات بعد.", predBacking: "مؤيد", whoBacked: "من أيّد مَن", back: "رجوع", upcoming: "قادمة",
     liveLbl: "مباشر", liveUpdates: "تحديثات مباشرة", hide: "إخفاء", openMatch: "فتح المباراة", kickoff: "انطلاق المباراة", fullTime: "انتهت المباراة", goalEx: "هدف!",
     nextMatch: "المباراة القادمة", todayComing: "اليوم — قادمة", todayDone: "اليوم — انتهت", noComing: "لا مزيد من المباريات اليوم.", noDone: "لا نتائج بعد اليوم.", latestResults: "أحدث النتائج", seeAll: "عرض الكل",
@@ -1266,6 +1268,174 @@ function ProgressRing({ pct, size = 132, stroke = 12, children }) {
 // The Home dashboard — a status-at-a-glance view for a prediction league:
 // tournament progress, who's winning, what's live/next with the league's
 // backing, recent results and who called them, and the prediction pulse.
+// ---- Knockout "who can still win" analysis ---------------------------------
+// A team is eliminated once it loses a decided knockout tie.
+function koEliminatedSet(data) {
+  const elim = new Set();
+  for (const [code, n] of KO_SEQ) for (let i = 0; i < n; i++) {
+    const w = koSlotActualWinner(code, i, data); if (!w) continue;
+    const m = koMatchForSlot(code, i, data); if (!m) continue;
+    [m.home, m.away].forEach((tm) => { if (tm && !sameTeam(tm, w)) elim.add(teamKey(tm)); });
+  }
+  return elim;
+}
+// The deepest round a team has actually won (null if it hasn't won a KO tie).
+function koTeamReached(team, data) {
+  if (!team) return null;
+  let reached = null;
+  for (const [code, n] of KO_SEQ) for (let i = 0; i < n; i++) { const w = koSlotActualWinner(code, i, data); if (w && sameTeam(w, team)) reached = code; }
+  return reached;
+}
+// Earned vs still-winnable knockout+champion points for one player.
+function koPotential(p, data, koPts, champPts, elim) {
+  const kp = (p && p.knockout) || {};
+  let earnedKO = 0, potKO = 0;
+  const remByRound = { R32: 0, R16: 0, QF: 0, SF: 0, F: 0 }, live = [];
+  for (const [code, n] of KO_SEQ) for (let i = 0; i < n; i++) {
+    const pick = kp[koSlotId(code, i)]; if (!pick) continue;
+    const pts = koPts[code] || 0, actual = koSlotActualWinner(code, i, data);
+    if (actual) { if (sameTeam(pick, actual)) earnedKO += pts; }
+    else if (koSlotLeaves(code, i).some((tt) => sameTeam(tt, pick)) && !elim.has(teamKey(pick))) {
+      potKO += pts; remByRound[code] += pts; live.push({ code, team: canonTeam(pick) });
+    }
+  }
+  let earnedCh = 0, potCh = 0;
+  if (data.champion) { if (p && sameTeam(p.champion, data.champion)) earnedCh = champPts; }
+  else if (p && p.champion && !elim.has(teamKey(p.champion))) potCh = champPts;
+  return { earnedKO, potKO, earnedCh, potCh, remByRound, live };
+}
+const KO_RD_COLOR = { R32: "#25c37d", R16: "#3d8bff", QF: "#a06bff", SF: "#ff9d4d", F: "#f5c451", champ: "#d98a1e" };
+function KOCompare({ data, lb, t, lang }) {
+  const koPts = koPointsFor(data), champPts = champPointsFor(data);
+  const elim = useMemo(() => koEliminatedSet(data), [data]);
+  const leadCurrent = useMemo(() => Math.max(0, ...lb.map((r) => r.total)), [lb]);
+  const analysis = useMemo(() => lb.map((r) => {
+    const pot = koPotential(data.players[r.name], data, koPts, champPts, elim);
+    const remaining = pot.potKO + pot.potCh, ceiling = r.total + remaining;
+    return { name: r.name, rank: r.rank, current: r.total, remaining, ceiling, canWin: ceiling >= leadCurrent, champion: (data.players[r.name] || {}).champion || null, ...pot };
+  }), [data, lb, elim, leadCurrent]);
+  const byName = useMemo(() => Object.fromEntries(analysis.map((a) => [a.name, a])), [analysis]);
+  const [sel, setSel] = useState(() => lb.slice(0, 3).map((r) => r.name));
+  const toggle = (name) => setSel((s) => s.includes(name) ? (s.length > 1 ? s.filter((x) => x !== name) : s) : [...s, name]);
+  const rows = sel.map((n) => byName[n]).filter(Boolean).sort((a, b) => b.ceiling - a.ceiling || b.current - a.current);
+  const rangeData = rows.map((a) => ({ name: a.name, earned: a.current, potential: a.remaining }));
+  const upsideData = rows.map((a) => ({ name: a.name, ...a.remByRound, champ: a.potCh }));
+  const anyUpside = upsideData.some((d) => d.R32 + d.R16 + d.QF + d.SF + d.F + d.champ > 0);
+  return (
+    <div className="view">
+      <div className="card slim"><h3 className="cardh">⚖️ {t("cmpTitle")}</h3><p className="hint block">{t("cmpHint")}</p></div>
+
+      {/* player picker */}
+      <div className="card slim">
+        <div className="hrow"><span className="hlabel">{t("cmpSelect")}</span></div>
+        <div className="psel-strip">
+          {lb.map((r) => (
+            <button key={r.name} className={"pchip" + (sel.includes(r.name) ? " on" : "")} onClick={() => toggle(r.name)}>
+              <Avatar name={r.name} /><span>{r.name}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* verdict cards */}
+      <div className="cmp-verdicts">
+        {rows.map((a) => {
+          const isLeader = a.current === leadCurrent, gap = leadCurrent - a.current;
+          const verdict = isLeader ? "lead" : a.canWin ? "in" : "out";
+          return (
+            <div className={"cmp-vc " + verdict} key={a.name}>
+              <div className="cmp-vc-top"><Avatar name={a.name} /><div className="cmp-vc-id"><b>{a.name}</b><span className="hint">#{a.rank}</span></div>
+                <span className={"cmp-badge " + verdict}>{isLeader ? "👑 " + t("cmpLeading") : a.canWin ? "✓ " + t("cmpInRace") : "✕ " + t("cmpOutRace")}</span>
+              </div>
+              <div className="cmp-vc-nums">
+                <span><b className="num">{a.current}</b><i>{t("cmpEarned")}</i></span>
+                <span className="cmp-plus">+<b className="num">{a.remaining}</b><i>{t("cmpPossible")}</i></span>
+                <span className="cmp-eq">=<b className="num">{a.ceiling}</b><i>{t("cmpCeiling")}</i></span>
+              </div>
+              {!isLeader && <div className="cmp-vc-gap hint">{gap} {t("cmpBehind")} · {t("cmpChamp")}: {a.champion ? <><Team t={canonTeam(a.champion)} /> {elim.has(teamKey(a.champion)) ? "· " + t("cmpOut") : koTeamReached(a.champion, data) ? "· " + t("cmpReached") + " " + koTeamReached(a.champion, data) : "· " + t("cmpAlive")}</> : "—"}</div>}
+            </div>
+          );
+        })}
+      </div>
+
+      {/* points range: earned + still winnable, vs the leader line */}
+      <div className="card">
+        <h3 className="cardh">📊 {t("cmpRange")}</h3>
+        <ResponsiveContainer width="100%" height={Math.max(150, rows.length * 52)}>
+          <BarChart layout="vertical" data={rangeData} margin={{ top: 6, right: 16, left: 6, bottom: 0 }}>
+            <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" horizontal={false} />
+            <XAxis type="number" tick={{ fontSize: 10, fill: "var(--muted)" }} />
+            <YAxis type="category" dataKey="name" width={72} tick={{ fontSize: 11, fill: "var(--ink)" }} />
+            <Tooltip contentStyle={{ fontSize: 12, borderRadius: 10, border: "1px solid var(--border)", background: "var(--card)" }} cursor={{ fill: "rgba(25,195,125,.06)" }} />
+            <Legend wrapperStyle={{ fontSize: 10 }} />
+            <Bar dataKey="earned" stackId="a" fill="var(--grass-d)" name={t("cmpEarned")} radius={[4, 0, 0, 4]} />
+            <Bar dataKey="potential" stackId="a" fill="var(--gold)" name={t("cmpPossible")} radius={[0, 4, 4, 0]} />
+            <ReferenceLine x={leadCurrent} stroke="#e5484d" strokeDasharray="4 3" label={{ value: t("cmpLeaderLine"), fontSize: 10, fill: "#e5484d", position: "top" }} />
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
+
+      {/* where the upside is — points still winnable by round */}
+      {anyUpside && (
+        <div className="card">
+          <h3 className="cardh">🧱 {t("cmpUpside")}</h3>
+          <ResponsiveContainer width="100%" height={Math.max(150, rows.length * 52)}>
+            <BarChart layout="vertical" data={upsideData} margin={{ top: 6, right: 16, left: 6, bottom: 0 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" horizontal={false} />
+              <XAxis type="number" tick={{ fontSize: 10, fill: "var(--muted)" }} />
+              <YAxis type="category" dataKey="name" width={72} tick={{ fontSize: 11, fill: "var(--ink)" }} />
+              <Tooltip contentStyle={{ fontSize: 12, borderRadius: 10, border: "1px solid var(--border)", background: "var(--card)" }} cursor={{ fill: "rgba(25,195,125,.06)" }} />
+              <Legend wrapperStyle={{ fontSize: 10 }} />
+              {["R32", "R16", "QF", "SF", "F"].map((c, i) => <Bar key={c} dataKey={c} stackId="u" fill={KO_RD_COLOR[c]} name={t("r_" + c)} radius={i === 0 ? [4, 0, 0, 4] : undefined} />)}
+              <Bar dataKey="champ" stackId="u" fill={KO_RD_COLOR.champ} name={t("champion")} radius={[0, 4, 4, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+      )}
+
+      {/* champion picks */}
+      <div className="card">
+        <h3 className="cardh">👑 {t("cmpChampRace")}</h3>
+        <div className="cmp-champs">
+          {rows.map((a) => {
+            const reached = koTeamReached(a.champion, data), out = a.champion && elim.has(teamKey(a.champion));
+            const st = data.champion ? (sameTeam(a.champion, data.champion) ? "won" : "out") : out ? "out" : "alive";
+            return (
+              <div className={"cmp-champ " + st} key={a.name}>
+                <span className="cmp-champ-nm">{a.name}</span>
+                <span className="cmp-champ-tm">{a.champion ? <><span className="cmp-champ-fl">{flagOf(a.champion)}</span>{canonTeam(a.champion)}</> : "—"}</span>
+                <span className={"cmp-champ-st " + st}>{st === "won" ? "🏆" : st === "out" ? "✕ " + t("cmpOut") : reached ? t("cmpReached") + " " + reached : t("cmpAlive")}</span>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* way forward — picks still alive */}
+      <div className="card">
+        <h3 className="cardh">🧭 {t("cmpPath")}</h3>
+        <div className="cmp-paths">
+          {rows.map((a) => {
+            const byR = {}; a.live.forEach((x) => { (byR[x.code] = byR[x.code] || []).push(x.team); });
+            const has = a.live.length > 0;
+            return (
+              <div className="cmp-path" key={a.name}>
+                <div className="cmp-path-h"><b>{a.name}</b> <span className="hint">+{a.remaining} {t("cmpRemaining")}</span></div>
+                {has ? KO_SEQ.filter(([c]) => byR[c]).map(([c]) => (
+                  <div className="cmp-path-r" key={c}>
+                    <span className="cmp-path-rd" style={{ color: KO_RD_COLOR[c] }}>{c}</span>
+                    <span className="cmp-path-tm">{byR[c].map((tm, k) => <span className="cmp-chip2" key={k}><span className="cmp-chip2-fl">{flagOf(tm)}</span>{code3(tm)}</span>)}</span>
+                  </div>
+                )) : <div className="empty sm">{t("cmpNoLive")}</div>}
+                {a.potCh > 0 && <div className="cmp-path-r"><span className="cmp-path-rd" style={{ color: KO_RD_COLOR.champ }}>👑</span><span className="cmp-path-tm"><span className="cmp-chip2"><span className="cmp-chip2-fl">{flagOf(a.champion)}</span>{code3(a.champion)}</span></span></div>}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
 function Overview({ data, lb, lang, onOpen, t, go, player }) {
   const phase = currentPhase(data);
   const all = data.matches || [];
@@ -4253,6 +4423,7 @@ const MORE_ITEMS = [
   { id: "points", ic: "prediction", key: "nav_points" },
   { id: "profile", ic: "profile", key: "nav_profile" },
   { id: "predictions", ic: "prediction", key: "nav_predictions" },
+  { id: "compare", ic: "chart", key: "nav_compare" },
   { id: "consensus", ic: "users", key: "nav_consensus" },
   { id: "trends", ic: "chart", key: "nav_trends" },
   { id: "scorers", ic: "ball", key: "nav_scorers" },
@@ -4538,6 +4709,7 @@ export default function App() {
         {view === "team" && <TeamFixtures data={data} lang={lang} onOpen={openMatch} t={t} />}
         {view === "bracket" && <BracketView data={data} lb={lb} t={t} lang={lang} name={profileName} setName={selectProfile} go={go} />}
         {view === "predictions" && <Predictions data={data} lb={lb} t={t} go={go} />}
+        {view === "compare" && <KOCompare data={data} lb={lb} t={t} lang={lang} />}
         {view === "points" && <Points data={data} lb={lb} t={t} name={profileName} setName={selectProfile} />}
         {view === "consensus" && <Consensus data={data} t={t} />}
         {view === "trends" && <Trends data={data} lb={lb} t={t} />}
@@ -5374,6 +5546,40 @@ border-radius:18px;padding:16px 14px;margin:10px 0;color:#fff;background:linear-
 .kt-d-live{color:#e5484d;font-weight:800}
 .kt-d-thru{color:var(--grass-d);font-weight:700}
 .kt-tap{text-align:center;color:var(--muted);font-size:12px;margin-top:8px}
+/* knockout compare view */
+.cmp-verdicts{display:grid;gap:10px;margin-bottom:12px}
+.cmp-vc{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:12px 14px;border-inline-start:4px solid var(--border)}
+.cmp-vc.lead{border-inline-start-color:#e6a31e;background:linear-gradient(90deg,rgba(245,196,81,.10),var(--card))}
+.cmp-vc.in{border-inline-start-color:#25c37d}
+.cmp-vc.out{border-inline-start-color:#c2413f;opacity:.9}
+.cmp-vc-top{display:flex;align-items:center;gap:9px}
+.cmp-vc-id{display:flex;flex-direction:column;line-height:1.15;flex:1;min-width:0}.cmp-vc-id b{font-size:14px}
+.cmp-badge{flex:none;font-size:11px;font-weight:800;padding:4px 9px;border-radius:999px;white-space:nowrap}
+.cmp-badge.lead{background:rgba(245,196,81,.18);color:#a9781a}
+.cmp-badge.in{background:rgba(25,195,125,.16);color:var(--grass-d)}
+.cmp-badge.out{background:rgba(194,65,63,.14);color:#c2413f}
+.cmp-vc-nums{display:flex;align-items:baseline;gap:14px;margin-top:10px;flex-wrap:wrap}
+.cmp-vc-nums span{display:flex;flex-direction:column;line-height:1.1}
+.cmp-vc-nums b{font-size:20px}.cmp-vc-nums i{font-size:10.5px;color:var(--muted);font-style:normal}
+.cmp-vc-nums .cmp-plus b{color:#b9891f}.cmp-vc-nums .cmp-eq b{color:var(--grass-d)}
+.cmp-vc-gap{margin-top:8px;display:flex;align-items:center;gap:5px;flex-wrap:wrap}
+.cmp-champs{display:grid;gap:8px}
+.cmp-champ{display:flex;align-items:center;gap:10px;padding:9px 10px;border:1px solid var(--border);border-radius:11px}
+.cmp-champ.won{border-color:rgba(230,163,30,.55);background:rgba(245,196,81,.10)}
+.cmp-champ.out{opacity:.6}
+.cmp-champ-nm{flex:1;min-width:0;font-weight:700;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cmp-champ-tm{display:flex;align-items:center;gap:6px;font-size:13px;font-weight:700}
+.cmp-champ-fl{font-size:17px}
+.cmp-champ-st{flex:none;font-size:11px;font-weight:800;color:var(--muted)}
+.cmp-champ-st.won{color:#a9781a}.cmp-champ-st.alive{color:var(--grass-d)}.cmp-champ-st.out{color:#c2413f}
+.cmp-paths{display:grid;gap:12px}
+.cmp-path{border:1px solid var(--border);border-radius:12px;padding:10px 12px}
+.cmp-path-h{margin-bottom:6px;font-size:13px}
+.cmp-path-r{display:flex;align-items:flex-start;gap:8px;padding:4px 0}
+.cmp-path-rd{flex:none;width:34px;font-size:12px;font-weight:800}
+.cmp-path-tm{display:flex;flex-wrap:wrap;gap:5px}
+.cmp-chip2{display:inline-flex;align-items:center;gap:4px;font-size:11.5px;font-weight:700;background:var(--soft);border:1px solid var(--border);border-radius:999px;padding:2px 8px}
+.cmp-chip2-fl{font-size:13px}
 /* canvas bracket: scales to the card width so the whole diagram is always visible */
 .brkimg-wrap{margin-top:8px;border:1px solid var(--border);border-radius:12px;overflow:hidden;background:#f7f8fa}
 .brkimg{display:block;width:100%;height:auto}

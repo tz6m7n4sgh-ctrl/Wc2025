@@ -91,7 +91,7 @@ const I18N = {
     rule_edge: "Pick the higher-ranked team and they win the match", rule_exact: "Team finishes in the exact position you predicted",
     rule_in: "Team is in the group but in a different position", rule_ko: "Correct knockout-round winner", rule_champ: "Correct champion",
     nav_more: "More", nav_matches: "Matches", nav_predictions: "Predictions", nav_compare: "Compare", nav_consensus: "Consensus", nav_trends: "Trends", nav_scorers: "Goals", nav_help: "Help", nav_mypicks: "My picks", mypicksSignIn: "Open your personal sign-in link (sent on WhatsApp) to fill and edit your predictions.",
-    cmpTitle: "Knockout compare", cmpHint: "Earned points plus what each player can still win — who's really in the race.", cmpSelect: "Players to compare", cmpEarned: "Earned", cmpPossible: "Still winnable", cmpCeiling: "Ceiling", cmpRange: "Points range · earned + still winnable", cmpUpside: "Where the upside is · points still winnable", cmpChampRace: "Champion picks", cmpPath: "Way forward · picks still alive", cmpAlive: "alive", cmpOut: "eliminated", cmpLeading: "Leading", cmpInRace: "Can still top the table", cmpOutRace: "Can't catch the leader", cmpBehind: "behind", cmpReached: "reached", cmpNoLive: "No picks still alive", cmpLeaderLine: "leader's score", cmpChamp: "champion", cmpRemaining: "remaining",
+    cmpTitle: "Knockout compare", cmpHint: "Earned points plus what each player can still win — who's really in the race.", cmpSelect: "Players to compare", cmpEarned: "Earned", cmpPossible: "Still winnable", cmpCeiling: "Ceiling", cmpRange: "Points range · earned + still winnable", cmpUpside: "Where the upside is · points still winnable", cmpChampRace: "Champion picks", cmpPath: "Way forward · picks still alive", cmpAlive: "alive", cmpOut: "eliminated", cmpLeading: "Leading", cmpInRace: "Can still top the table", cmpOutRace: "Can't catch the leader", cmpBehind: "behind", cmpReached: "reached", cmpNoLive: "No picks still alive", cmpLeaderLine: "leader's score", cmpChamp: "champion", cmpRemaining: "remaining", cmpRaceTitle: "Race for #1", cmpLeader: "Leader", cmpCanPass: "Can overtake #1", cmpCantPass: "Can't reach #1", cmpMaxGain: "max gain on leader", cmpNeeds: "needs", ovSwingTop3: "How today's match could move the top 3",
     nav_today: "Today", liveNow: "Live now", noMatches: "No matches on this day.", noEvents: "No data yet.", predBacking: "backing", whoBacked: "Who backed whom", back: "Back", upcoming: "Upcoming",
     liveLbl: "LIVE", liveUpdates: "Live updates", hide: "Hide", openMatch: "Open match", kickoff: "Kick-off", fullTime: "Full-time", goalEx: "GOAL!",
     nextMatch: "Next match", todayComing: "Today — coming up", todayDone: "Today — completed", noComing: "No more matches today.", noDone: "No results yet today.", latestResults: "Latest results", seeAll: "See all",
@@ -177,7 +177,7 @@ const I18N = {
     rule_edge: "اختر الفريق الأعلى ترتيباً ويفوز بالمباراة", rule_exact: "الفريق ينهي في المركز الذي توقعته بالضبط",
     rule_in: "الفريق في المجموعة لكن في مركز مختلف", rule_ko: "توقع الفائز الصحيح في الدور الإقصائي", rule_champ: "توقع البطل الصحيح",
     nav_more: "المزيد", nav_matches: "المباريات", nav_predictions: "التوقعات", nav_compare: "مقارنة", nav_consensus: "الإجماع", nav_trends: "التطور", nav_scorers: "الأهداف", nav_help: "المساعدة", nav_mypicks: "توقعاتي", mypicksSignIn: "افتح رابط الدخول الخاص بك (المُرسل عبر واتساب) لتعبئة توقّعاتك وتعديلها.",
-    cmpTitle: "مقارنة الإقصائيات", cmpHint: "النقاط المكتسبة إضافةً إلى ما يمكن لكل لاعب كسبه — مَن لا يزال في السباق فعلاً.", cmpSelect: "اللاعبون للمقارنة", cmpEarned: "مكتسبة", cmpPossible: "ما زالت ممكنة", cmpCeiling: "الحد الأقصى", cmpRange: "مدى النقاط · المكتسبة + الممكنة", cmpUpside: "أين الإمكانات · نقاط ما زالت ممكنة", cmpChampRace: "اختيارات البطل", cmpPath: "الطريق للأمام · اختيارات ما زالت قائمة", cmpAlive: "قائم", cmpOut: "خرج", cmpLeading: "المتصدّر", cmpInRace: "يمكنه التصدّر", cmpOutRace: "لا يمكنه اللحاق بالمتصدّر", cmpBehind: "خلف", cmpReached: "بلغ", cmpNoLive: "لا اختيارات قائمة", cmpLeaderLine: "نقاط المتصدّر", cmpChamp: "البطل", cmpRemaining: "متبقٍّ",
+    cmpTitle: "مقارنة الإقصائيات", cmpHint: "النقاط المكتسبة إضافةً إلى ما يمكن لكل لاعب كسبه — مَن لا يزال في السباق فعلاً.", cmpSelect: "اللاعبون للمقارنة", cmpEarned: "مكتسبة", cmpPossible: "ما زالت ممكنة", cmpCeiling: "الحد الأقصى", cmpRange: "مدى النقاط · المكتسبة + الممكنة", cmpUpside: "أين الإمكانات · نقاط ما زالت ممكنة", cmpChampRace: "اختيارات البطل", cmpPath: "الطريق للأمام · اختيارات ما زالت قائمة", cmpAlive: "قائم", cmpOut: "خرج", cmpLeading: "المتصدّر", cmpInRace: "يمكنه التصدّر", cmpOutRace: "لا يمكنه اللحاق بالمتصدّر", cmpBehind: "خلف", cmpReached: "بلغ", cmpNoLive: "لا اختيارات قائمة", cmpLeaderLine: "نقاط المتصدّر", cmpChamp: "البطل", cmpRemaining: "متبقٍّ", cmpRaceTitle: "السباق على الصدارة", cmpLeader: "المتصدّر", cmpCanPass: "يمكنه تجاوز المتصدّر", cmpCantPass: "لا يمكنه بلوغ الصدارة", cmpMaxGain: "أقصى تقارب مع المتصدّر", cmpNeeds: "يحتاج", ovSwingTop3: "كيف قد تغيّر مباراة اليوم ترتيب الثلاثة الأوائل",
     nav_today: "اليوم", liveNow: "مباشر الآن", noMatches: "لا مباريات في هذا اليوم.", noEvents: "لا توجد بيانات بعد.", predBacking: "مؤيد", whoBacked: "من أيّد مَن", back: "رجوع", upcoming: "قادمة",
     liveLbl: "مباشر", liveUpdates: "تحديثات مباشرة", hide: "إخفاء", openMatch: "فتح المباراة", kickoff: "انطلاق المباراة", fullTime: "انتهت المباراة", goalEx: "هدف!",
     nextMatch: "المباراة القادمة", todayComing: "اليوم — قادمة", todayDone: "اليوم — انتهت", noComing: "لا مزيد من المباريات اليوم.", noDone: "لا نتائج بعد اليوم.", latestResults: "أحدث النتائج", seeAll: "عرض الكل",
@@ -1304,16 +1304,51 @@ function koPotential(p, data, koPts, champPts, elim) {
   else if (p && p.champion && !elim.has(teamKey(p.champion))) potCh = champPts;
   return { earnedKO, potKO, earnedCh, potCh, remByRound, live };
 }
+// Max points a chaser can still gain ON the leader: only picks that differ from
+// the leader's and are still alive move the gap (a shared pick lifts both).
+function koSwingVsLeader(px, pl, data, koPts, champPts, elim) {
+  const xk = (px && px.knockout) || {}, lk = (pl && pl.knockout) || {};
+  let swing = 0; const need = [];
+  for (const [code, n] of KO_SEQ) for (let i = 0; i < n; i++) {
+    if (koSlotActualWinner(code, i, data)) continue; // already decided
+    const id = koSlotId(code, i), xp = xk[id]; if (!xp) continue;
+    if (!koSlotLeaves(code, i).some((tt) => sameTeam(tt, xp)) || elim.has(teamKey(xp))) continue; // dead
+    const lp = lk[id];
+    if (!lp || !sameTeam(lp, xp)) { swing += koPts[code] || 0; need.push({ code, team: canonTeam(xp) }); }
+  }
+  if (!data.champion) {
+    const xc = px && px.champion;
+    if (xc && !elim.has(teamKey(xc)) && (!(pl && pl.champion) || !sameTeam(pl.champion, xc))) { swing += champPts; need.push({ code: "champ", team: canonTeam(xc) }); }
+  }
+  return { swing, need };
+}
+// How the given players' totals would change under each outcome of one match.
+function matchOutcomeDeltas(data, m, names) {
+  if (!m || !names.length || (m.stage === "ko" && (!m.home || !m.away))) return null;
+  const base = {}; names.forEach((n) => { base[n] = calcPlayerPoints(data.players[n], data).total; });
+  const scen = (home) => {
+    let d2;
+    if (m.stage === "ko") { const w = canonTeam(home ? m.home : m.away); d2 = { ...data, knockoutResults: { ...(data.knockoutResults || {}), [m.mid]: w }, champion: m.round === "F" ? w : data.champion }; }
+    else { const key = matchKey(m.group, m.idx); d2 = { ...data, groupResults: { ...(data.groupResults || {}), [key]: home ? { home: 1, away: 0 } : { home: 0, away: 1 } } }; }
+    const o = {}; names.forEach((n) => { o[n] = calcPlayerPoints(data.players[n], d2).total - base[n]; });
+    return o;
+  };
+  return { home: scen(true), away: scen(false) };
+}
 const KO_RD_COLOR = { R32: "#25c37d", R16: "#3d8bff", QF: "#a06bff", SF: "#ff9d4d", F: "#f5c451", champ: "#d98a1e" };
 function KOCompare({ data, lb, t, lang }) {
   const koPts = koPointsFor(data), champPts = champPointsFor(data);
   const elim = useMemo(() => koEliminatedSet(data), [data]);
-  const leadCurrent = useMemo(() => Math.max(0, ...lb.map((r) => r.total)), [lb]);
+  const leadRow = useMemo(() => lb.reduce((m, r) => (r.total > m.total ? r : m), lb[0] || { total: 0 }), [lb]);
+  const leadCurrent = leadRow ? leadRow.total : 0;
   const analysis = useMemo(() => lb.map((r) => {
     const pot = koPotential(data.players[r.name], data, koPts, champPts, elim);
     const remaining = pot.potKO + pot.potCh, ceiling = r.total + remaining;
-    return { name: r.name, rank: r.rank, current: r.total, remaining, ceiling, canWin: ceiling >= leadCurrent, champion: (data.players[r.name] || {}).champion || null, ...pot };
-  }), [data, lb, elim, leadCurrent]);
+    const isLeader = leadRow && r.name === leadRow.name, gap = leadCurrent - r.total;
+    const sw = isLeader ? { swing: 0, need: [] } : koSwingVsLeader(data.players[r.name], leadRow && data.players[leadRow.name], data, koPts, champPts, elim);
+    const canWin = isLeader || sw.swing >= gap; // can at least draw level with the leader
+    return { name: r.name, rank: r.rank, current: r.total, remaining, ceiling, isLeader, gap, swing: sw.swing, need: sw.need, canWin, champion: (data.players[r.name] || {}).champion || null, ...pot };
+  }), [data, lb, elim, leadRow, leadCurrent]);
   const byName = useMemo(() => Object.fromEntries(analysis.map((a) => [a.name, a])), [analysis]);
   const [sel, setSel] = useState(() => lb.slice(0, 3).map((r) => r.name));
   const toggle = (name) => setSel((s) => s.includes(name) ? (s.length > 1 ? s.filter((x) => x !== name) : s) : [...s, name]);
@@ -1340,23 +1375,39 @@ function KOCompare({ data, lb, t, lang }) {
       {/* verdict cards */}
       <div className="cmp-verdicts">
         {rows.map((a) => {
-          const isLeader = a.current === leadCurrent, gap = leadCurrent - a.current;
-          const verdict = isLeader ? "lead" : a.canWin ? "in" : "out";
+          const verdict = a.isLeader ? "lead" : a.canWin ? "in" : "out";
           return (
             <div className={"cmp-vc " + verdict} key={a.name}>
               <div className="cmp-vc-top"><Avatar name={a.name} /><div className="cmp-vc-id"><b>{a.name}</b><span className="hint">#{a.rank}</span></div>
-                <span className={"cmp-badge " + verdict}>{isLeader ? "👑 " + t("cmpLeading") : a.canWin ? "✓ " + t("cmpInRace") : "✕ " + t("cmpOutRace")}</span>
+                <span className={"cmp-badge " + verdict}>{a.isLeader ? "👑 " + t("cmpLeading") : a.canWin ? "✓ " + t("cmpInRace") : "✕ " + t("cmpOutRace")}</span>
               </div>
               <div className="cmp-vc-nums">
                 <span><b className="num">{a.current}</b><i>{t("cmpEarned")}</i></span>
                 <span className="cmp-plus">+<b className="num">{a.remaining}</b><i>{t("cmpPossible")}</i></span>
                 <span className="cmp-eq">=<b className="num">{a.ceiling}</b><i>{t("cmpCeiling")}</i></span>
               </div>
-              {!isLeader && <div className="cmp-vc-gap hint">{gap} {t("cmpBehind")} · {t("cmpChamp")}: {a.champion ? <><Team t={canonTeam(a.champion)} /> {elim.has(teamKey(a.champion)) ? "· " + t("cmpOut") : koTeamReached(a.champion, data) ? "· " + t("cmpReached") + " " + koTeamReached(a.champion, data) : "· " + t("cmpAlive")}</> : "—"}</div>}
+              {!a.isLeader && <div className="cmp-vc-gap hint">{a.gap} {t("cmpBehind")} · {t("cmpChamp")}: {a.champion ? <><Team t={canonTeam(a.champion)} /> {elim.has(teamKey(a.champion)) ? "· " + t("cmpOut") : koTeamReached(a.champion, data) ? "· " + t("cmpReached") + " " + koTeamReached(a.champion, data) : "· " + t("cmpAlive")}</> : "—"}</div>}
             </div>
           );
         })}
       </div>
+
+      {/* race for #1 — can a chaser actually overtake the leader? */}
+      {leadRow && rows.some((a) => !a.isLeader) && (
+        <div className="card">
+          <h3 className="cardh">🥇 {t("cmpRaceTitle")}</h3>
+          <p className="hint block">{t("cmpLeader")}: <b>{leadRow.name}</b> · {leadCurrent} {t("pts")}</p>
+          {rows.filter((a) => !a.isLeader).map((a) => (
+            <div className={"cmp-race " + (a.canWin ? "in" : "out")} key={a.name}>
+              <div className="cmp-race-h"><b>{a.name}</b><span className={"cmp-badge " + (a.canWin ? "in" : "out")}>{a.canWin ? "✓ " + t("cmpCanPass") : "✕ " + t("cmpCantPass")}</span></div>
+              <div className="cmp-race-sub hint">{a.gap} {t("cmpBehind")} · {t("cmpMaxGain")} <b className={a.canWin ? "up" : ""}>+{a.swing}</b></div>
+              {a.canWin && a.need.length > 0 && (
+                <div className="cmp-race-need"><span className="hint">{t("cmpNeeds")}:</span>{a.need.map((x, k) => <span className="cmp-chip2" key={k}><span className="cmp-chip2-fl">{flagOf(x.team)}</span>{code3(x.team)}<i style={{ color: KO_RD_COLOR[x.code], fontStyle: "normal", fontWeight: 800, fontSize: 9 }}>{x.code === "champ" ? "👑" : x.code}</i></span>)}</div>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* points range: earned + still winnable, vs the leader line */}
       <div className="card">
@@ -1470,6 +1521,9 @@ function Overview({ data, lb, lang, onOpen, t, go, player }) {
   const lead = leader && second ? leader.total - second.total : 0;
   const next = liveNow.length ? null : all.filter((m) => m.status === "scheduled").sort((a, b) => a.ko - b.ko)[0];
   const nextTally = useMemo(() => (next ? matchPredictionTally(data, next) : null), [data, next && next.id]);
+  const top3 = useMemo(() => lb.slice(0, 3).map((r) => r.name), [lb]);
+  const focusM = liveNow.length ? liveNow[0] : next; // the match whose result moves the table next
+  const nextDeltas = useMemo(() => (focusM ? matchOutcomeDeltas(data, focusM, top3) : null), [data, focusM && focusM.id, top3]);
   const me = player ? lb.find((r) => r.name === player) : null;
   const dt = new Intl.DateTimeFormat(lang === "ar" ? "ar" : "en-GB", { weekday: "long", day: "numeric", month: "long", timeZone: getAppTz() }).format(new Date(nowMs()));
   return (
@@ -1534,6 +1588,21 @@ function Overview({ data, lb, lang, onOpen, t, go, player }) {
               )}
             </>
           ) : <div className="empty sm">{t("ovNothingLive")}</div>}
+        {focusM && nextDeltas && top3.some((n) => nextDeltas.home[n] > 0 || nextDeltas.away[n] > 0) && (
+          <div className="ov-swing">
+            <div className="ov-swing-h">📈 {t("ovSwingTop3")}</div>
+            <div className="ov-swing-tbl">
+              <div className="ov-swing-row hd"><span className="ov-swing-nm" /><span className="ov-swing-d"><span className="ov-swing-fl">{flagOf(focusM.home)}</span>{code3(focusM.home)}</span><span className="ov-swing-d"><span className="ov-swing-fl">{flagOf(focusM.away)}</span>{code3(focusM.away)}</span></div>
+              {top3.map((n, i) => (
+                <div className="ov-swing-row" key={n}>
+                  <span className="ov-swing-nm"><b className="num">{i + 1}</b> {n}</span>
+                  <span className={"ov-swing-d" + (nextDeltas.home[n] > 0 ? " up" : "")}>{nextDeltas.home[n] > 0 ? "+" + nextDeltas.home[n] : "·"}</span>
+                  <span className={"ov-swing-d" + (nextDeltas.away[n] > 0 ? " up" : "")}>{nextDeltas.away[n] > 0 ? "+" + nextDeltas.away[n] : "·"}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* latest results — who in the league called them */}
@@ -5580,6 +5649,25 @@ border-radius:18px;padding:16px 14px;margin:10px 0;color:#fff;background:linear-
 .cmp-path-tm{display:flex;flex-wrap:wrap;gap:5px}
 .cmp-chip2{display:inline-flex;align-items:center;gap:4px;font-size:11.5px;font-weight:700;background:var(--soft);border:1px solid var(--border);border-radius:999px;padding:2px 8px}
 .cmp-chip2-fl{font-size:13px}
+.cmp-race{padding:10px 0;border-bottom:1px solid var(--border)}
+.cmp-race:last-child{border-bottom:0;padding-bottom:0}
+.cmp-race-h{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.cmp-race-h b{font-size:14px}
+.cmp-race-sub{margin-top:4px}
+.cmp-race-sub .up{color:var(--grass-d)}
+.cmp-race-need{margin-top:7px;display:flex;flex-wrap:wrap;gap:5px;align-items:center}
+/* home: how today's match moves the top 3 */
+.ov-swing{margin-top:10px;border-top:1px solid var(--border);padding-top:10px}
+.ov-swing-h{font-size:11.5px;font-weight:800;color:var(--muted);margin-bottom:6px}
+.ov-swing-tbl{display:grid;gap:2px}
+.ov-swing-row{display:grid;grid-template-columns:1fr auto auto;align-items:center;gap:8px;padding:5px 6px;border-radius:8px}
+.ov-swing-row.hd{color:var(--muted);font-size:11px;font-weight:800}
+.ov-swing-row:nth-child(even){background:var(--soft)}
+.ov-swing-nm{font-size:12.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ov-swing-nm .num{color:var(--muted);margin-inline-end:3px}
+.ov-swing-d{min-width:52px;text-align:center;font-size:12.5px;font-weight:800;color:var(--muted);display:inline-flex;align-items:center;justify-content:center;gap:4px}
+.ov-swing-d.up{color:var(--grass-d)}
+.ov-swing-fl{font-size:14px}
 /* canvas bracket: scales to the card width so the whole diagram is always visible */
 .brkimg-wrap{margin-top:8px;border:1px solid var(--border);border-radius:12px;overflow:hidden;background:#f7f8fa}
 .brkimg{display:block;width:100%;height:auto}

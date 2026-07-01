@@ -1833,7 +1833,7 @@ const KT = { size: 940, cx: 470, cy: 470, ring: { R32: 412, R16: 335, QF: 256, S
 const KT_PARENT = { R32: "R16", R16: "QF", QF: "SF", SF: "F" };
 function ktPos(code, i) {
   const n = KT.nR[code], ang = (i + 0.5) * (2 * Math.PI / n) - Math.PI / 2, rad = KT.ring[code];
-  return { x: KT.cx + rad * Math.cos(ang), y: KT.cy + rad * Math.sin(ang) };
+  return { x: KT.cx + rad * Math.cos(ang), y: KT.cy + rad * Math.sin(ang), ang };
 }
 function KnockoutTree({ data, picks, mode, t, lang }) {
   const vpRef = useRef(null);
@@ -1866,7 +1866,7 @@ function KnockoutTree({ data, picks, mode, t, lang }) {
   const nodes = [], conns = [];
   for (const [code, n] of KO_SEQ) for (let i = 0; i < n; i++) {
     const p = ktPos(code, i), id = koSlotId(code, i);
-    nodes.push({ code, i, id, x: p.x, y: p.y, v: slotInfo(code, i) });
+    nodes.push({ code, i, id, x: p.x, y: p.y, ang: p.ang, v: slotInfo(code, i) });
     const pc = KT_PARENT[code], par = pc ? ktPos(pc, Math.floor(i / 2)) : { x: KT.cx, y: KT.cy };
     conns.push({ id, x1: p.x, y1: p.y, x2: par.x, y2: par.y, on: pathSet.has(id) });
   }
@@ -1927,7 +1927,7 @@ function KnockoutTree({ data, picks, mode, t, lang }) {
           <button className="bdg-b" onClick={() => fit(true)} aria-label="centre" title="centre">⤢</button>
         </div>
       </div>
-      <div className="kt-vp" ref={vpRef}>
+      <div className={"kt-vp" + (trace ? " tracing" : "")} ref={vpRef}>
         <div className="kt-stage" style={{ width: stageWH(z), height: stageWH(z) }}>
           <svg className="kt-svg" width={KT.size} height={KT.size} viewBox={`0 0 ${KT.size} ${KT.size}`} style={{ transform: `scale(${z})`, transformOrigin: "0 0" }} onClick={() => { setSel(null); setTrace(null); }}>
             {[412, 335, 256, 176].map((r) => <circle key={r} cx={KT.cx} cy={KT.cy} r={r} className="kt-ring" />)}
@@ -1936,6 +1936,8 @@ function KnockoutTree({ data, picks, mode, t, lang }) {
             {KO_SEQ.map(([code]) => <text key={code} x={KT.cx} y={KT.cy - KT.ring[code] - 3} className="kt-ringlbl" textAnchor="middle">{code}</text>)}
             {nodes.map((nd) => {
               const v = nd.v, st = nodeState(v), onP = pathSet.has(nd.id), isSel = sel && sel.code === nd.code && sel.i === nd.i;
+              const lr = KT.ring[nd.code] + 26, lx = KT.cx + lr * Math.cos(nd.ang), ly = KT.cy + lr * Math.sin(nd.ang);
+              const label = v.winner ? [code3(v.winner)] : (v.a && v.b) ? [code3(v.a), code3(v.b)] : null;
               return (
                 <g key={nd.id} className={"kt-node " + st + (onP ? " on" : "") + (isSel ? " sel" : "")} onClick={pickNode(nd.code, nd.i)}>
                   <circle cx={nd.x} cy={nd.y} r={21} className="kt-node-c" />
@@ -1944,6 +1946,11 @@ function KnockoutTree({ data, picks, mode, t, lang }) {
                     : (v.a && v.b)
                       ? <><text x={nd.x - 8} y={nd.y} className="kt-fl sm" textAnchor="middle" dominantBaseline="central">{flagOf(v.a)}</text><text x={nd.x + 8} y={nd.y} className="kt-fl sm" textAnchor="middle" dominantBaseline="central">{flagOf(v.b)}</text></>
                       : null}
+                  {label && (
+                    <text x={lx} y={ly} className="kt-lbl" textAnchor="middle" dominantBaseline="central">
+                      {label.length === 1 ? label[0] : <><tspan x={lx} dy="-0.5em">{label[0]}</tspan><tspan x={lx} dy="1.05em">{label[1]}</tspan></>}
+                    </text>
+                  )}
                 </g>
               );
             })}
@@ -5310,7 +5317,7 @@ border-radius:18px;padding:16px 14px;margin:10px 0;color:#fff;background:linear-
 .kt-lg{display:inline-flex;align-items:center;gap:6px}
 .kt-lg i{width:11px;height:11px;border-radius:50%;display:inline-block}
 .kt-lg.through i{background:#25c37d}.kt-lg.live i{background:#e5484d}.kt-lg.tbd i{background:transparent;border:2px solid #9aa}
-.kt-vp{position:relative;overflow:auto;height:66vh;max-height:600px;min-height:340px;border-radius:16px;background:radial-gradient(120% 80% at 50% 50%,rgba(245,196,81,.12),transparent 62%),linear-gradient(180deg,#0d2a1e,#081912);-webkit-overflow-scrolling:touch;touch-action:pan-x pan-y;animation:bdgIn .34s cubic-bezier(.22,.61,.36,1)}
+.kt-vp{position:relative;overflow:auto;aspect-ratio:1/1;max-height:600px;min-height:340px;border-radius:16px;background:radial-gradient(120% 80% at 50% 50%,rgba(245,196,81,.12),transparent 62%),linear-gradient(180deg,#0d2a1e,#081912);-webkit-overflow-scrolling:touch;touch-action:pan-x pan-y;animation:bdgIn .34s cubic-bezier(.22,.61,.36,1)}
 .kt-stage{position:relative}
 .kt-svg{position:absolute;top:0;left:0;overflow:visible;display:block}
 .kt-ring{fill:none;stroke:rgba(255,255,255,.06);stroke-width:1}
@@ -5329,6 +5336,13 @@ border-radius:18px;padding:16px 14px;margin:10px 0;color:#fff;background:linear-
 .kt-node.on .kt-node-c{stroke:#ffd84d;stroke-width:3.5}
 .kt-node.sel .kt-node-c{stroke:#ffd84d;stroke-width:4}
 .kt-fl{font-size:24px}.kt-fl.sm{font-size:15px}
+.kt-lbl{fill:#eef4f0;font-size:12.5px;font-weight:800;letter-spacing:.02em;paint-order:stroke;stroke:rgba(6,20,14,.92);stroke-width:3.2px;stroke-linejoin:round;pointer-events:none}
+.kt-node.through .kt-lbl,.kt-node.correct .kt-lbl{fill:#7bedac}
+.kt-node.live .kt-lbl,.kt-node.wrong .kt-lbl{fill:#ff9ea1}
+/* focus mode: tracing one team dims everything off its road */
+.kt-vp.tracing .kt-node:not(.on),.kt-vp.tracing .kt-conn:not(.on){opacity:.22}
+.kt-vp.tracing .kt-node.on .kt-node-c{stroke-width:4}
+.kt-node,.kt-conn,.kt-lbl{transition:opacity .2s}
 .kt-champ{cursor:pointer}
 .kt-champ-c{fill:#0c1a14;stroke:#2a4a3a;stroke-width:3;filter:drop-shadow(0 3px 10px rgba(0,0,0,.5))}
 .kt-champ.through .kt-champ-c,.kt-champ.correct .kt-champ-c{stroke:#ffd84d;stroke-width:4;filter:drop-shadow(0 0 12px rgba(255,216,77,.6))}

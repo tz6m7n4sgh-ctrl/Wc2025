@@ -1,0 +1,56 @@
+name: Build index.html
+
+# GitHub Pages serves the committed root index.html (an inlined single-file
+# build of app/src). Committing that 800 KB artifact by hand in every feature
+# PR caused noisy diffs and merge conflicts. Instead, rebuild it automatically
+# on main whenever the source changes, and commit it back — so feature PRs only
+# ever touch app/src and never the generated file.
+#
+# The path filter means the bot's own index.html commit does NOT re-trigger this
+# workflow (no loop). Requires the default branch-from-main Pages setup; if you
+# later switch Pages to "GitHub Actions" as the source, replace this with a
+# deploy-pages workflow and stop tracking index.html entirely.
+on:
+  push:
+    branches: [main]
+    paths:
+      - "app/src/**"
+      - "app/package.json"
+      - "app/package-lock.json"
+      - "app/vite.config.*"
+      - "app/index.html"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: build-index
+  cancel-in-progress: false
+
+jobs:
+  build-index:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: app/package-lock.json
+      - run: npm ci
+        working-directory: app
+      - run: npm run build
+        working-directory: app
+      - name: Sync root index.html
+        run: cp app/dist/index.html index.html
+      - name: Commit if changed
+        run: |
+          if git diff --quiet -- index.html; then
+            echo "index.html already up to date."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          git commit -m "Build index.html from source [skip ci]"
+          git push

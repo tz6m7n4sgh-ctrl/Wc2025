@@ -113,7 +113,8 @@ const I18N = {
     r16CandHint: "The Round-of-16 bracket is fixed. For each tie, pick the winner from its possible teams now — scored against the real result. Locks at the champion deadline.", r16TieFrom: "from",
     brkOverlayHint: "Picks turn green when correct, red when wrong, as results come in. Scroll to see the whole bracket.", shareBracket: "Share image", brkTapZoom: "Tap the bracket for a full-size image to save or share.", gkoSwipe: "Swipe to change round", gkoTapTeam: "Tap a team to trace their run", gkoTracing: "Tracing — tap anywhere to clear", yourChampion: "Your champion",
     brkTabLive: "Current state", brkTabPred: "Prediction", brkAlive: "alive", brkDecided: "decided",
-    brkDiagram: "Diagram", brkList: "List", bdgTapTeam: "tap a team for its path · pinch or +/− to zoom", bdgTurn: "Turn phone to read", bdgPath: "path to the final", bdgRotate: "Rotate your phone to view the bracket — or switch to List",
+    brkDiagram: "Tree", brkList: "List", bdgTapTeam: "tap a team for its path · pinch or +/− to zoom", bdgTurn: "Turn phone to read", bdgPath: "path to the centre", bdgRotate: "Rotate your phone to view the bracket — or switch to List",
+    ktTap: "Tap any match · champion sits at the centre", ktThrough: "Through", ktLive: "Live", ktTbd: "To be decided", brVs: "vs",
     koBracket: "Knockout bracket", koBracketHint: "Pick a winner in every tie from the Round of 32 to the Final — winners advance, and your Final winner is your champion. Locks at the champion deadline; each correct pick scores +1.", koBracketLocked: "Bracket locked. ✓ = correct, ✕ = wrong, as results come in.",
     resultsEditor: "Results editor", resultsHint: "Enter a score to mark a match finished — standings, points and the bracket update instantly.", setChampion: "Set champion",
     entryFee: "Entry fee", currency: "Currency", distribution: "Prize distribution", winnerTakes: "Winner takes all", topTwo: "Split top 2", topThree: "Split top 3", deadline: "Predictions deadline", lockPicks: "Lock predictions", prizePool: "Prize pool",
@@ -197,7 +198,8 @@ const I18N = {
     r16CandHint: "جدول دور الـ16 ثابت. لكل مواجهة، اختر الفائز الآن من الفرق المحتملة — وتُحتسب وفق النتيجة الفعلية. يُغلق عند موعد إغلاق توقّع البطل.", r16TieFrom: "من",
     brkOverlayHint: "تتحوّل التوقّعات إلى الأخضر عند الصواب والأحمر عند الخطأ مع ظهور النتائج. مرّر لرؤية الجدول كاملاً.", shareBracket: "مشاركة صورة", brkTapZoom: "اضغط على الجدول للحصول على صورة كاملة للحفظ أو المشاركة.", gkoSwipe: "مرّر لتغيير الدور", gkoTapTeam: "اضغط على فريق لتتبّع مشواره", gkoTracing: "تتبّع — اضغط أي مكان للإلغاء", yourChampion: "بطلك",
     brkTabLive: "الوضع الحالي", brkTabPred: "التوقّع", brkAlive: "ما زال قائماً", brkDecided: "محسومة",
-    brkDiagram: "المخطط", brkList: "قائمة", bdgTapTeam: "اضغط فريقاً لعرض طريقه · قرّب بإصبعين أو +/−", bdgTurn: "أدِر الهاتف للقراءة", bdgPath: "الطريق إلى النهائي", bdgRotate: "أدِر هاتفك لعرض المخطط — أو بدّل إلى القائمة",
+    brkDiagram: "الشجرة", brkList: "قائمة", bdgTapTeam: "اضغط فريقاً لعرض طريقه · قرّب بإصبعين أو +/−", bdgTurn: "أدِر الهاتف للقراءة", bdgPath: "الطريق إلى المركز", bdgRotate: "أدِر هاتفك لعرض المخطط — أو بدّل إلى القائمة",
+    ktTap: "اضغط أي مباراة · البطل في المنتصف", ktThrough: "متأهل", ktLive: "مباشر", ktTbd: "لم تُحسم", brVs: "ضد",
     koBracket: "جدول الأدوار الإقصائية", koBracketHint: "اختر الفائز في كل مواجهة من دور الـ32 حتى النهائي — يتأهّل الفائزون، والفائز بالنهائي هو بطلك. يُغلق عند موعد إغلاق البطل؛ كل توقّع صحيح يمنح نقطة.", koBracketLocked: "الجدول مُغلق. ✓ = صحيح، ✕ = خاطئ، مع ظهور النتائج.",
     resultsEditor: "محرّر النتائج", resultsHint: "أدخل النتيجة لإنهاء المباراة — يُحدّث الترتيب والنقاط والأدوار فوراً.", setChampion: "تعيين البطل",
     entryFee: "رسوم الاشتراك", currency: "العملة", distribution: "توزيع الجوائز", winnerTakes: "الفائز يأخذ الكل", topTwo: "أفضل اثنين", topThree: "أفضل ثلاثة", deadline: "موعد إغلاق التوقعات", lockPicks: "قفل التوقعات", prizePool: "مجموع الجوائز",
@@ -1825,6 +1827,151 @@ function BracketDiagram({ data, picks, mode, t }) {
     </div>
   );
 }
+// ---- Radial "Knockout Tree": champion at the centre, rounds as rings outward,
+// each match a flag node, tap to inspect + trace a team's road to the centre. ----
+const KT = { size: 940, cx: 470, cy: 470, ring: { R32: 412, R16: 335, QF: 256, SF: 176, F: 94 }, nR: { R32: 16, R16: 8, QF: 4, SF: 2, F: 1 } };
+const KT_PARENT = { R32: "R16", R16: "QF", QF: "SF", SF: "F" };
+function ktPos(code, i) {
+  const n = KT.nR[code], ang = (i + 0.5) * (2 * Math.PI / n) - Math.PI / 2, rad = KT.ring[code];
+  return { x: KT.cx + rad * Math.cos(ang), y: KT.cy + rad * Math.sin(ang) };
+}
+function KnockoutTree({ data, picks, mode, t, lang }) {
+  const vpRef = useRef(null);
+  const [z, setZ] = useState(1); const zRef = useRef(1);
+  const [sel, setSel] = useState(null);   // {code,i}
+  const [trace, setTrace] = useState(null); // traced team name
+  const player = mode === "player";
+  const res = {};
+  for (const [code, n] of KO_SEQ) for (let i = 0; i < n; i++) { const w = koSlotActualWinner(code, i, data); if (w) res[koSlotId(code, i)] = w; }
+  const source = player ? (picks || {}) : res;
+  const slotInfo = (code, i) => {
+    const id = koSlotId(code, i);
+    let a, b;
+    if (code === "R32") { [a, b] = R32_TIES[i]; } else { const c = koSlotContenders(source, code, i); a = c[0]; b = c[1]; }
+    const m = koMatchForSlot(code, i, data);
+    if (!player && m) { a = m.home || a; b = m.away || b; }
+    const actual = koSlotActualWinner(code, i, data);
+    const pick = player ? (picks && picks[id]) || null : res[id] || null;
+    let status = null;
+    if (pick) status = player ? (actual ? (sameTeam(pick, actual) ? "correct" : "wrong") : "pick") : "through";
+    return { a: a ? canonTeam(a) : null, b: b ? canonTeam(b) : null, winner: pick ? canonTeam(pick) : null, status, m, live: !player && m && m.status === "live" };
+  };
+  // a traced team's road: its slot each round until it stops winning
+  const traceK = trace ? teamKey(trace) : null;
+  const pathSet = new Set();
+  if (traceK) for (const [code, n] of KO_SEQ) {
+    let si = -1; for (let i = 0; i < n; i++) if (koSlotLeaves(code, i).some((tt) => teamKey(tt) === traceK)) { si = i; break; }
+    if (si < 0) break; const id = koSlotId(code, si); pathSet.add(id); const w = source[id]; if (!w || teamKey(w) !== traceK) break;
+  }
+  const nodes = [], conns = [];
+  for (const [code, n] of KO_SEQ) for (let i = 0; i < n; i++) {
+    const p = ktPos(code, i), id = koSlotId(code, i);
+    nodes.push({ code, i, id, x: p.x, y: p.y, v: slotInfo(code, i) });
+    const pc = KT_PARENT[code], par = pc ? ktPos(pc, Math.floor(i / 2)) : { x: KT.cx, y: KT.cy };
+    conns.push({ id, x1: p.x, y1: p.y, x2: par.x, y2: par.y, on: pathSet.has(id) });
+  }
+  const champ = source[KO_FINAL_ID] ? canonTeam(source[KO_FINAL_ID]) : null;
+  const champActual = koSlotActualWinner("F", 0, data);
+  const champStatus = champ ? (player ? (champActual ? (sameTeam(champ, champActual) ? "correct" : "wrong") : "pick") : "through") : null;
+  const goldPts = [];
+  if (pathSet.size) { for (const [code, n] of KO_SEQ) { for (let i = 0; i < n; i++) if (pathSet.has(koSlotId(code, i))) { const p = ktPos(code, i); goldPts.push(p.x + "," + p.y); break; } } goldPts.push(KT.cx + "," + KT.cy); }
+  // zoom + pan (pinch / ctrl-wheel / buttons); single-finger pans natively
+  const stageWH = (zz) => KT.size * zz;
+  const setZoom = (nz, ax, ay) => {
+    const vp = vpRef.current; if (!vp) return;
+    nz = Math.max(0.25, Math.min(2.6, nz));
+    const oz = zRef.current, px = ax == null ? vp.clientWidth / 2 : ax, py = ay == null ? vp.clientHeight / 2 : ay;
+    const fx = (vp.scrollLeft + px) / Math.max(1, stageWH(oz)), fy = (vp.scrollTop + py) / Math.max(1, stageWH(oz));
+    zRef.current = nz; setZ(nz);
+    requestAnimationFrame(() => { vp.scrollLeft = fx * stageWH(nz) - px; vp.scrollTop = fy * stageWH(nz) - py; });
+  };
+  useEffect(() => {
+    const vp = vpRef.current; if (!vp) return;
+    let pd = null;
+    const dist = (tt) => Math.hypot(tt[0].clientX - tt[1].clientX, tt[0].clientY - tt[1].clientY);
+    const ts = (e) => { if (e.touches.length === 2) pd = { d: dist(e.touches), z: zRef.current }; };
+    const tm = (e) => { if (e.touches.length === 2 && pd) { e.preventDefault(); const r = vp.getBoundingClientRect(), mx = (e.touches[0].clientX + e.touches[1].clientX) / 2, my = (e.touches[0].clientY + e.touches[1].clientY) / 2; setZoom(pd.z * dist(e.touches) / pd.d, mx - r.left, my - r.top); } };
+    const te = (e) => { if (e.touches.length < 2) pd = null; };
+    const wheel = (e) => { if (e.ctrlKey) { e.preventDefault(); const r = vp.getBoundingClientRect(); setZoom(zRef.current * (e.deltaY < 0 ? 1.1 : 0.9), e.clientX - r.left, e.clientY - r.top); } };
+    vp.addEventListener("touchstart", ts, { passive: false }); vp.addEventListener("touchmove", tm, { passive: false }); vp.addEventListener("touchend", te); vp.addEventListener("wheel", wheel, { passive: false });
+    return () => { vp.removeEventListener("touchstart", ts); vp.removeEventListener("touchmove", tm); vp.removeEventListener("touchend", te); vp.removeEventListener("wheel", wheel); };
+  }, []);
+  const fit = (smooth) => {
+    const vp = vpRef.current; if (!vp) return;
+    const nz = Math.max(0.25, Math.min(2.6, Math.min(vp.clientWidth, vp.clientHeight) / KT.size * 0.98));
+    zRef.current = nz; setZ(nz);
+    requestAnimationFrame(() => { const l = Math.max(0, (stageWH(nz) - vp.clientWidth) / 2), tp = Math.max(0, (stageWH(nz) - vp.clientHeight) / 2); if (smooth) vp.scrollTo({ left: l, top: tp, behavior: "smooth" }); else { vp.scrollLeft = l; vp.scrollTop = tp; } });
+  };
+  useEffect(() => { const raf = requestAnimationFrame(() => fit(false)); return () => cancelAnimationFrame(raf); }, [mode]);
+  const pickNode = (code, i) => (e) => {
+    e.stopPropagation();
+    setSel({ code, i });
+    const v = slotInfo(code, i), tm = v.winner || null;
+    setTrace(tm ? tm : null);
+  };
+  const selV = sel ? slotInfo(sel.code, sel.i) : null;
+  const nodeState = (v) => v.winner ? (v.status || "through") : v.live ? "live" : (v.a && v.b) ? "set" : "tbd";
+  return (
+    <div className="kt">
+      <div className="kt-legend">
+        <span className="kt-lg through"><i /> {t("ktThrough")}</span>
+        <span className="kt-lg live"><i /> {t("ktLive")}</span>
+        <span className="kt-lg tbd"><i /> {t("ktTbd")}</span>
+      </div>
+      <div className="bdg-bar">
+        <span className="bdg-hint">{trace ? <><span className="bdg-dot" /> {trace} · {t("bdgPath")}</> : t("ktTap")}</span>
+        <div className="bdg-btns">
+          {trace && <button className="bdg-b" onClick={() => { setTrace(null); setSel(null); }} aria-label={t("hide")}>✕</button>}
+          <button className="bdg-b" onClick={() => setZoom(zRef.current * 0.8)} aria-label="zoom out">－</button>
+          <button className="bdg-b" onClick={() => setZoom(zRef.current * 1.25)} aria-label="zoom in">＋</button>
+          <button className="bdg-b" onClick={() => fit(true)} aria-label="centre" title="centre">⤢</button>
+        </div>
+      </div>
+      <div className="kt-vp" ref={vpRef}>
+        <div className="kt-stage" style={{ width: stageWH(z), height: stageWH(z) }}>
+          <svg className="kt-svg" width={KT.size} height={KT.size} viewBox={`0 0 ${KT.size} ${KT.size}`} style={{ transform: `scale(${z})`, transformOrigin: "0 0" }} onClick={() => { setSel(null); setTrace(null); }}>
+            {[412, 335, 256, 176].map((r) => <circle key={r} cx={KT.cx} cy={KT.cy} r={r} className="kt-ring" />)}
+            {conns.map((c) => <line key={c.id} x1={c.x1} y1={c.y1} x2={c.x2} y2={c.y2} className={"kt-conn" + (c.on ? " on" : "")} />)}
+            {goldPts.length > 1 && <polyline points={goldPts.join(" ")} className="kt-gold" pathLength="1" />}
+            {KO_SEQ.map(([code]) => <text key={code} x={KT.cx} y={KT.cy - KT.ring[code] - 3} className="kt-ringlbl" textAnchor="middle">{code}</text>)}
+            {nodes.map((nd) => {
+              const v = nd.v, st = nodeState(v), onP = pathSet.has(nd.id), isSel = sel && sel.code === nd.code && sel.i === nd.i;
+              return (
+                <g key={nd.id} className={"kt-node " + st + (onP ? " on" : "") + (isSel ? " sel" : "")} onClick={pickNode(nd.code, nd.i)}>
+                  <circle cx={nd.x} cy={nd.y} r={21} className="kt-node-c" />
+                  {v.winner
+                    ? <text x={nd.x} y={nd.y} className="kt-fl" textAnchor="middle" dominantBaseline="central">{flagOf(v.winner)}</text>
+                    : (v.a && v.b)
+                      ? <><text x={nd.x - 8} y={nd.y} className="kt-fl sm" textAnchor="middle" dominantBaseline="central">{flagOf(v.a)}</text><text x={nd.x + 8} y={nd.y} className="kt-fl sm" textAnchor="middle" dominantBaseline="central">{flagOf(v.b)}</text></>
+                      : null}
+                </g>
+              );
+            })}
+            <g className={"kt-champ " + (champStatus || "")} onClick={(e) => { e.stopPropagation(); setSel({ code: "F", i: 0 }); const w = source[KO_FINAL_ID]; setTrace(w ? canonTeam(w) : null); }}>
+              <circle cx={KT.cx} cy={KT.cy} r={46} className="kt-champ-c" />
+              <text x={KT.cx} y={KT.cy + 1} className="kt-champ-em" textAnchor="middle" dominantBaseline="central">{champ ? flagOf(champ) : "🏆"}</text>
+            </g>
+          </svg>
+        </div>
+      </div>
+      {selV ? (
+        <div className={"kt-detail" + (sel.code === "F" ? " fin" : "")}>
+          <div className="kt-d-round">{sel.code === "F" ? "👑 " : ""}{t("r_" + sel.code)}</div>
+          <div className="kt-d-teams">
+            <span className={"kt-d-tm" + (selV.winner && selV.a && sameTeam(selV.a, selV.winner) ? " w" : "")}>{selV.a ? <><span className="kt-d-fl">{flagOf(selV.a)}</span>{selV.a}</> : t("koTba2")}</span>
+            <span className="kt-d-vs">{selV.m && selV.m.status !== "scheduled" ? `${selV.m.hs ?? "–"}–${selV.m.as ?? "–"}` : t("brVs")}</span>
+            <span className={"kt-d-tm" + (selV.winner && selV.b && sameTeam(selV.b, selV.winner) ? " w" : "")}>{selV.b ? <><span className="kt-d-fl">{flagOf(selV.b)}</span>{selV.b}</> : t("koTba2")}</span>
+          </div>
+          <div className="kt-d-meta">
+            {selV.m
+              ? (selV.m.status === "live" ? <span className="kt-d-live">● {t("ktLive")} {selV.m.minute}'</span> : selV.m.status === "finished" ? <span>FT</span> : selV.m.ko ? <span>{fmtDay(selV.m.ko, lang)} · {fmtTime(selV.m.ko, lang)}</span> : null)
+              : selV.winner ? <span className="kt-d-thru">{flagOf(selV.winner)} {selV.winner} {t("ktThrough")}</span> : <span className="dim">{t("koTba2")}</span>}
+          </div>
+        </div>
+      ) : null}
+    </div>
+  );
+}
 async function shareBracketImage(name, picks, data, koPts, totalPts, t) {
   const canvas = makeBracketCanvas({ data, picks, mode: "player", header: true, name, koPts, totalPts, t });
   await new Promise((res) => canvas.toBlob(async (blob) => {
@@ -2007,7 +2154,7 @@ function BracketView({ data, lb, t, lang, name, setName, go }) {
       {tab === "live" ? (
         <div className="card">
           <LookToggle />
-          {look === "diagram" ? <BracketDiagram data={data} mode="results" t={t} /> : <KnockoutBracketG data={data} t={t} lang={lang} />}
+          {look === "diagram" ? <KnockoutTree data={data} mode="results" t={t} lang={lang} /> : <KnockoutBracketG data={data} t={t} lang={lang} />}
         </div>
       ) : sel ? (
         <div className="card brk-pcard">
@@ -2025,7 +2172,7 @@ function BracketView({ data, lb, t, lang, name, setName, go }) {
             <span className="brk-statline"><b className="ko">{sel.knockout}</b> {t("knockout")} · <b>{made}/31</b> · <b className="alv">{alive}</b> {t("brkAlive")}</span>
             <LookToggle />
           </div>
-          {look === "diagram" ? <BracketDiagram data={data} picks={picks} mode="player" t={t} /> : <KnockoutBracketG data={data} picks={picks} mode="player" t={t} lang={lang} />}
+          {look === "diagram" ? <KnockoutTree data={data} picks={picks} mode="player" t={t} lang={lang} /> : <KnockoutBracketG data={data} picks={picks} mode="player" t={t} lang={lang} />}
         </div>
       ) : null}
     </div>
@@ -5157,6 +5304,49 @@ border-radius:18px;padding:16px 14px;margin:10px 0;color:#fff;background:linear-
 .domb-champ.correct{background:linear-gradient(180deg,#9ff0bf,#1fc379);color:#0c3d22}
 .domb-champ.wrong{background:linear-gradient(180deg,#f7a6a6,#e2574c);color:#5a0d0d}
 .domb-champ-cap{flex:none}.domb-champ-nm{display:flex;align-items:center;gap:6px;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* radial Knockout Tree */
+.kt{margin-top:2px}
+.kt-legend{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;margin:2px 0 8px;font-size:12px;color:var(--muted)}
+.kt-lg{display:inline-flex;align-items:center;gap:6px}
+.kt-lg i{width:11px;height:11px;border-radius:50%;display:inline-block}
+.kt-lg.through i{background:#25c37d}.kt-lg.live i{background:#e5484d}.kt-lg.tbd i{background:transparent;border:2px solid #9aa}
+.kt-vp{position:relative;overflow:auto;height:66vh;max-height:600px;min-height:340px;border-radius:16px;background:radial-gradient(120% 80% at 50% 50%,rgba(245,196,81,.12),transparent 62%),linear-gradient(180deg,#0d2a1e,#081912);-webkit-overflow-scrolling:touch;touch-action:pan-x pan-y;animation:bdgIn .34s cubic-bezier(.22,.61,.36,1)}
+.kt-stage{position:relative}
+.kt-svg{position:absolute;top:0;left:0;overflow:visible;display:block}
+.kt-ring{fill:none;stroke:rgba(255,255,255,.06);stroke-width:1}
+.kt-conn{stroke:rgba(255,255,255,.16);stroke-width:1.6}
+.kt-conn.on{stroke:rgba(255,216,77,.85);stroke-width:2.4}
+.kt-gold{fill:none;stroke:#ffd84d;stroke-width:5;stroke-linecap:round;stroke-linejoin:round;filter:drop-shadow(0 0 5px rgba(255,216,77,.9));stroke-dasharray:1;animation:dombDraw .6s ease forwards}
+.kt-ringlbl{fill:rgba(255,255,255,.5);font-size:15px;font-weight:800;letter-spacing:.06em}
+.kt-node{cursor:pointer}
+.kt-node-c{fill:#fff;stroke:#c9d2cc;stroke-width:2.5;transition:stroke .2s,r .15s;filter:drop-shadow(0 2px 4px rgba(0,0,0,.35))}
+.kt-node.through .kt-node-c,.kt-node.correct .kt-node-c{stroke:#25c37d}
+.kt-node.live .kt-node-c{stroke:#e5484d}
+.kt-node.wrong .kt-node-c{stroke:#e5484d}
+.kt-node.pick .kt-node-c{stroke:#3d8bff}
+.kt-node.set .kt-node-c{stroke:#b7c0ba}
+.kt-node.tbd .kt-node-c{fill:rgba(255,255,255,.14);stroke:rgba(255,255,255,.4);stroke-dasharray:3 3}
+.kt-node.on .kt-node-c{stroke:#ffd84d;stroke-width:3.5}
+.kt-node.sel .kt-node-c{stroke:#ffd84d;stroke-width:4}
+.kt-fl{font-size:24px}.kt-fl.sm{font-size:15px}
+.kt-champ{cursor:pointer}
+.kt-champ-c{fill:#0c1a14;stroke:#2a4a3a;stroke-width:3;filter:drop-shadow(0 3px 10px rgba(0,0,0,.5))}
+.kt-champ.through .kt-champ-c,.kt-champ.correct .kt-champ-c{stroke:#ffd84d;stroke-width:4;filter:drop-shadow(0 0 12px rgba(255,216,77,.6))}
+.kt-champ.wrong .kt-champ-c{stroke:#e5484d}
+.kt-champ-em{font-size:40px}
+.kt-detail{margin-top:10px;padding:12px 14px;border:1px solid var(--border);border-radius:14px;background:var(--soft);animation:bdgIn .2s ease}
+.kt-detail.fin{border-color:rgba(230,163,30,.5);background:linear-gradient(180deg,rgba(245,196,81,.12),var(--soft))}
+.kt-d-round{font-size:12px;font-weight:800;color:var(--muted);letter-spacing:.04em;text-transform:uppercase;margin-bottom:8px}
+.kt-d-teams{display:flex;align-items:center;gap:10px;font-size:14px;font-weight:700}
+.kt-d-tm{flex:1;display:flex;align-items:center;gap:6px;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.kt-d-teams .kt-d-tm:last-child{justify-content:flex-end;text-align:end}
+.kt-d-tm.w{color:var(--grass-d)}
+.kt-d-fl{font-size:18px}
+.kt-d-vs{flex:none;font-size:12px;font-weight:800;color:var(--muted);padding:2px 8px;background:var(--bg,#fff);border-radius:8px}
+.kt-d-meta{margin-top:8px;font-size:12px;color:var(--muted);text-align:center}
+.kt-d-live{color:#e5484d;font-weight:800}
+.kt-d-thru{color:var(--grass-d);font-weight:700}
+.kt-tap{text-align:center;color:var(--muted);font-size:12px;margin-top:8px}
 /* canvas bracket: scales to the card width so the whole diagram is always visible */
 .brkimg-wrap{margin-top:8px;border:1px solid var(--border);border-radius:12px;overflow:hidden;background:#f7f8fa}
 .brkimg{display:block;width:100%;height:auto}

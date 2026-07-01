@@ -148,9 +148,9 @@ const I18N = {
     noDetail: "No detailed data for this match yet (timelines/lineups can be missing or delayed).",
     p_howAdd: "How your points add up", p_correct: "correct", p_of: "of",
     p_winner_t: "Match winners", p_winner_d: "+1 each time your higher-ranked team wins its group match",
-    p_pos_t: "Group standings", p_pos_d: "+1 for each team you place in its exact final position",
-    p_ko_t: "Knockout winners", p_ko_d: "+1 for each knockout tie where you pick the winner (R16, QF, SF, Final)",
-    p_champ_t: "Champion", p_champ_d: "+1 for correctly picking the World Cup winner",
+    p_pos_t: "Group standings", p_pos_d: "+{n} for each team you place in its exact final position",
+    p_ko_t: "Knockout winners", p_ko_flat: "+{n} for each knockout tie you call right — Round of 32 to the Final", p_ko_var: "Points per knockout tie you call right",
+    p_champ_t: "Champion", p_champ_d: "+{n} for correctly picking the World Cup winner",
     p_exact: "exact", p_ingrp: "in group", p_yes: "correct", p_no: "missed",
     inProgress: "in progress", gcHint: "Your prediction next to the actual standings, with the points each pick earned.", gcProj: "Live: +1 for each team in its exact final position. Rises/falls as results come in, locks once the group finishes.",
     nav_overview: "Dashboard", ovBeta: "Preview", ovBetaNote: "A new home-screen concept — preview only. The current Home is unchanged. Tell us if you'd like to make this the default.",
@@ -235,9 +235,9 @@ const I18N = {
     noDetail: "لا تتوفر بيانات تفصيلية بعد (قد تتأخر التشكيلات والأحداث).",
     p_howAdd: "كيف تتكوّن نقاطك", p_correct: "صحيحة", p_of: "من",
     p_winner_t: "الفائز بالمباراة", p_winner_d: "+1 كلما فاز فريقك الأعلى ترتيباً في مباراة المجموعة",
-    p_pos_t: "ترتيب المجموعة", p_pos_d: "+1 لكل فريق تضعه في مركزه النهائي الصحيح",
-    p_ko_t: "الأدوار الإقصائية", p_ko_d: "+1 لكل مواجهة إقصائية تختار فائزها (دور 16، الربع، النصف، النهائي)",
-    p_champ_t: "البطل", p_champ_d: "+1 لاختيار بطل كأس العالم بشكل صحيح",
+    p_pos_t: "ترتيب المجموعة", p_pos_d: "+{n} لكل فريق تضعه في مركزه النهائي الصحيح",
+    p_ko_t: "الأدوار الإقصائية", p_ko_flat: "+{n} لكل مواجهة إقصائية تختار فائزها — من دور الـ32 حتى النهائي", p_ko_var: "نقاط كل مواجهة إقصائية تختار فائزها",
+    p_champ_t: "البطل", p_champ_d: "+{n} لاختيار بطل كأس العالم بشكل صحيح",
     p_exact: "صحيح", p_ingrp: "في المجموعة", p_yes: "صحيح", p_no: "خطأ",
     inProgress: "قيد اللعب", gcHint: "توقعك بجانب الترتيب الفعلي، مع النقاط التي حققها كل اختيار.", gcProj: "مباشر: +1 لكل فريق في مركزه النهائي الصحيح. يتغيّر مع النتائج ويُثبَّت عند انتهاء المجموعة.",
     nav_overview: "اللوحة", ovBeta: "معاينة", ovBetaNote: "تصميم جديد للصفحة الرئيسية — للمعاينة فقط. الصفحة الحالية لم تتغيّر. أخبرنا إن أردت اعتماده.",
@@ -1795,7 +1795,7 @@ function Leaderboard({ data, lb, prevRanks, name, setName, t, go }) {
             <div className="selhead-tx"><b>{sel.name}</b><span className="hint">{t("rank")} #{sel.rank} · {sel.total} {t("pts")}</span></div>
             <button className="seeall" onClick={() => go("profile", sel.name)}>{t("nav_profile")} ›</button>
           </div>
-          <PointsHow row={sel} t={t} />
+          <PointsHow row={sel} data={data} t={t} />
           <KnockoutCompare p={data.players[sel.name]} data={data} t={t} name={sel.name} />
           <div className="card slim">
             <button className="mypick-lbl collapse" onClick={() => setGrpOpen((v) => !v)} aria-expanded={grpOpen}>
@@ -2513,7 +2513,7 @@ function Profile({ data, lb, name, setName, t }) {
         </div>
       </div>
       <div className="card"><h3 className="cardh">🎯 {t("breakdown")}</h3><Breakdown row={row} t={t} /></div>
-      <PointsHow row={row} t={t} />
+      <PointsHow row={row} data={data} t={t} />
       <div className="card">
         <h3 className="cardh">📋 {t("predicted")}</h3>
         <div className="brk-tabs" role="tablist">
@@ -3379,12 +3379,23 @@ function pointsCounts(row) {
     champDecided: !!d.champion, champHit: d.champion && d.champion.got > 0,
   };
 }
-function PointsHow({ row, t }) {
+function PointsHow({ row, data, t }) {
   const c = pointsCounts(row);
+  // Describe the ACTUAL configured points, not a hard-coded "+1": knockout can be
+  // flat or escalate per round, and the champion may be worth more than one point.
+  const koPts = koPointsFor(data || {});
+  const rounds = ["R32", "R16", "QF", "SF", "F"];
+  const koVals = rounds.map((r) => koPts[r] || 0);
+  const koFlat = koVals.every((v) => v === koVals[0]);
+  const koDesc = koFlat
+    ? t("p_ko_flat").replace("{n}", koVals[0])
+    : t("p_ko_var") + " — " + rounds.map((r) => `${r} +${koPts[r] || 0}`).join(" · ");
+  const posDesc = t("p_pos_d").replace("{n}", (SCORING.groupPos && SCORING.groupPos[0]) || 1);
+  const champDesc = t("p_champ_d").replace("{n}", champPointsFor(data || {}));
   const items = [
-    { e: "🎯", title: t("p_pos_t"), desc: t("p_pos_d"), note: `${c.exact} ${t("p_exact")}`, pts: row.groupRank },
-    { e: "🗺️", title: t("p_ko_t"), desc: t("p_ko_d"), note: c.koTotal ? `${c.koHit} ${t("p_of")} ${c.koTotal} ${t("p_correct")}` : t("pending"), pts: row.knockout },
-    { e: "👑", title: t("p_champ_t"), desc: t("p_champ_d"), note: c.champDecided ? (c.champHit ? "✓ " + t("p_yes") : "✗ " + t("p_no")) : t("pending"), pts: row.champ },
+    { e: "🎯", title: t("p_pos_t"), desc: posDesc, note: `${c.exact} ${t("p_exact")}`, pts: row.groupRank },
+    { e: "🗺️", title: t("p_ko_t"), desc: koDesc, note: c.koTotal ? `${c.koHit} ${t("p_of")} ${c.koTotal} ${t("p_correct")}` : t("pending"), pts: row.knockout },
+    { e: "👑", title: t("p_champ_t"), desc: champDesc, note: c.champDecided ? (c.champHit ? "✓ " + t("p_yes") : "✗ " + t("p_no")) : t("pending"), pts: row.champ },
   ];
   return (
     <div className="card">
@@ -3451,7 +3462,7 @@ function Points({ data, lb, t, name, setName }) {
       </div>
 
       {/* plain-language breakdown */}
-      <PointsHow row={row} t={t} />
+      <PointsHow row={row} data={data} t={t} />
       {pending.pts > 0 && <div className="card slim"><div className="eq-pending">⚡ {t("pendingLive")}: <b>+{pending.pts}</b> {t("fromLive")}</div></div>}
 
       {/* champion + knockout first (the headline picks), then the groups */}

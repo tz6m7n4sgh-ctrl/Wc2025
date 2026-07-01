@@ -149,6 +149,16 @@ test("matchOutcomeDeltas: an undecided KO tie moves only the backers of the winn
   assert.equal(d.away.N, 0, "the home backer gains nothing on an away win");
 });
 
+test("koPointsFor / champPointsFor honour admin-configured points", () => {
+  const data = { settings: { koPoints: { R32: 2, R16: 3, QF: 4, SF: 5, F: 6 }, champPoints: 10 } };
+  const ko = koPointsFor(data);
+  assert.equal(ko.R32, 2, "configured R32 points"); assert.equal(ko.F, 6, "configured final points");
+  assert.equal(champPointsFor(data), 10, "configured champion points");
+  // partial override merges over the defaults
+  const partial = koPointsFor({ settings: { koPoints: { F: 6 } } });
+  assert.equal(partial.F, 6, "overridden round"); assert.ok(Number.isFinite(partial.R32), "unset rounds keep a default");
+});
+
 // --- helpers ---------------------------------------------------------------
 // A set of group-A results that fully decide the table (each team a distinct
 // points total), reused by the group-ranking tests.

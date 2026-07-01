@@ -2969,23 +2969,21 @@ function MatchPredictions({ m, data, t }) {
 
 function Predictions({ data, lb, t, go }) {
   const order = lb.map((r) => r.name);
-  // Knockout head-to-head: for each concrete tie (R32 fixed; later rounds once
-  // the real matchup is known), how the league split its winner pick.
+  // Knockout head-to-head: for EVERY slot in every round, how the league split
+  // its winner pick — the two most-backed teams (plus any remainder), so the
+  // full R32→Final bracket shows even before the real matchups are decided.
   const koTies = useMemo(() => {
-    const res = {};
-    for (const [code, n] of KO_SEQ) for (let i = 0; i < n; i++) { const w = koSlotActualWinner(code, i, data); if (w) res[koSlotId(code, i)] = w; }
     const out = [];
     for (const [code, n] of KO_SEQ) for (let i = 0; i < n; i++) {
-      let a, b;
-      if (code === "R32") { [a, b] = R32_TIES[i]; } else { const c = koSlotContenders(res, code, i); a = c[0]; b = c[1]; }
-      if (!a || !b) continue;
-      a = canonTeam(a); b = canonTeam(b);
-      const slot = koSlotId(code, i); let ca = 0, cb = 0;
-      order.forEach((name) => { const pk = (data.players[name].knockout || {})[slot]; if (!pk) return; if (sameTeam(pk, a)) ca++; else if (sameTeam(pk, b)) cb++; });
-      out.push({ code, a, b, ca, cb });
+      const slot = koSlotId(code, i);
+      const ranked = consensusTally(data.players, (p) => (p.knockout || {})[slot]);
+      if (!ranked.length) continue;
+      const actual = koSlotActualWinner(code, i, data);
+      out.push({ code, slot, ranked, actual: actual ? canonTeam(actual) : null, total: ranked.reduce((s, r) => s + r.count, 0) });
     }
     return out;
-  }, [data, order]);
+  }, [data]);
+  const champTally = useMemo(() => consensusTally(data.players, (p) => p.champion), [data]);
   // actual deep-round winners, for colouring the comparison table green
   const koAct = useMemo(() => ({
     F: koSlotActualWinner("F", 0, data),
@@ -2994,12 +2992,15 @@ function Predictions({ data, lb, t, go }) {
   }), [data]);
   const koCell = (pick, actual, key) => <td key={key} className={pick && actual && sameTeam(pick, actual) ? "hit" : ""} title={canonTeam(pick)}>{flagOf(pick)}</td>;
   const H2H = ({ x }) => {
-    const tot = Math.max(1, x.ca + x.cb);
+    const a = x.ranked[0], b = x.ranked[1];
+    const others = x.total - a.count - (b ? b.count : 0);
+    const w = (c) => `${(c / Math.max(1, x.total)) * 100}%`;
+    const aWon = x.actual && sameTeam(a.team, x.actual), bWon = b && x.actual && sameTeam(b.team, x.actual);
     return (
       <div className="h2h">
-        <span className="h2h-side"><span className="fl">{flagOf(x.a)}</span><span className="h2h-tn">{x.a}</span><b className="num">{x.ca}</b></span>
-        <span className="mpbar"><span className="mpfill h" style={{ width: `${(x.ca / tot) * 100}%` }} /><span className="mpfill a" style={{ width: `${(x.cb / tot) * 100}%` }} /></span>
-        <span className="h2h-side end"><b className="num">{x.cb}</b><span className="h2h-tn">{x.b}</span><span className="fl">{flagOf(x.b)}</span></span>
+        <span className={"h2h-side" + (aWon ? " won" : "")}><span className="fl">{flagOf(a.team)}</span><span className="h2h-tn">{a.team}</span><b className="num">{a.count}</b></span>
+        <span className="mpbar"><span className="mpfill h" style={{ width: w(a.count) }} />{b && <span className="mpfill a" style={{ width: w(b.count) }} />}{others > 0 && <span className="mpfill o" style={{ width: w(others) }} />}</span>
+        <span className="h2h-side end">{b ? <><b className="num">{b.count}</b><span className={"h2h-tn" + (bWon ? " won" : "")}>{b.team}</span><span className="fl">{flagOf(b.team)}</span></> : (others > 0 ? <span className="hint">+{others}</span> : null)}</span>
       </div>
     );
   };
@@ -3050,6 +3051,21 @@ function Predictions({ data, lb, t, go }) {
             </div>
           );
         })}
+        {/* champion — how the league splits its title pick */}
+        <div className="h2h-round">
+          <div className="h2h-rlabel">🏆 {t("champion")}</div>
+          {champTally.length === 0 ? <div className="empty sm">—</div> : champTally.slice(0, 8).map((c, k) => {
+            const won = data.champion && sameTeam(c.team, data.champion);
+            return (
+              <div className={"ch-row" + (won ? " won" : "")} key={k}>
+                <span className="fl">{flagOf(c.team)}</span>
+                <span className="ch-tn">{c.team}{won ? " ✓" : ""}</span>
+                <span className="mpbar"><span className="mpfill h" style={{ width: `${(c.count / Math.max(1, order.length)) * 100}%` }} /></span>
+                <b className="num">{c.count}</b>
+              </div>
+            );
+          })}
+        </div>
       </div>
 
       {/* knockout player comparison — each player's deep-round picks side by side */}
@@ -5214,7 +5230,16 @@ background:var(--soft);color:var(--ink);cursor:pointer;font-family:inherit}
 .h2h-side .fl{font-size:16px;flex:none}
 .h2h-tn{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .h2h-side b{color:var(--ink);flex:none}
+.h2h-side.won .h2h-tn,.h2h-tn.won{color:var(--grass-d);font-weight:800}
 .h2h .mpbar{flex:0 0 72px;height:7px}
+.mpfill.o{background:var(--border)}
+.ch-row{display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--border);font-size:12.5px;font-weight:600}
+.ch-row:last-child{border-bottom:none}
+.ch-row .fl{font-size:16px;flex:none}
+.ch-row.won .ch-tn{color:var(--grass-d);font-weight:800}
+.ch-tn{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ch-row .mpbar{flex:0 0 90px;height:7px}
+.ch-row b{flex:none;min-width:18px;text-align:end}
 
 /* consensus bars */
 .cbars{display:flex;flex-direction:column;gap:9px}

@@ -90,7 +90,8 @@ const I18N = {
     selectPlayer: "Select a player", group: "Group", winnerAdv: "advances",
     rule_edge: "Pick the higher-ranked team and they win the match", rule_exact: "Team finishes in the exact position you predicted",
     rule_in: "Team is in the group but in a different position", rule_ko: "Correct knockout-round winner", rule_champ: "Correct champion",
-    nav_more: "More", nav_matches: "Matches", nav_predictions: "Predictions", nav_compare: "Compare", nav_consensus: "Consensus", nav_trends: "Trends", nav_scorers: "Goals", nav_help: "Help", nav_mypicks: "My picks", mypicksSignIn: "Open your personal sign-in link (sent on WhatsApp) to fill and edit your predictions.",
+    nav_more: "More", nav_matches: "Matches", nav_predictions: "Predictions", nav_compare: "Compare", nav_payout: "Prize & payout", nav_consensus: "Consensus", nav_trends: "Trends", nav_scorers: "Goals", nav_help: "Help", nav_mypicks: "My picks",
+    poHint: "The pot and what each place pays, based on the entry fee and distribution set by your admin. Tied players split their combined prize.", poProvisional: "provisional until the tournament ends", poNoFee: "No entry fee set — ask your admin to set it in Settings.", poTie: "· tie-split", mypicksSignIn: "Open your personal sign-in link (sent on WhatsApp) to fill and edit your predictions.",
     cmpTitle: "Knockout compare", cmpHint: "Earned points plus what each player can still win — who's really in the race.", cmpSelect: "Players to compare", cmpEarned: "Earned", cmpPossible: "Still winnable", cmpCeiling: "Ceiling", cmpRange: "Points range · earned + still winnable", cmpUpside: "Where the upside is · points still winnable", cmpChampRace: "Champion picks", cmpPath: "Way forward · picks still alive", cmpAlive: "alive", cmpOut: "eliminated", cmpLeading: "Leading", cmpInRace: "Can still top the table", cmpOutRace: "Can't catch the leader", cmpBehind: "behind", cmpReached: "reached", cmpNoLive: "No picks still alive", cmpLeaderLine: "leader's score", cmpChamp: "champion", cmpRemaining: "remaining", cmpRaceTitle: "Race for #1", cmpLeader: "Leader", cmpCanPass: "Can overtake #1", cmpCantPass: "Can't reach #1", cmpMaxGain: "max gain on leader", cmpNeeds: "needs", ovSwingTop3: "How today's match could move the top 3",
     nav_today: "Today", liveNow: "Live now", noMatches: "No matches on this day.", noEvents: "No data yet.", predBacking: "backing", whoBacked: "Who backed whom", back: "Back", upcoming: "Upcoming",
     liveLbl: "LIVE", liveUpdates: "Live updates", hide: "Hide", openMatch: "Open match", kickoff: "Kick-off", fullTime: "Full-time", goalEx: "GOAL!",
@@ -176,7 +177,8 @@ const I18N = {
     selectPlayer: "اختر لاعباً", group: "المجموعة", winnerAdv: "يتأهل",
     rule_edge: "اختر الفريق الأعلى ترتيباً ويفوز بالمباراة", rule_exact: "الفريق ينهي في المركز الذي توقعته بالضبط",
     rule_in: "الفريق في المجموعة لكن في مركز مختلف", rule_ko: "توقع الفائز الصحيح في الدور الإقصائي", rule_champ: "توقع البطل الصحيح",
-    nav_more: "المزيد", nav_matches: "المباريات", nav_predictions: "التوقعات", nav_compare: "مقارنة", nav_consensus: "الإجماع", nav_trends: "التطور", nav_scorers: "الأهداف", nav_help: "المساعدة", nav_mypicks: "توقعاتي", mypicksSignIn: "افتح رابط الدخول الخاص بك (المُرسل عبر واتساب) لتعبئة توقّعاتك وتعديلها.",
+    nav_more: "المزيد", nav_matches: "المباريات", nav_predictions: "التوقعات", nav_compare: "مقارنة", nav_payout: "الجوائز والتوزيع", nav_consensus: "الإجماع", nav_trends: "التطور", nav_scorers: "الأهداف", nav_help: "المساعدة", nav_mypicks: "توقعاتي",
+    poHint: "قيمة الجائزة وما يحصل عليه كل مركز، بناءً على رسوم الاشتراك والتوزيع الذي حدّده المشرف. اللاعبون المتعادلون يتقاسمون جائزتهم.", poProvisional: "مبدئي حتى نهاية البطولة", poNoFee: "لم تُحدَّد رسوم اشتراك — اطلب من المشرف ضبطها في الإعدادات.", poTie: "· تقاسم التعادل", mypicksSignIn: "افتح رابط الدخول الخاص بك (المُرسل عبر واتساب) لتعبئة توقّعاتك وتعديلها.",
     cmpTitle: "مقارنة الإقصائيات", cmpHint: "النقاط المكتسبة إضافةً إلى ما يمكن لكل لاعب كسبه — مَن لا يزال في السباق فعلاً.", cmpSelect: "اللاعبون للمقارنة", cmpEarned: "مكتسبة", cmpPossible: "ما زالت ممكنة", cmpCeiling: "الحد الأقصى", cmpRange: "مدى النقاط · المكتسبة + الممكنة", cmpUpside: "أين الإمكانات · نقاط ما زالت ممكنة", cmpChampRace: "اختيارات البطل", cmpPath: "الطريق للأمام · اختيارات ما زالت قائمة", cmpAlive: "قائم", cmpOut: "خرج", cmpLeading: "المتصدّر", cmpInRace: "يمكنه التصدّر", cmpOutRace: "لا يمكنه اللحاق بالمتصدّر", cmpBehind: "خلف", cmpReached: "بلغ", cmpNoLive: "لا اختيارات قائمة", cmpLeaderLine: "نقاط المتصدّر", cmpChamp: "البطل", cmpRemaining: "متبقٍّ", cmpRaceTitle: "السباق على الصدارة", cmpLeader: "المتصدّر", cmpCanPass: "يمكنه تجاوز المتصدّر", cmpCantPass: "لا يمكنه بلوغ الصدارة", cmpMaxGain: "أقصى تقارب مع المتصدّر", cmpNeeds: "يحتاج", ovSwingTop3: "كيف قد تغيّر مباراة اليوم ترتيب الثلاثة الأوائل",
     nav_today: "اليوم", liveNow: "مباشر الآن", noMatches: "لا مباريات في هذا اليوم.", noEvents: "لا توجد بيانات بعد.", predBacking: "مؤيد", whoBacked: "من أيّد مَن", back: "رجوع", upcoming: "قادمة",
     liveLbl: "مباشر", liveUpdates: "تحديثات مباشرة", hide: "إخفاء", openMatch: "فتح المباراة", kickoff: "انطلاق المباراة", fullTime: "انتهت المباراة", goalEx: "هدف!",
@@ -389,9 +391,15 @@ function calcPlayerPoints(p, data) {
   if (data.champion) { const got = p && sameTeam(p.champion, data.champion) ? champPointsFor(data) : 0; champ = got; detail.champion = { pick: p && p.champion, actual: data.champion, got }; }
   return { total: gMatch + gRank + ko + champ, groupMatch: gMatch, groupRank: gRank, knockout: ko, champ, detail };
 }
+// League standings order: total, then a meaningful tiebreak chain — a correct
+// champion, then more knockout points, then more exact group positions — and
+// finally name so the order is always deterministic.
+function compareStandings(a, b) {
+  return b.total - a.total || (b.champ || 0) - (a.champ || 0) || (b.knockout || 0) - (a.knockout || 0) || (b.groupRank || 0) - (a.groupRank || 0) || a.name.localeCompare(b.name);
+}
 function buildLeaderboard(data) {
   const rows = Object.keys(data.players).map((name) => ({ name, ...calcPlayerPoints(data.players[name], data) }));
-  rows.sort((a, b) => b.total - a.total || a.name.localeCompare(b.name));
+  rows.sort(compareStandings);
   rows.forEach((r, i) => (r.rank = i + 1));
   return rows;
 }
@@ -1490,6 +1498,53 @@ function KOCompare({ data, lb, t, lang }) {
               </div>
             );
           })}
+        </div>
+      </div>
+    </div>
+  );
+}
+// Prize pool + payouts. The pool is entry-fee × players; the distribution
+// (winner-takes-all / split top 2 / top 3) is set in admin. Players tied on
+// points split the combined prize for the places they occupy — the fair rule.
+function Payout({ data, lb, t }) {
+  const s = data.settings || {};
+  const fee = Number(s.entryFeeAED) || 0, cur = s.currency || "AED";
+  const pool = lb.length * fee;
+  const dist = s.distribution || "winnerTakesAll";
+  const shares = dist === "split3" ? [0.6, 0.3, 0.1] : dist === "split2" ? [0.65, 0.35] : [1];
+  const distLabel = dist === "split3" ? t("topThree") : dist === "split2" ? t("topTwo") : t("winnerTakes");
+  const money = (v) => Math.round(v).toLocaleString("en-US") + " " + cur;
+  // payouts: group players tied on total, split the combined shares of the
+  // places they occupy equally among them.
+  const pay = {}; const tied = {};
+  for (let i = 0; i < lb.length;) {
+    let j = i; while (j + 1 < lb.length && lb[j + 1].total === lb[i].total) j++;
+    const k = j - i + 1; let sum = 0; for (let pl = i; pl <= j; pl++) sum += shares[pl] || 0;
+    const each = k ? (pool * sum) / k : 0;
+    for (let x = i; x <= j; x++) { pay[lb[x].name] = each; if (k > 1 && each > 0) tied[lb[x].name] = true; }
+    i = j + 1;
+  }
+  return (
+    <div className="view">
+      <div className="card slim"><h3 className="cardh">💰 {t("nav_payout")}</h3><p className="hint block">{t("poHint")}</p></div>
+      <div className="po-summary">
+        <div className="po-kpi"><span className="po-kpi-v num">{money(pool)}</span><span className="hint">{t("prizePool")}</span></div>
+        <div className="po-kpi"><span className="po-kpi-v num">{lb.length} × {fee}</span><span className="hint">{t("entryFee")} · {cur}</span></div>
+        <div className="po-kpi"><span className="po-kpi-v">{distLabel}</span><span className="hint">{t("distribution")}</span></div>
+      </div>
+      {fee <= 0 && <div className="card slim"><div className="empty sm">{t("poNoFee")}</div></div>}
+      <div className="card">
+        <h3 className="cardh">🏆 {t("standings")} <span className="hint">· {t("poProvisional")}</span></h3>
+        <div className="po-rows">
+          {lb.map((r) => (
+            <div className={"po-row" + (pay[r.name] > 0 ? " win" : "")} key={r.name}>
+              <span className="po-rank num">{r.rank}</span>
+              <Avatar name={r.name} />
+              <span className="po-nm">{r.name}{tied[r.name] ? <span className="po-tie">{t("poTie")}</span> : null}</span>
+              <span className="po-pts num">{r.total} {t("pts")}</span>
+              <span className="po-amt num">{pay[r.name] > 0 ? money(pay[r.name]) : "—"}</span>
+            </div>
+          ))}
         </div>
       </div>
     </div>
@@ -3656,9 +3711,9 @@ function projectedRows(data) {
   const rows = Object.keys(data.players).map((name) => {
     const p = data.players[name], cp = calcPlayerPoints(p, data), per = {};
     GROUP_KEYS.forEach((g) => { per[g] = cp.detail.ranking.filter((r) => r.g === g).reduce((s, r) => s + r.got, 0); });
-    return { name, total: cp.total, per, champion: canonTeam(p.champion) || "" };
+    return { name, total: cp.total, champ: cp.champ, knockout: cp.knockout, groupRank: cp.groupRank, per, champion: canonTeam(p.champion) || "" };
   });
-  rows.sort((a, b) => b.total - a.total || a.name.localeCompare(b.name));
+  rows.sort(compareStandings);
   rows.forEach((r, i) => (r.rank = i + 1));
   return rows;
 }
@@ -4501,6 +4556,7 @@ const MORE_ITEMS = [
   { id: "profile", ic: "profile", key: "nav_profile" },
   { id: "predictions", ic: "prediction", key: "nav_predictions" },
   { id: "compare", ic: "chart", key: "nav_compare" },
+  { id: "payout", ic: "trophy", key: "nav_payout" },
   { id: "consensus", ic: "users", key: "nav_consensus" },
   { id: "trends", ic: "chart", key: "nav_trends" },
   { id: "scorers", ic: "ball", key: "nav_scorers" },
@@ -4787,6 +4843,7 @@ export default function App() {
         {view === "bracket" && <BracketView data={data} lb={lb} t={t} lang={lang} name={profileName} setName={selectProfile} go={go} />}
         {view === "predictions" && <Predictions data={data} lb={lb} t={t} go={go} />}
         {view === "compare" && <KOCompare data={data} lb={lb} t={t} lang={lang} />}
+        {view === "payout" && <Payout data={data} lb={lb} t={t} />}
         {view === "points" && <Points data={data} lb={lb} t={t} name={profileName} setName={selectProfile} />}
         {view === "consensus" && <Consensus data={data} t={t} />}
         {view === "trends" && <Trends data={data} lb={lb} t={t} />}
@@ -5664,6 +5721,20 @@ border-radius:18px;padding:16px 14px;margin:10px 0;color:#fff;background:linear-
 .cmp-race-sub{margin-top:4px}
 .cmp-race-sub .up{color:var(--grass-d)}
 .cmp-race-need{margin-top:7px;display:flex;flex-wrap:wrap;gap:5px;align-items:center}
+/* prize & payout */
+.po-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
+.po-kpi{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px 10px;text-align:center;display:flex;flex-direction:column;gap:3px}
+.po-kpi-v{font-size:16px;font-weight:800}
+.po-rows{display:grid;gap:2px}
+.po-row{display:grid;grid-template-columns:auto auto 1fr auto auto;align-items:center;gap:9px;padding:8px 6px;border-radius:9px}
+.po-row:nth-child(even){background:var(--soft)}
+.po-row.win{background:linear-gradient(90deg,rgba(245,196,81,.14),transparent)}
+.po-rank{width:22px;text-align:center;color:var(--muted);font-weight:800}
+.po-nm{font-weight:600;font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:flex;align-items:center;gap:6px}
+.po-tie{font-size:10px;color:var(--muted);font-weight:700}
+.po-pts{color:var(--muted);font-size:12px;white-space:nowrap}
+.po-amt{font-weight:800;font-size:13.5px;min-width:74px;text-align:end}
+.po-row.win .po-amt{color:#a9781a}
 /* home: how today's match moves the top 3 */
 .ov-swing{margin-top:10px;border-top:1px solid var(--border);padding-top:10px}
 .ov-swing-h{font-size:11.5px;font-weight:800;color:var(--muted);margin-bottom:6px}

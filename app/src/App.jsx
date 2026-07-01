@@ -1013,40 +1013,48 @@ function buildSampleData() {
     }
   });
 
-  // --- full knockout tree, deterministically resolved from final standings ---
-  // Seeding pool: 12 group winners, 12 runners-up, 8 best third-placed teams.
+  // --- full knockout tree on the FIXED R32 draw (R32_TIES) — the same bracket
+  // the scoring engine and real data use — with each tie resolved by a
+  // group-derived team strength so results are deterministic. ---
   const finalData = { groupResults: finalGroupResults };
   const tables = {}; GROUP_KEYS.forEach((g) => (tables[g] = computeGroupTable(g, finalData)));
   const strength = {};
   GROUP_KEYS.forEach((g) => tables[g].forEach((row, pos) => (strength[teamKey(row.team)] = row.Pts * 100 + row.GD * 10 + row.GF - pos)));
-  const winners = GROUP_KEYS.map((g) => tables[g][0].team);
-  const runners = GROUP_KEYS.map((g) => tables[g][1].team);
-  const thirds = GROUP_KEYS.map((g) => ({ ...tables[g][2], g }))
-    .sort((a, b) => b.Pts - a.Pts || b.GD - a.GD || b.GF - a.GF).slice(0, 8).map((x) => x.team);
-  let roundTeams = [...winners, ...runners, ...thirds]; // 32
-  KO_ROUNDS.forEach(([rk, n], ri) => {
-    const next = [];
-    for (let k = 0; k < n; k++) {
-      const home = roundTeams[2 * k], away = roundTeams[2 * k + 1];
-      const sh = strength[teamKey(home)] || 0, sa = strength[teamKey(away)] || 0;
-      const homeWins = sh !== sa ? sh > sa : hashStr(home + away + rk) % 2 === 0;
-      const finalH = homeWins ? 2 : 1, finalA = homeWins ? 1 : 2;
+  const homeAdvances = (home, away, rk) => { const sh = strength[teamKey(home)] || 0, sa = strength[teamKey(away)] || 0; return sh !== sa ? sh > sa : hashStr(home + away + rk) % 2 === 0; };
+  const slotWin = {}; // koSlotId -> actual winner (canonical team)
+  KO_SEQ.forEach(([rk, n], ri) => {
+    for (let i = 0; i < n; i++) {
+      let home, away;
+      if (rk === "R32") { [home, away] = R32_TIES[i]; }
+      else { const prev = KO_SEQ[ri - 1][0]; home = slotWin[koSlotId(prev, 2 * i)]; away = slotWin[koSlotId(prev, 2 * i + 1)]; }
+      home = canonTeam(home); away = canonTeam(away);
+      const homeWins = homeAdvances(home, away, rk);
+      slotWin[koSlotId(rk, i)] = homeWins ? home : away;
       matches.push(mkMatch(
-        { id: `${rk}_${k}`, stage: "ko", group: null, idx: k, mid: `${rk}_${k}`, round: rk, ko: koTime(ri, k) },
-        home, away, finalH, finalA, rk + k));
-      next.push(homeWins ? home : away);
+        { id: `${rk}_${i}`, stage: "ko", group: null, idx: i, mid: `${rk}_${i}`, round: rk, ko: koTime(ri, i) },
+        home, away, homeWins ? 2 : 1, homeWins ? 1 : 2, rk + i));
     }
-    roundTeams = next;
   });
 
-  // --- players' knockout picks: back the team they ranked higher in its group ---
+  // --- players' knockout picks, keyed by canonical slot id (R32#0 … F#0) — the
+  // same keys the engine scores against — backing the higher-ranked team each
+  // tie, propagating their own winners forward through the bracket. ---
   const koPick = (p, home, away) => {
     const gh = groupOf(home), ga = groupOf(away);
     const rh = gh ? rankOfTeamInPred(p, gh, home) || 9 : 9;
     const ra = ga ? rankOfTeamInPred(p, ga, away) || 9 : 9;
     return rh <= ra ? canonTeam(home) : canonTeam(away);
   };
-  matches.filter((m) => m.stage === "ko").forEach((m) => { Object.values(players).forEach((p) => (p.knockout[m.mid] = koPick(p, m.home, m.away))); });
+  Object.values(players).forEach((p) => {
+    KO_SEQ.forEach(([rk, n]) => {
+      for (let i = 0; i < n; i++) {
+        const [a, b] = koSlotContenders(p.knockout, rk, i);
+        const pick = a && b ? koPick(p, a, b) : (a || b || null);
+        if (pick) p.knockout[koSlotId(rk, i)] = canonTeam(pick);
+      }
+    });
+    p.champion = p.knockout[koSlotId("F", 0)] || p.champion; // champion = their final winner
+  });
 
   matches.sort((a, b) => a.ko - b.ko);
   const data = { players, matches, championOverride: null, settings: { currency: "AED", entryFeeAED: 200, distribution: "winnerTakesAll" }, auditLog: [] };
